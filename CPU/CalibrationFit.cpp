@@ -1,10 +1,10 @@
 #include "stdafx.h"
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
+#include <cstdio>
+#include <cmath>
+#include <cstring>
 #include <ctime>
-#include <stdlib.h>
-#include <float.h>
+#include <cstdlib>
+#include <cfloat>
 #include "CalibrationFit.h"
 
 #define Npar 5 // C0, C1, C2, C3, C4

@@ -1,10 +1,10 @@
 #include "stdafx.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
 #include <ctime>
-#include <float.h>
+#include <cfloat>
 
 #include "GaussianFit3D_Theta.h"
 

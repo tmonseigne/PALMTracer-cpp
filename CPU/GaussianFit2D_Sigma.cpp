@@ -1,10 +1,10 @@
 #include "stdafx.h"
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
+#include <cstdio>
+#include <cmath>
+#include <cstring>
 #include <ctime>
-#include <stdlib.h>
-#include <float.h>
+#include <cstdlib>
+#include <cfloat>
 
 #include "GaussianFit2D_Sigma.h"
 

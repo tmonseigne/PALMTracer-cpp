@@ -1,9 +1,9 @@
 #include "stdafx.h"
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
+#include <cstdio>
+#include <cmath>
+#include <cstring>
 #include <ctime>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "GaussianFit2D_Sigma.h"
 
