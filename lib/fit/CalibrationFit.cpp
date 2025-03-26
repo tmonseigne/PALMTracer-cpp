@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include <cstdio>
 #include <cmath>
 #include <cstring>
@@ -6,6 +5,8 @@
 #include <cstdlib>
 #include <cfloat>
 #include "CalibrationFit.h"
+
+#include <algorithm>
 
 #define Npar 5 // C0, C1, C2, C3, C4
 int Npnt; 
@@ -223,7 +224,7 @@ float CalibrationFit::Run(float* sigma, float* Z, unsigned short pointsNbr, unsi
 
 	float max_ = 0;
 	for(int ii=0; ii < Npar; ii++)
-			max_ = max(max_, abs(beta[ii]));
+			max_ = std::max(max_, abs(beta[ii]));
 
 	unsigned int stop = 0;
 	if(max_ < epsilon_1) 
@@ -274,7 +275,7 @@ float CalibrationFit::Run(float* sigma, float* Z, unsigned short pointsNbr, unsi
 		for(int ii=0; ii < Npar; ii++)
 		{
 			p_try[ii] = p[ii] + delta_p[ii];
-			p_try[ii] = min(max(p_min[ii], p_try[ii]), p_max[ii]);
+			p_try[ii] = std::min(std::max(p_min[ii], p_try[ii]), p_max[ii]);
 		}
 
 		for(int ii=0; ii < Npnt; ii++)
@@ -308,17 +309,17 @@ float CalibrationFit::Run(float* sigma, float* Z, unsigned short pointsNbr, unsi
 
 			X2 = lm_matx(Z/*IN*/, p/*IN*/, sigma/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
 
-			lambda = max(lambda/lambda_DN_fac,1.e-7);
+			lambda = std::max(lambda/lambda_DN_fac,1.e-7f);
 		}
 		else  // it IS NOT better
 		{
 			X2 = X2_old;  // do not accept a_try
-			lambda = min(lambda*lambda_UP_fac,1.e7);
+			lambda = std::min(lambda*lambda_UP_fac,1.e7f);
 		}
 
 		max_ = 0;
 		for(int ii=0; ii < Npar; ii++)
-				max_ = max(max_, abs(delta_p[ii] / p[ii]));
+				max_ = std::max(max_, abs(delta_p[ii] / p[ii]));
 
 		if( (max_ < epsilon_2) && (iteration > 2) ) 
 			stop = 1;
@@ -328,7 +329,7 @@ float CalibrationFit::Run(float* sigma, float* Z, unsigned short pointsNbr, unsi
 
 		max_ = 0;
 		for(int ii=0; ii < Npar; ii++)
-				max_ = max(max_, abs(beta[ii]));
+				max_ = std::max(max_, abs(beta[ii]));
 
 		if( (max_ < epsilon_1) && (iteration > 2) ) 
 			stop = 1;

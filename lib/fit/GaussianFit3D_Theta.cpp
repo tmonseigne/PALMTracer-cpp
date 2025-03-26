@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -7,6 +6,8 @@
 #include <cfloat>
 
 #include "GaussianFit3D_Theta.h"
+
+#include <algorithm>
 
 // CPU version of gaussian fit 3D
 //#define dimFit 13
@@ -203,7 +204,7 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 
 		// for real data
 		float p_min[Npar] = {0., x0 - 1, y0 - 1, 0.1, 0.1, -150, 0.};
-		float p[Npar] = {2000., x0, y0, sqrt(2.) * sigmaX, sqrt(2.) * sigmaY, angle, 700.};
+		float p[Npar] = {2000., x0, y0, static_cast<float>(sqrt(2.)) * sigmaX, static_cast<float>(sqrt(2.)) * sigmaY, angle, 700.};
 		float p_max[Npar] = {65535., x0 + 1, y0 + 1, 20., 20., +150, 65535.};
 
 		//float y_dat[Npnt];
@@ -225,8 +226,8 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 				t[((ii + dimFit / 2) + (jj + dimFit / 2) * dimFit) * 2] = (int)x0 + ii;
 				t[((ii + dimFit / 2) + (jj + dimFit / 2) * dimFit) * 2 + 1] = (int)y0 + jj;
 
-				max_intensity = max(max_intensity, y_dat[(ii + dimFit/2) + (jj + dimFit/2) * dimFit]);
-				min_intensity = min(min_intensity, y_dat[(ii + dimFit/2) + (jj + dimFit/2) * dimFit]);
+				max_intensity = std::max(max_intensity, y_dat[(ii + dimFit/2) + (jj + dimFit/2) * dimFit]);
+				min_intensity = std::min(min_intensity, y_dat[(ii + dimFit/2) + (jj + dimFit/2) * dimFit]);
 			}
 
 		p[0] = max_intensity - min_intensity;
@@ -258,7 +259,7 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 		X2 = lm_matx(t/*IN*/, p/*IN*/, y_dat/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
 
 		float max_ = 0;
-		for (int ii = 0; ii < Npar; ii++) max_ = max(max_, abs(beta[ii]));
+		for (int ii = 0; ii < Npar; ii++) max_ = std::max(max_, abs(beta[ii]));
 
 		unsigned int stop = 0;
 		if (max_ < epsilon_1) stop = 1;
@@ -304,7 +305,7 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 
 			for (int ii = 0; ii < Npar; ii++) {
 				p_try[ii] = p[ii] + delta_p[ii];
-				p_try[ii] = min(max(p_min[ii], p_try[ii]), p_max[ii]);
+				p_try[ii] = std::min(std::max(p_min[ii], p_try[ii]), p_max[ii]);
 			}
 
 			for (int ii = 0; ii < Npnt; ii++) delta_y[ii] = y_dat[ii] - PSF((float)t[ii * 2], (float)t[ii * 2 + 1], p_try[0], p_try[1], p_try[2], p_try[3], p_try[4], p_try[5], p_try[6]);
@@ -336,23 +337,23 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 
 				X2 = lm_matx(t/*IN*/, p/*IN*/, y_dat/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
 
-				lambda = max(lambda/lambda_DN_fac, 1.e-7);
+				lambda = std::max(lambda/lambda_DN_fac, 1.e-7f);
 			}
 			else // it IS NOT better
 			{
 				X2 = X2_old; // do not accept a_try
-				lambda = min(lambda*lambda_UP_fac, 1.e7);
+				lambda = std::min(lambda*lambda_UP_fac, 1.e7f);
 			}
 
 			max_ = 0;
-			for (int ii = 0; ii < Npar; ii++) max_ = max(max_, abs(delta_p[ii] / p[ii]));
+			for (int ii = 0; ii < Npar; ii++) max_ = std::max(max_, abs(delta_p[ii] / p[ii]));
 
 			if ((max_ < epsilon_2) && (iteration > 2)) stop = 1;
 
 			if ((X2 / Npnt < epsilon_3) && (iteration > 2)) stop = 1;
 
 			max_ = 0;
-			for (int ii = 0; ii < Npar; ii++) max_ = max(max_, abs(beta[ii]));
+			for (int ii = 0; ii < Npar; ii++) max_ = std::max(max_, abs(beta[ii]));
 
 			if ((max_ < epsilon_1) && (iteration > 2)) stop = 1;
 

@@ -6,11 +6,11 @@
 #include "PALM.h"
 #include "PALM_Class.h"
 
-#include "GaussianFit2D.h"
-#include "GaussianFit2D_Sigma.h"
-#include "GaussianFit3D.h"
-#include "GaussianFit3D_Theta.h"
-#include "CalibrationFit.h"
+#include "fit/GaussianFit2D.h"
+#include "fit/GaussianFit2D_Sigma.h"
+#include "fit/GaussianFit3D.h"
+#include "fit/GaussianFit3D_Theta.h"
+#include "fit/CalibrationFit.h"
 
 //#include <GL\glut.h>
 
