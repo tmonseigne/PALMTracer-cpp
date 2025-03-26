@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>PALM_Live</ProjectName>
+    <ProjectName>Live</ProjectName>
     <ProjectGuid>{D2CE9884-0946-4BDB-9790-B89137FD947F}</ProjectGuid>
     <RootNamespace>PALM</RootNamespace>
     <Keyword>Win32Proj</Keyword>

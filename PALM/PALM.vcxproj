@@ -37,7 +37,7 @@
   <PropertyGroup Label="Globals">
     <ProjectName>PALM</ProjectName>
     <ProjectGuid>{55F71337-32A6-4C26-8CBA-A06A9183D6F2}</ProjectGuid>
-    <RootNamespace>template</RootNamespace>
+    <RootNamespace>PALM</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -151,10 +151,10 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>cudart.lib;cutil32.lib;cudpp32.lib;shrUtils32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>Debug/template.exe</OutputFile>
+      <OutputFile>Debug/PALM.exe</OutputFile>
       <AdditionalLibraryDirectories>$(CUDA_LIB_PATH)/../lib;../../common/lib;../../../shared/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(OutDir)template.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(OutDir)PALM.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
