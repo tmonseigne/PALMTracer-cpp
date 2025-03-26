@@ -31,7 +31,7 @@ public:
 	int linkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes);
 	int sortByIntensityAllNeighbors();
 
-	void checkLinksHomogeneity(wchar_t* st);
+	void checkLinksHomogeneity(const wchar_t* st);
 };
 
 

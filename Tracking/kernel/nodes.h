@@ -34,7 +34,7 @@ public:
 	PublicParameters* publicParameters;
 	//InfoData2D	info;
 
-	bool checkLinksHomogeneity(wchar_t* st);
+	bool checkLinksHomogeneity(const wchar_t* st);
 	bool checkLinksHomogeneityInVicinity(wchar_t* st);
 	bool checkLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2 = NULL, Node* p3 = NULL, Node* p4 = NULL, Node* p5 = NULL, Node* p6 = NULL);
 	int time;

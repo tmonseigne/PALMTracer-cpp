@@ -669,4 +669,4 @@ int TabTimes::giveResult()
 /********************************************************************************************************************
 void checkLinksHomogeneity() just call the function to display the result
 ********************************************************************************************************************/
-void TabTimes::checkLinksHomogeneity(wchar_t* st) { for (long time_ = 0; time_ < nbTimes; time_++) timeNodes[time_]->checkLinksHomogeneity(st); }
+void TabTimes::checkLinksHomogeneity(const wchar_t* st) { for (long time_ = 0; time_ < nbTimes; time_++) timeNodes[time_]->checkLinksHomogeneity(st); }

@@ -47,7 +47,7 @@ public:
 
 	int initialisation();
 	virtual int runModel() { return (T_ERR_OOP); };
-	void checkLinksHomogeneity(wchar_t* st);
+	void checkLinksHomogeneity(const wchar_t* st);
 };
 
 

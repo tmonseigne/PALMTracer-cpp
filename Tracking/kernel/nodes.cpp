@@ -278,9 +278,9 @@ bool Node::checkLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2, Node
 }
 
 /********************************************************************************************************************
-checkLinksHomogeneity(wchar_t* st) check all the connection to see the system homogeneity
+checkLinksHomogeneity(const wchar_t* st) check all the connection to see the system homogeneity
 ********************************************************************************************************************/
-bool Node::checkLinksHomogeneity(wchar_t* st)
+bool Node::checkLinksHomogeneity(const wchar_t* st)
 {
 	bool err = false;
 	if (connectionFuture != NULL) {

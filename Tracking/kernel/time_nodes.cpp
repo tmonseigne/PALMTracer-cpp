@@ -121,4 +121,4 @@ int TimeNodes::sortByIntensityAllNeighbors()
 /********************************************************************************************************************
 checkLinksHomogeneity() check all the connection to see the system homogeneity
 ********************************************************************************************************************/
-void TimeNodes::checkLinksHomogeneity(wchar_t* st) { for (int i = 0; i < nbNodes; i++) tabNodes[i]->checkLinksHomogeneity(st); }
+void TimeNodes::checkLinksHomogeneity(const wchar_t* st) { for (int i = 0; i < nbNodes; i++) tabNodes[i]->checkLinksHomogeneity(st); }
