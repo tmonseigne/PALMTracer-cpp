@@ -117,7 +117,6 @@
     <ClInclude Include="..\lib\tools\pandore.h" />
     <ClInclude Include="..\lib\tools\USrtArray.h" />
     <ClInclude Include="array_library_static\real array\ArrayType.h" />
-    <ClInclude Include="array_library_static\real array\ChrArray.h" />
     <ClInclude Include="array_library_static\real array\DblArray.h" />
     <ClInclude Include="array_library_static\real array\LngArray.h" />
     <ClInclude Include="array_library_static\real array\SrtArray.h" />
@@ -153,7 +152,6 @@
     <ClCompile Include="..\lib\tools\operators.cpp" />
     <ClCompile Include="..\lib\tools\USrtArray.cpp" />
     <ClCompile Include="array_library_static\real array\ArrayType.cpp" />
-    <ClCompile Include="array_library_static\real array\ChrArray.cpp" />
     <ClCompile Include="array_library_static\real array\DblArray.cpp" />
     <ClCompile Include="array_library_static\real array\LngArray.cpp" />
     <ClCompile Include="array_library_static\real array\operators.cpp" />

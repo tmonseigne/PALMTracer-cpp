@@ -105,7 +105,6 @@ public:
 		ArrayType &operator+=(const ComplexDbl val);
 #endif
 
-	ArrayType& operator+=(const ChrArray& arrayType);
 	ArrayType& operator+=(const UChrArray& arrayType);
 	ArrayType& operator+=(const SrtArray& arrayType);
 	ArrayType& operator+=(const USrtArray& arrayType);
@@ -142,7 +141,6 @@ public:
 		ArrayType &operator-=(const ComplexDbl val);
 #endif
 
-	ArrayType& operator-=(const ChrArray& arrayType);
 	ArrayType& operator-=(const UChrArray& arrayType);
 	ArrayType& operator-=(const SrtArray& arrayType);
 	ArrayType& operator-=(const USrtArray& arrayType);
@@ -177,7 +175,6 @@ public:
 		ArrayType &operator*=(const ComplexDbl val);
 #endif
 
-	ArrayType& operator*=(const ChrArray& arrayType);
 	ArrayType& operator*=(const UChrArray& arrayType);
 	ArrayType& operator*=(const SrtArray& arrayType);
 	ArrayType& operator*=(const USrtArray& arrayType);
@@ -212,7 +209,6 @@ public:
 		ArrayType &operator/=(const ComplexFlt val);
 		ArrayType &operator/=(const ComplexDbl val);
 #endif
-	ArrayType& operator/=(const ChrArray& arrayType);
 	ArrayType& operator/=(const UChrArray& arrayType);
 	ArrayType& operator/=(const SrtArray& arrayType);
 	ArrayType& operator/=(const USrtArray& arrayType);
@@ -248,7 +244,6 @@ public:
 		ArrayType &operator=(const ComplexDbl val);
 #endif
 
-	ArrayType& operator=(const ChrArray& arrayType);
 	ArrayType& operator=(const UChrArray& arrayType);
 	ArrayType& operator=(const SrtArray& arrayType);
 	ArrayType& operator=(const USrtArray& arrayType);

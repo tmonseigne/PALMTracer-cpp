@@ -254,12 +254,7 @@ DataType &ArrayType::operator()(long i,long j, long k, long l){
 
 //**************		OPERATORS	********************
 
-/*#define DataType2 char
-#define ArrayType2 ChrArray
-#include "operators.cpp"
-#undef ArrayType2
-#undef DataType2
-
+/*
 #define DataType2 unsigned char
 #define ArrayType2 UChrArray
 #include "operators.cpp"

@@ -2,7 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="array_library_static\real array\ArrayType.cpp" />
-    <ClCompile Include="array_library_static\real array\ChrArray.cpp" />
     <ClCompile Include="array_library_static\real array\DblArray.cpp" />
     <ClCompile Include="array_library_static\real array\LngArray.cpp" />
     <ClCompile Include="array_library_static\real array\operators.cpp" />
@@ -49,7 +48,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="array_library_static\real array\ArrayType.h" />
-    <ClInclude Include="array_library_static\real array\ChrArray.h" />
     <ClInclude Include="array_library_static\real array\DblArray.h" />
     <ClInclude Include="array_library_static\real array\LngArray.h" />
     <ClInclude Include="array_library_static\real array\SrtArray.h" />

@@ -100,15 +100,8 @@ public:
 		ArrayType &operator+=(const ComplexFlt val);
 		ArrayType &operator+=(const ComplexDbl val);
 #endif
-
-		/*ArrayType &operator+=(const ChrArray &arrayType);
-		ArrayType &operator+=(const UChrArray &arrayType);
-		ArrayType &operator+=(const SrtArray &arrayType);*/
 		ArrayType &operator+=(const USrtArray &arrayType);
-		/*ArrayType &operator+=(const LngArray &arrayType);
-		ArrayType &operator+=(const ULngArray &arrayType);*/
 		ArrayType &operator+=(const FltArray &arrayType);
-		//ArrayType &operator+=(const DblArray &arrayType);
 		ArrayType &operator+=(const BlArray &arrayType);
 #ifdef COMPLEX
 		ArrayType &operator+=(const CxChrArray &arrayType);
@@ -138,14 +131,8 @@ public:
 		ArrayType &operator-=(const ComplexDbl val);
 #endif
 
-		/*ArrayType &operator-=(const ChrArray &arrayType);
-		ArrayType &operator-=(const UChrArray &arrayType);
-		ArrayType &operator-=(const SrtArray &arrayType);*/
 		ArrayType &operator-=(const USrtArray &arrayType);
-		/*ArrayType &operator-=(const LngArray &arrayType);
-		ArrayType &operator-=(const ULngArray &arrayType);*/
 		ArrayType &operator-=(const FltArray &arrayType);
-		//ArrayType &operator-=(const DblArray &arrayType);
 #ifdef COMPLEX
 		ArrayType &operator-=(const CxChrArray &arrayType);
 		ArrayType &operator-=(const CxSrtArray &arrayType);
@@ -173,14 +160,8 @@ public:
 		ArrayType &operator*=(const ComplexDbl val);
 #endif
 
-		/*ArrayType &operator*=(const ChrArray &arrayType);
-		ArrayType &operator*=(const UChrArray &arrayType);
-		ArrayType &operator*=(const SrtArray &arrayType);*/
 		ArrayType &operator*=(const USrtArray &arrayType);
-		/*ArrayType &operator*=(const LngArray &arrayType);
-		ArrayType &operator*=(const ULngArray &arrayType);*/
 		ArrayType &operator*=(const FltArray &arrayType);
-		//ArrayType &operator*=(const DblArray &arrayType);
 		ArrayType &operator*=(const BlArray &arrayType);
 #ifdef COMPLEX
 		ArrayType &operator*=(const CxChrArray &arrayType);
@@ -201,29 +182,9 @@ public:
 		ArrayType &operator/=(const unsigned long val);
 		ArrayType &operator/=(const float val);
 		ArrayType &operator/=(const double val);
-/*#ifdef COMPLEX
-		ArrayType &operator/=(const ComplexChr val);
-		ArrayType &operator/=(const ComplexSrt val);
-		ArrayType &operator/=(const ComplexLng val);
-		ArrayType &operator/=(const ComplexFlt val);
-		ArrayType &operator/=(const ComplexDbl val);
-#endif
-		ArrayType &operator/=(const ChrArray &arrayType);
-		ArrayType &operator/=(const UChrArray &arrayType);
-		ArrayType &operator/=(const SrtArray &arrayType);*/
+
 		ArrayType &operator/=(const USrtArray &arrayType);
-		/*ArrayType &operator/=(const LngArray &arrayType);
-		ArrayType &operator/=(const ULngArray &arrayType);*/
 		ArrayType &operator/=(const FltArray &arrayType);
-		//ArrayType &operator/=(const DblArray &arrayType);
-		/*
-#ifdef COMPLEX
-		ArrayType &operator/=(const CxChrArray &arrayType);
-		ArrayType &operator/=(const CxSrtArray &arrayType);
-		ArrayType &operator/=(const CxLngArray &arrayType);
-		ArrayType &operator/=(const CxFltArray &arrayType);
-		ArrayType &operator/=(const CxDblArray &arrayType);
-#endif*/
 #endif
 
 
@@ -237,30 +198,10 @@ public:
 		ArrayType &operator=(const float val);
 		ArrayType &operator=(const double val);
 		ArrayType &operator=(const bool val);
-/*#ifdef COMPLEX
-		ArrayType &operator=(const ComplexChr val);
-		ArrayType &operator=(const ComplexSrt val);
-		ArrayType &operator=(const ComplexLng val);
-		ArrayType &operator=(const ComplexFlt val);
-		ArrayType &operator=(const ComplexDbl val);
-#endif
-*/
-		//ArrayType &operator=(const ChrArray &arrayType);
-		//ArrayType &operator=(const UChrArray &arrayType);
-		//ArrayType &operator=(const SrtArray &arrayType);
+
 		ArrayType &operator=(const USrtArray &arrayType);
-		//ArrayType &operator=(const LngArray &arrayType);
-		//ArrayType &operator=(const ULngArray &arrayType);
 		ArrayType &operator=(const FltArray &arrayType);
-		//ArrayType &operator=(const DblArray &arrayType);
 		ArrayType &operator=(const BlArray &arrayType);
-/*#ifdef COMPLEX
-		ArrayType &operator=(const CxChrArray &arrayType);
-		ArrayType &operator=(const CxSrtArray &arrayType);
-		ArrayType &operator=(const CxLngArray &arrayType);
-		ArrayType &operator=(const CxFltArray &arrayType);
-		ArrayType &operator=(const CxDblArray &arrayType);
-#endif*/
 
 #ifndef BOOL_TYPE
 #ifndef	COMPLEX
