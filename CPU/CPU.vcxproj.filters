@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="aTrous.cpp" />
+    <ClCompile Include="aTrous2D.cpp" />
+    <ClCompile Include="CalibrationFit.cpp" />
+    <ClCompile Include="GaussianFit2D.cpp" />
+    <ClCompile Include="GaussianFit2D_Sigma.cpp" />
+    <ClCompile Include="GaussianFit3D.cpp" />
+    <ClCompile Include="GaussianFit3D_Theta.cpp" />
+    <ClCompile Include="info_2D.cpp" />
+    <ClCompile Include="PALM.cpp" />
+    <ClCompile Include="segmentation.cpp" />
+    <ClCompile Include="segmentation_2D.cpp" />
+    <ClCompile Include="watershed_2D.cpp" />
+    <ClCompile Include="..\lib\tools\miscTools.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tools\USrtArray.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tools\BlArray.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tools\FltArray.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tools\arrayType.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tools\operators.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="aTrous.h" />
+    <ClInclude Include="CalibrationFit.h" />
+    <ClInclude Include="GaussianFit.h" />
+    <ClInclude Include="GaussianFit2D.h" />
+    <ClInclude Include="GaussianFit2D_Sigma.h" />
+    <ClInclude Include="GaussianFit3D.h" />
+    <ClInclude Include="GaussianFit3D_Theta.h" />
+    <ClInclude Include="info_2D.h" />
+    <ClInclude Include="PALM.h" />
+    <ClInclude Include="PALM_Class.h" />
+    <ClInclude Include="parameters.h" />
+    <ClInclude Include="segmentation.h" />
+    <ClInclude Include="segmentation_2D.h" />
+    <ClInclude Include="..\lib\tools\errc.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\lists.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\miscTools.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\pandore.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\allDataLib.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\allRealDataLib.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\generalParam.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\NoError.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\USrtArray.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\BlArray.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\FltArray.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\arrayType.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="PALM.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Tools">
+      <UniqueIdentifier>{5dc05904-0bd2-4808-b6f9-dfedecdd4251}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -3,8 +3,8 @@
 
 //#include <iostream.h>
 #include <memory.h>
-#include "allDataLib.h"
-#include "miscTools.h"
+#include "tools/allDataLib.h"
+#include "tools/miscTools.h"
 
 
 class ATrous

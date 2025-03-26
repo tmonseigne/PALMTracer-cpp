@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "allDataLib.h"
+#include "tools/allDataLib.h"
 
 extern int __nbInfoStrucAlloc;
 extern int __nbInfoStrucDealloc;

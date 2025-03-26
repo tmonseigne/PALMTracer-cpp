@@ -3,7 +3,7 @@
 
 //#include <iostream.h>
 #include <memory.h>
-#include "allDataLib.h"
+#include "tools/allDataLib.h"
 #include "miscTools.h"
 
 

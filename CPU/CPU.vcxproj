@@ -65,12 +65,12 @@
     </Midl>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>$(CUDA_INC_PATH);./;../../common/inc;../../../shared/inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../lib;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PALM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -95,11 +95,11 @@
       <TargetEnvironment>X64</TargetEnvironment>
     </Midl>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../lib;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PALM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -122,52 +122,54 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\lib\tools\arrayType.cpp" />
+    <ClCompile Include="..\lib\tools\BlArray.cpp" />
+    <ClCompile Include="..\lib\tools\FltArray.cpp" />
+    <ClCompile Include="..\lib\tools\miscTools.cpp" />
+    <ClCompile Include="..\lib\tools\operators.cpp" />
+    <ClCompile Include="..\lib\tools\USrtArray.cpp" />
     <ClCompile Include="aTrous.cpp" />
     <ClCompile Include="aTrous2D.cpp" />
-    <ClCompile Include="BlArray.cpp" />
     <ClCompile Include="CalibrationFit.cpp" />
-    <ClCompile Include="FltArray.cpp" />
     <ClCompile Include="GaussianFit2D.cpp" />
     <ClCompile Include="GaussianFit2D_Sigma.cpp" />
     <ClCompile Include="GaussianFit3D.cpp" />
     <ClCompile Include="GaussianFit3D_Theta.cpp" />
     <ClCompile Include="info_2D.cpp" />
-    <ClCompile Include="miscTools.cpp" />
     <ClCompile Include="PALM.cpp" />
     <ClCompile Include="segmentation.cpp" />
     <ClCompile Include="segmentation_2D.cpp" />
-    <ClCompile Include="stdafx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="USrtArray.cpp" />
     <ClCompile Include="watershed_2D.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PALM.def" />
-    <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="allDataLib.h" />
-    <ClInclude Include="allRealDataLib.h" />
+    <ClInclude Include="..\lib\tools\allDataLib.h" />
+    <ClInclude Include="..\lib\tools\allRealDataLib.h" />
+    <ClInclude Include="..\lib\tools\arrayType.h" />
+    <ClInclude Include="..\lib\tools\BlArray.h" />
+    <ClInclude Include="..\lib\tools\errc.h" />
+    <ClInclude Include="..\lib\tools\FltArray.h" />
+    <ClInclude Include="..\lib\tools\generalParam.h" />
+    <ClInclude Include="..\lib\tools\lists.h" />
+    <ClInclude Include="..\lib\tools\miscTools.h" />
+    <ClInclude Include="..\lib\tools\NoError.h" />
+    <ClInclude Include="..\lib\tools\pandore.h" />
+    <ClInclude Include="..\lib\tools\USrtArray.h" />
     <ClInclude Include="aTrous.h" />
     <ClInclude Include="CalibrationFit.h" />
-    <ClInclude Include="errc.h" />
     <ClInclude Include="GaussianFit.h" />
     <ClInclude Include="GaussianFit2D.h" />
     <ClInclude Include="GaussianFit2D_Sigma.h" />
     <ClInclude Include="GaussianFit3D.h" />
     <ClInclude Include="GaussianFit3D_Theta.h" />
     <ClInclude Include="info_2D.h" />
-    <ClInclude Include="lists.h" />
-    <ClInclude Include="miscTools.h" />
     <ClInclude Include="PALM.h" />
     <ClInclude Include="PALM_Class.h" />
-    <ClInclude Include="pandore.h" />
     <ClInclude Include="parameters.h" />
     <ClInclude Include="segmentation.h" />
     <ClInclude Include="segmentation_2D.h" />
-    <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

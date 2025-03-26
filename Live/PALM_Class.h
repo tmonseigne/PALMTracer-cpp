@@ -1,9 +1,9 @@
-#include "allDataLib.h"
+#include "tools/allDataLib.h"
 
 #include "aTrous.h"
 #include "segmentation_2D.h"
 
-// Cette classe est exportée de PALM.dll
+// Cette classe est exportï¿½e de PALM.dll
 //class PALM_API CPALM {
 
 // includes, project
@@ -14,10 +14,10 @@ extern "C"void cudaProjectionV02DGPU(unsigned short* input, float* output, unsig
 
 extern "C"void cuda3DFittingGPU_Theta_9x9(unsigned short* images, unsigned int numImages, unsigned short width, unsigned short height, unsigned short* nbStruct, float* pointsList, unsigned int nbPoints, unsigned int, unsigned short size, float sigmaX, float sigmaY, float angle);
 extern "C"void cuda3DFittingGPU_Theta_13x13(unsigned short* images, unsigned int numImages, unsigned short width, unsigned short height, unsigned short* nbStruct, float* pointsList, unsigned int nbPoints, unsigned int, unsigned short size, float sigmaX, float sigmaY, float angle);
-extern "C"void cuda3DFittingGPU_7x7(unsigned short* images, unsigned int numImages, unsigned short width, unsigned short height, unsigned short* nbStruct, float* pointsList, unsigned int nbPoints, unsigned int, unsigned short size, float sigmaX, float sigmaY, float angle, unsigned short computeZ, float* SigmaXCoefs, float* SigmaYCoefs, float ThreeDThickness/*µm*/, float ThreeDSampling/*µm*/, float pixelSize/*µm*/);
-extern "C"void cuda3DFittingGPU_9x9(unsigned short* images, unsigned int numImages, unsigned short width, unsigned short height, unsigned short* nbStruct, float* pointsList, unsigned int nbPoints, unsigned int, unsigned short size, float sigmaX, float sigmaY, float angle, unsigned short computeZ, float* SigmaXCoefs, float* SigmaYCoefs, float ThreeDThickness/*µm*/, float ThreeDSampling/*µm*/, float pixelSize/*µm*/);
-extern "C"void cuda3DFittingGPU_11x11(unsigned short* images, unsigned int numImages, unsigned short width, unsigned short height, unsigned short* nbStruct, float* pointsList, unsigned int nbPoints, unsigned int, unsigned short size, float sigmaX, float sigmaY, float angle, unsigned short computeZ, float* SigmaXCoefs, float* SigmaYCoefs, float ThreeDThickness/*µm*/, float ThreeDSampling/*µm*/, float pixelSize/*µm*/);
-extern "C"void cuda3DFittingGPU_13x13(unsigned short* images, unsigned int numImages, unsigned short width, unsigned short height, unsigned short* nbStruct, float* pointsList, unsigned int nbPoints, unsigned int, unsigned short size, float sigmaX, float sigmaY, float angle, unsigned short computeZ, float* SigmaXCoefs, float* SigmaYCoefs, float ThreeDThickness/*µm*/, float ThreeDSampling/*µm*/, float pixelSize/*µm*/);
+extern "C"void cuda3DFittingGPU_7x7(unsigned short* images, unsigned int numImages, unsigned short width, unsigned short height, unsigned short* nbStruct, float* pointsList, unsigned int nbPoints, unsigned int, unsigned short size, float sigmaX, float sigmaY, float angle, unsigned short computeZ, float* SigmaXCoefs, float* SigmaYCoefs, float ThreeDThickness/*ï¿½m*/, float ThreeDSampling/*ï¿½m*/, float pixelSize/*ï¿½m*/);
+extern "C"void cuda3DFittingGPU_9x9(unsigned short* images, unsigned int numImages, unsigned short width, unsigned short height, unsigned short* nbStruct, float* pointsList, unsigned int nbPoints, unsigned int, unsigned short size, float sigmaX, float sigmaY, float angle, unsigned short computeZ, float* SigmaXCoefs, float* SigmaYCoefs, float ThreeDThickness/*ï¿½m*/, float ThreeDSampling/*ï¿½m*/, float pixelSize/*ï¿½m*/);
+extern "C"void cuda3DFittingGPU_11x11(unsigned short* images, unsigned int numImages, unsigned short width, unsigned short height, unsigned short* nbStruct, float* pointsList, unsigned int nbPoints, unsigned int, unsigned short size, float sigmaX, float sigmaY, float angle, unsigned short computeZ, float* SigmaXCoefs, float* SigmaYCoefs, float ThreeDThickness/*ï¿½m*/, float ThreeDSampling/*ï¿½m*/, float pixelSize/*ï¿½m*/);
+extern "C"void cuda3DFittingGPU_13x13(unsigned short* images, unsigned int numImages, unsigned short width, unsigned short height, unsigned short* nbStruct, float* pointsList, unsigned int nbPoints, unsigned int, unsigned short size, float sigmaX, float sigmaY, float angle, unsigned short computeZ, float* SigmaXCoefs, float* SigmaYCoefs, float ThreeDThickness/*ï¿½m*/, float ThreeDSampling/*ï¿½m*/, float pixelSize/*ï¿½m*/);
 extern "C"void cuda2DFittingGPU_Sigma_7x7(unsigned short* images, unsigned int numImages, unsigned short width, unsigned short height, unsigned short* nbStruct, float* pointsList, unsigned int nbPoints, unsigned int, unsigned short size, float sigmaX);
 extern "C"void cuda2DFittingGPU_Sigma_5x5(unsigned short* images, unsigned int numImages, unsigned short width, unsigned short height, unsigned short* nbStruct, float* pointsList, unsigned int nbPoints, unsigned int, unsigned short size, float sigmaX);
 extern "C"void cuda2DFittingGPU_7x7(unsigned short* images, unsigned int numImages, unsigned short width, unsigned short height, unsigned short* nbStruct, float* pointsList, unsigned int nbPoints, unsigned int, unsigned short size, float sigmaX);
@@ -31,7 +31,7 @@ extern "C"void convertUSrtToFloat(unsigned short* input, float* output, unsigned
 class CPALM
 {
 public:
-	// TODO : ajoutez ici vos méthodes.
+	// TODOï¿½: ajoutez ici vos mï¿½thodes.
 
 	long CPALMProcessing();
 	CPALM(unsigned short* image, double* pointsList, unsigned long pointsListSize, unsigned long sizeX, unsigned long sizeY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short size);

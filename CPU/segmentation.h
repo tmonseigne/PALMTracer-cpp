@@ -10,10 +10,10 @@
 #include <time.h>
 
 
-#include "allDataLib.h"
-#include "lists.h"
+#include "tools/allDataLib.h"
+#include "tools/lists.h"
 //#include "../ReadWriteSTKNew/ReadWriteSTK.h"
-#include "generalParam.h"
+#include "tools/generalParam.h"
 
 #define MAX_TAB	10000
 

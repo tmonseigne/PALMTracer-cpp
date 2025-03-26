@@ -10,7 +10,7 @@
 #include <time.h>
 
 
-#include "allDataLib.h"
+#include "tools/allDataLib.h"
 #include "lists.h"
 //#include "../ReadWriteSTKNew/ReadWriteSTK.h"
 #include "generalParam.h"

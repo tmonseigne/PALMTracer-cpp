@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <math.h>
-#include "allDataLib.h"
+#include "tools/allDataLib.h"
 
 void printErrno(FILE* file, int errno);
 double tenTo(double a);
