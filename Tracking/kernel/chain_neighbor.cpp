@@ -1,6 +1,3 @@
-#include "stdafx.h"
-
-
 /*******************************************************************************************************************
 									ChainNeighbor Class
 								This class allows to make a chained list to chain all the presnet neighbor nodes 

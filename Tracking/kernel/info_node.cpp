@@ -1,6 +1,3 @@
-#include "stdafx.h"
-
-
 /*******************************************************************************************************************
 									InfoNode Class
 								  InfoNode contains the information for a given Node in 2D or in 3D

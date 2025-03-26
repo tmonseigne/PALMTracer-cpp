@@ -104,18 +104,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="array_library_static\allDataLib.h" />
-    <ClInclude Include="array_library_static\real array\allRealDataLib.h" />
+    <ClInclude Include="..\lib\tools\allDataLib.h" />
+    <ClInclude Include="..\lib\tools\allRealDataLib.h" />
+    <ClInclude Include="..\lib\tools\arrayType.h" />
+    <ClInclude Include="..\lib\tools\BlArray.h" />
+    <ClInclude Include="..\lib\tools\errc.h" />
+    <ClInclude Include="..\lib\tools\FltArray.h" />
+    <ClInclude Include="..\lib\tools\generalParam.h" />
+    <ClInclude Include="..\lib\tools\lists.h" />
+    <ClInclude Include="..\lib\tools\miscTools.h" />
+    <ClInclude Include="..\lib\tools\NoError.h" />
+    <ClInclude Include="..\lib\tools\pandore.h" />
+    <ClInclude Include="..\lib\tools\USrtArray.h" />
     <ClInclude Include="array_library_static\real array\ArrayType.h" />
-    <ClInclude Include="array_library_static\real array\BlArray.h" />
     <ClInclude Include="array_library_static\real array\ChrArray.h" />
     <ClInclude Include="array_library_static\real array\DblArray.h" />
-    <ClInclude Include="array_library_static\real array\FltArray.h" />
     <ClInclude Include="array_library_static\real array\LngArray.h" />
     <ClInclude Include="array_library_static\real array\SrtArray.h" />
     <ClInclude Include="array_library_static\real array\UChrArray.h" />
     <ClInclude Include="array_library_static\real array\ULngArray.h" />
-    <ClInclude Include="array_library_static\real array\USrtArray.h" />
     <ClInclude Include="HTML\print.h" />
     <ClInclude Include="likenessDistInten\nodes_dist_Inten.h" />
     <ClInclude Include="likenessDistInten\tab_times_dist_Inten.h" />
@@ -125,10 +132,6 @@
     <ClInclude Include="closerNeighbors\time_nodes_closer_neighbors.h" />
     <ClInclude Include="DebugMIA\controlAlloc.h" />
     <ClInclude Include="DebugMIA\print_debug.h" />
-    <ClInclude Include="miscTools\errc.h" />
-    <ClInclude Include="miscTools\lists.h" />
-    <ClInclude Include="miscTools\miscTools.h" />
-    <ClInclude Include="miscTools\pandore.h" />
     <ClInclude Include="readWriteSTKSimple\MMTIFF.h" />
     <ClInclude Include="readWriteSTKSimple\ReadWriteSTKSimple.h" />
     <ClInclude Include="kernel\chain_neighbor.h" />
@@ -143,18 +146,20 @@
     <ClInclude Include="Tracking.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="array_library_static\real array\allRealDataLib.cpp" />
+    <ClCompile Include="..\lib\tools\arrayType.cpp" />
+    <ClCompile Include="..\lib\tools\BlArray.cpp" />
+    <ClCompile Include="..\lib\tools\FltArray.cpp" />
+    <ClCompile Include="..\lib\tools\miscTools.cpp" />
+    <ClCompile Include="..\lib\tools\operators.cpp" />
+    <ClCompile Include="..\lib\tools\USrtArray.cpp" />
     <ClCompile Include="array_library_static\real array\ArrayType.cpp" />
-    <ClCompile Include="array_library_static\real array\BlArray.cpp" />
     <ClCompile Include="array_library_static\real array\ChrArray.cpp" />
     <ClCompile Include="array_library_static\real array\DblArray.cpp" />
-    <ClCompile Include="array_library_static\real array\FltArray.cpp" />
     <ClCompile Include="array_library_static\real array\LngArray.cpp" />
     <ClCompile Include="array_library_static\real array\operators.cpp" />
     <ClCompile Include="array_library_static\real array\SrtArray.cpp" />
     <ClCompile Include="array_library_static\real array\UChrArray.cpp" />
     <ClCompile Include="array_library_static\real array\ULngArray.cpp" />
-    <ClCompile Include="array_library_static\real array\USrtArray.cpp" />
     <ClCompile Include="HTML\print.cpp" />
     <ClCompile Include="likenessDistInten\nodes_dist_Inten.cpp" />
     <ClCompile Include="likenessDistInten\tab_times_dist_Inten.cpp" />
@@ -164,7 +169,6 @@
     <ClCompile Include="closerNeighbors\time_nodes_closer_neighbors.cpp" />
     <ClCompile Include="DebugMIA\controlAlloc.cpp" />
     <ClCompile Include="DebugMIA\print_debug.cpp" />
-    <ClCompile Include="miscTools\miscTools.cpp" />
     <ClCompile Include="readWriteSTKSimple\MMTIFF.cpp" />
     <ClCompile Include="readWriteSTKSimple\ReadWriteSTKSimple.cpp" />
     <ClCompile Include="kernel\chain_neighbor.cpp" />
@@ -180,7 +184,6 @@
     <ClCompile Include="Tracking.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ReadMe.txt" />
     <None Include="Tracking.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

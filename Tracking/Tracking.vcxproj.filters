@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="array_library_static\real array\ArrayType.cpp" />
+    <ClCompile Include="array_library_static\real array\ChrArray.cpp" />
+    <ClCompile Include="array_library_static\real array\DblArray.cpp" />
+    <ClCompile Include="array_library_static\real array\LngArray.cpp" />
+    <ClCompile Include="array_library_static\real array\operators.cpp" />
+    <ClCompile Include="array_library_static\real array\SrtArray.cpp" />
+    <ClCompile Include="array_library_static\real array\UChrArray.cpp" />
+    <ClCompile Include="array_library_static\real array\ULngArray.cpp" />
+    <ClCompile Include="HTML\print.cpp" />
+    <ClCompile Include="likenessDistInten\nodes_dist_Inten.cpp" />
+    <ClCompile Include="likenessDistInten\tab_times_dist_Inten.cpp" />
+    <ClCompile Include="likenessDistInten\time_nodes_dist_Inten.cpp" />
+    <ClCompile Include="closerNeighbors\nodes_closer_neighbors.cpp" />
+    <ClCompile Include="closerNeighbors\tab_times_closer_neighbors.cpp" />
+    <ClCompile Include="closerNeighbors\time_nodes_closer_neighbors.cpp" />
+    <ClCompile Include="DebugMIA\controlAlloc.cpp" />
+    <ClCompile Include="DebugMIA\print_debug.cpp" />
+    <ClCompile Include="readWriteSTKSimple\MMTIFF.cpp" />
+    <ClCompile Include="readWriteSTKSimple\ReadWriteSTKSimple.cpp" />
+    <ClCompile Include="kernel\chain_neighbor.cpp" />
+    <ClCompile Include="kernel\info_node.cpp" />
+    <ClCompile Include="kernel\nodes.cpp" />
+    <ClCompile Include="kernel\print_debug.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="kernel\tab_times.cpp" />
+    <ClCompile Include="kernel\time_nodes.cpp" />
+    <ClCompile Include="Tracking.cpp" />
+    <ClCompile Include="..\lib\tools\arrayType.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tools\BlArray.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tools\FltArray.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tools\miscTools.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tools\operators.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tools\USrtArray.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="array_library_static\real array\ArrayType.h" />
+    <ClInclude Include="array_library_static\real array\ChrArray.h" />
+    <ClInclude Include="array_library_static\real array\DblArray.h" />
+    <ClInclude Include="array_library_static\real array\LngArray.h" />
+    <ClInclude Include="array_library_static\real array\SrtArray.h" />
+    <ClInclude Include="array_library_static\real array\UChrArray.h" />
+    <ClInclude Include="array_library_static\real array\ULngArray.h" />
+    <ClInclude Include="HTML\print.h" />
+    <ClInclude Include="likenessDistInten\nodes_dist_Inten.h" />
+    <ClInclude Include="likenessDistInten\tab_times_dist_Inten.h" />
+    <ClInclude Include="likenessDistInten\time_nodes_dist_Inten.h" />
+    <ClInclude Include="closerNeighbors\nodes_closer_neighbors.h" />
+    <ClInclude Include="closerNeighbors\tab_times_closer_neighbors.h" />
+    <ClInclude Include="closerNeighbors\time_nodes_closer_neighbors.h" />
+    <ClInclude Include="DebugMIA\controlAlloc.h" />
+    <ClInclude Include="DebugMIA\print_debug.h" />
+    <ClInclude Include="readWriteSTKSimple\MMTIFF.h" />
+    <ClInclude Include="readWriteSTKSimple\ReadWriteSTKSimple.h" />
+    <ClInclude Include="kernel\chain_neighbor.h" />
+    <ClInclude Include="kernel\general.h" />
+    <ClInclude Include="kernel\info_node.h" />
+    <ClInclude Include="kernel\nodes.h" />
+    <ClInclude Include="kernel\print_debug.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="kernel\tab_times.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="kernel\time_nodes.h" />
+    <ClInclude Include="Tracking.h" />
+    <ClInclude Include="..\lib\tools\allDataLib.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\allRealDataLib.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\arrayType.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\BlArray.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\errc.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\FltArray.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\generalParam.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\lists.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\miscTools.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\NoError.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\pandore.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\USrtArray.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Tracking.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Tools">
+      <UniqueIdentifier>{120fba11-7e8f-4026-86ec-d878e6706104}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

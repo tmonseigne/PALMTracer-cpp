@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 /*******************************************************************************************************************
 									Nodes closer neighbors Class
 									It is derived from the class Nodes

@@ -1,6 +1,3 @@
-#include "stdafx.h"
-
-
 /*******************************************************************************************************************
 									TabTimesDistanceIntensity Class
 									It is derived from the class TabTimes

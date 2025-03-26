@@ -1,6 +1,3 @@
-#include "stdafx.h"
-
-
 /*******************************************************************************************************************
 									TimeNodesDistanceIntensity Class
 									It is derived from the class TimeNodes

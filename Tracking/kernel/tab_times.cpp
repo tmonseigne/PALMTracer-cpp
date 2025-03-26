@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 /*******************************************************************************************************************
 									TabTimes Class
 							Array containing all the TimeNodes for all instants

@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 /*******************************************************************************************************************
 									NodeDistanceIntensity  Class
 									It is derived from the class Nodes

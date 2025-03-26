@@ -1,6 +1,3 @@
-#include "stdafx.h"
-
-
 /*******************************************************************************************************************
 									TimeNodes Class
 							Array containing all the Node s of a particular instant

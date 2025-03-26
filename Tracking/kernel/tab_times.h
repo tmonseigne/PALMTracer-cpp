@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <time.h>  //for rand()
 #include "../readWriteSTKSimple/ReadWriteSTKSimple.h"
-#include "../miscTools/miscTools.h"
+#include "tools/miscTools.h"
 #include "general.h"
 #include "time_nodes.h"
 //#include "tracking_2D.h"
