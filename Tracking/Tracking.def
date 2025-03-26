@@ -1,4 +1,4 @@
-LIBRARY "Tracking.dll"
+LIBRARY "Tracking_PALM.dll"
 
 EXPORTS
 	Tracking

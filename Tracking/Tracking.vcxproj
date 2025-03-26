@@ -61,8 +61,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <OutputFile>../PALM\Tracking.dll</OutputFile>
-      <ModuleDefinitionFile>.\Tracking.def</ModuleDefinitionFile>
+      <OutputFile>../PALM\Tracking_PALM.dll</OutputFile>
+      <ModuleDefinitionFile>.\Tracking_PALM.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
@@ -84,9 +84,9 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <OutputFile>../PALM\Tracking.dll</OutputFile>
+      <OutputFile>../PALM\Tracking_PALM.dll</OutputFile>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ModuleDefinitionFile>.\Tracking.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>.\Tracking_PALM.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
