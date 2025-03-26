@@ -210,7 +210,7 @@ int Segment2D::watershed(FltArray& potential, USrtArray& seg, float threshold)
 								if (p1.y < potential.size(1))
 									if (potential.data[p1.x * sizeDataY + p1.y] > threshold)
 										if (seg.data[p1.x * sizeDataY + p1.y] == 0) {
-											// On empile ce nouveau avec une priorité legèrement supérieure
+											// On empile ce nouveau avec une prioritÃ© legÃ¨rement supÃ©rieure
 											// a sa vrai valeur de potentiel.
 											cle = (float)(-potential.data[p1.x * sizeDataY + p1.y] + (float)it * EPSILON);
 											tas.Push(p1, cle);
@@ -241,27 +241,19 @@ int Segment2D::watershedIntelligent(FltArray& potential, USrtArray& seg, float t
 	//first, find the local maximum to set the different germinates
 	if ((nbInfoStruct = getLocalMax(potential, seg, threshold)) < 0) return (nbInfoStruct);
 
-	//float begin = clock();
-
-	if ((ret = watershed(potential, seg, threshold)) < 0) //first watershed
-		return (ret);
-
-	////float end = clock();
-
-	////FILE* fp = fopen("C:\\Watershed.txt", "a+");
-	////fprintf(fp, "Time: %f\n", (end - begin)/* / (float)CLOCKS_PER_SEC */);
-	////fclose(fp);
+	//first watershed
+	if ((ret = watershed(potential, seg, threshold)) < 0) return (ret);
 
 	if (thresholdRatio == 0) {
 		mixIndex(seg);
 		return (nbInfoStruct);
 	}
 
-	if ((ret = filterStructureWS(potential, seg, thresholdRatio)) < 0) //filter the germinates to minimize the oversegmentation
-		return (ret);
-
-	if ((ret = watershed(potential, seg, threshold)) < 0) //first watershed
-		return (ret);
+	 //filter the germinates to minimize the oversegmentation
+	if ((ret = filterStructureWS(potential, seg, thresholdRatio)) < 0) return (ret);
+	
+	//first watershed
+	if ((ret = watershed(potential, seg, threshold)) < 0) return (ret);
 	mixIndex(seg);
 	return (nbInfoStruct);
 }
@@ -473,7 +465,7 @@ int Segment2D::watershed(USrtArray& potential, USrtArray& seg, float threshold)
 								if (p1.y < potential.size(1))
 									if (potential.data[p1.x * sizeDataY + p1.y] > threshold)
 										if (seg.data[p1.x * sizeDataY + p1.y] == 0) {
-											// On empile ce nouveau avec une priorité legèrement supérieure
+											// On empile ce nouveau avec une prioritÃ© legÃ¨rement supÃ©rieure
 											// a sa vrai valeur de potentiel.
 											cle = (float)(-potential.data[p1.x * sizeDataY + p1.y] + (float)it * EPSILON);
 											tas.Push(p1, cle);

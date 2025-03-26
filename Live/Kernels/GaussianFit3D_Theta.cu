@@ -9,7 +9,6 @@
 #define dimFit 13
 #define Npar 7 // I0, x0, y0, sigmaX, sigmaY, angle, offset
 #define Npnt dimFit*dimFit
-//#define ANGLE 0.f
 #define ref (dimFit/2)
 
 __constant__ double epsilon_1 = 1e-6;
@@ -162,7 +161,7 @@ __device__ void inverse_matrix(float* MM, float* Minv)
 			Minv[index] = Mi1[index];
 		}
 
-		for(int k=0; k<Npar; k++)// mise zéros de la colonne
+		for(int k=0; k<Npar; k++)// mise zï¿½ros de la colonne
 			if (k != i)
 				for(int j=0; j<Npar; j++)
 				{
@@ -408,7 +407,7 @@ void cuda3DFittingGPU_Theta(float* data, unsigned int numImages, unsigned short 
 	grid.z = 1;
     threads.x = FIT_BLOCK_SIZE;
 	threads.y = 1;
-	threads.z = 1;  // Par rapport aux contraintes de la mémoire partagée (taille limitée à 16 Ko pour chaque block)
+	threads.z = 1;  // Par rapport aux contraintes de la mï¿½moire partagï¿½e (taille limitï¿½e ï¿½ 16 Ko pour chaque block)
 											 // '64' au lieu de '256'
 	GPU3DFitting_Theta<<< grid, threads/*, FIT_BLOCK_SIZE * Npar * Npar * sizeof(float) * FIT_BLOCK_SIZE*/>>>(numImages * MaxNbStruct, MaxNbStruct, pointsList, data, nbStruct, width, height, iterNum, size, sigmaX, sigmaY, angle);
 }

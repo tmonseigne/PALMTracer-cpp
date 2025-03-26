@@ -82,13 +82,6 @@ int Segment2D::alloc(unsigned long nbStruct)
 
 unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned short* useParam)
 {
-#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::filterData(USrtArray 0x%p &seg, double* 0x%p param, unsigned short* 0x%p useParam)  <-<-\n",
-		&seg, param, useParam);
-	closeDebugStreamALS();
-#endif
-
 	unsigned short sizeDataY = seg.size(1);
 
 	InfoStruct2D* ptr = headInfo;
@@ -162,10 +155,7 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 			unselected = false;
 			for (i = 1; (i <= nbInfoStructOld) && !unselected; i++)
 				if (tabInfo[i] != NULL) {
-					/*double d=sqrt( (ptr->data.moment.x-tabInfo[i]->data.moment.x)*(ptr->data.moment.x-tabInfo[i]->data.moment.x) 
-						+ (ptr->data.moment.y-tabInfo[i]->data.moment.y)*(ptr->data.moment.y-tabInfo[i]->data.moment.y));*/
 					double d = sqrt((double)((ptr->data.max.x - tabInfo[i]->data.max.x) * (ptr->data.max.x - tabInfo[i]->data.max.x) + (ptr->data.max.y - tabInfo[i]->data.max.y) * (ptr->data.max.y - tabInfo[i]->data.max.y)));
-
 					if ((d > 1) && (d < param[6]) && (tabInfo[i]->data.max.val > ptr->data.max.val)) unselected = true;
 				}
 
@@ -416,96 +406,23 @@ int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData
 
 						if (((ii + refx) >= 0) && ((ii + refx) < sizeDataX) && ((jj + refy) < sizeDataY) && ((jj + refy) >= 0)) {
 							val = (double)waveData[(ii + refx) * sizeDataY + (jj + refy)];
-							//fprintf(f, "%f ", val);
-							//val = 1.;
-							//if (val > 0)
-							{
-								//if ( ((ii==-2) && (jj==-2)) || ((ii==-2) && (jj==+2)) || ((ii==+2) && (jj==-2)) || ((ii==+2) && (jj==+2)) );
-								//else
-								{
 									tabInfo[ind]->data.moment.x += val * (double)(ii + refx);
 									tabInfo[ind]->data.moment.y += val * (double)(jj + refy);
 									mean += val;
-								}
-							}
 						}
 					}
-					//fprintf(f, "\n", val);
 				}
-
-				//fprintf(f, "*****************\n", val);
 
 				tabInfo[ind]->data.moment.x /= mean;
 				tabInfo[ind]->data.moment.y /= mean;
-
-				/*******************************************************/
-				///* initialize random seed: */
-				//srand ( time(NULL) );
-
-				//tabInfo[ind]->data.moment.x += (double)(rand() % 100)/100;
-				//tabInfo[ind]->data.moment.y += (double)(rand() % 100)/100;
-				/*******************************************************/
-
 				tabInfo[ind]->data.mean /= tabInfo[ind]->data.surf;
 				tabInfo[ind]->data.intensity = tabInfo[ind]->data.mean;
 
 				/***********************************/
-
-				//if (gaussFit == 5)
-				//{
-				//	/*************************************/
-				//	tabInfo[ind]->data.moment.x = 0.;
-				//	tabInfo[ind]->data.moment.y = 0.;
-				//	float x = 0.;
-				//	float y = 0.;
-				//	float mean = 0.;
-				//	float val;
-				//	
-
-				//	for(int ii=-2; ii<=2; ii++) // sizeDataX
-				//	{
-				//		for(int jj=-2; jj<=2;jj++) // sizeDataY
-				//		{
-				//			int refx = (int)tabInfo[ind]->data.max.x;
-				//			int refy = (int)tabInfo[ind]->data.max.y;
-
-				//			if ( ((ii+refx)>= 0) && ((ii+refx)< sizeDataX) && ((jj+refy)<sizeDataY) && ((jj+refy)>=0) )
-				//			{
-				//				val = waveData[(ii+refx)*sizeDataY+(jj+refy)];
-				//				//fprintf(f, "%f ", val);
-				//				/*val = 1;*/
-				//				//if (val > 0)
-				//				{
-				//					//if ( ((ii==-2) && (jj==-2)) || ((ii==-2) && (jj==+2)) || ((ii==+2) && (jj==-2)) || ((ii==+2) && (jj==+2)) );
-				//					//else
-				//					{
-				//						x += val*(float)(ii+refx);
-				//						y += val*(float)(jj+refy);
-				//						mean						+= val;						
-				//					}
-				//				}
-				//			}
-
-				//		}
-				//		//fprintf(f, "\n", val);
-				//	}
-
-				//	//fprintf(f, "*****************\n", val);
-
-				//	tabInfo[ind]->data.moment.x = (double)(x/mean);
-				//	tabInfo[ind]->data.moment.y = (double)(y/mean);
-
-				//	tabInfo[ind]->data.mean /= tabInfo[ind]->data.surf;
-				//	tabInfo[ind]->data.intensity=tabInfo[ind]->data.mean;
-
-				//	/***********************************/				
 			}
 			else {
 				tabInfo[ind]->data.moment.x /= tabInfo[ind]->data.mean;
 				tabInfo[ind]->data.moment.y /= tabInfo[ind]->data.mean;
-
-				//tabInfo[ind]->data.moment.x /= 1000.;
-				//tabInfo[ind]->data.moment.y /= 1000.;
 
 				tabInfo[ind]->data.momentSurf.x /= tabInfo[ind]->data.surf;
 				tabInfo[ind]->data.momentSurf.y /= tabInfo[ind]->data.surf;
@@ -521,60 +438,6 @@ int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData
 				tabInfo[ind]->data.stdev /= tabInfo[ind]->data.surf;
 				tabInfo[ind]->data.stdev = sqrt(tabInfo[ind]->data.stdev);
 			}
-
-			//tabInfo[ind]->data.moment.x /= tabInfo[ind]->data.mean;
-			//tabInfo[ind]->data.moment.y /= tabInfo[ind]->data.mean;
-			//tabInfo[ind]->data.momentSurf.x /= tabInfo[ind]->data.surf;
-			//tabInfo[ind]->data.momentSurf.y /= tabInfo[ind]->data.surf;
-			//tabInfo[ind]->data.var.xx /= tabInfo[ind]->data.mean;
-			//tabInfo[ind]->data.var.yy /= tabInfo[ind]->data.mean;
-			//tabInfo[ind]->data.var.xy /= tabInfo[ind]->data.mean;
-			//tabInfo[ind]->data.var.xx -= tabInfo[ind]->data.moment.x*tabInfo[ind]->data.moment.x;
-			//tabInfo[ind]->data.var.yy -= tabInfo[ind]->data.moment.y*tabInfo[ind]->data.moment.y;
-			//tabInfo[ind]->data.var.xy -= tabInfo[ind]->data.moment.x*tabInfo[ind]->data.moment.y;
-			//tabInfo[ind]->data.intensity=tabInfo[ind]->data.mean;
-			//tabInfo[ind]->data.stdev -= tabInfo[ind]->data.mean;
-			//tabInfo[ind]->data.mean /= tabInfo[ind]->data.surf;
-			//tabInfo[ind]->data.stdev /= tabInfo[ind]->data.surf;
-			//tabInfo[ind]->data.stdev = sqrt(tabInfo[ind]->data.stdev);
-
-			;
-
-			/*if (fabs(tabInfo[ind]->data.var.xx-tabInfo[ind]->data.var.yy)<1E-7){
-				tabInfo[ind]->data.sigma.x = sqrt(fabs(tabInfo[ind]->data.var.xx));
-				tabInfo[ind]->data.sigma.y = sqrt(fabs(tabInfo[ind]->data.var.yy));
-				tabInfo[ind]->data.angle = 0.;
-			}else if(fabs(tabInfo[ind]->data.var.xy)<1E-9){
-				tabInfo[ind]->data.sigma.x = sqrt(fabs(tabInfo[ind]->data.var.xx));
-				tabInfo[ind]->data.sigma.y = sqrt(fabs(tabInfo[ind]->data.var.yy));
-				if(tabInfo[ind]->data.sigma.x>tabInfo[ind]->data.sigma.y)	tabInfo[ind]->data.angle = 0.;
-				else tabInfo[ind]->data.angle = PI/2.;
-			}else{
-				tabInfo[ind]->data.angle = 0.5 * atan(2*tabInfo[ind]->data.var.xy/(tabInfo[ind]->data.var.xx-tabInfo[ind]->data.var.yy));
-
-				tabInfo[ind]->data.sigma.x = sqrt( fabs((tabInfo[ind]->data.var.xx+tabInfo[ind]->data.var.yy)/2. + 
-					tabInfo[ind]->data.var.xy/sin(2.*tabInfo[ind]->data.angle) ));
-				tabInfo[ind]->data.sigma.y = sqrt( fabs((tabInfo[ind]->data.var.xx+tabInfo[ind]->data.var.yy)/2. - 
-					tabInfo[ind]->data.var.xy/sin(2.*tabInfo[ind]->data.angle) ));
-			}
-			if(tabInfo[ind]->data.sigma.x>tabInfo[ind]->data.sigma.y){
-				double val;
-				if(tabInfo[ind]->data.angle<0)
-					tabInfo[ind]->data.angle+=PI/2.;
-				else
-					tabInfo[ind]->data.angle-=PI/2.;
-				val=tabInfo[ind]->data.sigma.x;
-				tabInfo[ind]->data.sigma.x=tabInfo[ind]->data.sigma.y;
-				tabInfo[ind]->data.sigma.y=val;
-			}*/
-
-
-			/*if((fabs(tabInfo[ind]->data.sigma.y)<1E-7)&& (fabs(tabInfo[ind]->data.sigma.x)<1E-7))
-				tabInfo[ind]->data.morpho=0.5;
-			else
-				tabInfo[ind]->data.morpho = tabInfo[ind]->data.sigma.x>tabInfo[ind]->data.sigma.y ? 
-					tabInfo[ind]->data.sigma.y/tabInfo[ind]->data.sigma.x:
-					tabInfo[ind]->data.sigma.x/tabInfo[ind]->data.sigma.y;*/
 		}
 	}
 
@@ -768,7 +631,6 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 	for (i = 0; i < (long)nSeg; i++) ptr2[i] = 0;
 	structFinded = 1;
 	for (i = 1; i < (long)nSeg; i++)
-		//for(j=1;j<nSeg;j++)
 		if (ptr2[ptr[i]] == 0) {
 			ptr2[ptr[i]] = structFinded;
 			structFinded++;
@@ -936,7 +798,6 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	for (i = 0; i < (long)nSeg; i++) ptr2[i] = 0;
 	structFinded = 1;
 	for (i = 1; i < (long)nSeg; i++)
-		//for(j=1;j<nSeg;j++)
 		if (ptr2[ptr[i]] == 0) {
 			ptr2[ptr[i]] = structFinded;
 			structFinded++;
@@ -1103,7 +964,6 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	for (i = 0; i < (long)nSeg; i++) ptr2[i] = 0;
 	structFinded = 1;
 	for (i = 1; i < (long)nSeg; i++)
-		//for(j=1;j<nSeg;j++)
 		if (ptr2[ptr[i]] == 0) {
 			ptr2[ptr[i]] = structFinded;
 			structFinded++;

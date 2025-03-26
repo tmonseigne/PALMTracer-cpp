@@ -8,7 +8,6 @@
 *******************************************************************************************************************/
 
 #include "segmentation_3D.h"
-//#include "../MIA/print_debug.h"
 
 #define SEG(i,j,k)	seg.data[( (i)*sizeDataY+(j) )*sizeDataZ+(k)]
 #define SEGHoles(i,j,k)	seg.data[( (i)*sizeDataY+(j) )*sizeDataZ+(k)]
@@ -71,22 +70,14 @@ void Segment3D::desalloc(){
 }
 
 Segment3D::Segment3D(){
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "## Segment3D() ##\n");
-	closeDebugStreamALS();
-	#endif
+
 	headInfo=NULL;
 	nbInfoStruct=0;
 	tabInfo=NULL;
 }
 
 Segment3D::~Segment3D(){
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "## ~Segment3D() ##\n");
-	closeDebugStreamALS();
-	#endif
+
 	desalloc();
 }
 
@@ -115,12 +106,7 @@ int Segment3D::alloc(unsigned long nbStruct){
 }
 
 unsigned long Segment3D::filterData(USrtArray &seg, double* param, unsigned short* useParam){
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::filterData(USrtArray 0x%p &seg, double* 0x%p param, unsigned short* 0x%p useParam)  <-<-\n",
-		&seg, param, useParam);
-	closeDebugStreamALS();
-	#endif
+
 	InfoStruct3D* ptr=headInfo;
 	InfoStruct3D* ptrMax;
 	InfoStruct3D* ptrOld=NULL;
@@ -208,9 +194,6 @@ unsigned long Segment3D::filterData(USrtArray &seg, double* param, unsigned shor
 			unselected=false;
 			for(i=1;(i<=nbInfoStructOld)&&!unselected;i++)
 				if(tabInfo[i]!=NULL){
-					/*double d=sqrt( (ptr->data.moment.x-tabInfo[i]->data.moment.x)*(ptr->data.moment.x-tabInfo[i]->data.moment.x) 
-						+ (ptr->data.moment.y-tabInfo[i]->data.moment.y)*(ptr->data.moment.y-tabInfo[i]->data.moment.y)
-						+ (ptr->data.moment.z-tabInfo[i]->data.moment.z)*(ptr->data.moment.z-tabInfo[i]->data.moment.z));*/
 					double d=sqrt( (ptr->data.max.x-tabInfo[i]->data.max.x)*(ptr->data.max.x-tabInfo[i]->data.max.x) 
 						+ (ptr->data.max.y-tabInfo[i]->data.max.y)*(ptr->data.max.y-tabInfo[i]->data.max.y)
 						+ (ptr->data.max.z-tabInfo[i]->data.max.z)*(ptr->data.max.z-tabInfo[i]->data.max.z));
@@ -425,21 +408,11 @@ int Segment3D::printStatistics(wchar_t *fileName, unsigned short resultType, uns
 	case 2:	//ASCII file
 		if((atEndOfFile==0) || (time==1)){
 			if((stream=_wfopen( fileName, L"w" ))==NULL){ 
-				#ifdef	DEBUG_AT
-				openDebugStreamALS();
-				fprintf(debugStreamALS, "££ Error S_OPEN_FILE_ERR for fopen(\"%ls\", \"w\" ) \n", fileName);
-				closeDebugStreamALS();
-				#endif
 				return(S_OPEN_FILE_ERR);
 			}
 			fprintf(stream,"3D stat, total of %d times\n",nbTime);
 		}else
 			if((stream=_wfopen( fileName, L"a+" ))==NULL){ 
-				#ifdef	DEBUG_AT
-				openDebugStreamALS();
-				fprintf(debugStreamALS, "££ Error S_OPEN_FILE_ERR for fopen(\"%ls\", \"a+\" ) \n", fileName);
-				closeDebugStreamALS();
-				#endif
 				return(S_OPEN_FILE_ERR);
 			}
 
@@ -470,11 +443,6 @@ int Segment3D::printStatistics(wchar_t *fileName, unsigned short resultType, uns
 	case 3: //HTML file
 		if((atEndOfFile==0) || (time==1)){
 			if((stream=_wfopen( fileName, L"w" ))==NULL){ 
-				#ifdef	DEBUG_AT
-				openDebugStreamALS();
-				fprintf(debugStreamALS, "££ Error S_OPEN_FILE_ERR for fopen(\"%ls\", \"w\" ) \n", fileName);
-				closeDebugStreamALS();
-				#endif
 				return(S_OPEN_FILE_ERR);
 			}
 			//HTML 4.01
@@ -510,7 +478,6 @@ int Segment3D::printStatistics(wchar_t *fileName, unsigned short resultType, uns
 			printHTMLCell(L"Surface volume", stream,2,1);
 			printHTMLCell(L"Shape factor", stream,2,1);
 			printHTMLCell(L"Max", stream,1,4);
-			//printHTMLCell(L"Variance", stream,1,6);
 			printHTMLCell(L"Ellipse axis", stream,1,3);
 			printHTMLCell(L"Angle (rad)", stream,1,3);
 			fprintf(stream,"\t</tr>\n");
@@ -527,12 +494,6 @@ int Segment3D::printStatistics(wchar_t *fileName, unsigned short resultType, uns
 			printHTMLCell(L"Y", stream,1,1);
 			printHTMLCell(L"Z", stream,1,1);
 			printHTMLCell(L"Val", stream,1,1);
-			//printHTMLCell(L"XX", stream,1,1);
-			//printHTMLCell(L"XY", stream,1,1);
-			//printHTMLCell(L"XZ", stream,1,1);
-			//printHTMLCell(L"YY", stream,1,1);
-			//printHTMLCell(L"YZ", stream,1,1);
-			//printHTMLCell(L"ZZ", stream,1,1);
 			printHTMLCell(L"Major", stream,1,1);
 			printHTMLCell(L"Middle", stream,1,1);
 			printHTMLCell(L"Minor", stream,1,1);
@@ -543,11 +504,6 @@ int Segment3D::printStatistics(wchar_t *fileName, unsigned short resultType, uns
 
 		}else{
 			if((stream=_wfopen( fileName, L"r+" ))==NULL){ 
-				#ifdef	DEBUG_AT
-				openDebugStreamALS();
-				fprintf(debugStreamALS, "££ Error S_OPEN_FILE_ERR for fopen(\"%ls\", \"r+\" ) \n", fileName);
-				closeDebugStreamALS();
-				#endif
 				return(S_OPEN_FILE_ERR);
 			}
 			if((ret=locateStringInFile(L"</table>", stream))<0){ 
@@ -591,12 +547,6 @@ int Segment3D::printStatistics(wchar_t *fileName, unsigned short resultType, uns
 			printIntHTMLCell(tabInfo[ind]->data.max.y, stream);  //Max Y //swapping of axis to be compatible with MM spec
 			printIntHTMLCell(tabInfo[ind]->data.max.x, stream);  //Max Z //swapping of axis to be compatible with MM spec
 			printFloatHTMLCell(tabInfo[ind]->data.max.val, stream);  //Max Value
-			//printFloatHTMLCell(tabInfo[ind]->data.var.zz, stream);  //Variance XX //swapping of axis to be compatible with MM spec
-			//printFloatHTMLCell(tabInfo[ind]->data.var.yz, stream);  //Variance XY //swapping of axis to be compatible with MM spec
-			//printFloatHTMLCell(tabInfo[ind]->data.var.xz, stream);  //Variance XZ //swapping of axis to be compatible with MM spec
-			//printFloatHTMLCell(tabInfo[ind]->data.var.yy, stream);  //Variance YY //swapping of axis to be compatible with MM spec
-			//printFloatHTMLCell(tabInfo[ind]->data.var.xy, stream);  //Variance YZ //swapping of axis to be compatible with MM spec
-			//printFloatHTMLCell(tabInfo[ind]->data.var.xx, stream);  //Variance ZZ //swapping of axis to be compatible with MM spec
 			if(fabs(tabInfo[ind]->data.det)>1e-10){
 				printFloatHTMLCell(tabInfo[ind]->data.sigma.z, stream);  //Ellipse major axis
 				printFloatHTMLCell(tabInfo[ind]->data.sigma.y, stream);  //Ellipse middle axis
@@ -617,33 +567,8 @@ int Segment3D::printStatistics(wchar_t *fileName, unsigned short resultType, uns
 	return(RET_OK);
 }
 
-/*
-unsigned short Segment3D::readStatistics(wchar_t *fileName){
-	unsigned short	ind;
-	int fileHandle;
-	unsigned short nbStruct;
-
-
-	//	BINARY file
-	if( (fileHandle = open( fileName, O_RDONLY | O_BINARY, S_IREAD )) != -1 ){
-		read(fileHandle, &nbStruct, sizeof(long));
-		alloc(nbStruct);
-		for(ind=0;ind<nbStruct;ind++)
-			read( fileHandle,  &(tabInfo[ind]->data), sizeof(InfoData3D));
-		close( fileHandle );
-	}else
-		return(S_OPEN_FILE_ERR);
-	return(nbStruct);
-
-}*/
-
 int Segment3D::computeStatistics(USrtArray &data, USrtArray &seg){
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::computeStatistics(&data 0x%p,&seg 0x%p)  <-<-\n",
-		&data, &seg);
-	closeDebugStreamALS();
-	#endif	
+
 	unsigned short	i,j,k;
 	double			val;
 	unsigned long	ind;
@@ -864,12 +789,7 @@ int Segment3D::computeStatistics(USrtArray &data, USrtArray &seg){
 
 
 int Segment3D::computeStatistics(FltArray &data, USrtArray &seg){
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::computeStatistics(&data 0x%p,&seg 0x%p)  <-<-\n",
-		&data, &seg);
-	closeDebugStreamALS();
-	#endif
+
 	unsigned short	i,j,k;
 	double			val;
 	unsigned long		ind;
@@ -1089,12 +1009,7 @@ int Segment3D::computeStatistics(FltArray &data, USrtArray &seg){
 
 
 unsigned short Segment3D::segmentation(USrtArray &data, USrtArray &seg, double val, bool diagonal, bool fillHoles){
-		#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::segmentation(USrtArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d, bool fillHoles %d)  <-<-\n",
-		&data, &seg, val, diagonal, fillHoles);
-	closeDebugStreamALS();
-	#endif	
+
 	
 	if(!fillHoles)
 		return(segmentationPositiveValues(data, seg, val, diagonal));
@@ -1134,13 +1049,6 @@ unsigned short Segment3D::segmentationNegativeValues(USrtArray &data, USrtArray 
 	segmentation3D segment the 3D signal "data" which is lower than "val". It gives a map of segmentation "seg". 
 	A label is set to each structure in the map seg. 
 **/
-	
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::segmentationNegativeValue(USrtArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();
-	#endif	
 
 	unsigned long *ptr;
 	unsigned long *ptr2;
@@ -1339,7 +1247,6 @@ unsigned short Segment3D::segmentationNegativeValues(USrtArray &data, USrtArray 
 		ptr2[i]=0;
 	structFinded=1;
 	for(i=1;i<(long)nSeg;i++)
-		//for(j=1;j<nSeg;j++)
 		if(ptr2[ptr[i]]==0){
 			ptr2[ptr[i]]=structFinded;
 			structFinded++;
@@ -1362,12 +1269,6 @@ unsigned short Segment3D::segmentationPositiveValues(USrtArray &data, USrtArray 
 	A label is set to each structure in the map seg. 
 **/
 
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::segmentationPositiveValues(USrtArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();
-	#endif	
 	unsigned long *ptr;
 	unsigned long *ptr2;
 	long i,j,k;
@@ -1381,13 +1282,6 @@ unsigned short Segment3D::segmentationPositiveValues(USrtArray &data, USrtArray 
 	long sizeDataY;
 	long sizeDataZ;
 	getSize(sizeDataX, sizeDataY, sizeDataZ, seg);
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::segmentation(USrtArray	&data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();	
-	#endif
 
 	//allocation of ptr
 	//ptr is an array of index to enumerate different structure
@@ -1570,7 +1464,6 @@ unsigned short Segment3D::segmentationPositiveValues(USrtArray &data, USrtArray 
 		ptr2[i]=0;
 	structFinded=1;
 	for(i=1;i<(long)nSeg;i++)
-		//for(j=1;j<nSeg;j++)
 		if(ptr2[ptr[i]]==0){
 			ptr2[ptr[i]]=structFinded;
 			structFinded++;
@@ -1593,12 +1486,6 @@ unsigned short Segment3D::segmentationPositiveValues(USrtArray &data, USrtArray 
 	A label is set to each structure in the map seg. 
 **/
 
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::segmentationPositiveValues(USrtArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();
-	#endif	
 		unsigned long *ptr;
 	unsigned long *ptr2;
 	long i,j,k;
@@ -1796,7 +1683,6 @@ unsigned short Segment3D::segmentationPositiveValues(USrtArray &data, USrtArray 
 		ptr2[i]=0;
 	structFinded=1;
 	for(i=1;i<(long)nSeg;i++)
-		//for(j=1;j<nSeg;j++)
 		if(ptr2[ptr[i]]==0){
 			ptr2[ptr[i]]=structFinded;
 			structFinded++;
@@ -1813,237 +1699,8 @@ unsigned short Segment3D::segmentationPositiveValues(USrtArray &data, USrtArray 
 	return(structFinded-1);
 }
 
-/*unsigned short Segment3D::segmentation(USrtArray &data, USrtArray &seg, double val, bool diagonal, bool fillHoles){
-
-//	segmentation segment the 3D signal "data" which is upper than "val". It gives a map of segmentation "seg". 
-//	A label is set to each structure in the map seg. 
-
-	unsigned long *ptr;
-	unsigned long *ptr2;
-	long i,j,k;
-	unsigned long nSeg;
-	int structFinded;
-	int mini;
-	//int max;
-	long sizePtr=MAX_TAB;
-	
-	long sizeDataX;
-	long sizeDataY;
-	long sizeDataZ;
-	getSize(sizeDataX, sizeDataY, sizeDataZ, seg);
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::segmentation(USrtArray	&data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();	
-	#endif
-
-	//allocation of ptr
-	//ptr is an array of index to enumerate different structure
-	//if ptr[i]=j then structure i and structure j are same.
-	ptr=(unsigned long *)malloc(sizeof(long)*MAX_TAB);
-	//initialisation of ptr
-	for(i=0;i<MAX_TAB;i++)
-		ptr[i]=(unsigned long)i;
-	//nSeg indicate the number of the next unused structure
-	nSeg=1;
-
-
-	//initialisation of seg
-	seg=(unsigned short)0;
-
-
-	for(i=0;i<sizeDataX;i++)
-	for(j=0;j<sizeDataY;j++)
-	for(k=0;k<sizeDataZ;k++)
-		if(DATA(i,j,k)>val){
-			structFinded=0;
-			//test (i-1,j,k)
-			if((i-1>=0))
-				if( SEG(i-1,j,k)!=0 ){
-					if(structFinded==0){
-						SEG(i,j,k)=SEG(i-1,j,k);
-						structFinded=SEG(i-1,j,k);
-					}else if(structFinded!=SEG(i-1,j,k)){
-						mini=min(structFinded,SEG(i-1,j,k),ptr[structFinded], ptr[SEG(i-1,j,k)]);
-						ptr[structFinded]=mini;
-						ptr[SEG(i-1,j,k)]=mini;	
-						SEG(i,j,k)=mini;
-						structFinded=mini;
-					}
-				}
-			//test (i,j,k-1)
-			if(k-1>=0)
-				if( SEG(i,j,k-1)!=0 ){
-					if(structFinded==0){
-						SEG(i,j,k)=SEG(i,j,k-1);
-						structFinded=SEG(i,j,k-1);
-					}else if(structFinded!=SEG(i,j,k-1)){
-						mini=min(structFinded,SEG(i,j,k-1),ptr[structFinded], ptr[SEG(i,j,k-1)]);
-						ptr[structFinded]=mini;
-						ptr[SEG(i,j,k-1)]=mini;	
-						SEG(i,j,k)=mini;
-						structFinded=mini;
-					}
-				}
-			//test (i,j-1,k)
-			if(j-1>=0)
-				if( SEG(i,j-1,k)!=0 ){
-					if(structFinded==0){
-						SEG(i,j,k)=SEG(i,j-1,k);
-						structFinded=SEG(i,j-1,k);
-					}else if(structFinded!=SEG(i,j-1,k)){
-						mini=min(structFinded,SEG(i,j-1,k),ptr[structFinded], ptr[SEG(i,j-1,k)]);
-						ptr[structFinded]=mini;
-						ptr[SEG(i,j-1,k)]=mini;	
-						SEG(i,j,k)=mini;
-						structFinded=mini;
-					}
-				}
-
-			if(diagonal){
-				//test (i-1,j-1,k-1)
-				if((i-1>=0)  && (j-1>=0)  &&  (k-1>=0)){
-					
-					if( SEG(i-1,j-1,k-1)!=0 ){
-						SEG(i,j,k)=SEG(i-1,j-1,k-1);
-						structFinded=SEG(i-1,j-1,k-1);
-					}
-				}
-				//test (i-1,j,k-1)
-				if((i-1>=0)  &&  (k-1>=0))
-					if( SEG(i-1,j,k-1)!=0 ){
-						if(structFinded==0){
-							SEG(i,j,k)=SEG(i-1,j,k-1);
-							structFinded=SEG(i-1,j,k-1);
-						}else if(structFinded!=SEG(i-1,j,k-1)){
-							mini=min(structFinded,SEG(i-1,j,k-1),ptr[structFinded], ptr[SEG(i-1,j,k-1)]);
-							ptr[structFinded]=mini;
-							ptr[SEG(i-1,j,k-1)]=mini;	
-							SEG(i,j,k)=mini;
-							structFinded=mini;
-						}
-					}
-
-				//test (i-1,j+1,k-1)
-				if((i-1>=0)  && (j+1<sizeDataY)  &&  (k-1>=0))
-					if( SEG(i-1,j+1,k-1)!=0 ){
-						if(structFinded==0){
-							SEG(i,j,k)=SEG(i-1,j+1,k-1);
-							structFinded=SEG(i-1,j+1,k-1);
-						}else if(structFinded!=SEG(i-1,j+1,k-1)){
-							mini=min(structFinded,SEG(i-1,j+1,k-1),ptr[structFinded], ptr[SEG(i-1,j+1,k-1)]);
-							ptr[structFinded]=mini;
-							ptr[SEG(i-1,j+1,k-1)]=mini;	
-							SEG(i,j,k)=mini;
-							structFinded=mini;
-						}
-					}
-					
-				//test (i-1,j-1,k)
-				if((i-1>=0)  && (j-1>=0))
-					if( SEG(i-1,j-1,k)!=0 ){
-						if(structFinded==0){
-							SEG(i,j,k)=SEG(i-1,j-1,k);
-							structFinded=SEG(i-1,j-1,k);
-						}else if(structFinded!=SEG(i-1,j-1,k)){
-							mini=min(structFinded,SEG(i-1,j-1,k),ptr[structFinded], ptr[SEG(i-1,j-1,k)]);
-							ptr[structFinded]=mini;
-							ptr[SEG(i-1,j-1,k)]=mini;	
-							SEG(i,j,k)=mini;
-							structFinded=mini;
-						}
-					}	
-
-				//test (i-1,j,k+1)
-				if((i-1>=0)  &&  (k+1<sizeDataZ))
-					if( SEG(i-1,j,k+1)!=0 ){
-						if(structFinded==0){
-							SEG(i,j,k)=SEG(i-1,j,k+1);
-							structFinded=SEG(i-1,j,k+1);
-						}else if(structFinded!=SEG(i-1,j,k+1)){
-							mini=min(structFinded,SEG(i-1,j,k+1),ptr[structFinded], ptr[SEG(i-1,j,k+1)]);
-							ptr[structFinded]=mini;
-							ptr[SEG(i-1,j,k+1)]=mini;	
-							SEG(i,j,k)=mini;
-							structFinded=mini;
-						}
-					}	
-
-				//test (i,j-1,k-1)
-				if((j-1>=0)  &&  (k-1>=0))
-					if( SEG(i,j-1,k-1)!=0 ){
-						if(structFinded==0){
-							SEG(i,j,k)=SEG(i,j-1,k-1);
-							structFinded=SEG(i,j-1,k-1);
-						}else if(structFinded!=SEG(i,j-1,k-1)){
-							mini=min(structFinded,SEG(i,j-1,k-1),ptr[structFinded], ptr[SEG(i,j-1,k-1)]);
-							ptr[structFinded]=mini;
-							ptr[SEG(i,j-1,k-1)]=mini;	
-							SEG(i,j,k)=mini;
-							structFinded=mini;
-						}
-					}
-
-				//test (i,j-1,k+1)
-				if((j-1>=0)  &&  (k+1<sizeDataZ))
-					if( SEG(i,j-1,k+1)!=0 ){
-						if(structFinded==0){
-							SEG(i,j,k)=SEG(i,j-1,k+1);
-							structFinded=SEG(i,j-1,k+1);
-						}else if(structFinded!=SEG(i,j-1,k+1)){
-							mini=min(structFinded,SEG(i,j-1,k+1),ptr[structFinded], ptr[SEG(i,j-1,k+1)]);
-							ptr[structFinded]=mini;
-							ptr[SEG(i,j-1,k+1)]=mini;	
-							SEG(i,j,k)=mini;
-							structFinded=mini;
-						}
-					}	
-			}
-
-			if(structFinded==0){
-				SEG(i,j,k)=(unsigned short)nSeg;
-				inc(nSeg, &ptr, sizePtr);
-			}
-		}
-
-
-	//assembling structures
-
-	for(i=1;i<(long)nSeg;i++)
-		if(ptr[i]!=(unsigned long)i)
-			ptr[i]=ptr[ptr[i]];
-
-	ptr2=(unsigned long *)malloc(sizeof(long)*nSeg);
-	for(i=0;i<(long)nSeg;i++)
-		ptr2[i]=0;
-	structFinded=1;
-	for(i=1;i<(long)nSeg;i++)
-		//for(j=1;j<nSeg;j++)
-		if(ptr2[ptr[i]]==0){
-			ptr2[ptr[i]]=structFinded;
-			structFinded++;
-		}
-
-
-	for(i=0;i<sizeDataX*sizeDataY*sizeDataZ;i++)
-		seg.data[i]=(unsigned short)ptr2[ptr[seg.data[i]]];
-
-	free(ptr);
-	free(ptr2);
-	nbInfoStruct=structFinded-1;
-	mixIndex(seg);
-	return(structFinded-1);
-}*/
-
 unsigned short Segment3D::segmentation(FltArray &data, USrtArray &seg, double val, bool diagonal, bool fillHoles){
-		#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::segmentation(FltArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d, bool fillHoles %d)  <-<-\n",
-		&data, &seg, val, diagonal, fillHoles);
-	closeDebugStreamALS();
-	#endif	
+
 	
 	if(!fillHoles)
 		return(segmentationPositiveValues(data, seg, val, diagonal));
@@ -2083,13 +1740,6 @@ unsigned short Segment3D::segmentationNegativeValues(FltArray &data, USrtArray &
 	segmentation3D segment the 3D signal "data" which is lower than "val". It gives a map of segmentation "seg". 
 	A label is set to each structure in the map seg. 
 **/
-	
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::segmentationNegativeValue(FltArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();
-	#endif	
 
 	unsigned long *ptr;
 	unsigned long *ptr2;
@@ -2288,7 +1938,6 @@ unsigned short Segment3D::segmentationNegativeValues(FltArray &data, USrtArray &
 		ptr2[i]=0;
 	structFinded=1;
 	for(i=1;i<(long)nSeg;i++)
-		//for(j=1;j<nSeg;j++)
 		if(ptr2[ptr[i]]==0){
 			ptr2[ptr[i]]=structFinded;
 			structFinded++;
@@ -2311,12 +1960,6 @@ unsigned short Segment3D::segmentationPositiveValues(FltArray &data, USrtArray &
 	A label is set to each structure in the map seg. 
 **/
 
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::segmentationPositiveValues(FltArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();
-	#endif	
 	unsigned long *ptr;
 	unsigned long *ptr2;
 	long i,j,k;
@@ -2330,13 +1973,6 @@ unsigned short Segment3D::segmentationPositiveValues(FltArray &data, USrtArray &
 	long sizeDataY;
 	long sizeDataZ;
 	getSize(sizeDataX, sizeDataY, sizeDataZ, seg);
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::segmentation(USrtArray	&data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();	
-	#endif
 
 	//allocation of ptr
 	//ptr is an array of index to enumerate different structure
@@ -2519,7 +2155,6 @@ unsigned short Segment3D::segmentationPositiveValues(FltArray &data, USrtArray &
 		ptr2[i]=0;
 	structFinded=1;
 	for(i=1;i<(long)nSeg;i++)
-		//for(j=1;j<nSeg;j++)
 		if(ptr2[ptr[i]]==0){
 			ptr2[ptr[i]]=structFinded;
 			structFinded++;
@@ -2542,12 +2177,6 @@ unsigned short Segment3D::segmentationPositiveValues(FltArray &data, USrtArray &
 	A label is set to each structure in the map seg. 
 **/
 
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::segmentationPositiveValues(FltArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();
-	#endif	
 		unsigned long *ptr;
 	unsigned long *ptr2;
 	long i,j,k;
@@ -2745,7 +2374,6 @@ unsigned short Segment3D::segmentationPositiveValues(FltArray &data, USrtArray &
 		ptr2[i]=0;
 	structFinded=1;
 	for(i=1;i<(long)nSeg;i++)
-		//for(j=1;j<nSeg;j++)
 		if(ptr2[ptr[i]]==0){
 			ptr2[ptr[i]]=structFinded;
 			structFinded++;
@@ -2761,230 +2389,7 @@ unsigned short Segment3D::segmentationPositiveValues(FltArray &data, USrtArray &
 	mixIndex(seg);
 	return(structFinded-1);
 }
-/*unsigned short Segment3D::segmentation(FltArray &data, USrtArray &seg, double val, bool diagonal, bool fillHoles){
 
-//	segmentation segment the 3D signal "data" which is upper than "val". It gives a map of segmentation "seg". 
-//	A label is set to each structure in the map seg. 
-
-	unsigned long *ptr;
-	unsigned long *ptr2;
-	long i,j,k;
-	unsigned long nSeg;
-	int structFinded;
-	int mini;
-	//int max;
-	long sizePtr=MAX_TAB;
-	
-	long sizeDataX;
-	long sizeDataY;
-	long sizeDataZ;
-	getSize(sizeDataX, sizeDataY, sizeDataZ, seg);
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::segmentation(FltArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();	
-	#endif
-
-	//allocation of ptr
-	//ptr is an array of index to enumerate different structure
-	//if ptr[i]=j then structure i and structure j are same.
-	ptr=(unsigned long *)malloc(sizeof(long)*MAX_TAB);
-	//initialisation of ptr
-	for(i=0;i<MAX_TAB;i++)
-		ptr[i]=(unsigned short)i;
-	//nSeg indicate the number of the next unused structure
-	nSeg=1;
-
-
-	//initialisation of seg
-	seg=(unsigned long)0;
-
-	for(i=0;i<sizeDataX;i++)
-	for(j=0;j<sizeDataY;j++)
-	for(k=0;k<sizeDataZ;k++)
-		if(DATA(i,j,k)>val){
-			structFinded=0;
-			//test (i-1,j,k)
-			if((i-1>=0))
-				if( SEG(i-1,j,k)!=0 ){
-					if(structFinded==0){
-						SEG(i,j,k)=SEG(i-1,j,k);
-						structFinded=SEG(i-1,j,k);
-					}else if(structFinded!=SEG(i-1,j,k)){
-						mini=min(structFinded,SEG(i-1,j,k),ptr[structFinded], ptr[SEG(i-1,j,k)]);
-						ptr[structFinded]=mini;
-						ptr[SEG(i-1,j,k)]=mini;	
-						SEG(i,j,k)=mini;
-						structFinded=mini;
-					}
-				}
-			//test (i,j,k-1)
-			if(k-1>=0)
-				if( SEG(i,j,k-1)!=0 ){
-					if(structFinded==0){
-						SEG(i,j,k)=SEG(i,j,k-1);
-						structFinded=SEG(i,j,k-1);
-					}else if(structFinded!=SEG(i,j,k-1)){
-						mini=min(structFinded,SEG(i,j,k-1),ptr[structFinded], ptr[SEG(i,j,k-1)]);
-						ptr[structFinded]=mini;
-						ptr[SEG(i,j,k-1)]=mini;	
-						SEG(i,j,k)=mini;
-						structFinded=mini;
-					}
-				}
-			//test (i,j-1,k)
-			if(j-1>=0)
-				if( SEG(i,j-1,k)!=0 ){
-					if(structFinded==0){
-						SEG(i,j,k)=SEG(i,j-1,k);
-						structFinded=SEG(i,j-1,k);
-					}else if(structFinded!=SEG(i,j-1,k)){
-						mini=min(structFinded,SEG(i,j-1,k),ptr[structFinded], ptr[SEG(i,j-1,k)]);
-						ptr[structFinded]=mini;
-						ptr[SEG(i,j-1,k)]=mini;	
-						SEG(i,j,k)=mini;
-						structFinded=mini;
-					}
-				}
-
-			if(diagonal){
-				//test (i-1,j-1,k-1)
-				if((i-1>=0)  && (j-1>=0)  &&  (k-1>=0)){
-					
-					if( SEG(i-1,j-1,k-1)!=0 ){
-						SEG(i,j,k)=SEG(i-1,j-1,k-1);
-						structFinded=SEG(i-1,j-1,k-1);
-					}
-				}
-				//test (i-1,j,k-1)
-				if((i-1>=0)  &&  (k-1>=0))
-					if( SEG(i-1,j,k-1)!=0 ){
-						if(structFinded==0){
-							SEG(i,j,k)=SEG(i-1,j,k-1);
-							structFinded=SEG(i-1,j,k-1);
-						}else if(structFinded!=SEG(i-1,j,k-1)){
-							mini=min(structFinded,SEG(i-1,j,k-1),ptr[structFinded], ptr[SEG(i-1,j,k-1)]);
-							ptr[structFinded]=mini;
-							ptr[SEG(i-1,j,k-1)]=mini;	
-							SEG(i,j,k)=mini;
-							structFinded=mini;
-						}
-					}
-
-				//test (i-1,j+1,k-1)
-				if((i-1>=0)  && (j+1<sizeDataY)  &&  (k-1>=0))
-					if( SEG(i-1,j+1,k-1)!=0 ){
-						if(structFinded==0){
-							SEG(i,j,k)=SEG(i-1,j+1,k-1);
-							structFinded=SEG(i-1,j+1,k-1);
-						}else if(structFinded!=SEG(i-1,j+1,k-1)){
-							mini=min(structFinded,SEG(i-1,j+1,k-1),ptr[structFinded], ptr[SEG(i-1,j+1,k-1)]);
-							ptr[structFinded]=mini;
-							ptr[SEG(i-1,j+1,k-1)]=mini;	
-							SEG(i,j,k)=mini;
-							structFinded=mini;
-						}
-					}
-					
-				//test (i-1,j-1,k)
-				if((i-1>=0)  && (j-1>=0))
-					if( SEG(i-1,j-1,k)!=0 ){
-						if(structFinded==0){
-							SEG(i,j,k)=SEG(i-1,j-1,k);
-							structFinded=SEG(i-1,j-1,k);
-						}else if(structFinded!=SEG(i-1,j-1,k)){
-							mini=min(structFinded,SEG(i-1,j-1,k),ptr[structFinded], ptr[SEG(i-1,j-1,k)]);
-							ptr[structFinded]=mini;
-							ptr[SEG(i-1,j-1,k)]=mini;	
-							SEG(i,j,k)=mini;
-							structFinded=mini;
-						}
-					}	
-
-				//test (i-1,j,k+1)
-				if((i-1>=0)  &&  (k+1<sizeDataZ))
-					if( SEG(i-1,j,k+1)!=0 ){
-						if(structFinded==0){
-							SEG(i,j,k)=SEG(i-1,j,k+1);
-							structFinded=SEG(i-1,j,k+1);
-						}else if(structFinded!=SEG(i-1,j,k+1)){
-							mini=min(structFinded,SEG(i-1,j,k+1),ptr[structFinded], ptr[SEG(i-1,j,k+1)]);
-							ptr[structFinded]=mini;
-							ptr[SEG(i-1,j,k+1)]=mini;	
-							SEG(i,j,k)=mini;
-							structFinded=mini;
-						}
-					}	
-
-				//test (i,j-1,k-1)
-				if((j-1>=0)  &&  (k-1>=0))
-					if( SEG(i,j-1,k-1)!=0 ){
-						if(structFinded==0){
-							SEG(i,j,k)=SEG(i,j-1,k-1);
-							structFinded=SEG(i,j-1,k-1);
-						}else if(structFinded!=SEG(i,j-1,k-1)){
-							mini=min(structFinded,SEG(i,j-1,k-1),ptr[structFinded], ptr[SEG(i,j-1,k-1)]);
-							ptr[structFinded]=mini;
-							ptr[SEG(i,j-1,k-1)]=mini;	
-							SEG(i,j,k)=mini;
-							structFinded=mini;
-						}
-					}
-
-				//test (i,j-1,k+1)
-				if((j-1>=0)  &&  (k+1<sizeDataZ))
-					if( SEG(i,j-1,k+1)!=0 ){
-						if(structFinded==0){
-							SEG(i,j,k)=SEG(i,j-1,k+1);
-							structFinded=SEG(i,j-1,k+1);
-						}else if(structFinded!=SEG(i,j-1,k+1)){
-							mini=min(structFinded,SEG(i,j-1,k+1),ptr[structFinded], ptr[SEG(i,j-1,k+1)]);
-							ptr[structFinded]=mini;
-							ptr[SEG(i,j-1,k+1)]=mini;	
-							SEG(i,j,k)=mini;
-							structFinded=mini;
-						}
-					}	
-			}
-
-			if(structFinded==0){
-				SEG(i,j,k)=(unsigned short)nSeg;
-				inc(nSeg, &ptr, sizePtr);
-			}
-		}
-
-	//assembling structures
-
-	for(i=1;i<(long)nSeg;i++)
-		if(ptr[i]!=(unsigned long)i)
-			ptr[i]=ptr[ptr[i]];
-
-	ptr2=(unsigned long *)malloc(sizeof(long)*nSeg);
-	for(i=0;i<(long)nSeg;i++)
-		ptr2[i]=0;
-	structFinded=1;
-	for(i=1;i<(long)nSeg;i++)
-		//for(j=1;j<nSeg;j++)
-		if(ptr2[ptr[i]]==0){
-			ptr2[ptr[i]]=structFinded;
-			structFinded++;
-		}
-
-
-	for(i=0;i<sizeDataX*sizeDataY*sizeDataZ;i++)
-		seg.data[i]=(unsigned short)ptr2[ptr[seg.data[i]]];
-
-	
-		
-
-	free(ptr);
-	free(ptr2);
-	nbInfoStruct=structFinded-1;
-	mixIndex(seg);
-	return(structFinded-1);
-}
-*/
 void  Segment3D::mixIndex(USrtArray &seg){
 	
 	USrtArray *mixer=new USrtArray(nbInfoStruct+1);

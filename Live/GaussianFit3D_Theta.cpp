@@ -10,31 +10,11 @@
 #include <algorithm>
 
 // CPU version of gaussian fit 3D
-//#define dimFit 13
 #define Npar 7 // I0, x0, y0, sigmaX, sigmaY, angle, offset
-//#define Npnt dimFit*dimFit
-//#define ANGLE 0
-
 
 float GaussianFit3D_Theta::PSF(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float angle, float offset) { return I0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2)) + offset; }
 
 float GaussianFit3D_Theta::deriv1I0(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float angle, float offset) { return exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2)); }
-
-//float GaussianFit3D_Theta::deriv1x0(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float angle, float offset)
-//{
-//	float p = I0 * exp( -pow(((x-x0)*cos(angle)-(y-y0)*sin(angle))/sigmaX, 2) - pow(((x-x0)*sin(angle)+(y-y0)*cos(angle))/sigmaY, 2) );
-//	float alpha = -( (2 * pow(cos(angle), 2) * (x - x0) -2 * (y - y0) * cos(angle) * sin(angle) ) / pow(sigmaX, 2) );
-//	float beta = -( (2 * pow(sin(angle), 2) * (x - x0) +2 * (y - y0) * cos(angle) * sin(angle) ) / pow(sigmaY, 2) );
-//	return p * (alpha + beta);
-//}
-
-//float GaussianFit3D_Theta::deriv1y0(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float angle, float offset)
-//{
-//	float p = I0 * exp( -pow(((x-x0)*cos(angle)-(y-y0)*sin(angle))/sigmaX, 2) - pow(((x-x0)*sin(angle)+(y-y0)*cos(angle))/sigmaY, 2) );
-//	float alpha = -( (2 * pow(sin(angle), 2) * (y - y0) -2 * (x - x0) * cos(angle) * sin(angle) ) / pow(sigmaX, 2) );
-//	float beta = -( (2 * pow(cos(angle), 2) * (y - y0) +2 * (x - x0) * cos(angle) * sin(angle) ) / pow(sigmaY, 2) );
-//	return p * (alpha + beta);
-//}
 
 float GaussianFit3D_Theta::deriv1x0(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float angle, float offset)
 {
@@ -103,7 +83,7 @@ float GaussianFit3D_Theta::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float*
 	for (int elt = 0; elt < Npnt; elt++)
 		for (int i = 0; i < Npar; i++) inter[elt * Npar + i] = weight_sq[elt] * dydp[elt * Npar + i];
 
-	// Computing alpha (A vérifier)
+	// Computing alpha (A vÃ©rifier)
 	for (int j = 0; j < Npar; j++)
 		for (int i = 0; i < Npar; i++) {
 			alpha[Npar * j + i] = 0;
@@ -167,7 +147,7 @@ void GaussianFit3D_Theta::inverse(float* MM, float* Minv)
 		// Copy Mi1 to Minv
 		for (int index = 0; index < Npar * Npar; index++) Minv[index] = Mi1[index];
 
-		for (int k = 0; k < Npar; k++) // mise zéros de la colonne
+		for (int k = 0; k < Npar; k++) // mise zÃ©ros de la colonne
 			if (k != i)
 				for (int j = 0; j < Npar; j++) {
 					M1[k * Npar + j] = MM[k * Npar + j] - MM[i * Npar + j] * MM[k * Npar + i];
@@ -195,27 +175,17 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 	float time = 0;
 
 	if ((x0 >= (int)ref) && (x0 <= sizeX - (int)ref - 1) && (y0 >= (int)ref) && (y0 <= sizeY - (int)ref - 1)) {
-		// for simulation
-		//float p_min[5] = {0  , pointsList[4 * index]-1, pointsList[4 * index + 1]-1, 0.5, 300};
-		//float p[5]     = {250, pointsList[4 * index]  , pointsList[4 * index + 1]  , 1. , 1000};
-		//float p_max[5] = {350, pointsList[4 * index]+1, pointsList[4 * index + 1]+1, 1.5, 1700};
-
 		// for real data
 		float p_min[Npar] = {0., x0 - 1, y0 - 1, 0.1, 0.1, -150, 0.};
 		float p[Npar] = {2000., x0, y0, sqrt(2.) * sigmaX, sqrt(2.) * sigmaY, angle, 700.};
 		float p_max[Npar] = {65535., x0 + 1, y0 + 1, 20., 20., +150, 65535.};
-
-		//float y_dat[Npnt];
-		//float weight[Npnt];
-		//float weight_sq[Npnt];
-		//unsigned int t[2 * Npnt];
 
 		float* y_dat = (float*)malloc(Npnt * sizeof(float));
 		float* weight = (float*)malloc(Npnt * sizeof(float));
 		float* weight_sq = (float*)malloc(Npnt * sizeof(float));
 		unsigned int* t = (unsigned int*)malloc(2 * Npnt * sizeof(unsigned int));
 
-		// Initialization of y_dat & t (A vérifier)
+		// Initialization of y_dat & t (A vÃ©rifier)
 		for (int jj = -dimFit / 2; jj <= dimFit / 2; jj++)
 			for (int ii = -dimFit / 2; ii <= dimFit / 2; ii++) {
 				y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit] = (float)image[((int)x0 + ii) + ((int)y0 + jj) * sizeX];
@@ -349,37 +319,6 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 
 			if (iteration == iterNum) stop = 1;
 		}
-
-		// Computing standard error
-		//for(int ii = 0; ii < Npnt_; ii++) 
-		//	weight_sq[ii] = (Npnt_-Npar+1)/(delta_y[ii]*delta_y[ii]);
-
-		//X2 = lm_matx_(t/*IN*/, p/*IN*/, y_dat/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
-
-		//float covar[Npar * Npar];
-		//float sigma_p[Npar];
-		//float corr [Npar * Npar];
-
-		//X2 /= 2;
-		//
-		//inverse_(alpha, covar);
-
-		//// standard error of parameters
-		//sigma_p[0] = sqrt(covar[0*Npar+0]);
-		//sigma_p[1] = sqrt(covar[1*Npar+1]);
-		//sigma_p[2] = sqrt(covar[2*Npar+2]);
-		//sigma_p[3] = sqrt(covar[3*Npar+3]);
-		//sigma_p[4] = sqrt(covar[4*Npar+4]);	
-		//sigma_p[5] = sqrt(covar[5*Npar+5]);
-		//sigma_p[6] = sqrt(covar[6*Npar+6]);
-
-		//float q[Npar*Npar];
-		//for(int ii = 0; ii < Npar; ii++) 
-		//	for(int jj = 0; jj < Npar; jj++)
-		//		q[ii + jj * Npar] = sigma_p[ii] * sigma_p[jj];
-
-		//for(int ii = 0; ii < Npar*Npar; ii++)
-		//	corr[ii] = covar[ii] / q[ii]; 
 
 		// computing "y_dat" mean & "y_hat" mean
 		float y_dat_mean = 0.;

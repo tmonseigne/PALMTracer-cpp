@@ -1,4 +1,4 @@
-// PALM.cpp : définit le point d'entrée pour l'application DLL.
+// PALM.cpp : dÃ©finit le point d'entrÃ©e pour l'application DLL.
 //
 
 #include "CPALM.h"
@@ -73,19 +73,6 @@ CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsList
 
 long CPALM::CPALMProcessing()
 {
-	//
-	//FILE* f = fopen("C:\\debug.txt", "w");
-	//fprintf(f, "After CPALMProcessing\n");
-	//fclose(f);
-
-	//FILE* f = fopen("C:\\image.txt", "a+");
-	//for(int i=0; i<_sizeX*_sizeY; i++)
-	//	fprintf(f, "%d\n", _image[i]);
-	//fclose(f);
-
-	//FILE* f = fopen("debug.txt", "a+");
-	//fprintf(f, "Begin\n");
-
 	int ret;
 	nbCalls++;
 	long nbStruct;
@@ -93,22 +80,10 @@ long CPALM::CPALMProcessing()
 
 	float begin = clock();
 
-	//FILE* f = fopen("C:\\nbPlane.txt", "a+");
-	//fprintf(f, "%d\n", _nbPlane);
-	//fclose(f);
-
 	if ((ret = _aTrousPub->aTrousDecomposition2D(*_input, *(_aTrousPub->wDecomp), *_planesToUseB, _nbPlane, false)) < 0) return (ret);
 
-	//float _end = clock();
-	//FILE* _fp = fopen("C:\\WaveletTimeCPU.txt", "a+");
-	//fprintf(_fp, "Time: %f\n", (_end - begin) / (float)CLOCKS_PER_SEC );
-	//fclose(_fp);
-
-	//FILE *f = fopen("C:\\image_CPU.txt", "a+");
 	for (long j = 0; j < long(_sizeX * _sizeY); j++) {
 		long offs = _waveletNo * _sizeX * _sizeY;
-		//fprintf(f,"%f\n", _aTrousPub->wDecomp->data[j]);
-		//fprintf(f,"%d\n", _image[j]);
 		if (_aTrousPub->wDecomp->data[offs + j] > _thresholdVal) {
 			_outputPub->data[j] = _aTrousPub->wDecomp->data[offs + j];
 			_segPub->data[j] = 1;
@@ -118,52 +93,21 @@ long CPALM::CPALMProcessing()
 			_outputPub->data[j] = 0;
 		}
 	}
-	//fclose(f);
 	begin = clock();
 
 	if (_watershedRatio == 1.) {
 		if ((nbStruct = _segmentPub->segmentation(*_outputPub, *_segPub, 1e-8f, true, false)) < 0) return (nbStruct);
-		//fprintf(f, "segmentation\n");
 	}
 	else {
 		if ((nbStruct = _segmentPub->watershedIntelligent(*_outputPub, *_segPub, 1e-8f, (float)_watershedRatio)) < 0) return (nbStruct);
-		//fprintf(f, "watershedIntelligent\n");
 	}
 
-	//FILE* f = fopen("C:\\log.txt", "a+");
-	//fprintf(f, "%d\n", nbStruct);
-	//fclose(f);
-	//end = clock();
-
-	//FILE* fp = fopen("C:\\Watershed.txt", "a+");
-	//fprintf(fp, "Time: %f\n", (end - begin) / (float)CLOCKS_PER_SEC );
-	//fclose(fp);
 
 	if ((nbPointsSign = _segmentPub->computeStatistics(*_outputPub, *_segPub, _aTrousPub->wDecomp->data + _waveletNo * _sizeX * _sizeY, _gaussFit)) < 0) return (nbPointsSign);
-
-	//fprintf(f, "computeStatistics\n");
-
-	// for debug
-	//FILE* f = fopen("test_CPU.txt", "w");
-	//InfoStruct2D** ptr;
-	//ptr = (InfoStruct2D**)_segmentPub->getTabInfo();
-	//for(int i =1; i<= 36; i++)
-	//	fprintf(f, "%f, %f, %f, %d \n", ptr[i]->data.moment.x, ptr[i]->data.moment.y, ptr[i]->data.intensity, (int)ptr[i]->data.surf);
-	//fclose(f);
-	// fin debug
-
-	// for debug
-	//FILE* f = fopen("test_CPU.txt", "w");
-	//for(int i =0; i< 128; i++)
-	//	for(int j=0; j<128; j++)
-	//		fprintf(f, "%d\n", _segPub->data[i + 128*j]);
-	//fclose(f);
-	// fin debug
 
 	begin = clock();
 
 	if ((_volMin > 0.) || (_intMin > 0.)) if ((nbStruct = _segmentPub->filterData(*_segPub, _structFiltParam, _structFiltParamUse)) < 0) return (ret);
-	//fprintf(f, "filterData\n");
 
 	InfoStruct2D** p;
 	p = (InfoStruct2D**)_segmentPub->getTabInfo();
@@ -217,22 +161,11 @@ long CPALM::CPALMProcessing()
 				float offset = 0.;
 				float RSS = -1.;
 
-				/*begin = clock();*/
-
 				// Gaussian fit of 2D
 				GaussianFit2D* fit = new GaussianFit2D();
 				fit->Run(_image, _sizeY, _sizeX, x0, y0, I0, sigmaX, offset, RSS, /*30*/10, _size);
 
-				//end = clock();
-				//fp = fopen("GaussianFit.txt", "a+");
-				//fprintf(fp, "Time: %f\n", (end - begin) / (float)CLOCKS_PER_SEC );
-				//fclose(fp);
 
-				//if ((int)RSS != -1)
-				//{
-				//	sum += RSS;
-				//	pointsNumber++;
-				//}
 
 				_pointsList[currentPoint++] = sigmaX;
 				_pointsList[currentPoint++] = sigmaX;
@@ -260,26 +193,10 @@ long CPALM::CPALMProcessing()
 				float offset;
 				float RSS = -1.;
 
-				/*begin = clock();*/
-
 				// Gaussian fit of 2D
 				GaussianFit2D_Sigma* fit = new GaussianFit2D_Sigma();
 				fit->Run(_image, _sizeY, _sizeX, x0, y0, I0, sigmaX, offset, RSS, 10/*30*/, _size);
 
-				//end = clock();
-				//fp = fopen("GaussianFit.txt", "a+");
-				//fprintf(fp, "Time: %f\n", (end - begin) / (float)CLOCKS_PER_SEC );
-				//fclose(fp);
-
-				//if ((int)RSS != -1)
-				//{
-				//	sum += RSS;
-				//	pointsNumber++;
-
-				//	FILE* f = fopen("RSS.txt", "a+");
-				//	fprintf(f, "%f\n", RSS);
-				//	fclose(f);
-				//}
 
 				_pointsList[currentPoint++] = sigmaX;
 				_pointsList[currentPoint++] = sigmaX;
@@ -315,12 +232,6 @@ long CPALM::CPALMProcessing()
 				GaussianFit3D* fit = new GaussianFit3D();
 				fit->Run(_image, _sizeY, _sizeX, x0, y0, I0, sigmaX, sigmaY, angle, offset, RSS, /*20*//*50*//*20 * 6*/10/*7 * 20*/, _size);
 
-				//if ((int)RSS != -1)
-				//{
-				//	sum += RSS;
-				//	pointsNumber++;
-				//}
-
 				_pointsList[currentPoint++] = sigmaX;
 				_pointsList[currentPoint++] = sigmaY;
 				_pointsList[currentPoint++] = angle;
@@ -353,16 +264,6 @@ long CPALM::CPALMProcessing()
 
 				GaussianFit3D_Theta* fit = new GaussianFit3D_Theta();
 				fit->Run(_image, _sizeY, _sizeX, x0, y0, I0, sigmaX, sigmaY, angle, offset, RSS, 20 * 7, _size);
-
-				//if ((int)RSS != -1)
-				//{
-				//	sum += RSS;
-				//	pointsNumber++;
-
-				//	FILE* f = fopen("RSS.txt", "a+");
-				//	fprintf(f, "%f\n", RSS);
-				//	fclose(f);
-				//}
 
 				_pointsList[currentPoint++] = sigmaX;
 				_pointsList[currentPoint++] = sigmaY;
@@ -398,12 +299,6 @@ long CPALM::CPALMProcessing()
 				GaussianFit3D* fit = new GaussianFit3D();
 				fit->Run(_image, _sizeY, _sizeX, x0, y0, I0, sigmaX, sigmaY, angle, offset, RSS, 7 * 20, _size);
 
-				//if ((int)RSS != -1)
-				//{
-				//	sum += RSS;
-				//	pointsNumber++;
-				//}
-
 				_pointsList[currentPoint++] = sigmaX;
 				_pointsList[currentPoint++] = sigmaY;
 				_pointsList[currentPoint++] = angle;
@@ -438,10 +333,6 @@ long CPALM::CPALMProcessing()
 	_pointsList[currentPoint++] = -1; // Z coordinate
 	_pointsList[currentPoint++] = -1; // Spectral or other
 	_pointsList[currentPoint++] = -1; // Other
-
-	//fprintf(f, "End\n");
-	//fclose(f);
-
 	return (currentPoint);
 }
 

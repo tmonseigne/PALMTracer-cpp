@@ -51,13 +51,6 @@ public:
 #endif
 
 private:
-#ifdef	DEBUG_AT
-		
-		const wchar_t* typeName(){ return((wchar_t*)&TYPE_NAME); } 
-		
-		void writeInfo(const wchar_t* s,const long i, const long j, const long k, const long l);
-		void writeInfo(DataType	*_data, const wchar_t* s, const long i, const long j, const long k, const long l);
-#endif
 	int getDim(const long i, const long j, const long k, const long l);
 	int testDim(const long i, const long j, const long k, const long l);
 

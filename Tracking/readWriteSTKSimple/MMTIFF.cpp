@@ -1023,11 +1023,6 @@ int TIFFImage::readImageInfo(char* _fileName)
 	//Reading the hearder file
 	in = fopen(fileName, "rb");
 	if (in == NULL) {
-#ifdef DEBUG_AT
-		openDebugStreamALS();
-		fwprintf(debugStreamALS, "Error: unable to open %ls!\n",fileName);
-		closeDebugStreamALS();
-#endif
 		return (ERR_READ_STK);
 	}
 
@@ -1163,11 +1158,6 @@ int TIFFImage::readData(void* _buffer)
 	sizeOfData = width * height * samplesPerPixel * nbPlanes * depth / 8;
 	FILE* in = fopen(fileName, "rb");
 	if (in == NULL) {
-#ifdef DEBUG_AT
-		openDebugStreamALS();
-		fwprintf(debugStreamALS, "Error: unable to open %ls!\n",fileName);
-		closeDebugStreamALS();
-#endif
 		return (ERR_READ_STK);
 	}
 
@@ -1220,11 +1210,6 @@ int TIFFImage::writeImage(char* _fileName, void* data)
 
 	in = fopen(_fileName, "wb");
 	if (in == NULL) {
-#ifdef DEBUG_AT
-		openDebugStreamALS();
-		fwprintf(debugStreamALS, "Error: unable to open %ls!\n",_fileName);
-		closeDebugStreamALS();
-#endif
 		return (ERR_WRITE_STK);
 	}
 

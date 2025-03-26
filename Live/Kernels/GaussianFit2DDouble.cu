@@ -124,7 +124,7 @@ __device__ void inverse_5x5_2D_(float* MM, float* Minv)
 			Minv[index] = Mi1[index];
 		}
 
-		for (int k = 0; k < Npar; k++) // mise zéros de la colonne
+		for (int k = 0; k < Npar; k++) // mise zÃ©ros de la colonne
 			if (k != i)
 				for (int j = 0; j < Npar; j++) {
 					M1[k * Npar + j] = MM[k * Npar + j] - MM[i * Npar + j] * MM[k * Npar + i];
@@ -221,11 +221,6 @@ __global__ void GPUFitting_5x5_DoubleFitting_2D(unsigned int nbPoints, float* po
 				{
 					iteration++;
 					float delta_p[Npar] = {0., 0., 0., 0., 0., 0., 0.};
-					//delta_p[shift + (id + 0 * 16)] = 0.;
-					//delta_p[shift + (id + 1 * 16)] = 0.;
-					//delta_p[shift + (id + 2 * 16)] = 0.;
-					//delta_p[shift + (id + 3 * 16)] = 0.;
-					//delta_p[shift + (id + 4 * 16)] = 0.;
 
 					// Copy alpha to inter
 					for (int ii = 0; ii < Npar * Npar; ii++) inter[ii] = alpha[ii];
@@ -239,29 +234,18 @@ __global__ void GPUFitting_5x5_DoubleFitting_2D(unsigned int nbPoints, float* po
 					inter[5 * Npar + 5] += lambda * alpha[5 * Npar + 5];
 					inter[6 * Npar + 6] += lambda * alpha[6 * Npar + 6];
 
-					//inter[shift_ + (id + (0*Npar + 0) * 16)] += lambda * alpha[0*Npar + 0];
-					//inter[shift_ + (id + (1*Npar + 1) * 16)] += lambda * alpha[1*Npar + 1];
-					//inter[shift_ + (id + (2*Npar + 2) * 16)] += lambda * alpha[2*Npar + 2];
-					//inter[shift_ + (id + (3*Npar + 3) * 16)] += lambda * alpha[3*Npar + 3];
-					//inter[shift_ + (id + (4*Npar + 4) * 16)] += lambda * alpha[4*Npar + 4];
-
 					inverse_5x5_2D_(inter, inter1);
 
 					m = 0;
 					for (int ii = 0; ii < Npar; ii++) {
 						for (int cursor = 0; cursor < Npar; cursor++) delta_p[ii] += inter1[ii * Npar + cursor] * beta[cursor];
-						//for(int cursor=0; cursor < Npar; cursor++)
-						//	delta_p[shift + (id + ii * 16)] += inter1[ii*Npar + cursor] * beta[cursor];
 
 						// Computing p_try
 						p_try[ii] = fminf(fmaxf(p_min[ii], p[ii] + delta_p[ii]), p_max[ii]);
-						/*p_try[ii] = min(max(p_min[ii], p[ii] + delta_p[shift + (id + ii * 16)]), p_max[ii]);*/
 
 						// Computing m
 						inter3 = lambda * delta_p[ii] + beta[ii]; // lambda * delta_p + beta
 						m += delta_p[ii] * inter3;
-						//inter3 = lambda * delta_p[shift + (id + ii * 16)] + beta[ii];// lambda * delta_p + beta
-						//m += delta_p[shift + (id + ii * 16)] * inter3;
 					}
 					m *= 2;
 
@@ -292,7 +276,6 @@ __global__ void GPUFitting_5x5_DoubleFitting_2D(unsigned int nbPoints, float* po
 					max__ = 0;
 					for (int ii = 0; ii < Npar; ii++) {
 						max_ = fmaxf(max_, fabsf(delta_p[ii] / p[ii]));
-						//max_ = max(max_, abs(delta_p[shift + (id + ii * 16)] / p[ii]));
 						max__ = fmaxf(max__, fabsf(beta[ii]));
 					}
 
@@ -304,35 +287,10 @@ __global__ void GPUFitting_5x5_DoubleFitting_2D(unsigned int nbPoints, float* po
 				// Computing statistics
 				float R_sq;
 				{
-					///*float covar[Npar*Npar];*//* replaced by inter */
-					///*float dydp[Npar*Npnt];*//* replaced by inter1*/
-					/*float sigma_p[Npar];*/
-					////float corr[Npar*Npar];
-					////float res;
 					float y_dat_mean;
 					float y_hat_mean;
 					float t1, t2, t3;
 					float diff_hat, diff_dat;
-
-					// parameter covariance matrix
-					//inverse(alpha, inter/*covar*/);
-
-					// standard error of parameters
-					//sigma_p[0] = sqrt(/*covar*/inter[0*Npar+0]);
-					//sigma_p[1] = sqrt(/*covar*/inter[1*Npar+1]);
-					//sigma_p[2] = sqrt(/*covar*/inter[2*Npar+2]);
-					//sigma_p[3] = sqrt(/*covar*/inter[3*Npar+3]);
-					//sigma_p[4] = sqrt(/*covar*/inter[4*Npar+4]);
-
-					// parameter correlation matrix (A vérifier)
-					/*float q[Npar*Npar];*/ /* replaced by inter1 */
-					//for(int ii = 0; ii < Npar; ii++) 
-					//	for(int jj = 0; jj < Npar; jj++)
-					//		/*q*/inter1[ii + jj * Npar] = sigma_p[ii] * sigma_p[jj];
-
-					/*float corr [Npar * Npar];*/ /* replaced by inter */
-					//for(int ii = 0; ii < Npar*Npar; ii++)
-					//	/*corr*/inter[ii] = /*covar*/inter[ii] / /*q*/inter1[ii]; 
 
 					// computing 'y_dat' mean & 'y_hat' mean
 					y_dat_mean = 0;
@@ -404,55 +362,10 @@ __global__ void GPUFitting_5x5_DoubleFitting_2D(unsigned int nbPoints, float* po
 
 extern "C"void cuda2DFittingGPU_DoubleFitting_5x5(unsigned short* data, unsigned int numImages, unsigned short width, unsigned short height, unsigned short* nbStruct, float* pointsList, unsigned int nbPoints, unsigned int iterNum, unsigned short sizeFit, float sigmaX)
 {
-	//{
-	//	double* list = (double*)malloc(MAX_NB_STRUCTURES * numImages * 10 * sizeof(double));
-	//	double* d_list;
-	//	checkCudaErrors( cudaMalloc( (void**) &d_list, MAX_NB_STRUCTURES * numImages * 10 * sizeof(double) ) );
-	//	checkCudaErrors( cudaMemcpy( list, d_list, MAX_NB_STRUCTURES * numImages * 10 * sizeof(double), cudaMemcpyDeviceToHost) );
-
-	//	FILE* f = fopen("t1989.txt", "w");
-	//	for(int i=0; i < MAX_NB_STRUCTURES * numImages; i++)
-	//		fprintf(f, "%f, %f, %f, %f\n", list[i*10], list[i*10+1], list[i*10+2], list[i*10+3], list[i*10+4]);
-	//	fclose(f);
-
-	//	// cleanup memory
-	//	free(list);
-	//}
-
 	printf("Optimized version\n");
-
 
 	dim3 grid(1, 1, 1);
 	dim3 threads(1, 1, 1);
-
-	//{
-	//	float* list = (float*)malloc(width * height * sizeof(float));
-	//	checkCudaErrors( cudaMemcpy( list, data, width * height * sizeof(float), cudaMemcpyDeviceToHost) );
-
-	//	FILE* f = fopen("t.txt", "w");
-	//	for(int i=0; i < width * height; i++)
-	//		fprintf(f, "(%d, %d) : %f\n", i%width, i/width, list[i]);
-	//	fclose(f);
-
-	//	// cleanup memory
-	//	free(list);
-	//}
-
-	// Convert all pixels to [0, 1000] interval
-	//GPUconvert<<<grid, threads>>>(data, width, height, gpu_min, gpu_max, 0, 1000);
-
-	//{
-	//	float* list = (float*)malloc(width * height * sizeof(float));
-	//	checkCudaErrors( cudaMemcpy( list, data, width * height * sizeof(float), cudaMemcpyDeviceToHost) );
-
-	//	FILE* f = fopen("t333.txt", "w");
-	//	for(int i=0; i < width * height; i++)
-	//		fprintf(f, "(%d, %d): %f\n", i%width, i/width, list[i]);
-	//	fclose(f);
-
-	//	// cleanup memory
-	//	free(list);
-	//}
 
 	// allocate memory
 	grid.x = (int)ceil((float)(nbPoints) / (float)FIT_BLOCK_SIZE);
@@ -460,25 +373,11 @@ extern "C"void cuda2DFittingGPU_DoubleFitting_5x5(unsigned short* data, unsigned
 	grid.z = 1;
 	threads.x = FIT_BLOCK_SIZE;
 	threads.y = 1;
-	threads.z = 1; // Par rapport aux contraintes de la mémoire partagée (taille limitée à 16 Ko pour chaque block)
+	threads.z = 1; // Par rapport aux contraintes de la mÃ©moire partagÃ©e (taille limitÃ©e Ã  16 Ko pour chaque block)
 	// '64' au lieu de '256'
 	GPUFitting_5x5_DoubleFitting_2D<<< grid, threads >>>(nbPoints, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX);
 
 	cudaError err = cudaThreadSynchronize();
-	/*printf("Error : %d \n", err);*/
 }
 
 #endif // #ifndef _FITTING_KERNEL_H_
-
-//{
-//	float* list = (float*)malloc(MAX_NB_STRUCTURES * numImages * Npar * sizeof(float));
-//	checkCudaErrors( cudaMemcpy( list, p, MAX_NB_STRUCTURES * numImages * Npar * sizeof(float), cudaMemcpyDeviceToHost) );
-
-//	FILE* f = fopen("t1989.txt", "w");
-//	for(int i=0; i < MAX_NB_STRUCTURES * numImages; i++)
-//		fprintf(f, "%f, %f, %f, %f\n", list[i*Npar], list[i*Npar+1], list[i*Npar+2], list[i*Npar+3], list[i*Npar+4]);
-//	fclose(f);
-
-//	// cleanup memory
-//	free(list);
-//}

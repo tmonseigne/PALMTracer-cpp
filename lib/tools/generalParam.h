@@ -19,9 +19,4 @@
 #define PI 3.1415926535897932384626433832795
 #endif
 
-
-//COMPILATION TYPE
-//#define DEBUG_AT
-//#undef DEBUG_AT 
- 
 #endif //__GENRAL_PARAM__

@@ -134,9 +134,6 @@ int ArrayType::alloc(const long i, const long j, const long k, const long l){
 			#endif
 		}
 	}
-	#ifdef	DEBUG_AT
-	
-	#endif
 	return(RET_OK);
 }
 
@@ -186,9 +183,6 @@ int	ArrayType::alloc(DataType	*_data, const long i, const long j, const long k, 
 int	ArrayType::realloc(const long i, const long j, const long k, const long l){
 	long ret;
 	nbDim=getDim(i,j,k,l);
-	#ifdef	DEBUG_AT
-	writeInfo(L"realloc", i,j,k,l);
-	#endif
 	if((ret=testDim(i,j,k,l))<0) return(ret);
 	if(isThereData() && !dataAllocatedByConstructor){
 
@@ -732,7 +726,6 @@ void ArrayType::writeArray(wchar_t* fileName){
 	header.sizeData[3]=sizeData[3];
 	header.type=type();
 
-	//if( (fileHandle = _wopen( fileName, O_RDWR | O_CREAT | O_BINARY, S_IWRITE )) != -1 ){
 	if( (ret = _wsopen_s( &fileHandle, fileName, _O_RDWR | _O_CREAT | _O_BINARY, _SH_DENYRD, _S_IWRITE )) ==0 ){
 
 		if((nbCharWrite=_write( fileHandle, (void*)&header, sizeof(HeaderFile)))==-1){
@@ -756,7 +749,6 @@ void ArrayType::readArray(wchar_t* fileName){
 int ret;
 	HeaderFile header;
 
-	//if( (fileHandle = _wopen( fileName, O_RDONLY| O_BINARY, S_IREAD )) != -1 ){
 	if( (ret = _wsopen_s( &fileHandle, fileName, _O_RDONLY | _O_BINARY, _SH_DENYWR, _S_IREAD )) ==0 ){
 		int nb;
 

@@ -118,7 +118,7 @@ __device__ void inverse_7x7_2D(float* MM, float* Minv)
 			Minv[index] = Mi1[index];
 		}
 
-		for (int k = 0; k < Npar; k++) // mise zéros de la colonne
+		for (int k = 0; k < Npar; k++) // mise zÃ©ros de la colonne
 			if (k != i)
 				for (int j = 0; j < Npar; j++) {
 					M1[k * Npar + j] = MM[k * Npar + j] - MM[i * Npar + j] * MM[k * Npar + i];
@@ -215,11 +215,6 @@ __global__ void GPUFitting_Sigma_7x7_2D(unsigned int nbPoints, float* pointsList
 				{
 					iteration++;
 					float delta_p[Npar] = {0., 0., 0., 0., 0.};
-					//delta_p[shift + (id + 0 * 16)] = 0.;
-					//delta_p[shift + (id + 1 * 16)] = 0.;
-					//delta_p[shift + (id + 2 * 16)] = 0.;
-					//delta_p[shift + (id + 3 * 16)] = 0.;
-					//delta_p[shift + (id + 4 * 16)] = 0.;
 
 					// Copy alpha to inter
 					for (int ii = 0; ii < Npar * Npar; ii++) inter[ii] = alpha[ii];
@@ -231,29 +226,18 @@ __global__ void GPUFitting_Sigma_7x7_2D(unsigned int nbPoints, float* pointsList
 					inter[3 * Npar + 3] += lambda * alpha[3 * Npar + 3];
 					inter[4 * Npar + 4] += lambda * alpha[4 * Npar + 4];
 
-					//inter[shift_ + (id + (0*Npar + 0) * 16)] += lambda * alpha[0*Npar + 0];
-					//inter[shift_ + (id + (1*Npar + 1) * 16)] += lambda * alpha[1*Npar + 1];
-					//inter[shift_ + (id + (2*Npar + 2) * 16)] += lambda * alpha[2*Npar + 2];
-					//inter[shift_ + (id + (3*Npar + 3) * 16)] += lambda * alpha[3*Npar + 3];
-					//inter[shift_ + (id + (4*Npar + 4) * 16)] += lambda * alpha[4*Npar + 4];
-
 					inverse_7x7_2D(inter, inter1);
 
 					m = 0;
 					for (int ii = 0; ii < Npar; ii++) {
 						for (int cursor = 0; cursor < Npar; cursor++) delta_p[ii] += inter1[ii * Npar + cursor] * beta[cursor];
-						//for(int cursor=0; cursor < Npar; cursor++)
-						//	delta_p[shift + (id + ii * 16)] += inter1[ii*Npar + cursor] * beta[cursor];
 
 						// Computing p_try
 						p_try[ii] = fminf(fmaxf(p_min[ii], p[ii] + delta_p[ii]), p_max[ii]);
-						/*p_try[ii] = min(max(p_min[ii], p[ii] + delta_p[shift + (id + ii * 16)]), p_max[ii]);*/
 
 						// Computing m
 						inter3 = lambda * delta_p[ii] + beta[ii]; // lambda * delta_p + beta
 						m += delta_p[ii] * inter3;
-						//inter3 = lambda * delta_p[shift + (id + ii * 16)] + beta[ii];// lambda * delta_p + beta
-						//m += delta_p[shift + (id + ii * 16)] * inter3;
 					}
 					m *= 2;
 
@@ -284,7 +268,6 @@ __global__ void GPUFitting_Sigma_7x7_2D(unsigned int nbPoints, float* pointsList
 					max__ = 0;
 					for (int ii = 0; ii < Npar; ii++) {
 						max_ = fmaxf(max_, fabsf(delta_p[ii] / p[ii]));
-						//max_ = max(max_, abs(delta_p[shift + (id + ii * 16)] / p[ii]));
 						max__ = fmaxf(max__, fabsf(beta[ii]));
 					}
 
@@ -296,35 +279,10 @@ __global__ void GPUFitting_Sigma_7x7_2D(unsigned int nbPoints, float* pointsList
 				// Computing statistics
 				float R_sq;
 				{
-					///*float covar[Npar*Npar];*//* replaced by inter */
-					///*float dydp[Npar*Npnt];*//* replaced by inter1*/
-					/*float sigma_p[Npar];*/
-					////float corr[Npar*Npar];
-					////float res;
 					float y_dat_mean;
 					float y_hat_mean;
 					float t1, t2, t3;
 					float diff_hat, diff_dat;
-
-					// parameter covariance matrix
-					//inverse(alpha, inter/*covar*/);
-
-					// standard error of parameters
-					//sigma_p[0] = sqrt(/*covar*/inter[0*Npar+0]);
-					//sigma_p[1] = sqrt(/*covar*/inter[1*Npar+1]);
-					//sigma_p[2] = sqrt(/*covar*/inter[2*Npar+2]);
-					//sigma_p[3] = sqrt(/*covar*/inter[3*Npar+3]);
-					//sigma_p[4] = sqrt(/*covar*/inter[4*Npar+4]);
-
-					// parameter correlation matrix (A vérifier)
-					/*float q[Npar*Npar];*/ /* replaced by inter1 */
-					//for(int ii = 0; ii < Npar; ii++) 
-					//	for(int jj = 0; jj < Npar; jj++)
-					//		/*q*/inter1[ii + jj * Npar] = sigma_p[ii] * sigma_p[jj];
-
-					/*float corr [Npar * Npar];*/ /* replaced by inter */
-					//for(int ii = 0; ii < Npar*Npar; ii++)
-					//	/*corr*/inter[ii] = /*covar*/inter[ii] / /*q*/inter1[ii]; 
 
 					// computing 'y_dat' mean & 'y_hat' mean
 					y_dat_mean = 0;
@@ -405,11 +363,10 @@ extern "C"void cuda2DFittingGPU_Sigma_7x7(unsigned short* data, unsigned int num
 	grid.z = 1;
 	threads.x = FIT_BLOCK_SIZE;
 	threads.y = 1;
-	threads.z = 1; // Par rapport aux contraintes de la mémoire partagée (taille limitée à 16 Ko pour chaque block)
+	threads.z = 1; // Par rapport aux contraintes de la mÃ©moire partagÃ©e (taille limitÃ©e Ã  16 Ko pour chaque block)
 	// '64' au lieu de '256'
 	GPUFitting_Sigma_7x7_2D<<< grid, threads >>>(nbPoints, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX);
 	cudaError err = cudaThreadSynchronize();
-	/*printf("Error : %d \n", err);*/
 }
 
 #endif

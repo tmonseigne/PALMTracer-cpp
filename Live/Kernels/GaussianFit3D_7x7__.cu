@@ -6,14 +6,11 @@
 #include "../parameters.h"
 
 // Levenberg fit --> simple precision (float)
-//#define dimFit 13 // By default
 #ifndef dimFit
 	#define dimFit 7
 #endif
-//#define MaxNbStruct MAX_NB_STRUCT
 #define Npar 6 // I0, x0, y0, sigmaX, sigmaY, angle, backGround
 #define Npnt dimFit*dimFit
-//#define ANGLE 0.f
 #define ref (dimFit/2)
 #define NbSegParams 11
 
@@ -155,7 +152,7 @@ __device__ void inverse_7x7(float* MM, float* Minv)
 			Minv[index] = Mi1[index];
 		}
 
-		for(int k=0; k<Npar; k++)// mise zéros de la colonne
+		for(int k=0; k<Npar; k++)// mise zÃ©ros de la colonne
 			if (k != i)
 				for(int j=0; j<Npar; j++)
 				{
@@ -176,7 +173,7 @@ __device__ void inverse_7x7(float* MM, float* Minv)
 }
 
 __global__ void GPU3DFitting_7x7(unsigned int nbPoints, float* pointsList, unsigned short* data, unsigned short* nbStruct, unsigned short WIDTH, unsigned short HEIGHT, unsigned int iterNum,
-							 unsigned short _size, float sigmaX, float sigmaY, float angle, unsigned short computeZ, float* SigmaXCoefs, float* SigmaYCoefs, float ThreeDThickness/*µm*/, float ThreeDSampling/*µm*/)
+							 unsigned short _size, float sigmaX, float sigmaY, float angle, unsigned short computeZ, float* SigmaXCoefs, float* SigmaYCoefs, float ThreeDThickness/*um*/, float ThreeDSampling/*um*/)
 {
 	unsigned int index = threadIdx.x + blockIdx.x * blockDim.x;
 
@@ -188,7 +185,6 @@ __global__ void GPU3DFitting_7x7(unsigned int nbPoints, float* pointsList, unsig
 
 		if ((int)pointsList[index * NbSegParams + 3] != 0)
 		{
-			//if( (pointsList[NbSegParams * index + 1] >= (int)ref) && (pointsList[NbSegParams * index + 1] <= HEIGHT-(int)ref-1) &&  (pointsList[NbSegParams * index] >= (int)ref) && (pointsList[NbSegParams * index] <= WIDTH-(int)ref-1))
 			{
 				int x = (int)pointsList[NbSegParams * index];
 				int y = (int)pointsList[NbSegParams * index + 1];
@@ -387,29 +383,17 @@ __global__ void GPU3DFitting_7x7(unsigned int nbPoints, float* pointsList, unsig
 					float Zval = 999999;
 					float Zerror = 1000.0;
 					
-					/*if (R_sq > 0.6)*///(R_sq == 5555)
-					{
-						//float ThreeDThickness  = 1.0;    // µm
-						//float ThreeDSampling  = 0.04;  // µm
 						float ZYfunc, ZXfunc;
-
-						//float Zval = -10.0;
-						//float Zerror = 1000.0;
 						float a;
-
-						//float SigmaXCoefs[5] = {-0.426300459971609, 0.483101697322705, -0.28494936673529, 1.8479784935972, 0.14549176567368};
-						//float SigmaYCoefs[5] = {-0.067121549068566, 0.278533197980758, 0.48492460996385, 0.163489060776199, 0.145439665841924};
-
-
 						float val;
 						float delta;
 						float val_pixel;
 						float sX = p[3]/sqrtf(2.);
 						float sY = p[4]/sqrtf(2.);
 
-						for(delta = (int)-(ThreeDThickness * 500); delta <= (int)(ThreeDThickness * 500); delta += (int)(ThreeDSampling * 1000)) // Delta en nm pour valeurs entières
+						for(delta = (int)-(ThreeDThickness * 500); delta <= (int)(ThreeDThickness * 500); delta += (int)(ThreeDSampling * 1000)) // Delta en nm pour valeurs entiÃ¨res
 						{
-							val = delta / 1000.0; // Retour en µm pour calibration
+							val = delta / 1000.0; // Retour en um pour calibration
 
 							//INVERSION SIGMA_X et SIGMA_Y
 
@@ -424,7 +408,6 @@ __global__ void GPU3DFitting_7x7(unsigned int nbPoints, float* pointsList, unsig
 								Zval = val;
 							}
 						}
-  					}
 
 					if (Zerror < 0.4)			
 						pointsList[NbSegParams * index + 10] = Zval;
@@ -453,29 +436,13 @@ __global__ void GPU3DFitting_7x7(unsigned int nbPoints, float* pointsList, unsig
 					pointsList[NbSegParams * index + 7] = R_sq;
 
 			}
-			//else
-			//{
-			//	float inter = pointsList[NbSegParams * index + 3];
-			//	pointsList[NbSegParams * index + 3] = pointsList[NbSegParams * index + 0];
-			//	pointsList[NbSegParams * index + 4] = pointsList[NbSegParams * index + 1];			
-			//	pointsList[NbSegParams * index    ] = sigmaX;
-			//	pointsList[NbSegParams * index + 1] = sigmaY;
-			//	pointsList[NbSegParams * index + 8] = pointsList[NbSegParams * index + 2];
-			//	pointsList[NbSegParams * index + 9] = inter/*pointsList[NbSegParams * index + 3]*/;			
-			//	pointsList[NbSegParams * index + 2] = angle;
-			//	pointsList[NbSegParams * index + 10] = 999999; 
-
-			//	pointsList[NbSegParams * index + 5] = 0.;
-			//	pointsList[NbSegParams * index + 6] = 0.;
-			//	pointsList[NbSegParams * index + 7] = -1.;
-			//}
 		}
 	}
 }
 
 extern "C"
 void cuda3DFittingGPU_7x7(unsigned short* data, unsigned int numImages, unsigned short width, unsigned short height, unsigned short* nbStruct, float* pointsList, unsigned int nbPoints,
-							 unsigned int iterNum, unsigned short sizeFit, float sigmaX, float sigmaY, float angle, unsigned short computeZ, float* SigmaXCoefs, float* SigmaYCoefs, float ThreeDThickness/*µm*/, float ThreeDSampling/*µm*/)
+							 unsigned int iterNum, unsigned short sizeFit, float sigmaX, float sigmaY, float angle, unsigned short computeZ, float* SigmaXCoefs, float* SigmaYCoefs, float ThreeDThickness/*um*/, float ThreeDSampling/*um*/)
 {
 	printf("3D fitting\n");
 
@@ -489,37 +456,13 @@ void cuda3DFittingGPU_7x7(unsigned short* data, unsigned int numImages, unsigned
 	grid.z = 1;
     threads.x = FIT_BLOCK_SIZE;
 	threads.y = 1;
-	threads.z = 1;  // Par rapport aux contraintes de la mémoire partagée (taille limitée à 16 Ko pour chaque block)
-
-	//FILE* f =fopen("C:\\log.txt", "a+");
-	//fprintf(f, "nbPoints: %d\n", nbPoints);
-	//fclose(f);
-
-	//FILE* f = fopen("C:\\debug.txt", "a+");
-	//fprintf(f, "Before\n");
-	//fclose(f);
+	threads.z = 1;  // Par rapport aux contraintes de la mÃ©moire partagÃ©e (taille limitÃ©e Ã  16 Ko pour chaque block)
 
 								// '64' au lieu de '256'
-	GPU3DFitting_7x7<<< grid, threads >>>(nbPoints, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX, sigmaY, angle, computeZ, SigmaXCoefs, SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/);
-	
-	//f = fopen("C:\\debug.txt", "a+");
-	//fprintf(f, "After\n");
-	//fclose(f);
-
-	//int maxNbPoints = MaxNbStruct * numImages;
-	//double* list = (double*) malloc(maxNbPoints * 10 * sizeof(double));
-	//cutilSafeCall( cudaMemcpy( list, pointsList, maxNbPoints * sizeof(double) * 10, cudaMemcpyDeviceToHost) );
-	//FILE* f = fopen("ptr.txt", "w");
-	//fprintf(f, "After\n");
-	//for(int i=0; i < numImages * MaxNbStruct * 10; i++)
-	//	fprintf(f, "%f\n", list[i]);
-	//fclose(f);
-
-	//free(list);
-
+	GPU3DFitting_7x7<<< grid, threads >>>(nbPoints, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX, sigmaY, angle, computeZ, SigmaXCoefs, SigmaYCoefs, ThreeDThickness/*um*/, ThreeDSampling/*um*/);
 }
 
-//#endif // dimFit
+//#endif // imFit
 #endif // #ifndef _FITTING_KERNEL_H_
 
 

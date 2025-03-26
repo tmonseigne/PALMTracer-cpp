@@ -23,13 +23,6 @@ float thresholdRatio: value to distinguish if 2 strucutres in contact have to be
 							oversegmentation)
 ********************************************************************************************************************/
 int Segment3D::filterStructureWS(FltArray &potential, USrtArray &seg, float thresholdRatio){
-	
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::filterStructureWS(FltArray 0x%p &potential(%d, %d, %d), USrtArray 0x%p &seg(%d, %d, %d), float %f threshold)  <-<-\n",		
-		&potential, potential.size(0), potential.size(1), potential.size(2), &seg, seg.size(0), seg.size(1), seg.size(2), thresholdRatio);
-	closeDebugStreamALS();
-	#endif
 
 	wsFusion3D* ptrStr;
 	ptrStr=(wsFusion3D*)malloc((nbInfoStruct+1)*sizeof(wsFusion3D));
@@ -145,14 +138,7 @@ USrtArray &localMax: local maximum
 float threshold: a point to be considered as a local maximum have to be > to threshold.
 ********************************************************************************************************************/
 int Segment3D::getLocalMax(FltArray &image, USrtArray &seg, float threshold){
-	
 
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::getLocalMax(FltArray 0x%p &potential(%d, %d, %d), USrtArray 0x%p &seg(%d, %d, %d), float %f threshold)  <-<-\n",
-		&image, image.size(0), image.size(1), image.size(2), &seg, seg.size(0), seg.size(1), seg.size(2),threshold);
-	closeDebugStreamALS();
-	#endif
 
 	seg=(unsigned short)0;
 	long i,j,k, ii,jj,kk;
@@ -196,11 +182,6 @@ int Segment3D::getLocalMax(FltArray &image, USrtArray &seg, float threshold){
 			}
 
 		}
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::getLocalMax End  <-<-\n");
-	closeDebugStreamALS();
-	#endif
 
 	return(label-1);
 
@@ -217,14 +198,6 @@ FltArray &potential: defines the potential function the makes the watershed segm
 USrtArray &seg: it contains the result of the watershed segmentation. 
 ********************************************************************************************************************/
 int Segment3D::watershed(FltArray &potential, USrtArray &seg, float threshold){
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::watershed(FltArray 0x%p &potential(%d, %d, %d), USrtArray 0x%p &seg(%d, %d, %d), float %f threshold)  <-<-\n",
-		&potential, potential.size(0), potential.size(1), potential.size(2), &seg, seg.size(0), seg.size(1), seg.size(2),threshold);
-	closeDebugStreamALS();
-	#endif
-
 	float cle;
 
 	coor3D p;
@@ -280,7 +253,7 @@ int Segment3D::watershed(FltArray &potential, USrtArray &seg, float threshold){
 			if(p1.z>=0)	if(p1.z<sizeDataZ)
 			if(potential.data[(p1.x*sizeDataY+p1.y)*sizeDataZ+p1.z]>threshold)
 			if(seg.data[(p1.x*sizeDataY+p1.y)*sizeDataZ+p1.z]==0){
-			// On empile ce nouveau avec une priorité legèrement supérieure
+			// On empile ce nouveau avec une prioritï¿½ legï¿½rement supï¿½rieure
 			// a sa vrai valeur de potentiel.
 				cle=-potential.data[(p1.x*sizeDataY+p1.y)*sizeDataZ+p1.z]+(float)it*EPSILON;
 				tas.Push(p1,cle);
@@ -309,12 +282,6 @@ return value: number of detected structures
 ********************************************************************************************************************/
 int Segment3D::watershedIntelligent(FltArray &potential, USrtArray &seg, float threshold, float thresholdRatio){
 
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::watershedIntelligent(FltArray 0x%p &potential(%d, %d, %d), USrtArray 0x%p &seg(%d, %d, %d), float %f threshold, float %f thresholdRatio)  <-<-\n",
-		&potential, potential.size(0), potential.size(1), potential.size(2), &seg, seg.size(0), seg.size(1), seg.size(2),threshold ,thresholdRatio);
-	closeDebugStreamALS();
-	#endif
 	int ret;
 
 	//first, find the local maximum to set the different germinates
@@ -354,13 +321,7 @@ float thresholdRatio: value to distinguish if 2 strucutres in contact have to be
 							oversegmentation)
 ********************************************************************************************************************/
 int Segment3D::filterStructureWS(USrtArray &potential, USrtArray &seg, float thresholdRatio){
-	
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::filterStructureWS(USrtArray 0x%p &potential(%d, %d, %d), USrtArray 0x%p &seg(%d, %d, %d), float %f threshold)  <-<-\n",		
-		&potential, potential.size(0), potential.size(1), potential.size(2), &seg, seg.size(0), seg.size(1), seg.size(2), thresholdRatio);
-	closeDebugStreamALS();
-	#endif
+
 
 	wsFusion3D* ptrStr;
 	ptrStr=(wsFusion3D*)malloc((nbInfoStruct+1)*sizeof(wsFusion3D));
@@ -476,14 +437,7 @@ USrtArray &localMax: local maximum
 float threshold: a point to be considered as a local maximum have to be > to threshold.
 ********************************************************************************************************************/
 int Segment3D::getLocalMax(USrtArray &image, USrtArray &seg, float threshold){
-	
 
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::getLocalMax(USrtArray 0x%p &potential(%d, %d, %d), USrtArray 0x%p &seg(%d, %d, %d), float %f threshold)  <-<-\n",
-		&image, image.size(0), image.size(1), image.size(2), &seg, seg.size(0), seg.size(1), seg.size(2),threshold);
-	closeDebugStreamALS();
-	#endif
 
 	seg=(unsigned short)0;
 	long i,j,k, ii,jj,kk;
@@ -527,12 +481,6 @@ int Segment3D::getLocalMax(USrtArray &image, USrtArray &seg, float threshold){
 			}
 
 		}
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::getLocalMax End  <-<-\n");
-	closeDebugStreamALS();
-	#endif
-
 	return(label-1);
 
 }
@@ -549,12 +497,6 @@ USrtArray &seg: it contains the result of the watershed segmentation.
 ********************************************************************************************************************/
 int Segment3D::watershed(USrtArray &potential, USrtArray &seg, float threshold){
 
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::watershed(USrtArray 0x%p &potential(%d, %d, %d), USrtArray 0x%p &seg(%d, %d, %d), float %f threshold)  <-<-\n",
-		&potential, potential.size(0), potential.size(1), potential.size(2), &seg, seg.size(0), seg.size(1), seg.size(2),threshold);
-	closeDebugStreamALS();
-	#endif
 
 	float cle;
 
@@ -613,7 +555,7 @@ int Segment3D::watershed(USrtArray &potential, USrtArray &seg, float threshold){
 			if(p1.z>=0)	if(p1.z<sizeDataZ)
 			if(potential.data[(p1.x*sizeDataY+p1.y)*sizeDataZ+p1.z]>threshold)
 			if(seg.data[(p1.x*sizeDataY+p1.y)*sizeDataZ+p1.z]==0){
-			// On empile ce nouveau avec une priorité legèrement supérieure
+			// On empile ce nouveau avec une prioritï¿½ legï¿½rement supï¿½rieure
 			// a sa vrai valeur de potentiel.
 				cle=-potential.data[(p1.x*sizeDataY+p1.y)*sizeDataZ+p1.z]+(float)it*EPSILON;
 				tas.Push(p1,cle);
@@ -642,12 +584,6 @@ return value: number of detected structures
 ********************************************************************************************************************/
 int Segment3D::watershedIntelligent(USrtArray &potential, USrtArray &seg, float threshold, float thresholdRatio){
 
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment3D::watershedIntelligent(USrtArray 0x%p &potential(%d, %d, %d), USrtArray 0x%p &seg(%d, %d, %d), float %f threshold, float %f thresholdRatio)  <-<-\n",
-		&potential, potential.size(0), potential.size(1), potential.size(2), &seg, seg.size(0), seg.size(1), seg.size(2),threshold ,thresholdRatio);
-	closeDebugStreamALS();
-	#endif
 	int ret;
 
 	//first, find the local maximum to set the different germinates

@@ -13,8 +13,6 @@
 
 
 #define STD_NOISE	40
-//#define K_INT		10
-//#define K_MEAN		10
 
 class NodeDistanceIntensity : public Node
 {

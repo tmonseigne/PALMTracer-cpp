@@ -36,8 +36,6 @@ typedef struct
 typedef float TIFFTYPE_FLOAT;
 typedef double TIFFTYPE_DOUBLE;
 
-//#define DEBUG_RW_STK
-
 class MMTAGS;
 
 

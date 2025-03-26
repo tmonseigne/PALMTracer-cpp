@@ -12,9 +12,6 @@ links to the current objet.
 
 float globalDistMax;
 
-//extern PublicParameters *publicParameters;
-
-
 /*********************************************************************************************
 double distanceToBorder(void)
   get the distance from this to the closer border
@@ -26,11 +23,6 @@ double Node::distanceToBorder(void)
 	mini = __min(mini, publicParameters->maxX-info->getX());
 	mini = __min(mini, info->getY());
 	mini = __min(mini, publicParameters->maxY-info->getY());
-	/*if(publicParameters->nbDim==3){
-		mini=__min(mini, info->getZ());
-		mini=__min(mini, publicParameters->maxZ-info->getZ());
-	}*/
-
 	return (mini);
 }
 
@@ -147,10 +139,6 @@ int Node::sortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 	ChainNeighbor* l2;
 	ChainNeighbor* lOld;
 	bool change;
-	//printf("n:%d time:%d Before Sorting: {", n, time);
-	//for(l=*neighborsHead;l!=NULL;l=l->next)
-	//	printf("%f, ",l->neighbor->info->getIntensity());
-	//printf("}\n");
 	if (*neighborsHead != NULL)
 		if ((*neighborsHead)->next != NULL)
 			do {
@@ -175,21 +163,8 @@ int Node::sortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 				}
 			}
 			while (change);
-	//printf("After Sorting: {");
-	//for(l=*neighborsHead;l!=NULL;l=l->next)
-	//	printf("%f, ",l->neighbor->info->getIntensity());
-	//printf("}\n");
 	return (RET_OK);
 }
-
-/********************************************************************************************************************
-canBeLinked(Node *node) is the two nodes (node and this) can be linked together?
-Virtual function 
-********************************************************************************************************************/
-//bool Node::canBeLinked(Node *node){
-//	return(distance(node)<publicParameters->distMaxPastAndFuture);
-//}
-
 
 /********************************************************************************************************************
 checkLinksHomogeneityInVicinity(wchar_t* st) check all the connection to verify the system homogeneity in the vicinity

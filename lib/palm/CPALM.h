@@ -3,13 +3,13 @@
 #include "aTrous.h"
 #include "segmentation_2D.h"
 
-// Cette classe est export�e de PALM.dll
+// Cette classe est exportée de PALM.dll
 //class PALM_API CPALM {
 
 class CPALM
 {
 public:
-	// TODO�: ajoutez ici vos m�thodes.
+	// TODO : ajoutez ici vos méthodes.
 
 	long CPALMProcessing();
 	CPALM(unsigned short* image, double* pointsList, unsigned long pointsListSize, unsigned long sizeX, unsigned long sizeY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short size);

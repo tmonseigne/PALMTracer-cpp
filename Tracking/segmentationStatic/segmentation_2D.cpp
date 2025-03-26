@@ -56,22 +56,12 @@ void Segment2D::desalloc(){
 
 
 Segment2D::Segment2D(){
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "## Segment2D() ##\n");
-	closeDebugStreamALS();
-	#endif
 	headInfo=NULL;
 	nbInfoStruct=0;
 	tabInfo=NULL;
 }
 
 Segment2D::~Segment2D(){
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "## ~Segment2D() ##\n");
-	closeDebugStreamALS();
-	#endif
 	desalloc();
 }
 
@@ -111,13 +101,6 @@ int Segment2D::alloc(unsigned long nbStruct){
 
 
 unsigned long Segment2D::filterData(USrtArray &seg, double* param, unsigned short* useParam){
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::filterData(USrtArray 0x%p &seg, double* 0x%p param, unsigned short* 0x%p useParam)  <-<-\n",
-		&seg, param, useParam);
-	closeDebugStreamALS();
-	#endif
-
 	unsigned short sizeDataY=seg.size(1);
 
 	InfoStruct2D* ptr=headInfo;
@@ -196,8 +179,6 @@ unsigned long Segment2D::filterData(USrtArray &seg, double* param, unsigned shor
 			unselected=false;
 			for(i=1;(i<=nbInfoStructOld)&&!unselected;i++)
 				if(tabInfo[i]!=NULL){
-					/*double d=sqrt( (ptr->data.moment.x-tabInfo[i]->data.moment.x)*(ptr->data.moment.x-tabInfo[i]->data.moment.x) 
-						+ (ptr->data.moment.y-tabInfo[i]->data.moment.y)*(ptr->data.moment.y-tabInfo[i]->data.moment.y));*/
 					double d=sqrt( (ptr->data.max.x-tabInfo[i]->data.max.x)*(ptr->data.max.x-tabInfo[i]->data.max.x) 
 						+ (ptr->data.max.y-tabInfo[i]->data.max.y)*(ptr->data.max.y-tabInfo[i]->data.max.y));
 
@@ -445,21 +426,11 @@ int Segment2D::printStatistics(wchar_t* fileName, unsigned short resultType, uns
 	case 2:	//ASCII file
 		if((atEndOfFile==0) || (time==1)){
 			if((stream=_wfopen( fileName, L"w" ))==NULL){ 
-				#ifdef	DEBUG_AT
-				openDebugStreamALS();
-				fprintf(debugStreamALS, "££ Error S_OPEN_FILE_ERR for fopen(\"%ls\", \"w\" ) \n", fileName);
-				closeDebugStreamALS();
-				#endif
 				return(S_OPEN_FILE_ERR);
 			}
 			fprintf(stream,"2D stat, total of %d times\n",nbTime);
 		}else
 			if((stream=_wfopen( fileName, L"a+" ))==NULL){ 
-				#ifdef	DEBUG_AT
-				openDebugStreamALS();
-				fprintf(debugStreamALS, "££ Error S_OPEN_FILE_ERR for fopen(\"%ls\", \"a+\" ) \n", fileName);
-				closeDebugStreamALS();
-				#endif
 				return(S_OPEN_FILE_ERR);
 			}
 		fprintf(stream,"2D stat at time %d, pourcentage of significant value:\t%f\t",time, (double)cptPoints/((double)(sizeX*sizeY)));
@@ -482,11 +453,6 @@ int Segment2D::printStatistics(wchar_t* fileName, unsigned short resultType, uns
 	case 3: //HTML file
 		if((atEndOfFile==0) || (time==1)){
 			if((stream=_wfopen( fileName, L"w" ))==NULL){ 
-				#ifdef	DEBUG_AT
-				openDebugStreamALS();
-				fprintf(debugStreamALS, "££ Error S_OPEN_FILE_ERR for fopen(\"%ls\", \"w\" ) \n", fileName);
-				closeDebugStreamALS();
-				#endif
 				return(S_OPEN_FILE_ERR);
 			}
 			//HTML 4.01
@@ -521,7 +487,6 @@ int Segment2D::printStatistics(wchar_t* fileName, unsigned short resultType, uns
 			printHTMLCell(L"Perimeter", stream,2,1);
 			printHTMLCell(L"Shape factor", stream,2,1);
 			printHTMLCell(L"Max", stream,1,3);
-			//printHTMLCell(L"Variance", stream,1,3);
 			printHTMLCell(L"Ellipse axis", stream,1,2);
 			printHTMLCell(L"Angle (rad)", stream,2,1);
 			fprintf(stream,"\t</tr>\n");
@@ -535,20 +500,12 @@ int Segment2D::printStatistics(wchar_t* fileName, unsigned short resultType, uns
 			printHTMLCell(L"X", stream,1,1);
 			printHTMLCell(L"Y", stream,1,1);
 			printHTMLCell(L"Val", stream,1,1);
-			//printHTMLCell(L"XX", stream,1,1);
-			//printHTMLCell(L"XY", stream,1,1);
-			//printHTMLCell(L"YY", stream,1,1);
 			printHTMLCell(L"Major", stream,1,1);
 			printHTMLCell(L"Minor", stream,1,1);
 			fwprintf(stream,L"\t</tr>\n");
 			
 		}else{
 			if((stream=_wfopen( fileName, L"r+" ))==NULL){ 
-				#ifdef	DEBUG_AT
-				openDebugStreamALS();
-				fprintf(debugStreamALS, "££ Error S_OPEN_FILE_ERR for fopen(\"%ls\", \"r+\" ) \n", fileName);
-				closeDebugStreamALS();
-				#endif
 				return(S_OPEN_FILE_ERR);
 			}
 			if((ret=locateStringInFile(L"</table>", stream))<0){ 
@@ -591,9 +548,6 @@ int Segment2D::printStatistics(wchar_t* fileName, unsigned short resultType, uns
 			printIntHTMLCell(tabInfo[ind]->data.max.y, stream);  //Max X //swapping of axis to be compatible with MM spec
 			printIntHTMLCell(tabInfo[ind]->data.max.x, stream);  //Max Y //swapping of axis to be compatible with MM spec
 			printFloatHTMLCell(tabInfo[ind]->data.max.val, stream);  //Max Value
-			//printFloatHTMLCell(tabInfo[ind]->data.var.yy, stream);  //Variance XX //swapping of axis to be compatible with MM spec
-			//printFloatHTMLCell(tabInfo[ind]->data.var.xy, stream);  //Variance XY //swapping of axis to be compatible with MM spec
-			//printFloatHTMLCell(tabInfo[ind]->data.var.xx, stream);  //Variance YY //swapping of axis to be compatible with MM spec
 			printFloatHTMLCell(tabInfo[ind]->data.sigma.y, stream);  //Ellipse major axis
 			printFloatHTMLCell(tabInfo[ind]->data.sigma.x, stream);  //Ellipse minor axis
 			printFloatHTMLCell(tabInfo[ind]->data.angle, stream);  //Angle (rad)
@@ -610,76 +564,7 @@ int Segment2D::printStatistics(wchar_t* fileName, unsigned short resultType, uns
 	return(RET_OK);
 }
 
-/*
-int Segment2D::printStatistics(wchar_t* fileName, unsigned short resultASCII, unsigned long time, unsigned long nbTime, unsigned short atEndOfFile,
-							   unsigned long cptPoints, unsigned short sizeX, unsigned short sizeY, unsigned short sizeStk){
-	unsigned long	ind;
-	FILE *stream;
-	int fileHandle;
-	long sizeData=2;
-
-
-
-	if(resultASCII==1){		//	ASCII file
-		if((atEndOfFile==0) || (time==1)){
-			if((stream=fopen( fileName, "w" ))==NULL) return(S_OPEN_FILE_ERR);
-			//fprintf(stream,"2D stat, total of %d times\n",nbTime);
-		}else
-			if((stream=fopen( fileName, "a+" ))==NULL) return(S_OPEN_FILE_ERR);
-		fprintf(stream,"%d\t",time);
-
-		for(ind=1;ind<=nbInfoStruct;ind++){
-			fprintf(stream,"%f\t%f\t",tabInfo[ind]->data.moment.x,tabInfo[ind]->data.moment.y);
-			fprintf(stream,"%f\t", tabInfo[ind]->data.sigma.x/tabInfo[ind]->data.sigma.y);
-			fprintf(stream,"%f\n", tabInfo[ind]->data.angle*180/PI);
-		}
-		fclose( stream );
-	}else{					//	BINARY file
-		if((atEndOfFile==0) || (time==1)){
-			if( (fileHandle = open( fileName, O_RDWR | O_CREAT | O_BINARY | _O_TRUNC, S_IWRITE )) == -1 ) return(S_OPEN_FILE_ERR);
-			write(fileHandle, &sizeData, sizeof(long));
-			write(fileHandle, &nbTime, sizeof(long));
-		}else
-			if( (fileHandle = open( fileName, O_RDWR | O_CREAT | O_BINARY | _O_APPEND, S_IWRITE )) == -1 ) return(S_OPEN_FILE_ERR);
-
-		write(fileHandle, &nbInfoStruct, sizeof(long));
-		for(ind=1;ind<=nbInfoStruct;ind++){
-			tabInfo[ind]->data.time=time;
-			write( fileHandle, &(tabInfo[ind]->data), sizeof(InfoData2D));
-		}
-		close( fileHandle );
-	}
-	return(RET_OK);
-}*/
-
-/*
-unsigned short Segment2D::readStatistics(wchar_t* fileName){
-	unsigned short	ind;
-	int fileHandle;
-	unsigned short nbStruct;
-
-	//	BINARY file
-	if( (fileHandle = open( fileName, O_RDONLY | O_BINARY, S_IREAD )) != -1 ){
-		read(fileHandle, &nbStruct, sizeof(long));
-		alloc(nbStruct);
-		//infoStruct=(infoStruct2D*)malloc(sizeof(infoStruct2D)*nbStruct);
-		for(ind=1;ind<=nbStruct;ind++){
-			read( fileHandle, &(tabInfo[ind]->data), sizeof(InfoData2D));
-		}
-		close( fileHandle );
-	}else
-		return(S_OPEN_FILE_ERR);
-	return(nbStruct);
-
-}*/
-
 int Segment2D::computeStatistics(FltArray &data, USrtArray &seg){
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::computeStatistics(&data 0x%p,&seg 0x%p)  <-<-\n",
-		&data, &seg);
-	closeDebugStreamALS();
-	#endif
 	unsigned short	i,j;
 	double			val;
 	unsigned long	ind;
@@ -801,13 +686,6 @@ int Segment2D::computeStatistics(FltArray &data, USrtArray &seg){
 			tabInfo[ind]->data.sigma.x=tabInfo[ind]->data.sigma.y;
 			tabInfo[ind]->data.sigma.y=val;
 		}
-		/*if(tabInfo[ind]->data.angle<0){
-			tabInfo[ind]->data.angle+=PI/2.;
-			double val;
-			val=tabInfo[ind]->data.sigma.x;
-			tabInfo[ind]->data.sigma.x=tabInfo[ind]->data.sigma.y;
-			tabInfo[ind]->data.sigma.y=val;
-		}*/
 		tabInfo[ind]->data.morpho = tabInfo[ind]->data.sigma.x>tabInfo[ind]->data.sigma.y ? 
 			tabInfo[ind]->data.sigma.y/tabInfo[ind]->data.sigma.x:
 			tabInfo[ind]->data.sigma.x/tabInfo[ind]->data.sigma.y;
@@ -823,12 +701,7 @@ int Segment2D::computeStatistics(FltArray &data, USrtArray &seg){
 
 
 int Segment2D::computeStatistics(USrtArray &data, USrtArray &seg){
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::computeStatistics(&data 0x%p,&seg 0x%p)  <-<-\n",
-		&data, &seg);
-	closeDebugStreamALS();
-	#endif
+
 	unsigned short	i,j;
 	double			val;
 	unsigned long	ind;
@@ -945,39 +818,16 @@ int Segment2D::computeStatistics(USrtArray &data, USrtArray &seg){
 			tabInfo[ind]->data.sigma.x=tabInfo[ind]->data.sigma.y;
 			tabInfo[ind]->data.sigma.y=val;
 		}
-		/*if(tabInfo[ind]->data.angle<0){
-			tabInfo[ind]->data.angle+=PI/2.;
-			double val;
-			val=tabInfo[ind]->data.sigma.x;
-			tabInfo[ind]->data.sigma.x=tabInfo[ind]->data.sigma.y;
-			tabInfo[ind]->data.sigma.y=val;
-		}*/
 		tabInfo[ind]->data.morpho = tabInfo[ind]->data.sigma.x>tabInfo[ind]->data.sigma.y ? 
 			tabInfo[ind]->data.sigma.y/tabInfo[ind]->data.sigma.x:
 			tabInfo[ind]->data.sigma.x/tabInfo[ind]->data.sigma.y;
 	}
-
-	//maximum length computation
-	//if(computeML)
-	//	if((ret=computeMaxLength(seg, maxThreshold))<0) return(ret);
-
-	//prototype de creation d'une image.
-	//USrtArray* tableau=new USrtArray;
-	//if((ret=tableau.alloc(x,y))<0) return(ret);
-	//delete tableau;
-
 
 	return(cptPoints);
 
 }
 
 unsigned short Segment2D::segmentation(USrtArray &data, USrtArray &seg, double val, bool diagonal, bool fillHoles){
-		#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::segmentation(USrtArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d, bool fillHoles %d)  <-<-\n",
-		&data, &seg, val, diagonal, fillHoles);
-	closeDebugStreamALS();
-	#endif	
 	
 	if(!fillHoles)
 		return(segmentationPositiveValues(data, seg, val, diagonal));
@@ -1028,16 +878,6 @@ unsigned short Segment2D::segmentationNegativeValues(USrtArray &data, USrtArray 
 	long sizeDataX=data.size(0);
 	long sizeDataY=data.size(1);
 
-
-
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::segmentationNegativeValue(USrtArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();
-	#endif	
-
 	//allocation of ptr
 	//ptr is an array of index to enumerate different structure
 	//if ptr[i]=j then structure i and structure j are same.
@@ -1165,16 +1005,13 @@ unsigned short Segment2D::segmentationNegativeValues(USrtArray &data, USrtArray 
 		}// end for j
 	}//end for i
 
-
 	//assembling structures
-
 
 	ptr2=(unsigned long *)malloc(sizeof(long)*nSeg);
 	for(i=0;i<(long)nSeg;i++)
 		ptr2[i]=0;
 	structFinded=1;
 	for(i=1;i<(long)nSeg;i++)
-		//for(j=1;j<nSeg;j++)
 		if(ptr2[ptr[i]]==0){
 			ptr2[ptr[i]]=structFinded;
 			structFinded++;
@@ -1208,16 +1045,6 @@ unsigned short Segment2D::segmentationPositiveValues(USrtArray &data, USrtArray 
 	long sizePtr=MAX_TAB;
 	long sizeDataX=data.size(0);
 	long sizeDataY=data.size(1);
-
-
-
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::segmentationPositiveValues(USrtArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();
-	#endif	
 
 	//allocation of ptr
 	//ptr is an array of index to enumerate different structure
@@ -1355,7 +1182,6 @@ unsigned short Segment2D::segmentationPositiveValues(USrtArray &data, USrtArray 
 		ptr2[i]=0;
 	structFinded=1;
 	for(i=1;i<(long)nSeg;i++)
-		//for(j=1;j<nSeg;j++)
 		if(ptr2[ptr[i]]==0){
 			ptr2[ptr[i]]=structFinded;
 			structFinded++;
@@ -1389,16 +1215,6 @@ unsigned short Segment2D::segmentationPositiveValues(USrtArray &data, USrtArray 
 	long sizePtr=MAX_TAB;
 	long sizeDataX=data.size(0);
 	long sizeDataY=data.size(1);
-
-
-
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::segmentationPositiveValues(USrtArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();
-	#endif	
 
 	//allocation of ptr
 	//ptr is an array of index to enumerate different structure
@@ -1536,7 +1352,6 @@ unsigned short Segment2D::segmentationPositiveValues(USrtArray &data, USrtArray 
 		ptr2[i]=0;
 	structFinded=1;
 	for(i=1;i<(long)nSeg;i++)
-		//for(j=1;j<nSeg;j++)
 		if(ptr2[ptr[i]]==0){
 			ptr2[ptr[i]]=structFinded;
 			structFinded++;
@@ -1554,195 +1369,8 @@ unsigned short Segment2D::segmentationPositiveValues(USrtArray &data, USrtArray 
 	return(structFinded-1);
 }
 
-/*unsigned short Segment2D::segmentation(USrtArray &data, USrtArray &seg, double val, bool diagonal){
-
-//	segmentation2D segment the 2D signal "data" which is upper than "val". It gives a map of segmentation "seg". 
-//	A label is set to each structure in the map seg. 
-
-	unsigned long *ptr;
-
-	unsigned long *ptr2;
-	long i,j;
-	unsigned long nSeg;
-	int structFinded;
-	int mini;
-	//int max;
-	long sizePtr=MAX_TAB;
-	long sizeDataX=data.size(0);
-	long sizeDataY=data.size(1);
-
-
-
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::segmentation(USrtArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();
-	#endif	
-
-	//allocation of ptr
-	//ptr is an array of index to enumerate different structure
-	//if ptr[i]=j then structure i and structure j are same.
-	ptr=(unsigned long *)malloc(sizeof(long)*MAX_TAB);
-	//initialisation of ptr
-	for(i=0;i<MAX_TAB;i++)
-		ptr[i]=(unsigned short)i;
-	//nSeg indicate the number of the next unused structure
-	nSeg=1;
-
-
-	//initialisation of seg
-	seg=(unsigned long)0;
-
-	//first pixel
-	if(fabs(data.data[0])>val){ 
-		seg.data[0]=(unsigned short)nSeg;
-		inc(nSeg, &ptr, sizePtr);
-	}
-
-	//first line
-	for(j=1;j<sizeDataY;j++)
-		if(fabs(data.data[j])>val){
-			if(seg.data[j-1]==0){
-				seg.data[j]=(unsigned short)nSeg;
-				inc(nSeg, &ptr, sizePtr);
-			}else
-				seg.data[j]=seg.data[j-1];
-		}
-
-	//the rest
-	for(i=1;i<sizeDataX;i++){
-		if(DATA(i,0)>val){
-			if(SEG(i-1,0)!=0)
-				SEG(i,0)=SEG(i-1,0);
-			else if(SEG(i-1,1)!=0)
-				SEG(i,0)=SEG(i-1,1);
-			else{
-				SEG(i,0)=(unsigned short)nSeg;
-				inc(nSeg, &ptr, sizePtr);
-			}
-		}
-		for(j=1;j<sizeDataY;j++){
-			structFinded=0;
-			if(DATA(i,j)>val){
-				if( SEG(i,j-1) !=0 ){
-					structFinded=SEG(i,j-1);
-					SEG(i,j)=SEG(i,j-1);
-				}
-
-				if(diagonal)
-					if( SEG(i-1,j-1)!=0 ){
-						if(structFinded==0){
-							SEG(i,j)=SEG(i-1,j-1);
-							structFinded=SEG(i-1,j-1);
-						}else if(structFinded!=SEG(i-1,j-1)){
-							mini=min(structFinded,SEG(i-1,j-1),ptr[structFinded], ptr[SEG(i-1,j-1)]);
-							if((long)ptr[SEG(i-1,j-1)]>mini)
-								for(long k=mini;k<(long)nSeg;k++) 
-									if(k!=SEG(i-1,j-1))
-										if(ptr[SEG(i-1,j-1)]==ptr[k])
-											ptr[k]=mini;
-							if((long)ptr[SEG(i,j)]>mini)
-									for(long k=mini;k<(long)nSeg;k++) 
-										if(k!=SEG(i,j))
-											if(ptr[SEG(i,j)]==ptr[k])
-												ptr[k]=mini;
-							ptr[SEG(i-1,j-1)]=mini;	
-							ptr[structFinded]=mini;
-							structFinded=mini;
-						}
-					}
-
-				if( SEG(i-1,j)!=0 ){
-					if(structFinded==0){
-						SEG(i,j)=SEG(i-1,j);
-						structFinded=SEG(i-1,j);
-					}else if(structFinded!=SEG(i-1,j)){
-						mini=min(structFinded,SEG(i-1,j),ptr[structFinded], ptr[SEG(i-1,j)]);
-						if((long)ptr[SEG(i-1,j)]>mini)
-							for(long k=mini;k<(long)nSeg;k++) 
-								if(k!=SEG(i-1,j))
-									if(ptr[SEG(i-1,j)]==ptr[k])
-										ptr[k]=mini;
-						if((long)ptr[SEG(i,j)]>mini)
-								for(long k=mini;k<(long)nSeg;k++)
-									if(k!=SEG(i,j))
-										if(ptr[SEG(i,j)]==ptr[k])
-											ptr[k]=mini;
-						ptr[SEG(i-1,j)]=mini;
-						ptr[structFinded]=mini;
-						structFinded=mini;
-					}	
-				}
-				
-				if(diagonal)
-					if(j+1 < sizeDataY)
-						if( SEG(i-1,j+1)!=0 ){
-							if(structFinded==0){
-								SEG(i,j)=SEG(i-1,j+1);
-								structFinded=SEG(i-1,j+1);
-							}else if(structFinded!=SEG(i-1,j+1)){
-								mini=min(structFinded,SEG(i-1,j+1),ptr[structFinded], ptr[SEG(i-1,j+1)]);
-								if((long)ptr[SEG(i-1,j+1)]>mini)
-									for(long k=mini;k<(long)nSeg;k++) 
-										if(k!=SEG(i-1,j+1))
-											if(ptr[SEG(i-1,j+1)]==ptr[k])
-												ptr[k]=mini;
-								if((long)ptr[SEG(i,j)]>mini)
-									for(long k=mini;k<(long)nSeg;k++) 
-										if(k!=SEG(i,j))
-											if(ptr[SEG(i,j)]==ptr[k])
-												ptr[k]=mini;
-								ptr[SEG(i-1,j+1)]=mini;
-								ptr[structFinded]=mini;
-								structFinded=mini;
-							}
-						}
-				
-				if(structFinded==0){
-					SEG(i,j)=(unsigned short)nSeg;
-					inc(nSeg, &ptr, sizePtr);
-				}
-			}// end DATA(i,j)>val
-		}// end for j
-	}//end for i
-
-
-	//assembling structures
-
-
-	ptr2=(unsigned long *)malloc(sizeof(long)*nSeg);
-	for(i=0;i<(long)nSeg;i++)
-		ptr2[i]=0;
-	structFinded=1;
-	for(i=1;i<(long)nSeg;i++)
-		//for(j=1;j<nSeg;j++)
-		if(ptr2[ptr[i]]==0){
-			ptr2[ptr[i]]=structFinded;
-			structFinded++;
-		}
- 
-
-	for(i=0;i<sizeDataX*sizeDataY;i++)
-		seg.data[i]=(unsigned short)ptr2[ptr[seg.data[i]]];
-
-	free(ptr);
-	free(ptr2);
-	nbInfoStruct=structFinded-1;
-	mixIndex(seg);
-	
-	return(structFinded-1);
-}*/
-
 unsigned short Segment2D::segmentation(FltArray &data, USrtArray &seg, double val, bool diagonal, bool fillHoles){
-		#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::segmentation(FltArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d, bool fillHoles %d)  <-<-\n",
-		&data, &seg, val, diagonal, fillHoles);
-	closeDebugStreamALS();
-	#endif	
-	
+
 	if(!fillHoles)
 		return(segmentationPositiveValues(data, seg, val, diagonal));
 	int ret;
@@ -1792,16 +1420,6 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray &data, USrtArray &
 	long sizeDataX=data.size(0);
 	long sizeDataY=data.size(1);
 
-
-
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::segmentationNegativeValue(FltArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();
-	#endif	
-
 	//allocation of ptr
 	//ptr is an array of index to enumerate different structure
 	//if ptr[i]=j then structure i and structure j are same.
@@ -1938,7 +1556,6 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray &data, USrtArray &
 		ptr2[i]=0;
 	structFinded=1;
 	for(i=1;i<(long)nSeg;i++)
-		//for(j=1;j<nSeg;j++)
 		if(ptr2[ptr[i]]==0){
 			ptr2[ptr[i]]=structFinded;
 			structFinded++;
@@ -1972,16 +1589,6 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray &data, USrtArray &
 	long sizePtr=MAX_TAB;
 	long sizeDataX=data.size(0);
 	long sizeDataY=data.size(1);
-
-
-
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::segmentationPositiveValues(FltArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();
-	#endif	
 
 	//allocation of ptr
 	//ptr is an array of index to enumerate different structure
@@ -2119,7 +1726,6 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray &data, USrtArray &
 		ptr2[i]=0;
 	structFinded=1;
 	for(i=1;i<(long)nSeg;i++)
-		//for(j=1;j<nSeg;j++)
 		if(ptr2[ptr[i]]==0){
 			ptr2[ptr[i]]=structFinded;
 			structFinded++;
@@ -2153,16 +1759,6 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray &data, USrtArray &
 	long sizePtr=MAX_TAB;
 	long sizeDataX=data.size(0);
 	long sizeDataY=data.size(1);
-
-
-
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::segmentationPositiveValues(FltArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();
-	#endif	
 
 	//allocation of ptr
 	//ptr is an array of index to enumerate different structure
@@ -2300,7 +1896,6 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray &data, USrtArray &
 		ptr2[i]=0;
 	structFinded=1;
 	for(i=1;i<(long)nSeg;i++)
-		//for(j=1;j<nSeg;j++)
 		if(ptr2[ptr[i]]==0){
 			ptr2[ptr[i]]=structFinded;
 			structFinded++;
@@ -2317,190 +1912,6 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray &data, USrtArray &
 	
 	return(structFinded-1);
 }
-
-/*unsigned short Segment2D::segmentation(FltArray &data, USrtArray &seg, double val, bool diagonal, bool fillHoles){
-
-//	segmentation2D segment the 2D signal "data" which is upper than "val". It gives a map of segmentation "seg". 
-//	A label is set to each structure in the map seg. 
-
-	unsigned long *ptr;
-
-	unsigned long *ptr2;
-	long i,j;
-	unsigned long nSeg;
-	int structFinded;
-	int mini;
-	//int max;
-	long sizePtr=MAX_TAB;
-	long sizeDataX=data.size(0);
-	long sizeDataY=data.size(1);
-
-
-
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::segmentation(FltArray &data 0x%p, USrtArray &seg 0x%p, double val %f, bool diagonal %d)  <-<-\n",
-		&data, &seg, val, diagonal);
-	closeDebugStreamALS();
-	#endif	
-
-	//allocation of ptr
-	//ptr is an array of index to enumerate different structure
-	//if ptr[i]=j then structure i and structure j are same.
-	ptr=(unsigned long *)malloc(sizeof(long)*MAX_TAB);
-	//initialisation of ptr
-	for(i=0;i<MAX_TAB;i++)
-		ptr[i]=(unsigned short)i;
-	//nSeg indicate the number of the next unused structure
-	nSeg=1;
-
-
-	//initialisation of seg
-	seg=(unsigned long)0;
-
-	//first pixel
-	if(fabs(data.data[0])>val){ 
-		seg.data[0]=(unsigned short)nSeg;
-		inc(nSeg, &ptr, sizePtr);
-	}
-
-	//first line
-	for(j=1;j<sizeDataY;j++)
-		if(fabs(data.data[j])>val){
-			if(seg.data[j-1]==0){
-				seg.data[j]=(unsigned short)nSeg;
-				inc(nSeg, &ptr, sizePtr);
-			}else
-				seg.data[j]=seg.data[j-1];
-		}
-
-	//the rest
-	for(i=1;i<sizeDataX;i++){
-		if(DATA(i,0)>val){
-			if(SEG(i-1,0)!=0)
-				SEG(i,0)=SEG(i-1,0);
-			else if(SEG(i-1,1)!=0)
-				SEG(i,0)=SEG(i-1,1);
-			else{
-				SEG(i,0)=(unsigned short)nSeg;
-				inc(nSeg, &ptr, sizePtr);
-			}
-		}
-		for(j=1;j<sizeDataY;j++){
-			structFinded=0;
-			if(DATA(i,j)>val){
-				if( SEG(i,j-1) !=0 ){
-					structFinded=SEG(i,j-1);
-					SEG(i,j)=SEG(i,j-1);
-				}
-
-				if(diagonal)
-					if( SEG(i-1,j-1)!=0 ){
-						if(structFinded==0){
-							SEG(i,j)=SEG(i-1,j-1);
-							structFinded=SEG(i-1,j-1);
-						}else if(structFinded!=SEG(i-1,j-1)){
-							mini=min(structFinded,SEG(i-1,j-1),ptr[structFinded], ptr[SEG(i-1,j-1)]);
-							if((long)ptr[SEG(i-1,j-1)]>mini)
-								for(long k=mini;k<(long)nSeg;k++) 
-									if(k!=SEG(i-1,j-1))
-										if(ptr[SEG(i-1,j-1)]==ptr[k])
-											ptr[k]=mini;
-							if((long)ptr[SEG(i,j)]>mini)
-									for(long k=mini;k<(long)nSeg;k++) 
-										if(k!=SEG(i,j))
-											if(ptr[SEG(i,j)]==ptr[k])
-												ptr[k]=mini;
-							ptr[SEG(i-1,j-1)]=mini;	
-							ptr[structFinded]=mini;
-							structFinded=mini;
-						}
-					}
-
-				if( SEG(i-1,j)!=0 ){
-					if(structFinded==0){
-						SEG(i,j)=SEG(i-1,j);
-						structFinded=SEG(i-1,j);
-					}else if(structFinded!=SEG(i-1,j)){
-						mini=min(structFinded,SEG(i-1,j),ptr[structFinded], ptr[SEG(i-1,j)]);
-						if((long)ptr[SEG(i-1,j)]>mini)
-							for(long k=mini;k<(long)nSeg;k++) 
-								if(k!=SEG(i-1,j))
-									if(ptr[SEG(i-1,j)]==ptr[k])
-										ptr[k]=mini;
-						if((long)ptr[SEG(i,j)]>mini)
-								for(long k=mini;k<(long)nSeg;k++)
-									if(k!=SEG(i,j))
-										if(ptr[SEG(i,j)]==ptr[k])
-											ptr[k]=mini;
-						ptr[SEG(i-1,j)]=mini;
-						ptr[structFinded]=mini;
-						structFinded=mini;
-					}	
-				}
-				
-				if(diagonal)
-					if(j+1 < sizeDataY)
-						if( SEG(i-1,j+1)!=0 ){
-							if(structFinded==0){
-								SEG(i,j)=SEG(i-1,j+1);
-								structFinded=SEG(i-1,j+1);
-							}else if(structFinded!=SEG(i-1,j+1)){
-								mini=min(structFinded,SEG(i-1,j+1),ptr[structFinded], ptr[SEG(i-1,j+1)]);
-								if((long)ptr[SEG(i-1,j+1)]>mini)
-									for(long k=mini;k<(long)nSeg;k++) 
-										if(k!=SEG(i-1,j+1))
-											if(ptr[SEG(i-1,j+1)]==ptr[k])
-												ptr[k]=mini;
-								if((long)ptr[SEG(i,j)]>mini)
-									for(long k=mini;k<(long)nSeg;k++) 
-										if(k!=SEG(i,j))
-											if(ptr[SEG(i,j)]==ptr[k])
-												ptr[k]=mini;
-								ptr[SEG(i-1,j+1)]=mini;
-								ptr[structFinded]=mini;
-								structFinded=mini;
-							}
-						}
-				
-				if(structFinded==0){
-					SEG(i,j)=(unsigned short)nSeg;
-					inc(nSeg, &ptr, sizePtr);
-				}
-			}// end DATA(i,j)>val
-		}// end for j
-	}//end for i
-
-
-
-
-
-
-	ptr2=(unsigned long *)malloc(sizeof(long)*nSeg);
-	for(i=0;i<(long)nSeg;i++)
-		ptr2[i]=0;
-	structFinded=1;
-	for(i=1;i<(long)nSeg;i++)
-		//for(j=1;j<nSeg;j++)
-		if(ptr2[ptr[i]]==0){
-			ptr2[ptr[i]]=structFinded;
-			structFinded++;
-		}
-
-
-	for(i=0;i<sizeDataX*sizeDataY;i++)
-		seg.data[i]=(unsigned short)ptr2[ptr[seg.data[i]]];
-
-	free(ptr);
-	free(ptr2);
-	nbInfoStruct=structFinded-1;
-
-
-	mixIndex(seg);
-
-	return(structFinded-1);
-}*/
 
 void  Segment2D::mixIndex(USrtArray &seg){
 	

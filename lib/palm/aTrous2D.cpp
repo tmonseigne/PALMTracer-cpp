@@ -34,8 +34,6 @@ int ATrous::testSizes2D(FltArray& inputData, FltArray& outputData, BlArray& plan
 	if ((inputData.dim() + 1) != outputData.dim()) return (W_DIM_ERR);
 	if ((inputData.size(0) != outputData.size(0)) || (inputData.size(1) != outputData.size(1))) return (W_SIZE_ERR);
 	if (planesToUse.dim() != 1) return (W_DIM_ERR);
-	//if(outputData.size(2)!=planesToUse.size(0))
-	//return(W_SIZE_ERR);
 	for (i = outputData.size(2); i < (unsigned long)planesToUse.size(0); i++) planesToUse(i - 1) = false;
 
 
@@ -65,8 +63,6 @@ int ATrous::testSizes2D(USrtArray& inputData, FltArray& outputData, BlArray& pla
 	if ((inputData.dim() + 1) != outputData.dim()) return (W_DIM_ERR);
 	if ((inputData.size(0) != outputData.size(0)) || (inputData.size(1) != outputData.size(1))) return (W_SIZE_ERR);
 	if (planesToUse.dim() != 1) return (W_DIM_ERR);
-	//if(outputData.size(2)!=planesToUse.size(0))
-	//	return(W_SIZE_ERR);
 	for (i = outputData.size(2); i < (unsigned long)planesToUse.size(0); i++) planesToUse(i - 1) = false;
 
 
@@ -87,10 +83,8 @@ int ATrous::testSizes2D(USrtArray& inputData, FltArray& outputData, BlArray& pla
 
 void ATrous::projectionV02D(unsigned short* srcData, float* destData, unsigned long realProj, unsigned long sizeDataX, unsigned long sizeDataY)
 {
-	//Makes a projection in V0 space
-	//To be in the apropriate condition of the multiresolution,
-	//realProj make be set to 1
-	//if realProj=0 it just copy the data from srcData to destData
+	//Makes a projection in V0 space to be in the apropriate condition of the multiresolution, 
+	//realProj make be set to 1 if realProj=0 it just copy the data from srcData to destData
 
 	int i, j, cur_i, cur_j, offs;
 	double tab[3] = {0.1666666666, 0.6666666666666, 0.16666666666};
@@ -140,10 +134,8 @@ void ATrous::projectionV02D(unsigned short* srcData, float* destData, unsigned l
 
 void ATrous::projectionV02D(float* srcData, float* destData, unsigned long realProj, unsigned long sizeDataX, unsigned long sizeDataY)
 {
-	//Makes a projection in V0 space
-	//To be in the apropriate condition of the multiresolution,
-	//realProj make be set to 1
-	//if realProj=0 it just copy the data from srcData to destData
+	//Makes a projection in V0 space to be in the apropriate condition of the multiresolution,
+	//realProj make be set to 1 if realProj=0 it just copy the data from srcData to destData
 
 	int i, j, cur_i, cur_j, offs;
 	double tab[3] = {0.1666666666, 0.6666666666666, 0.16666666666};
@@ -301,8 +293,6 @@ int ATrous::aTrousDecomposition2D(FltArray& inputData, FltArray& outputData, BlA
 	projectionV02D(inputData.data, outputData.data, (int)realProj, sizeDataX, sizeDataY);
 
 	//############  sigma of input data ##########
-	//fprintf(debugStream,"sigma of input data:\t%f\n",sigmaNoiseEstimation(outputData, sizeDataX*sizeDataY, 10));
-
 	//Projection of the input signal in each wavelet space.
 	//The signal waveletPlanes[0] is the projection of the input signal in the W1 space,
 	//the signal waveletPlanes[x] is the projection of the input signal in the W(x+1) space...
@@ -374,14 +364,6 @@ int ATrous::aTrousDecomposition2D(USrtArray& inputData, FltArray& outputData, Bl
 		//As proj( W(x+1) ) = proj( V(x) ) - proj( V(x+1) ) ;	proj(Vx) is in waveletPlanes[x+1] 
 		//and proj(Vx+1) is in waveletPlanes[x+2]
 		//	waveletPlanes[x+1][*]=waveletPlanes[x+1][*]-waveletPlanes[x+2][*]
-		//if (currentPlane == 0)
-		//{
-		//	FILE* f = fopen("C:\\C1_CPU.txt", "a+");
-		//	for(int i = 0; i < sizeDataY*sizeDataX; i++)
-		//			fprintf(f, "%f\n", (waveletPlanes[1])[i]);
-		//	fclose(f);		
-		//}
-
 
 		for (i = 0; i < (unsigned long)(sizeDataX * sizeDataY); i++) (waveletPlanes[currentPlane])[i] -= (waveletPlanes[currentPlane + 1])[i];
 	}

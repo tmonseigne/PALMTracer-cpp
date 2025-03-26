@@ -28,12 +28,6 @@ bool NodeDistanceIntensity::metropolis(double deltaE, double temperature)
 	if (deltaE >= 0.) return (true);
 	if ((double)(rand() + 1) / (double)RAND_MAX > exp(deltaE / temperature)) return (false);
 	else return (true);
-
-
-	/*if(deltaE>=-temperature)  //same convergence!!!
-		return(true);
-	else
-		return(false);*/
 }
 
 
@@ -70,7 +64,7 @@ double NodeDistanceIntensity::likenessDistance(Node* n)
 *********************************************************************************************/
 double NodeDistanceIntensity::likenessDistance(Node* n)
 {
-	if (n == NULL) return (getLikeness(__min(distanceToBorder(), publicParameters->stdDistance), publicParameters->stdDistance)); // attention je rajoute le *3 pour les dooonées d'aqi(autoquant)
+	if (n == NULL) return (getLikeness(__min(distanceToBorder(), publicParameters->stdDistance), publicParameters->stdDistance)); // attention je rajoute le *3 pour les dooonÃ©es d'aqi(autoquant)
 	return (getLikeness(distance(n), publicParameters->stdDistance));
 }
 
@@ -420,16 +414,6 @@ double NodeDistanceIntensity::makeChangeFission0(double limitLoss)
 	if (!metropolis(deltaLikeness, limitLoss)) //deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFission0\n");
-#endif
-
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFuture; Node * p3=cRand->neighbor;
-		Node * p4=cRand->neighbor->connectionPast;
-		checkLinksHomogeneityInVicinity(L"Fission0", p1,p2,p3,p4);
-#endif
-
 		connectionFission1Future = connectionFuture;
 		connectionFission2Future = cRand->neighbor;
 		connectionFuture->connectionFissionPast = this;
@@ -439,11 +423,6 @@ double NodeDistanceIntensity::makeChangeFission0(double limitLoss)
 
 		if (cRand->neighbor->connectionPast != NULL) cRand->neighbor->connectionPast->connectionFuture = NULL;
 		cRand->neighbor->connectionPast = NULL;
-
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fission0", p1,p2,p3,p4);
-#endif
-
 
 		return (deltaLikeness);
 	}
@@ -476,18 +455,6 @@ double NodeDistanceIntensity::makeChangeFission1(double limitLoss, ChainNeighbor
 	if (!metropolis(deltaLikeness, limitLoss)) //deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-
-
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFission1\n");
-#endif
-
-#ifdef DEBUG_AT
-		Node * p1=this;Node * p2=connectionFission1Future;Node * p3=connectionFission2Future;Node * p4=cRand->neighbor;
-		Node * p5=cRand->neighbor->connectionFuture;
-		checkLinksHomogeneityInVicinity(L"Fission1", p1,p2,p3,p4,p5);
-#endif
-
 		connectionFuture = connectionFission1Future;
 		connectionFuture->connectionPast = this;
 		if (cRand->neighbor->connectionFuture != NULL) cRand->neighbor->connectionFuture->connectionPast = NULL;
@@ -497,10 +464,6 @@ double NodeDistanceIntensity::makeChangeFission1(double limitLoss, ChainNeighbor
 		connectionFission2Future->connectionFissionPast = NULL;
 		connectionFission1Future = NULL;
 		connectionFission2Future = NULL;
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fission1", p1,p2,p3,p4,p5);
-#endif
-
 		return (deltaLikeness);
 	}
 }
@@ -532,17 +495,6 @@ double NodeDistanceIntensity::makeChangeFission2(double limitLoss, ChainNeighbor
 	if (!metropolis(deltaLikeness, limitLoss)) //deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-
-
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFission2\n");
-#endif
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFission1Future; Node * p3=connectionFission2Future; Node * p4=cRand->neighbor;
-		Node * p5=cRand->neighbor->connectionFuture;
-		checkLinksHomogeneityInVicinity(L"Fission2", p1,p2 ,p3,p4,p5);
-#endif
-
 		connectionFuture = connectionFission2Future;
 		connectionFuture->connectionPast = this;
 		if (cRand->neighbor->connectionFuture != NULL) cRand->neighbor->connectionFuture->connectionPast = NULL;
@@ -553,9 +505,6 @@ double NodeDistanceIntensity::makeChangeFission2(double limitLoss, ChainNeighbor
 		connectionFission2Future = NULL;
 		connectionFission1Future = NULL;
 
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fission2", p1,p2 ,p3,p4,p5);
-#endif
 		return (deltaLikeness);
 	}
 }
@@ -576,26 +525,12 @@ double NodeDistanceIntensity::makeChangeFission3(double limitLoss)
 		return (0.);
 	else { // change the configuration
 
-
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFission3\n");
-#endif
-
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFission1Future; Node * p3=connectionFission2Future;
-		checkLinksHomogeneityInVicinity(L"Fission3", p1, p2, p3);
-#endif
-
-
 		connectionFuture = connectionFission1Future;
 		connectionFuture->connectionPast = this;
 		connectionFuture->connectionFissionPast = NULL;
 		connectionFission2Future->connectionFissionPast = NULL;
 		connectionFission1Future = NULL;
 		connectionFission2Future = NULL;
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fission3", p1, p2, p3);
-#endif
 
 		return (deltaLikeness);
 	}
@@ -611,27 +546,12 @@ double NodeDistanceIntensity::makeChangeFission4(double limitLoss)
 	if (!metropolis(deltaLikeness, limitLoss)) //deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFission4\n");
-#endif
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFission1Future; Node * p3=connectionFission2Future;
-		checkLinksHomogeneityInVicinity(L"Fission4", p1, p2, p3);
-#endif
-
-
 		connectionFuture = connectionFission2Future;
 		connectionFuture->connectionPast = this;
 		connectionFuture->connectionFissionPast = NULL;
 		connectionFission1Future->connectionFissionPast = NULL;
 		connectionFission1Future = NULL;
 		connectionFission2Future = NULL;
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fission4", p1, p2, p3);
-#endif
-
-
 		return (deltaLikeness);
 	}
 }
@@ -658,16 +578,6 @@ double NodeDistanceIntensity::makeChangeFission5(double limitLoss, ChainNeighbor
 		return (0.);
 	else { // change the configuration
 
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFission5\n");
-#endif
-
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFission1Future; Node * p3=connectionFission2Future; 
-		Node * p4=cRand->neighbor; Node * p5=cRand->neighbor->connectionFuture;
-		checkLinksHomogeneityInVicinity(L"Fission5", p1, p2, p3, p4, p5);
-#endif
-
 		connectionFuture = connectionFission1Future;
 		connectionFuture->connectionPast = this;
 		cRand->neighbor->connectionFission1Future = connectionFission2Future;
@@ -680,11 +590,6 @@ double NodeDistanceIntensity::makeChangeFission5(double limitLoss, ChainNeighbor
 		connectionFission2Future = NULL;
 		cRand->neighbor->connectionFuture->connectionPast = NULL;
 		cRand->neighbor->connectionFuture = NULL;
-
-
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fission5", p1, p2, p3, p4, p5);
-#endif
 
 		return (deltaLikeness);
 	}
@@ -713,16 +618,6 @@ double NodeDistanceIntensity::makeChangeFission8(double limitLoss, ChainNeighbor
 		return (0.);
 	else { // change the configuration
 
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFission8\n");
-#endif
-
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFission1Future; Node * p3=connectionFission2Future; Node * p4=cRand->neighbor; 
-		Node * p5=cRand->neighbor->connectionFuture;
-		checkLinksHomogeneityInVicinity(L"Fission8", p1, p2, p3, p4, p5);
-#endif
-
 		connectionFuture = connectionFission2Future;
 		connectionFuture->connectionPast = this;
 		cRand->neighbor->connectionFission2Future = connectionFission1Future;
@@ -735,11 +630,6 @@ double NodeDistanceIntensity::makeChangeFission8(double limitLoss, ChainNeighbor
 		connectionFission1Future = NULL;
 		cRand->neighbor->connectionFuture->connectionPast = NULL;
 		cRand->neighbor->connectionFuture = NULL;
-
-
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fission8", p1, p2, p3, p4, p5);
-#endif
 
 		return (deltaLikeness);
 	}
@@ -776,16 +666,6 @@ double NodeDistanceIntensity::makeChangeFission9(double limitLoss, ChainNeighbor
 		return (0.);
 	else { // change the configuration
 
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFission9\n");
-#endif
-
-#ifdef DEBUG_AT
-		Node * p1=this;Node * p2=connectionFission1Future; Node * p3=connectionFission2Future; 
-		Node * p4=cRand->neighbor; Node * p5=cRand->neighbor->connectionFuture;
-		checkLinksHomogeneityInVicinity(L"Fission5", p1, p2, p3, p4, p5);
-#endif
-
 
 		cRand->neighbor->connectionFission1Future = connectionFission1Future;
 		connectionFission1Future->connectionFissionPast = cRand->neighbor;
@@ -796,12 +676,6 @@ double NodeDistanceIntensity::makeChangeFission9(double limitLoss, ChainNeighbor
 		connectionFission1Future = NULL;
 		connectionFission2Future = NULL;
 		cRand->neighbor->connectionFuture = NULL;
-
-
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fission5", p1, p2, p3, p4, p5);
-#endif
-
 		return (deltaLikeness);
 	}
 }
@@ -833,16 +707,6 @@ double NodeDistanceIntensity::makeChangeFission6(double limitLoss, ChainNeighbor
 		return (0.);
 	else { // change the configuration
 
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFission6\n");
-#endif
-
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFission1Future; Node * p3=connectionFission2Future; Node * p4=cRand->neighbor;
-		Node * p5=cRand->neighbor->connectionFuture; 
-		checkLinksHomogeneityInVicinity(L"Fission6", p1, p2, p3, p4, p5);
-#endif
-
 		connectionFission2Future->connectionPast = cRand->neighbor;
 		cRand->neighbor->connectionFuture->connectionFissionPast = this;
 		Node* localN = cRand->neighbor->connectionFuture;
@@ -850,11 +714,6 @@ double NodeDistanceIntensity::makeChangeFission6(double limitLoss, ChainNeighbor
 		connectionFission2Future->connectionFissionPast = NULL;
 		connectionFission2Future = localN;
 		connectionFission2Future->connectionPast = NULL;
-
-
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fission6", p1, p2, p3, p4, p5);
-#endif
 
 		return (deltaLikeness);
 	}
@@ -888,16 +747,6 @@ double NodeDistanceIntensity::makeChangeFission7(double limitLoss, ChainNeighbor
 		return (0.);
 	else { // change the configuration
 
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFission7\n");
-#endif
-
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFission1Future; Node * p3=connectionFission2Future; Node * p4=cRand->neighbor;
-		Node * p5=cRand->neighbor->connectionFuture;
-		checkLinksHomogeneityInVicinity(L"Fission7", p1, p2, p3, p4, p5);
-#endif
-
 		connectionFission1Future->connectionPast = cRand->neighbor;
 		cRand->neighbor->connectionFuture->connectionFissionPast = this;
 		Node* localN = cRand->neighbor->connectionFuture;
@@ -905,11 +754,6 @@ double NodeDistanceIntensity::makeChangeFission7(double limitLoss, ChainNeighbor
 		connectionFission1Future->connectionFissionPast = NULL;
 		connectionFission1Future = localN;
 		connectionFission1Future->connectionPast = NULL;
-
-
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fission7", p1, p2, p3, p4, p5);
-#endif
 
 		return (deltaLikeness);
 	}
@@ -1075,23 +919,10 @@ double NodeDistanceIntensity::makeChangeFusion0(double limitLoss)
 
 	deltaLikeness = +connectionFuture->likenessFusion(cRand->neighbor, this) + ((cRand->neighbor->connectionFuture != NULL) ? cRand->neighbor->connectionFuture->likeness(NULL) : 0.) - likeness(connectionFuture) - cRand->neighbor->likeness(cRand->neighbor->connectionFuture);
 
-	//if(cRand->neighbor->connectionFuture!=NULL)
-	//	deltaLikeness+=	cRand->neighbor->connectionFuture->likeness(NULL);
-
 	if (!metropolis(deltaLikeness, limitLoss)) //deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
 		//unlink connectionFuture
-
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFusion0\n");
-#endif
-
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFuture; Node * p3=cRand->neighbor; Node * p4=cRand->neighbor->connectionFuture;
-		checkLinksHomogeneityInVicinity(L"Fusion0", p1, p2, p3, p4);
-#endif
-
 
 		connectionFusionFuture = connectionFuture;
 		connectionFuture->connectionFusion1Past = this;
@@ -1103,10 +934,6 @@ double NodeDistanceIntensity::makeChangeFusion0(double limitLoss)
 		cRand->neighbor->connectionFuture = NULL;
 		connectionFuture = NULL;
 		connectionFusionFuture->connectionPast = NULL;
-
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fusion0", p1, p2, p3, p4);
-#endif
 
 		return (deltaLikeness);
 	}
@@ -1149,15 +976,6 @@ double NodeDistanceIntensity::makeChangeFusion1(double limitLoss, ChainNeighbor*
 	if (!metropolis(deltaLikeness, limitLoss)) //deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFusion1\n");
-#endif
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFusionFuture; Node * p3=node; Node * p4=cRand->neighbor; Node * p5=cRand->neighbor->connectionPast;
-		checkLinksHomogeneityInVicinity(L"Fusion1", p1, p2, p3, p4, p5);
-#endif
-
-
 		connectionFusionFuture->connectionPast = this;
 		connectionFusionFuture->connectionFusion1Past = NULL;
 		connectionFusionFuture->connectionFusion2Past = NULL;
@@ -1169,9 +987,6 @@ double NodeDistanceIntensity::makeChangeFusion1(double limitLoss, ChainNeighbor*
 		if (cRand->neighbor->connectionPast != NULL) cRand->neighbor->connectionPast->connectionFuture = NULL;
 		cRand->neighbor->connectionPast = node;
 
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fusion1", p1, p2, p3, p4, p5);
-#endif
 		return (deltaLikeness);
 	}
 }
@@ -1211,14 +1026,6 @@ double NodeDistanceIntensity::makeChangeFusion2(double limitLoss, ChainNeighbor*
 	else { // change the configuration
 		//unlink connectionFuture
 
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFusion2\n");
-#endif
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFusionFuture; Node * p3=node; Node * p4=cRand->neighbor; Node * p5=cRand->neighbor->connectionPast;
-		checkLinksHomogeneityInVicinity(L"Fusion2", p1, p2, p3, p4, p5);
-#endif
-
 		connectionFusionFuture->connectionPast = node;
 		connectionFusionFuture->connectionFusion1Past = NULL;
 		connectionFusionFuture->connectionFusion2Past = NULL;
@@ -1228,9 +1035,7 @@ double NodeDistanceIntensity::makeChangeFusion2(double limitLoss, ChainNeighbor*
 		connectionFuture = cRand->neighbor;
 		if (cRand->neighbor->connectionPast != NULL) cRand->neighbor->connectionPast->connectionFuture = NULL;
 		cRand->neighbor->connectionPast = this;
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fusion2", p1, p2, p3, p4, p5);
-#endif
+
 		return (deltaLikeness);
 	}
 }
@@ -1257,15 +1062,6 @@ double NodeDistanceIntensity::makeChangeFusion3(double limitLoss)
 		return (0.);
 	else { // change the configuration
 
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFusion3\n");
-#endif
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFusionFuture; Node * p3=node;
-		checkLinksHomogeneityInVicinity(L"Fusion3", p1, p2, p3);
-#endif
-
-
 		connectionFusionFuture->connectionPast = this;
 		connectionFusionFuture->connectionFusion1Past = NULL;
 		connectionFusionFuture->connectionFusion2Past = NULL;
@@ -1273,10 +1069,6 @@ double NodeDistanceIntensity::makeChangeFusion3(double limitLoss)
 		connectionFusionFuture = NULL;
 		node->connectionFusionFuture = NULL;
 		if (node->connectionFuture != NULL) return (-1.); //impossible inutile
-
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fusion3", p1, p2, p3);
-#endif
 
 		return (deltaLikeness);
 	}
@@ -1301,24 +1093,13 @@ double NodeDistanceIntensity::makeChangeFusion4(double limitLoss)
 	if (!metropolis(deltaLikeness, limitLoss)) //deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFusion4\n");
-#endif
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFusionFuture; Node * p3=node;
-		checkLinksHomogeneityInVicinity(L"Fusion4", p1, p2, p3);
-#endif
-
-
 		connectionFusionFuture->connectionPast = node;
 		connectionFusionFuture->connectionFusion1Past = NULL;
 		connectionFusionFuture->connectionFusion2Past = NULL;
 		node->connectionFuture = connectionFusionFuture;
 		connectionFusionFuture = NULL;
 		node->connectionFusionFuture = NULL;
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fusion4", p1, p2, p3);
-#endif
+
 		if (connectionFuture != NULL) return (-1.); //impossible inutile
 		return (deltaLikeness);
 	}
@@ -1359,15 +1140,6 @@ double NodeDistanceIntensity::makeChangeFusion5(double limitLoss, ChainNeighbor*
 	if (!metropolis(deltaLikeness, limitLoss)) //deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFusion5\n");
-#endif
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFusionFuture; Node * p3=node; Node * p4=cRand->neighbor; 
-		Node * p5=cRand->neighbor->connectionPast;
-		checkLinksHomogeneityInVicinity(L"Fusion5", p1, p2, p3, p4, p5);
-#endif
-
 
 		connectionFuture = connectionFusionFuture;
 		connectionFuture->connectionPast = this;
@@ -1386,9 +1158,6 @@ double NodeDistanceIntensity::makeChangeFusion5(double limitLoss, ChainNeighbor*
 		cRand->neighbor->connectionPast->connectionFuture = NULL;
 		cRand->neighbor->connectionPast = NULL;
 
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fusion5", p1, p2, p3, p4, p5);
-#endif
 		return (deltaLikeness);
 	}
 }
@@ -1427,14 +1196,6 @@ double NodeDistanceIntensity::makeChangeFusion7(double limitLoss, ChainNeighbor*
 	if (!metropolis(deltaLikeness, limitLoss)) //deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFusion5\n");
-#endif
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFusionFuture; Node * p3=node; Node * p4=cRand->neighbor; Node * p5=cRand->neighbor->connectionPast;
-		checkLinksHomogeneityInVicinity(L"Fusion7", p1, p2, p3, p4, p5);
-#endif
-
 
 		node->connectionFuture = node->connectionFusionFuture;
 		node->connectionFuture->connectionPast = node;
@@ -1453,9 +1214,6 @@ double NodeDistanceIntensity::makeChangeFusion7(double limitLoss, ChainNeighbor*
 		cRand->neighbor->connectionPast->connectionFuture = NULL;
 		cRand->neighbor->connectionPast = NULL;
 
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fusion7", p1, p2, p3, p4, p5);
-#endif
 		return (deltaLikeness);
 	}
 }
@@ -1497,14 +1255,6 @@ double NodeDistanceIntensity::makeChangeFusion8(double limitLoss, ChainNeighbor*
 	if (!metropolis(deltaLikeness, limitLoss)) //deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFusion8\n");
-#endif
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFusionFuture; Node * p3=node; Node * p4=cRand->neighbor; Node * p5=cRand->neighbor->connectionPast; 
-		checkLinksHomogeneityInVicinity(L"Fusion8", p1, p2, p3, p4, p5);
-#endif
-
 		connectionFusionFuture->connectionPast = cRand->neighbor->connectionPast;
 		connectionFusionFuture->connectionPast->connectionFuture = connectionFusionFuture;
 
@@ -1517,10 +1267,6 @@ double NodeDistanceIntensity::makeChangeFusion8(double limitLoss, ChainNeighbor*
 		connectionFusionFuture->connectionFusion2Past = NULL;
 		connectionFusionFuture = cRand->neighbor;
 
-
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fusion8", p1, p2, p3, p4, p5);
-#endif
 		return (deltaLikeness);
 	}
 }
@@ -1555,13 +1301,6 @@ double NodeDistanceIntensity::makeChangeFusion6(double limitLoss, ChainNeighbor*
 	if (!metropolis(deltaLikeness, limitLoss)) //deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFusion6\n");
-#endif
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFusionFuture; Node * p3=node; Node * p4=cRand->neighbor; Node * p5=cRand->neighbor->connectionPast; 
-		checkLinksHomogeneityInVicinity(L"Fusion6", p1, p2, p3, p4, p5);
-#endif
 
 		if (connectionFusionFuture->connectionFusion1Past == this) {
 			cRand->neighbor->connectionPast->connectionFusionFuture = connectionFusionFuture;
@@ -1580,10 +1319,6 @@ double NodeDistanceIntensity::makeChangeFusion6(double limitLoss, ChainNeighbor*
 			cRand->neighbor->connectionPast = node;
 		}
 
-
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fusion6", p1, p2, p3, p4, p5);
-#endif
 		return (deltaLikeness);
 	}
 }
@@ -1619,18 +1354,6 @@ double NodeDistanceIntensity::makeChangeFusion9(double limitLoss, ChainNeighbor*
 	if (!metropolis(deltaLikeness, limitLoss)) //deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeFusion9\n");
-#endif
-#ifdef DEBUG_AT
-		Node * p1=this; 
-		Node * p2=connectionFusionFuture; 
-		Node * p3=node; 
-		Node * p4=cRand->neighbor; 
-		Node * p5=cRand->neighbor->connectionFissionPast; 
-		Node * p6=node2;
-		checkLinksHomogeneityInVicinity(L"Fusion6", p1, p2, p3, p4, p5, p6);
-#endif
 
 		connectionFusionFuture->connectionPast = this;
 		connectionFuture = connectionFusionFuture;
@@ -1647,10 +1370,6 @@ double NodeDistanceIntensity::makeChangeFusion9(double limitLoss, ChainNeighbor*
 		node2->connectionPast = node2->connectionFissionPast;
 		node2->connectionFissionPast = NULL;
 
-
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"Fusion6", p1, p2, p3, p4, p5, p6);
-#endif
 		return (deltaLikeness);
 	}
 }
@@ -1793,25 +1512,7 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage0(double limitLoss)
 	//NULL--------2(connectionFuture)
 
 	double deltaLikeness = +likeness(NULL) + connectionFuture->likeness(NULL) - likeness(connectionFuture);
-	if (!metropolis(deltaLikeness, limitLoss)) //deltaLikeness<limitLoss) // if the new solution is to bad
-		return (0.);
-	//else{ // change the configuration
-
-	//	#ifdef TRACE_NODE
-	//	wprintf(L"makeChangeSimpleLinkage0\n");
-	//	#endif
-	//	#ifdef DEBUG_AT
-	//	Node * p1=this; Node * p2=connectionFuture; 
-	//	checkLinksHomogeneityInVicinity(L"SimpleLinkage0", p1, p2);
-	//	#endif
-
-	//	connectionFuture->connectionPast=NULL;
-	//	connectionFuture=NULL;
-	//	#ifdef DEBUG_AT
-	//	checkLinksHomogeneityInVicinity(L"SimpleLinkage0", p1, p2);
-	//	#endif
-	//	return(deltaLikeness);
-	//}
+	if (!metropolis(deltaLikeness, limitLoss)) return (0.); //deltaLikeness<limitLoss) // if the new solution is to bad
 	return (0.);
 }
 
@@ -1839,21 +1540,11 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage1(double limitLoss, ChainNe
 	if (!metropolis(deltaLikeness, limitLoss)) //deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeSimpleLinkage1\n");
-#endif
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFuture; Node * p3=cRand->neighbor;
-		checkLinksHomogeneityInVicinity(L"SimpleLinkage1", p1, p2, p3);
-#endif
-
 		//unlink connectionFuture
 		if (connectionFuture != NULL) connectionFuture->connectionPast = NULL;
 		connectionFuture = cRand->neighbor;
 		connectionFuture->connectionPast = this;
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"SimpleLinkage1", p1, p2, p3);
-#endif
+
 		return (deltaLikeness);
 	}
 	//return(0.);
@@ -1880,21 +1571,13 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage2(double limitLoss, ChainNe
 		return (0.);
 	else { // change the configuration
 		//unlink connectionFuture
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeSimpleLinkage2\n");
-#endif
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFuture; Node * p3=cRand->neighbor; Node * p4=cRand->neighbor->connectionPast;
-		checkLinksHomogeneityInVicinity(L"SimpleLinkage2", p1, p2, p3, p4);
-#endif
+
 
 		if (connectionFuture != NULL) connectionFuture->connectionPast = NULL;
 		connectionFuture = cRand->neighbor;
 		connectionFuture->connectionPast->connectionFuture = NULL;
 		connectionFuture->connectionPast = this;
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"SimpleLinkage2", p1, p2, p3, p4);
-#endif
+
 		return (deltaLikeness);
 	}
 	//return(0.);
@@ -1951,14 +1634,6 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage3(double limitLoss, ChainNe
 		return (0.);
 	else { // change the configuration
 		//unlink connectionFuture
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeSimpleLinkage3\n");
-#endif
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFuture; Node * p3=cRand->neighbor; Node * p4=cRand->neighbor->connectionPast;
-		Node * p5=c->neighbor;
-		checkLinksHomogeneityInVicinity(L"SimpleLinkage3a", p1, p2, p3, p4, p5);
-#endif
 
 		if (connectionFuture != NULL) connectionFuture->connectionPast = NULL; //????
 		connectionFuture = cRand->neighbor;
@@ -1966,9 +1641,6 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage3(double limitLoss, ChainNe
 		connectionFuture->connectionPast->connectionFuture->connectionPast = connectionFuture->connectionPast;
 		connectionFuture->connectionPast = this;
 
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"SimpleLinkage3b", p1, p2, p3, p4, p5);
-#endif
 		return (deltaLikeness);
 	}
 	//return(0.);
@@ -1996,22 +1668,12 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage4(double limitLoss, ChainNe
 	if (!metropolis(deltaLikeness, limitLoss)) //deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeSimpleLinkage4\n");
-#endif
-
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionFuture; Node * p3=cRand->neighbor; Node * p4=cRand->neighbor->connectionPast;
-		checkLinksHomogeneityInVicinity(L"SimpleLinkage4b", p1, p2, p3, p4);
-#endif
 
 		cRand->neighbor->connectionPast->connectionFuture = connectionFuture;
 		connectionFuture->connectionPast = cRand->neighbor->connectionPast;
 		connectionFuture = cRand->neighbor;
 		cRand->neighbor->connectionPast = this;
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"SimpleLinkagea4", p1, p2, p3, p4);
-#endif
+
 		return (deltaLikeness);
 	}
 	//return(0.);
@@ -2033,9 +1695,6 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage0(double limitLoss)
 	long dt, i;
 	ChainNeighbor* cRand;
 
-	//if(connectionFuture!=NULL) 
-	//	return(0);
-
 	dt = rand() % (publicParameters->nbTemporalWindows - 1) + 2;
 	long nbNodeAtGoodTime = 0;
 	cRand = NULL; //inutile
@@ -2043,9 +1702,6 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage0(double limitLoss)
 	long idRandNeighbor;
 
 	for (i = 0, cRand = neighborsBlinkFuture; cRand != NULL; cRand = cRand->next)
-		//	if(cRand->neighbor->time-time>dt)
-		//		;//exitFor=true;
-		//	else 
 		if ((cRand->neighbor->time - time == dt) && (cRand->neighbor->connectionPast == NULL) && (cRand->neighbor->connectionBlinkPast == NULL) && (cRand->neighbor->connectionFissionPast == NULL) && (cRand->neighbor->connectionFusion1Past == NULL)) nbNodeAtGoodTime++;
 	if (nbNodeAtGoodTime == 0) return (0);
 
@@ -2067,20 +1723,9 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage0(double limitLoss)
 	if (!metropolis(deltaLikeness, limitLoss)) //deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeBlinkLinkage0\n");
-#endif
-
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=cRand->neighbor;
-		checkLinksHomogeneityInVicinity(L"makeChangeBlinkLinkage0b", p1, p2);
-#endif
-
 		cRand->neighbor->connectionBlinkPast = this;
 		connectionBlinkFuture = cRand->neighbor;
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"makeChangeBlinkLinkage0a", p1, p2);
-#endif
+
 		return (deltaLikeness);
 	}
 }
@@ -2100,20 +1745,11 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage1(double limitLoss)
 	if (!metropolis(deltaLikeness, limitLoss)) // deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeBlinkLinkage1\n");
-#endif
 
-#ifdef DEBUG_AT
-		Node * p1=this; Node * p2=connectionBlinkFuture;
-		checkLinksHomogeneityInVicinity(L"makeChangeBlinkLinkage1b", p1, p2);
-#endif
 
 		connectionBlinkFuture->connectionBlinkPast = NULL;
 		connectionBlinkFuture = NULL;
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"makeChangeBlinkLinkage1a", p1, p2);
-#endif
+
 		return (deltaLikeness);
 	}
 }
@@ -2141,17 +1777,6 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage2(double limitLoss, ChainNei
 	if (!metropolis(deltaLikeness, limitLoss)) // deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeBlinkLinkage2\n");
-#endif
-
-#ifdef DEBUG_AT
-		Node * p1=this; 
-		Node * p2=connectionBlinkFuture;
-		Node * p3=cRand->neighbor;
-		Node * p4=cRand->neighbor->connectionPast;
-		checkLinksHomogeneityInVicinity(L"makeChangeBlinkLinkage2B", p1, p2, p3, p4);
-#endif
 		connectionBlinkFuture->connectionBlinkPast = cRand->neighbor->connectionPast;
 		cRand->neighbor->connectionPast->connectionBlinkFuture = connectionBlinkFuture;
 		cRand->neighbor->connectionPast->connectionFuture = NULL;
@@ -2159,10 +1784,6 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage2(double limitLoss, ChainNei
 		connectionFuture = cRand->neighbor;
 		connectionBlinkFuture = NULL;
 
-
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"makeChangeBlinkLinkage2A", p1, p2, p3, p4);
-#endif
 		return (deltaLikeness);
 	}
 }
@@ -2190,17 +1811,7 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage3(double limitLoss, ChainNei
 	if (!metropolis(deltaLikeness, limitLoss)) // deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeBlinkLinkage3\n");
-#endif
 
-#ifdef DEBUG_AT
-		Node * p1=this; 
-		Node * p2=connectionBlinkFuture;
-		Node * p3=cRand->neighbor;
-		Node * p4=cRand->neighbor->connectionFuture;
-		checkLinksHomogeneityInVicinity(L"makeChangeBlinkLinkage3b", p1, p2, p3, p4);
-#endif
 		cRand->neighbor->connectionFuture->connectionBlinkPast = this;
 		cRand->neighbor->connectionFuture->connectionPast = NULL;
 		connectionBlinkFuture->connectionBlinkPast = NULL;
@@ -2209,10 +1820,6 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage3(double limitLoss, ChainNei
 		cRand->neighbor->connectionFuture = connectionBlinkFuture;
 		connectionBlinkFuture = tmp;
 
-
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"makeChangeBlinkLinkage3a", p1, p2, p3, p4);
-#endif
 		return (deltaLikeness);
 	}
 }
@@ -2239,25 +1846,11 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage4(double limitLoss, ChainNei
 	if (!metropolis(deltaLikeness, limitLoss)) // deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeBlinkLinkage4\n");
-#endif
-
-#ifdef DEBUG_AT
-		Node * p1=this; 
-		Node * p2=connectionBlinkFuture;
-		Node * p3=cRand->neighbor;
-		checkLinksHomogeneityInVicinity(L"makeChangeBlinkLinkage4B", p1, p2, p3);
-#endif
 		connectionBlinkFuture->connectionBlinkPast = NULL;
 		connectionBlinkFuture = NULL;
 		cRand->neighbor->connectionPast = this;
 		connectionFuture = cRand->neighbor;
 
-
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"makeChangeBlinkLinkage4A", p1, p2, p3);
-#endif
 		return (deltaLikeness);
 	}
 }
@@ -2285,27 +1878,12 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage5(double limitLoss, ChainNei
 	if (!metropolis(deltaLikeness, limitLoss)) // deltaLikeness<limitLoss) // if the new solution is to bad
 		return (0.);
 	else { // change the configuration
-#ifdef TRACE_NODE
-		wprintf(L"makeChangeBlinkLinkage3\n");
-#endif
 
-#ifdef DEBUG_AT
-		Node * p1=this; 
-		Node * p2=connectionBlinkFuture;
-		Node * p3=cRand->neighbor;
-
-		checkLinksHomogeneityInVicinity(L"makeChangeBlinkLinkage5B", p1, p2, p3);
-#endif
 
 		connectionBlinkFuture->connectionBlinkPast = NULL;
 		connectionBlinkFuture->connectionPast = cRand->neighbor;
 		cRand->neighbor->connectionFuture = connectionBlinkFuture;
 		connectionBlinkFuture = NULL;
-
-
-#ifdef DEBUG_AT
-		checkLinksHomogeneityInVicinity(L"makeChangeBlinkLinkage5A", p1, p2, p3);
-#endif
 		return (deltaLikeness);
 	}
 }
@@ -2538,15 +2116,6 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage(double limitLoss)
 	int i;
 	ChainNeighbor* cRand;
 	ChainNeighbor* c;
-	// is the difference between the new configuration likeness and the old. 
-	//if deltaLikeness>0 then the new solution is better
-
-	/*//test if this is implicated in a fusion or a fission
-	if(connectionFission1Future!=NULL) //! Fission
-		return(0.);
-	if(connectionFusionFuture!=NULL) //! Fusion
-		return(0.);*/
-
 
 	if ((connectionFuture == NULL) || (rand() % 2 == 0)) {
 		//cRand is a random node in the vicinity of "this" in the future.

@@ -10,14 +10,7 @@
 #include <algorithm>
 
 // CPU version of gaussian fit 2D
-//#define dimFit 7
 #define Npar 5 // I0, x0, y0, sigma, offset
-//#define Npnt dimFit*dimFit
-//#define SIMULATION
-
-//unsigned short dimFit = 0;
-//unsigned short Npnt = 0;
-//float ref = 0.;
 
 float GaussianFit2D_Sigma::PSF(float x, float y, float I0, float x0, float y0, float sigma, float offset) { return I0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2))) + offset; }
 
@@ -43,7 +36,6 @@ float GaussianFit2D_Sigma::deriv1sigma(float x, float y, float I0, float x0, flo
 
 float GaussianFit2D_Sigma::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat/*IN*/, float* weight_sq/*IN*/, float* alpha/*OUT*/, float* beta/*OUT*/, float* y_hat/*OUT*/)
 {
-	/*float delta_y[Npnt];*/
 	float* delta_y = (float*)malloc(Npnt * sizeof(float));
 	for (int elt = 0; elt < Npnt; elt++) {
 		y_hat[elt] = PSF((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4]);
@@ -51,7 +43,6 @@ float GaussianFit2D_Sigma::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float*
 	}
 
 	// Computing Jacobian matrix (dydp)
-	//float dydp[Npnt * Npar];
 	float* dydp = (float*)malloc(Npnt * Npar * sizeof(float));
 	for (int elt = 0; elt < Npnt; elt++) {
 		dydp[(0) + elt * Npar] = deriv1I0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3]);    // I0
@@ -61,12 +52,11 @@ float GaussianFit2D_Sigma::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float*
 		dydp[(4) + elt * Npar] = 1;                                                                             // offset
 	}
 
-	//float inter[Npar * Npnt];
 	float* inter = (float*)malloc(Npar * Npnt * sizeof(float));
 	for (int elt = 0; elt < Npnt; elt++)
 		for (int i = 0; i < Npar; i++) inter[elt * Npar + i] = weight_sq[elt] * dydp[elt * Npar + i];
 
-	// Computing alpha (A vérifier)
+	// Computing alpha (A vÃ©rifier)
 	for (int j = 0; j < Npar; j++)
 		for (int i = 0; i < Npar; i++) {
 			alpha[Npar * j + i] = 0;
@@ -74,7 +64,6 @@ float GaussianFit2D_Sigma::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float*
 		}
 
 	// Computing beta
-	//float inter1[Npnt];
 	float* inter1 = (float*)malloc(Npnt * sizeof(float));
 	for (int elt = 0; elt < Npnt; elt++) inter1[elt] = weight_sq[elt] * delta_y[elt];
 
@@ -127,7 +116,7 @@ void GaussianFit2D_Sigma::inverse(float* MM, float* Minv)
 		// Copy Mi1 to Minv
 		for (int index = 0; index < Npar * Npar; index++) Minv[index] = Mi1[index];
 
-		for (int k = 0; k < Npar; k++) // mise zéros de la colonne
+		for (int k = 0; k < Npar; k++) // mise zÃ©ros de la colonne
 			if (k != i)
 				for (int j = 0; j < Npar; j++) {
 					M1[k * Npar + j] = MM[k * Npar + j] - MM[i * Npar + j] * MM[k * Npar + i];
@@ -156,7 +145,6 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 	float time_final;
 	float time = 0;
 
-	/*if((x0 > 3) && (x0 < sizeX-4) &&  (y0 > 3) && (y0 < sizeY-4))*/
 	if ((x0 >= (int)ref) && (x0 <= sizeX - (int)ref - 1) && (y0 >= (int)ref) && (y0 <= sizeY - (int)ref - 1)) {
 #ifdef SIMULATION
 
@@ -172,16 +160,12 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 		float p_max[Npar] = {65535., x0 + 1, y0 + 1, 20., 65535.};
 #endif
 
-		//float y_dat[Npnt];
-		//float weight[Npnt];
-		//float weight_sq[Npnt];
-		//unsigned int t[2 * Npnt];
 		float* y_dat = (float*)malloc(Npnt * sizeof(float));
 		float* weight = (float*)malloc(Npnt * sizeof(float));
 		float* weight_sq = (float*)malloc(Npnt * sizeof(float));
 		unsigned int* t = (unsigned int*)malloc(2 * Npnt * sizeof(unsigned int));
 
-		// Initialization of y_dat & t (A vérifier)
+		// Initialization of y_dat & t (A vÃ©rifier)
 		float max_intensity = -70000;
 		float min_intensity = +70000;
 		for (int jj = -dimFit / 2; jj <= dimFit / 2; jj++)
@@ -318,36 +302,6 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 
 			if (iteration == iterNum) stop = 1;
 		}
-
-		// Computing standard error
-		;
-		//for(int ii = 0; ii < Npnt; ii++) 
-		//	weight_sq[ii] = (Npnt-Npar+1)/(delta_y[ii]*delta_y[ii]);
-
-		//X2 = lm_matx(t/*IN*/, p/*IN*/, y_dat/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
-
-		//float covar[Npar * Npar];
-		//float sigma_p[Npar];
-		//float corr [Npar * Npar];
-
-		//X2 /= 2;
-		//
-		//inverse(alpha, covar);
-
-		//// standard error of parameters
-		//sigma_p[0] = sqrt(covar[0*Npar+0]);
-		//sigma_p[1] = sqrt(covar[1*Npar+1]);
-		//sigma_p[2] = sqrt(covar[2*Npar+2]);
-		//sigma_p[3] = sqrt(covar[3*Npar+3]);
-		//sigma_p[4] = sqrt(covar[4*Npar+4]);		
-
-		//float q[Npar*Npar];
-		//for(int ii = 0; ii < Npar; ii++) 
-		//	for(int jj = 0; jj < Npar; jj++)
-		//		q[ii + jj * Npar] = sigma_p[ii] * sigma_p[jj];
-
-		//for(int ii = 0; ii < Npar*Npar; ii++)
-		//	corr[ii] = covar[ii] / q[ii]; 
 
 		// computing "y_dat" mean & "y_hat" mean
 		float y_dat_mean = 0.;

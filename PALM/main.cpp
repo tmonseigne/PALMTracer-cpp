@@ -97,7 +97,6 @@ void computeBsplines(int n, gsl_vector* x, gsl_vector* y, int* nbPoints, vec* x_
 	cov = gsl_matrix_alloc(ncoeffs, ncoeffs);
 	mw = gsl_multifit_linear_alloc(n, ncoeffs);
 
-	//printf("#m=0,S=0\n");
 	ifstream f("Calibration.txt");
 	string line;
 	getline(f, line); // Header
@@ -107,7 +106,6 @@ void computeBsplines(int n, gsl_vector* x, gsl_vector* y, int* nbPoints, vec* x_
 	double xMax = -9999;
 	for (i = 0; i < n; ++i) {
 		getline(f, line);
-		//cout << ligne+"\n";
 		splitstring s((char*)line.c_str());
 		std::vector<std::string> tokens = s.split('\t', 2);
 		double xi = atof(tokens[0].c_str());
@@ -122,12 +120,8 @@ void computeBsplines(int n, gsl_vector* x, gsl_vector* y, int* nbPoints, vec* x_
 		gsl_vector_set(w, i, 1.0);
 	}
 
-	//printf("%f %f\n", xMin, xMax);
-
 	/* use uniform breakpoints on [xMin, xMax] */
 	gsl_bspline_knots_uniform(xMin, xMax, bw);
-
-	//printf("bw->knots->size: %d\n", bw->knots->size);
 
 	/* construct the fit matrix X */
 	for (i = 0; i < n; ++i) {
@@ -150,7 +144,6 @@ void computeBsplines(int n, gsl_vector* x, gsl_vector* y, int* nbPoints, vec* x_
 	tss = gsl_stats_wtss(w->data, 1, y->data, 1, y->size);
 	Rsq = 1.0 - chisq / tss;
 
-	//fprintf(stderr, "chisq/dof = %e, Rsq = %f\n", chisq / dof, Rsq);
 	*nbPoints = (int)floor((xMax - xMin) / 0.1) + 1;
 	*x_sp = vec(*nbPoints);
 	*y_sp = vec(*nbPoints);
@@ -158,13 +151,11 @@ void computeBsplines(int n, gsl_vector* x, gsl_vector* y, int* nbPoints, vec* x_
 	{
 		double xi, yi, yerr;
 
-		//printf("#m=1,S=0\n");
 		FILE* f = fopen("Calibration_Smoothed.txt", "w");
 		int ind = 0;
 		for (xi = xMin; xi < xMax; xi += 0.1) {
 			gsl_bspline_eval(xi, B, bw);
 			gsl_multifit_linear_est(B, c, cov, &yi, &yerr);
-			//fprintf(stderr, "%f\t%f\n", xi, yi);
 			(*x_sp)(ind) = xi;
 			(*y_sp)(ind) = yi;
 			fprintf(f, "%f\t%f\n", (*x_sp)(ind), (*y_sp)(ind));
@@ -210,18 +201,6 @@ int main(void)
 		}
 	}
 	M = solve(A, B);
-
-	//FILE *f = fopen("logTest.txt","w");
-	//for(int i=0; i < nbPoints-2; i++)
-	//{
-	// /*fprintf(f,"%f\n", B(i));*/
-	// fprintf(f,"%f\n", M(i));
-	// //for(int j=0; j < nbPoints-2; j++)
-	// // fprintf(f,"%f\t", _A(i,j));
-
-	// //fprintf(f,"\n");
-	//}
-	//fclose(f);
 
 	double* a = (double*)malloc((nbPoints - 1) * sizeof(double));
 	double* b = (double*)malloc((nbPoints - 1) * sizeof(double));

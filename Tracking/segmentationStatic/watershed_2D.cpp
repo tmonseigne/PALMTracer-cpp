@@ -25,13 +25,6 @@ float thresholdRatio: value to distinguish if 2 strucutres in contact have to be
 ********************************************************************************************************************/
 int Segment2D::filterStructureWS(FltArray &potential, USrtArray &seg, float thresholdRatio){
 	
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::filterStructureWS(FltArray 0x%p &potential(%d, %d, %d), USrtArray 0x%p &seg(%d, %d, %d), float %f threshold)  <-<-\n",		
-		&potential, potential.size(0), potential.size(1), potential.size(2), &seg, seg.size(0), seg.size(1), seg.size(2), thresholdRatio);
-	closeDebugStreamALS();
-	#endif
-
 	wsFusion2D* ptrStr;
 	ptrStr=(wsFusion2D*)malloc((nbInfoStruct+1)*sizeof(wsFusion2D));
 	long i,j,ii, jj;
@@ -142,14 +135,6 @@ USrtArray &localMax: local maximum
 float threshold: a point to be considered as a local maximum have to be > to threshold.
 ********************************************************************************************************************/
 int Segment2D::getLocalMax(FltArray &image, USrtArray &seg, float threshold){
-	
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::getLocalMax(FltArray 0x%p &potential(%d, %d, %d), USrtArray 0x%p &seg(%d, %d, %d), float %f threshold)  <-<-\n",
-		&image, image.size(0), image.size(1), image.size(2), &seg, seg.size(0), seg.size(1), seg.size(2),threshold);
-	closeDebugStreamALS();
-	#endif
 
 	seg=(unsigned short)0;
 	long i,j,ii,jj;
@@ -204,16 +189,6 @@ FltArray &potential: defines the potential function the makes the watershed segm
 USrtArray &seg: it contains the result of the watershed segmentation. 
 ********************************************************************************************************************/
 int Segment2D::watershed(FltArray &potential, USrtArray &seg, float threshold){
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::watershed(FltArray 0x%p &potential(%d, %d, %d), USrtArray 0x%p &seg(%d, %d, %d), float %f threshold)  <-<-\n",
-		&potential, potential.size(0), potential.size(1), potential.size(2), &seg, seg.size(0), seg.size(1), seg.size(2),threshold);
-	closeDebugStreamALS();
-	#endif
-
-
-
 	float cle;
 
 	coor2D p;
@@ -263,7 +238,7 @@ int Segment2D::watershed(FltArray &potential, USrtArray &seg, float threshold){
 			if(p1.y>=0)	if(p1.y<potential.size(1))
 			if(potential.data[p1.x*sizeDataY+p1.y]>threshold)
 			if(seg.data[p1.x*sizeDataY+p1.y]==0){
-			// On empile ce nouveau avec une priorité legèrement supérieure
+			// On empile ce nouveau avec une prioritÃ© legÃ¨rement supÃ©rieure
 			// a sa vrai valeur de potentiel.
 				cle=-potential.data[p1.x*sizeDataY+p1.y]+(float)it*EPSILON;
 				tas.Push(p1,cle);
@@ -289,13 +264,6 @@ float thresholdRatio: value 0<= X <=1. Makes a fusion to minimize the oversegmen
 return value: number of detected structures
 ********************************************************************************************************************/
 int Segment2D::watershedIntelligent(FltArray &potential, USrtArray &seg, float threshold, float thresholdRatio){
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::watershedIntelligent(FltArray 0x%p &potential(%d, %d, %d), USrtArray 0x%p &seg(%d, %d, %d), float %f threshold, float %f thresholdRatio)  <-<-\n",
-		&potential, potential.size(0), potential.size(1), potential.size(2), &seg, seg.size(0), seg.size(1), seg.size(2),threshold ,thresholdRatio);
-	closeDebugStreamALS();
-	#endif
 	int ret;
 
 	//first, find the local maximum to set the different germinates
@@ -328,13 +296,6 @@ float thresholdRatio: value to distinguish if 2 strucutres in contact have to be
 							oversegmentation)
 ********************************************************************************************************************/
 int Segment2D::filterStructureWS(USrtArray &potential, USrtArray &seg, float thresholdRatio){
-	
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::filterStructureWS(USrtArray 0x%p &potential(%d, %d, %d), USrtArray 0x%p &seg(%d, %d, %d), float %f threshold)  <-<-\n",		
-		&potential, potential.size(0), potential.size(1), potential.size(2), &seg, seg.size(0), seg.size(1), seg.size(2), thresholdRatio);
-	closeDebugStreamALS();
-	#endif
 
 	wsFusion2D* ptrStr;
 	ptrStr=(wsFusion2D*)malloc((nbInfoStruct+1)*sizeof(wsFusion2D));
@@ -347,13 +308,7 @@ int Segment2D::filterStructureWS(USrtArray &potential, USrtArray &seg, float thr
 	long label;
 	bool change=true;
 	while(change){
-		//openDebugStreamALS();
-		//					fprintf(debugStreamALS, "nbInfoStruct %d <-<-\n", nbInfoStruct);
-		//					closeDebugStreamALS();
-
 		oldNbInfoStruct=nbInfoStruct;
-
-
 
 		for(i=1;i<=nbInfoStruct;i++){
 			ptrStr[i].maxPotentialWithNeighbor=-1e10;
@@ -395,11 +350,6 @@ int Segment2D::filterStructureWS(USrtArray &potential, USrtArray &seg, float thr
 				if((ptrStr[i].locked==false)&&(ptrStr[ptrStr[i].structureInContact].locked==false)){
 					ratio=(ptrStr[i].maxPotentialOnTheStructure-ptrStr[i].maxPotentialWithNeighbor)/
 						(ptrStr[i].maxPotentialOnTheStructure-ptrStr[i].minPotentialOnTheStructure);
-#ifdef DEBUG_AT
-					openDebugStreamALS();
-						fprintf(debugStreamALS, "ratio %f\n", ratio);
-						closeDebugStreamALS();
-#endif 
 					if(ratio<thresholdRatio){
 						
 						if(ptrStr[i].maxPotentialOnTheStructure<ptrStr[ptrStr[i].structureInContact].maxPotentialOnTheStructure){
@@ -459,15 +409,6 @@ USrtArray &localMax: local maximum
 float threshold: a point to be considered as a local maximum have to be > to threshold.
 ********************************************************************************************************************/
 int Segment2D::getLocalMax(USrtArray &image, USrtArray &seg, float threshold){
-	
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::getLocalMax(USrtArray 0x%p &potential(%d, %d, %d), USrtArray 0x%p &seg(%d, %d, %d), float %f threshold)  <-<-\n",
-		&image, image.size(0), image.size(1), image.size(2), &seg, seg.size(0), seg.size(1), seg.size(2),threshold);
-	closeDebugStreamALS();
-	#endif
-
 	seg=(unsigned short)0;
 	long i,j,ii,jj;
 	long label=1;
@@ -521,16 +462,6 @@ USrtArray &potential: defines the potential function the makes the watershed seg
 USrtArray &seg: it contains the result of the watershed segmentation. 
 ********************************************************************************************************************/
 int Segment2D::watershed(USrtArray &potential, USrtArray &seg, float threshold){
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::watershed(USrtArray 0x%p &potential(%d, %d, %d), USrtArray 0x%p &seg(%d, %d, %d), float %f threshold)  <-<-\n",
-		&potential, potential.size(0), potential.size(1), potential.size(2), &seg, seg.size(0), seg.size(1), seg.size(2),threshold);
-	closeDebugStreamALS();
-	#endif
-
-
-
 	float cle;
 
 	coor2D p;
@@ -580,7 +511,7 @@ int Segment2D::watershed(USrtArray &potential, USrtArray &seg, float threshold){
 			if(p1.y>=0)	if(p1.y<potential.size(1))
 			if(potential.data[p1.x*sizeDataY+p1.y]>threshold)
 			if(seg.data[p1.x*sizeDataY+p1.y]==0){
-			// On empile ce nouveau avec une priorité legèrement supérieure
+			// On empile ce nouveau avec une prioritÃ© legÃ¨rement supÃ©rieure
 			// a sa vrai valeur de potentiel.
 				cle=-potential.data[p1.x*sizeDataY+p1.y]+(float)it*EPSILON;
 				tas.Push(p1,cle);
@@ -606,13 +537,6 @@ float thresholdRatio: value 0<= X <=1. Makes a fusion to minimize the oversegmen
 return value: number of detected structures
 ********************************************************************************************************************/
 int Segment2D::watershedIntelligent(USrtArray &potential, USrtArray &seg, float threshold, float thresholdRatio){
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "->-> Segment2D::watershedIntelligent(USrtArray 0x%p &potential(%d, %d, %d), USrtArray 0x%p &seg(%d, %d, %d), float %f threshold, float %f thresholdRatio)  <-<-\n",
-		&potential, potential.size(0), potential.size(1), potential.size(2), &seg, seg.size(0), seg.size(1), seg.size(2),threshold ,thresholdRatio);
-	closeDebugStreamALS();
-	#endif
 	int ret;
 
 	//first, find the local maximum to set the different germinates

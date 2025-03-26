@@ -6,14 +6,11 @@
 #include "parameters.h"
 
 // Levenberg fit --> simple precision (float)
-//#define dimFit 13 // By default
 #ifndef dimFit
 	#define dimFit 13
 #endif
-//#define MaxNbStruct MAX_NB_STRUCT
 #define Npar 6 // I0, x0, y0, sigmaX, sigmaY, angle, backGround
 #define Npnt dimFit*dimFit
-//#define ANGLE 0.f
 #define ref (dimFit/2)
 
 __constant__ double epsilon_1 = 1e-6;
@@ -154,7 +151,7 @@ __device__ void inverse_(float* MM, float* Minv)
 			Minv[index] = Mi1[index];
 		}
 
-		for(int k=0; k<Npar; k++)// mise zéros de la colonne
+		for(int k=0; k<Npar; k++)// mise zÃ©ros de la colonne
 			if (k != i)
 				for(int j=0; j<Npar; j++)
 				{
@@ -401,93 +398,12 @@ void cuda3DFittingGPU(float* data, unsigned int numImages, unsigned short width,
 	grid.z = 1;
     threads.x = FIT_BLOCK_SIZE;
 	threads.y = 1;
-	threads.z = 1;  // Par rapport aux contraintes de la mémoire partagée (taille limitée à 16 Ko pour chaque block)
+	threads.z = 1;  // Par rapport aux contraintes de la mÃ©moire partagÃ©e (taille limitÃ©e Ã  16 Ko pour chaque block)
 
-	//switch(sizeFit)
-	//{
-
-	//	case(5):
-	//		#ifdef dimFit
-	//		#define dimFit 5
-	//					GPU3DFitting<<< grid, threads/*, FIT_BLOCK_SIZE * Npar * Npar * sizeof(float) * FIT_BLOCK_SIZE*/>>>(numImages * MaxNbStruct, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX, sigmaY, angle);
-	//		#endif
-	//	break;
-
-	//	case(7):
-	//		#ifdef dimFit
-	//		#define dimFit 7
-	//					GPU3DFitting<<< grid, threads/*, FIT_BLOCK_SIZE * Npar * Npar * sizeof(float) * FIT_BLOCK_SIZE*/>>>(numImages * MaxNbStruct, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX, sigmaY, angle);
-	//		#endif
-	//	break;
-
-	//	case(9):
-	//		#ifdef dimFit
-	//		#define dimFit 9
-	//					GPU3DFitting<<< grid, threads/*, FIT_BLOCK_SIZE * Npar * Npar * sizeof(float) * FIT_BLOCK_SIZE*/>>>(numImages * MaxNbStruct, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX, sigmaY, angle);
-	//		#endif
-	//	break;
-
-	//	case(11):
-	//		#ifdef dimFit
-	//		#define dimFit 11
-	//					GPU3DFitting<<< grid, threads/*, FIT_BLOCK_SIZE * Npar * Npar * sizeof(float) * FIT_BLOCK_SIZE*/>>>(numImages * MaxNbStruct, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX, sigmaY, angle);
-	//		#endif
-	//	break;
-
-	//	case(13):
-	//		#ifdef dimFit
-	//		#define dimFit 13
-	//					GPU3DFitting<<< grid, threads/*, FIT_BLOCK_SIZE * Npar * Npar * sizeof(float) * FIT_BLOCK_SIZE*/>>>(numImages * MaxNbStruct, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX, sigmaY, angle);
-	//		#endif
-	//	break;
-
-	//	case(15):
-	//		#ifdef dimFit
-	//		#define dimFit 15
-	//					GPU3DFitting<<< grid, threads/*, FIT_BLOCK_SIZE * Npar * Npar * sizeof(float) * FIT_BLOCK_SIZE*/>>>(numImages * MaxNbStruct, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX, sigmaY, angle);
-	//		#endif
-	//	break;
-
-	//	case(17):
-	//		#ifdef dimFit
-	//		#define dimFit 17
-	//					GPU3DFitting<<< grid, threads/*, FIT_BLOCK_SIZE * Npar * Npar * sizeof(float) * FIT_BLOCK_SIZE*/>>>(numImages * MaxNbStruct, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX, sigmaY, angle);
-	//		#endif
-	//	break;
-
-	//	case(19):
-	//		#ifdef dimFit
-	//		#define dimFit 19
-	//					GPU3DFitting<<< grid, threads/*, FIT_BLOCK_SIZE * Npar * Npar * sizeof(float) * FIT_BLOCK_SIZE*/>>>(numImages * MaxNbStruct, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX, sigmaY, angle);
-	//		#endif
-	//	break;
-
-	//	case(21):
-	//		#ifdef dimFit
-	//		#define dimFit 21
-	//					GPU3DFitting<<< grid, threads/*, FIT_BLOCK_SIZE * Npar * Npar * sizeof(float) * FIT_BLOCK_SIZE*/>>>(numImages * MaxNbStruct, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX, sigmaY, angle);
-	//		#endif
-	//	break;
-
-	//}
-
-								// '64' au lieu de '256'
+	// '64' au lieu de '256'
 	GPU3DFitting<<< grid, threads/*, FIT_BLOCK_SIZE * Npar * Npar * sizeof(float) * FIT_BLOCK_SIZE*/>>>(numImages * MaxNbStruct, MaxNbStruct, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX, sigmaY, angle);
-	
-	//int maxNbPoints = MaxNbStruct * numImages;
-	//double* list = (double*) malloc(maxNbPoints * 10 * sizeof(double));
-	//cutilSafeCall( cudaMemcpy( list, pointsList, maxNbPoints * sizeof(double) * 10, cudaMemcpyDeviceToHost) );
-	//FILE* f = fopen("ptr.txt", "w");
-	//fprintf(f, "After\n");
-	//for(int i=0; i < numImages * MaxNbStruct * 10; i++)
-	//	fprintf(f, "%f\n", list[i]);
-	//fclose(f);
-
-	//free(list);
-
 }
 
-//#endif // dimFit
 #endif // #ifndef _FITTING_KERNEL_H_
 
 

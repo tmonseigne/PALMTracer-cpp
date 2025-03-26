@@ -13,22 +13,11 @@ int __nbInfoStrucAlloc;
 int __nbInfoStrucDealloc;
 
 Segment::Segment(){
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "## Segment() ##\n");
-	closeDebugStreamALS();
-	#endif
 	__nbInfoStrucAlloc=0;
 	__nbInfoStrucDealloc=0;
 }
 
 Segment::~Segment(){
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "## ~Segment() ##\n");
-	closeDebugStreamALS();
-	#endif
-
 	if(__nbInfoStrucAlloc!=__nbInfoStrucDealloc){
 		openDebugStreamALS();
 		fprintf(debugStreamALS, "!!! Error in allocation of InfoStruct2D/3D: nbInfoStrucAlloc=%d, nbInfoStrucDealloc=%d !!!\n");
@@ -43,12 +32,6 @@ void Segment::inc( unsigned long &nSeg, unsigned long **ptr, long &sizePtr ){
 	if(nSeg==65535) return;
 	nSeg++;
 	if((long)nSeg<sizePtr) return;
-
-	#ifdef	DEBUG_AT
-	openDebugStreamALS();
-	fprintf(debugStreamALS, "-- Segment::inc(nSeg: %d, sizePtr: %d) --\n",sizePtr);
-	closeDebugStreamALS();
-	#endif
 	
 	newPtr=(unsigned long *)malloc(sizeof(long)*sizePtr);
 	//backup of data

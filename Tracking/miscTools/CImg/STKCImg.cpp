@@ -80,18 +80,15 @@ int display(USrtArray & input, double &gamma, char* windowName, contour ***conto
 	CImgDisplay disp(cImg,windowName,1,3);
 	bool changed=false;
 	while (!(disp.closed || disp.key == cimg::keyQ || disp.key==cimg::keyESC || disp.key==cimg::keyENTER)){
-		//printf("%d %d \n",disp.mousex, disp.mousey);
 		if(disp.button!=0){
 			if((disp.mousex>=0)&&(disp.mousey>=0)){
 				if(disp.mousex/zoom<30){
 					if(disp.mousey/zoom<30){
 						gamma*=0.8;
-						//printf("click  +  en %d %d gamma %f\n",disp.mousex, disp.mousey, gamma);
 						changed=true;
 					}else{
 						if(disp.mousey/zoom<60){
 							gamma*=1.2;
-							//printf("click  -  en %d %d gamma %f\n",disp.mousex, disp.mousey, gamma);
 							changed=true;
 						}
 					}
@@ -198,7 +195,6 @@ int display(USrtArray & input, double &gamma, char* windowName, unsigned short n
 	CImgDisplay disp(cImg,windowName,1,3);
 	bool changed=false;
 	while (!(disp.closed || disp.key == cimg::keyQ || disp.key==cimg::keyESC || disp.key==cimg::keyENTER)){
-		//printf("%d %d \n",disp.mousex, disp.mousey);
 		if(disp.key == cimg::keyDELETE || disp.key == cimg::keyBACKSPACE)
 			if(countClick>0){
 				countClick--;
@@ -218,12 +214,10 @@ int display(USrtArray & input, double &gamma, char* windowName, unsigned short n
 				if(disp.mousex/zoom<30){
 					if(disp.mousey/zoom<30){
 						gamma*=0.8;
-						//printf("click  +  en %d %d gamma %f\n",disp.mousex, disp.mousey, gamma);
 						changed=true;
 					}else{
 						if(disp.mousey/zoom<60){
 							gamma*=1.2;
-							//printf("click  -  en %d %d gamma %f\n",disp.mousex, disp.mousey, gamma);
 							changed=true;
 						}
 					}
@@ -263,8 +257,6 @@ int display(USrtArray & input, double &gamma, char* windowName, unsigned short n
 					if ((nClick>0)&&(countClick<nClick)){
 						getClick[countClick*2]=(unsigned short)(disp.mousex/zoom-30);
 						getClick[countClick*2+1]=(unsigned short)(disp.mousey/zoom);
-						//printf("click -> %d %d\n", getClick[countClick*2], getClick[countClick*2+1]);
-						
 						for(x=-10;x<10 ;x++)
 							for(c=0;c<3 ;c++){
 								cImg(x+getClick[countClick*2]+30,getClick[countClick*2+1],0,c)=cImg(getClick[countClick*2]+30,x+getClick[countClick*2+1],0,c)=(float)maxi;

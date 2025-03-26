@@ -71,7 +71,7 @@ __global__ void GPU_Trous2D_X(unsigned short step, float* input, float* output, 
 // projectionV02D en Y axe
 __global__ void GPU_projectionV02D_Y(float* input, float* output, unsigned short WIDTH, unsigned short HEIGHT)
 {
-	// Chargement des données sur shared memory
+	// Chargement des donnÃ©es sur shared memory
 	//__shared__ float sData [(HEIGHT_PORTION + 2) * WIDTH_PORTION];  /* 2 = templateSize/2 et l'autre 2 c'est pour les voisins haut-bas*/ 
 	extern __shared__ float sData[];
 	// numero d'image = blcokIdx.x / ( WIDTH / WIDTH_PORTION )
@@ -122,7 +122,7 @@ __global__ void GPU_projectionV02D_Y(float* input, float* output, unsigned short
 //projectionV02D en X axe
 __global__ void GPU_projectionV02D_X(float* input, float* output, unsigned short WIDTH, unsigned short HEIGHT)
 {
-	// Chargement des données sur shared memory
+	// Chargement des donnÃ©es sur shared memory
 	//__shared__ float sData [(WIDTH_PORTION + 2) * HEIGHT_PORTION];  /* 2 = templateSize/2 et l'autre 2 c'est pour les voisins gauche-droite */ 
 	extern __shared__ float sData[];
 	// numero d'image = blcokIdx.x / ( WIDTH / WIDTH_PORTION )
@@ -186,19 +186,6 @@ __global__ void GPUuSrtToFloat(unsigned short* input, float* output, unsigned sh
 
 extern "C"void cudaProjectionV02DGPU(unsigned short* input, float* output, unsigned int numImages, unsigned short width, unsigned short height, bool realProj)
 {
-	//cutilSafeCall( cudaMemcpyToSymbol("HEIGHT", &height, sizeof(unsigned short), 0, cudaMemcpyHostToDevice) );
-	//   cutilSafeCall( cudaMemcpyToSymbol("WIDTH", &width, sizeof(unsigned short), 0, cudaMemcpyHostToDevice) );
-
-	// For debug
-	//unsigned short a = 0;
-	//cutilSafeCall( cudaMemcpyFromSymbol (&a, "WIDTH", sizeof(unsigned short), 0, cudaMemcpyDeviceToHost) );
-	//printf("WIDTH : %d\n", a);
-	//cutilSafeCall( cudaMemcpyFromSymbol (&a, "HEIGHT", sizeof(unsigned short), 0, cudaMemcpyDeviceToHost) );
-	//printf("HEIGHT : %d\n", a);
-
-	//cutilSafeCall( cudaMemcpy( &WIDTH, &width, sizeof(unsigned short), cudaMemcpyHostToDevice) );
-	//cutilSafeCall( cudaMemcpy( &HEIGHT, &height, sizeof(unsigned short), cudaMemcpyHostToDevice) );
-
 	// A completer
 	dim3 grid(numImages * (unsigned int)ceil((float)width / (float)WIDTH_PORTION), (unsigned int)ceil((float)height / (float)HEIGHT_PORTION), 1);
 	dim3 threads(WIDTH_PORTION, 1, 1);

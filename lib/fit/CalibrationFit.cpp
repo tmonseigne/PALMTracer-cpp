@@ -47,21 +47,16 @@ float CalibrationFit::deriv1C4(float Z, float C0, float C1, float C2, float C3, 
 
 float CalibrationFit::lm_matx(float* Z/*IN*/, float* p/*IN*/, float* y_dat/*IN*/, float* weight_sq/*IN*/, float* alpha/*OUT*/, float* beta/*OUT*/, float* y_hat/*OUT*/)
 {
-	/*float delta_y[Npnt];*/
 	float* delta_y = (float*)malloc(Npnt * sizeof(float));
 
-	//FILE* f = fopen("C:\\FitTrace.txt", "w+");
 	for(int elt = 0; elt < Npnt; elt++)
 	{
 		y_hat[elt] = sigmaFunc(Z[elt], p[0], p[1], p[2], p[3], p[4]);
-		//fprintf(f, "%f\n", y_hat[elt]);
 		delta_y[elt] = y_dat[elt] - y_hat[elt];
 	}
 
-	//fclose(f);
 
 	// Computing Jacobian matrix (dydp)
-	//float dydp[Npnt * Npar];
 	float* dydp = (float*)malloc(Npnt * Npar * sizeof(float));
 	for(int elt=0; elt < Npnt; elt++)
 	{
@@ -72,13 +67,12 @@ float CalibrationFit::lm_matx(float* Z/*IN*/, float* p/*IN*/, float* y_dat/*IN*/
 		dydp[(4) + elt * Npar] = deriv1C4(Z[elt], p[0], p[1], p[2], p[3], p[4]); // C4
 	}
 
-	//float inter[Npar * Npnt];
 	float* inter = (float*)malloc(Npar * Npnt * sizeof(float));
 	for(int elt=0; elt < Npnt; elt++)
 		for(int i=0; i < Npar; i++)
 			inter[elt*Npar + i] = weight_sq[elt] * dydp[elt*Npar + i];
 
-	// Computing alpha (A vérifier)
+	// Computing alpha (A vÃ©rifier)
 	for(int j=0; j < Npar; j++)
 		for(int i=0; i < Npar; i++)
 		{
@@ -151,7 +145,7 @@ void CalibrationFit::inverse(float* MM, float* Minv)
 		for(int index=0; index < Npar*Npar; index++)
 			Minv[index] = Mi1[index];
 
-		for(int k=0; k<Npar; k++)// mise zéros de la colonne
+		for(int k=0; k<Npar; k++)// mise zÃ©ros de la colonne
 			if (k != i)
 				for(int j=0; j<Npar; j++)
 				{
@@ -380,11 +374,6 @@ float CalibrationFit::Run(float* sigma, float* Z, unsigned short pointsNbr, unsi
 		RSS = (float)0;
 	else
 		RSS = R_sq;
-	
-
-	//FILE* f = fopen("C:\\Fit.txt", "w");
-	//fprintf(f, "%d\n", iteration);
-	//fclose(f);
 
 	// cleanup memory
 	free(weight);

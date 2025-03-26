@@ -66,7 +66,6 @@ int TabTimes::initialisation()
 
 	checkLinksHomogeneity(L"initalisation");
 	srand((unsigned)time(NULL));
-	/*srand( 1234567890 );*/
 	return (RET_OK);
 }
 
@@ -74,12 +73,12 @@ int TabTimes::initialisation()
 /********************************************************************************************************************
 printConnectionsASCII() print the result of the connections in a ASCII file as Daniel Choquet has defined:
 Colonne 1         numero de la trace
-Colonne 2         numero de l’image, ou temps (commencant à 1 SVP)
+Colonne 2         numero de l'image, ou temps (commencant Ã  1 SVP)
 Colonne 3         X
 Colonne 4         Y
 (Colonne 5        Z)
-Colonne 5 ou 6         nombre de pixels de l’objet
-Colonne 6 ou 7         intensité intégrée
+Colonne 5 ou 6         nombre de pixels de l'objet
+Colonne 6 ou 7         intensitÃ© intÃ©grÃ©e
 ********************************************************************************************************************/
 int TabTimes::printConnectionsASCII()
 {
@@ -115,44 +114,22 @@ int TabTimes::printConnectionsASCII()
 /********************************************************************************************************************
 printConnectionsASCII_trc() print the result of the connections in a pointer as Daniel Choquet has defined:
 Colonne 1         numero de la trace
-Colonne 2         numero de l’image, ou temps (commencant à 1 SVP)
+Colonne 2         numero de l'image, ou temps (commencant Ã  1 SVP)
 Colonne 3         X
 Colonne 4         Y
 (Colonne 5        Z)
-Colonne 5 ou 6         nombre de pixels de l’objet
-Colonne 6 ou 7         intensité intégrée
+Colonne 5 ou 6         nombre de pixels de l'objet
+Colonne 6 ou 7         intensitÃ© intÃ©grÃ©e
 ********************************************************************************************************************/
 int TabTimes::printConnectionsASCII_trc()
 {
 	unsigned long index = 0;
-	//FILE* f = fopen("C:\\log.txt", "a+");
 	for (int t = 0; t < nbTimes; t++) {
 		TimeNodes* _localTimeNodes = timeNodes[t];
 		for (int n = 0; n < _localTimeNodes->nbNodes; n++) {
 			Node* node = _localTimeNodes->tabNodes[n];
 			if ((node->connectionPast == NULL) && (node->trackedStructureIndex > 0)) {
 				for (Node* nodeConnection = node; nodeConnection != NULL; nodeConnection = nodeConnection->connectionFuture) {
-					//fprintf(f, "%d\t%d", (int)(nodeConnection->info->getX()), (int)(nodeConnection->info->getY()));
-
-
-					//Cell1
-					//25.188644
-					//146.147507
-					//
-					//124.185562
-					//48.573086
-					//
-					//Cell2
-					//231.518433
-					//215.616837
-					//
-					//59.543339
-					//8.400725
-					//
-					//Cell3				
-					//239.060333251953	 
-					//193.529922485352
-
 					double y0 = 25.188644;
 					double x0 = 146.147507;
 
@@ -163,8 +140,6 @@ int TabTimes::printConnectionsASCII_trc()
 					double y = nodeConnection->info->getY();
 					double r = 1;
 
-					//if ((pow(x-x0, 2.0) + pow(y-y0, 2.0) > pow(r, 2.0)) && (pow(x-x1, 2.0) + pow(y-y1, 2.0) > pow(r, 2.0)))
-					{
 						publicParameters->trc[index++] = node->trackedStructureIndex;
 						publicParameters->trc[index++] = nodeConnection->time + 1;
 						publicParameters->trc[index++] = nodeConnection->info->getX();
@@ -185,18 +160,15 @@ int TabTimes::printConnectionsASCII_trc()
 
 						// The number of trajectory
 						publicParameters->nbTraj = node->trackedStructureIndex;
-					}
 				}
 			}
 		}
 	}
-
-	//fclose(f);
 	return (RET_OK);
 }
 
 /********************************************************************************************************************
-printCoveredArea() print the covered area: CA=sqrt<(X-<X>)²>.sqrt<(Y-<Y>)²>.sqrt<(Z-<Z>)²>
+printCoveredArea() print the covered area: CA=sqrt<(X-<X>)>.sqrt<(Y-<Y>)>.sqrt<(Z-<Z>)>
 ********************************************************************************************************************/
 void TabTimes::printCoveredArea()
 {
@@ -291,7 +263,6 @@ int TabTimes::readStatFile()
 
 			for (node = 0; node < localTimeNodes->nbNodes; node++) {
 				count = read(fileHandle, (*localTimeNodes)(node)->info->getPtrInfoData(), (*localTimeNodes)(node)->info->sizeofInfoData()); //reading one node
-				//if(time_==0)
 
 				if ((*localTimeNodes)(node)->info->getIntensity() < 0) { wprintf(L"%d : <0\n", ++incre); }
 
@@ -342,9 +313,6 @@ int TabTimes::readPointsList()
 
 	nbTimes = publicParameters->nbTimes;
 
-	//if(publicParameters->verbose)
-	//	printHTML(outputStream, L"The file %ls contain %u times\n", publicParameters->statFile, nbTimes);
-
 	allocTabTimes(); //Allocation of tabTimes
 
 	long incre = 0;
@@ -354,16 +322,9 @@ int TabTimes::readPointsList()
 	publicParameters->maxZ = 0;
 
 	for (time_ = 0; time_ < (long)nbTimes; time_++) {
-		//count=read(fileHandle, &nbNodes, sizeof(long));//reading the number of nodes
-		//if(count!=sizeof(long)){
-		//	printHTML(outputStream, L"Error corrupted statistic file %ls\n", publicParameters->statFile);
-		//	return(T_ERR_CORRUPT_FILE);
-		//}
-		;
 		// Computing the number of nodes by frame
 		nbNodes = 0;
 		for (i = index; ; /*i+=4*/ i += publicParameters->NbSegParams) {
-			//if (((int)publicParameters->pointsList[i+3] != -1) && ((int)publicParameters->pointsList[i+3] != 0)) // surface
 			if (((int)publicParameters->pointsList[i + 9] != -1) && ((int)publicParameters->pointsList[i + 9] != 0)) // surface
 				nbNodes++;
 			else break;
@@ -371,7 +332,6 @@ int TabTimes::readPointsList()
 
 
 		timeNodes[time_] = allocTimeNodes(time_, (int)nbNodes); //Allocation of timeNodes
-		//new TimeNodes(time_,(int)nbNodes);
 		localTimeNodes = timeNodes[time_];
 
 		if (localTimeNodes == NULL) { return (T_ERR_ALLOC); }
@@ -388,24 +348,13 @@ int TabTimes::readPointsList()
 			str->setColor(publicParameters->pointsList[index + node * publicParameters->NbSegParams + 11]);
 			str->setMolId(publicParameters->pointsList[index + node * publicParameters->NbSegParams + 12]);
 
-			//printf("%f\n", str->getZ());
-			//str->setX(publicParameters->pointsList[index + node*4]);
-			//str->setY(publicParameters->pointsList[index + node*4+1]);
-
-			//str->setX(publicParameters->pointsList[index + node*4+1]);
-			//str->setY(publicParameters->pointsList[index + node*4]);
-
 			str->setIndex(node + 1);
 
 			str->setIntensity(publicParameters->pointsList[index + node * publicParameters->NbSegParams + 8]);
-			//str->setIntensity(publicParameters->pointsList[index + node*publicParameters->NbSegParams+5]*publicParameters->pointsList[index + node*publicParameters->NbSegParams+0]*publicParameters->pointsList[index + node*publicParameters->NbSegParams+0]);
 
-			/*str->setIntensity(publicParameters->pointsList[index + node*4+2]);*/
 			str->setTime(time_ + 1);
 			str->setSurface((unsigned long)publicParameters->pointsList[index + node * publicParameters->NbSegParams + 9]);
-			/*str->setSurface((unsigned long)publicParameters->pointsList[index + node*4+3]);*/
 			str->setMean(publicParameters->pointsList[index + node * publicParameters->NbSegParams + 8] / (unsigned long)publicParameters->pointsList[index + node * publicParameters->NbSegParams + 9]);
-			/*str->setMean(publicParameters->pointsList[index + node*4+2] / (unsigned long)publicParameters->pointsList[index + node*4+3]);*/
 
 			if (publicParameters->maxX < (*localTimeNodes)(node)->info->getX()) publicParameters->maxX = (*localTimeNodes)(node)->info->getX();
 			if (publicParameters->maxY < (*localTimeNodes)(node)->info->getY()) publicParameters->maxY = (*localTimeNodes)(node)->info->getY();
@@ -429,7 +378,7 @@ int TabTimes::readPointsList()
 			localTimeNodes->tabNodes[i] = nodeMax;
 		}
 
-		index += (nbNodes + 1) * publicParameters->NbSegParams; //(A vérifier)
+		index += (nbNodes + 1) * publicParameters->NbSegParams; //(A vÃ©rifier)
 	}
 	return (RET_OK);
 }
@@ -521,7 +470,6 @@ void TabTimes::setColorToTrackedStructures()
 							if (node->connectionFissionPast != NULL) {
 								node2 = (node == node->connectionFissionPast->connectionFission1Future) ? node->connectionFissionPast->connectionFission2Future : node->connectionFissionPast->connectionFission1Future;
 								for (nodePastFission = node->connectionFissionPast; nodePastFission != NULL; nodePastFission = nodePastFission->connectionPast) nodePastFission2 = nodePastFission;
-								//if(nodePastFission2!=NULL)
 								if (nodePastFission2->connectionFusion1Past != NULL) {
 									nodePastFission3 = nodePastFission2->connectionFusion1Past;
 									nodePastFission4 = nodePastFission2->connectionFusion2Past;

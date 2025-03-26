@@ -6,8 +6,6 @@
 #include <helper_timer.h>
 #include "../parameters.h"
 
-//#define sigma 1
-//#define I0 1000.0f
 #define NbSegParams 13
 
 __device__ float GaussianFunction_2D(float x, float y, float I0, float sigma) { return I0 * expf((-powf(x, 2) - powf(y, 2)) / (2 * powf(sigma, 2))); }
@@ -56,15 +54,11 @@ extern "C"void GaussianVisu(double* gaussianPointsList /*(sizeReg*sizeReg*nbPoin
 	grid.z = 1;
 	threads.x = FIT_BLOCK_SIZE;
 	threads.y = 1;
-	threads.z = 1; // Par rapport aux contraintes de la mémoire partagée (taille limitée à 16 Ko pour chaque block)
+	threads.z = 1; // Par rapport aux contraintes de la mÃ©moire partagÃ©e (taille limitÃ©e Ã  16 Ko pour chaque block)
 	// '64' au lieu de '256'
 	GaussianVisu_kernel<<< grid, threads >>>(gaussianPointsList, pointsList, width, height, nbPoints, sizeReg, zoom, conversionRatio /*from: ADU to photons*/, pixelSize);
 
 	cudaError err = cudaThreadSynchronize();
-	//FILE* f = fopen("c:\\GaussianVisu.txt", "a+");
-	//fprintf(f,"Error : %d \n", err);
-	//fprintf(f,"%d\t%d\t%d\t%d\t%d\t%f\t%f\n", width, height, nbPoints, sizeReg, zoom, conversionRatio, pixelSize);
-	//fclose(f);
 }
 
 #endif // #ifndef _GAUSSIAN_VISU_H_

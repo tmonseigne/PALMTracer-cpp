@@ -39,17 +39,6 @@ void autoCompleteFilename(wchar_t* filename, wchar_t* filenameFolder)
 
 _declspec(dllexport) long _stdcall Tracking(/*wchar_t* statFile, wchar_t* folderOut, wchar_t* fileResASCII, */double* pointsList, unsigned long pointsListSize, double* trc, unsigned long trcSize, double maxSpeed, double dZdX, double minLife, double decrease, unsigned long allowFusiondisso, double costBirth, unsigned long nbDim, unsigned long model, unsigned long nbTimes)
 {
-	// for debug
-	//FILE* f = fopen("trace_GPU.txt", "w");
-	//for (int j=0; (j < 1000000); j++)
-	//	fprintf(f, "%d : (x,y,int,surf)=(%f,%f,%f,%f)\n", j+1, pointsList[j * 4 + 1], pointsList[j * 4], pointsList[j * 4 + 2], /*(int)*/pointsList[j * 4 + 3]);
-	//fclose(f);
-	//////
-	// Initialization of 'publicParameters'
-	//wcscpy(publicParameters->statFile, statFile);
-	//wcscpy(publicParameters->folderOut, folderOut);
-	//wcscpy(publicParameters->fileResASCII, fileResASCII);
-	;
 	TabTimes* tabTimes;
 	int ret;
 
@@ -68,10 +57,6 @@ _declspec(dllexport) long _stdcall Tracking(/*wchar_t* statFile, wchar_t* folder
 	publicParameters->nbDim = 2;
 	publicParameters->pointsList = pointsList;
 
-	//FILE* f = fopen("C:\\debug.txt", "a+");
-	//fprintf(f, "%d: \n", pointsList);
-	//fclose(f);
-
 	publicParameters->pointsListSize = pointsListSize;
 	publicParameters->trc = trc;
 	publicParameters->trcSize = trcSize;
@@ -103,30 +88,17 @@ _declspec(dllexport) long _stdcall Tracking(/*wchar_t* statFile, wchar_t* folder
 
 	if ((ret = tabTimes->initialisation()) < 0) return (ret);
 
-	//srand(1);
-
 	float end = clock();
-	//FILE* fp = fopen("d:\\Tracking.txt", "a+");
-	//fprintf(fp, "Initialisation: %f s\n", (end - begin) / (float)CLOCKS_PER_SEC );
-	//fclose(fp);
-
 	begin = clock();
 
 	if ((ret = tabTimes->runModel()) < 0) return (ret);
 
 	end = clock();
-	//fp = fopen("d:\\Tracking.txt", "a+");
-	//fprintf(fp, "runModel: %f s\n", (end - begin) / (float)CLOCKS_PER_SEC );
-	//fclose(fp);
-
 	begin = clock();
 
 	if ((ret = tabTimes->giveResult()) < 0) return (ret);
 
 	end = clock();
-	//fp = fopen("d:\\Tracking.txt", "a+");
-	//fprintf(fp, "giveResult: %f s\n", (end - begin) / (float)CLOCKS_PER_SEC );
-	//fclose(fp);
 
 	delete tabTimes;
 
@@ -134,23 +106,10 @@ _declspec(dllexport) long _stdcall Tracking(/*wchar_t* statFile, wchar_t* folder
 	delete publicParameters;
 
 	return nb;
-
-	//return(RET_OK);
 }
 
 _declspec(dllexport) long _stdcall tracking_30(/*wchar_t* statFile, wchar_t* folderOut, wchar_t* fileResASCII, */double* pointsList, unsigned long pointsListSize, double* trc, unsigned long trcSize, double maxSpeed, double dZdX, double minLife, double decrease, unsigned long allowFusiondisso, double costBirth, unsigned long nbDim, unsigned long model, unsigned long nbTimes)
 {
-	// for debug
-	//FILE* f = fopen("trace_GPU.txt", "w");
-	//for (int j=0; (j < 1000000); j++)
-	//	fprintf(f, "%d : (x,y,int,surf)=(%f,%f,%f,%f)\n", j+1, pointsList[j * 4 + 1], pointsList[j * 4], pointsList[j * 4 + 2], /*(int)*/pointsList[j * 4 + 3]);
-	//fclose(f);
-	//////
-	// Initialization of 'publicParameters'
-	//wcscpy(publicParameters->statFile, statFile);
-	//wcscpy(publicParameters->folderOut, folderOut);
-	//wcscpy(publicParameters->fileResASCII, fileResASCII);
-	;
 	TabTimes* tabTimes;
 	int ret;
 
@@ -169,10 +128,6 @@ _declspec(dllexport) long _stdcall tracking_30(/*wchar_t* statFile, wchar_t* fol
 	publicParameters->nbDim = 2;
 	publicParameters->pointsList = pointsList;
 
-	//FILE* f = fopen("C:\\debug.txt", "a+");
-	//fprintf(f, "%d: \n", pointsList);
-	//fclose(f);
-
 	publicParameters->pointsListSize = pointsListSize;
 	publicParameters->trc = trc;
 	publicParameters->trcSize = trcSize;
@@ -204,30 +159,18 @@ _declspec(dllexport) long _stdcall tracking_30(/*wchar_t* statFile, wchar_t* fol
 
 	if ((ret = tabTimes->initialisation()) < 0) return (ret);
 
-	//srand(1);
-
 	float end = clock();
-	//FILE* fp = fopen("d:\\Tracking.txt", "a+");
-	//fprintf(fp, "Initialisation: %f s\n", (end - begin) / (float)CLOCKS_PER_SEC );
-	//fclose(fp);
 
 	begin = clock();
 
 	if ((ret = tabTimes->runModel()) < 0) return (ret);
 
 	end = clock();
-	//fp = fopen("d:\\Tracking.txt", "a+");
-	//fprintf(fp, "runModel: %f s\n", (end - begin) / (float)CLOCKS_PER_SEC );
-	//fclose(fp);
-
 	begin = clock();
 
 	if ((ret = tabTimes->giveResult()) < 0) return (ret);
 
 	end = clock();
-	//fp = fopen("d:\\Tracking.txt", "a+");
-	//fprintf(fp, "giveResult: %f s\n", (end - begin) / (float)CLOCKS_PER_SEC );
-	//fclose(fp);
 
 	delete tabTimes;
 
@@ -235,6 +178,4 @@ _declspec(dllexport) long _stdcall tracking_30(/*wchar_t* statFile, wchar_t* fol
 	delete publicParameters;
 
 	return nb;
-
-	//return(RET_OK);
 }

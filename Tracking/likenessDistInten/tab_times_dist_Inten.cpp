@@ -79,40 +79,7 @@ void TabTimesDistanceIntensity::computeConstantes(void)
 		if ((stdDistanceComputing > 1e-8) && (coutStdDist > 0)) publicParameters->stdDistance = stdDistanceComputing / coutStdDist; //*1.0275;//3.4352;
 		publicParameters->stdDistance = sqrt(publicParameters->stdDistance);
 	}
-
-
-	//#ifdef DEBUG_AT
-	/*	wchar_t filenameLine[1024];
-		long t;
-		if(publicParameters->folderOut[wcslen(publicParameters->folderOut)]!=L'\\')
-				wcscat(publicParameters->folderOut,L"\\");
-		
-		swprintf(filenameLine, L"%lsDistanceHisto.txt", publicParameters->folderOut);
-	
-		FILE*fid=_wfopen(filenameLine,L"w");
-	
-		fwprintf(fid, L"Computed constants\tD=%f\tI=%f\tM=%f\n\n", publicParameters->stdDistance, publicParameters->stdIntensity, 
-			publicParameters->stdMean);
-	
-	
-		long *dist;
-		dist=new long[publicParameters->distMaxPastAndFuture+1];
-		for( t=0;t<publicParameters->distMaxPastAndFuture+1;t++)
-			dist[t]=0;
-		for(_time=0;_time<nbTimes-1;_time++){
-				((TimeNodesDistanceIntensity*)(timeNodes[_time]))->computeConstantSigmas(stdIntensityComputing, countStdInt,
-					stdMeanComputing, countStdMean, stdDistanceComputing, coutStdDist, true, dist);
-			}
-		if(fid!=NULL){
-			for( t=0;t<publicParameters->distMaxPastAndFuture+1;t++)
-				fwprintf(fid, L"%d\t%d\n",t, dist[t]);
-			fclose(fid);
-		}
-		delete dist;*/
-
-	//#endif
 	publicParameters->stdDistance /= 3; //attention au /3 c'est just pour augmenter l'influence de la distance
-	//publicParameters->stdDistance*=3;//attention au /3 c'est just pour diminuer l'influence de la distance
 }
 
 /********************************************************************************************************************
@@ -120,30 +87,6 @@ updateConstantes() ones the Tracking in compute, compute the constant
 ********************************************************************************************************************/
 void TabTimesDistanceIntensity::updateConstantes(void)
 {
-	/*wchar_t filenameLine[1024];
-	long t;
-	if(publicParameters->folderOut[wcslen(publicParameters->folderOut)]!=L'\\')
-			wcscat(publicParameters->folderOut,L"\\");
-	
-	swprintf(filenameLine, L"%lsDistanceHisto.txt", publicParameters->folderOut);
-
-	FILE*fid=_wfopen(filenameLine,L"w");
-
-	fwprintf(fid, L"D\tdI\tdM\n");
-
-
-
-	for(t=0;t<nbTimes;t++){
-		TimeNodes* _localTimeNodes=timeNodes[t];
-		for(int n=0;n<_localTimeNodes->nbNodes;n++){
-			Node* node=_localTimeNodes->tabNodes[n];
-			if(node->connectionFuture!=NULL){
-				fwprintf(fid, L"%f\t%f\t%f\n", node->distance(node->connectionFuture),
-					node->info->getIntensity()-node->connectionFuture->info->getIntensity(),node->info->getMean()-node->connectionFuture->info->getMean());
-			}
-		}
-	}
-	fclose(fid);*/
 	long t;
 	long cpt = 0;
 	double covID = 0;
@@ -178,13 +121,6 @@ void TabTimesDistanceIntensity::updateConstantes(void)
 	publicParameters->stdIntensity = sqrt(publicParameters->stdIntensity);
 	publicParameters->stdDistance = sqrt(publicParameters->stdDistance);
 	publicParameters->stdMean = sqrt(publicParameters->stdMean);
-
-
-	//wprintf(L"covID %f  covIM %f covDM %f\n", covID, publicParameters->covMeanIntensity, covDM);
-
-	//wprintf(L"det(Cov)MI %f\n", publicParameters->stdIntensity*publicParameters->stdIntensity * publicParameters->stdMean * publicParameters->stdMean - publicParameters->covMeanIntensity*publicParameters->covMeanIntensity);
-
-	//wprintf(L"covIM^2 (%f^2) - covII(%f)*covMM(%f)=%f\n", publicParameters->covMeanIntensity, publicParameters->stdIntensity*publicParameters->stdIntensity, publicParameters->stdMean*publicParameters->stdMean, publicParameters->covMeanIntensity*publicParameters->covMeanIntensity- publicParameters->stdIntensity*publicParameters->stdIntensity*publicParameters->stdMean*publicParameters->stdMean);
 }
 
 
@@ -218,7 +154,6 @@ int TabTimesDistanceIntensity::runModel()
 		totalLikeness = getLikenessGlobal();
 
 		int nbInt = 0;
-		//if(publicParameters->temperatureDecrease<=0) return(RET_OK);
 
 		wprintf(L"**********Global Likeness: %f ***********\n", totalLikeness);
 		int bcl = 0;
@@ -228,11 +163,8 @@ int TabTimesDistanceIntensity::runModel()
 			nbInt++;
 
 			deltaLikeness = 0;
-			/*for(int i=0; i<300; i++){*/
 			for (int i = 0; i < publicParameters->NbIterations; i++) { for (int _time = 0; _time < nbTimes - 1; _time++) { deltaLikeness += ((TimeNodesDistanceIntensity*)(timeNodes[_time]))->tryRandomChange(error); } }
 			totalLikeness += deltaLikeness;
-
-			//wprintf(L"%d\tObjective function: %lf, T: %lf, cpt: %d\n", nbInt, totalLikeness, error, cpt);
 
 			if (fabs(deltaLikeness) < 1e-8) cpt++;
 			else cpt = 0;

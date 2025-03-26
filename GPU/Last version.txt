@@ -16,14 +16,13 @@ Gaussian fit
 		// End test
 		;
 
-		// Apparement il faut traiter les images en plusieurs fois pour éviter le probleme : cudaErrorLaunchTimeout
+		// Apparement il faut traiter les images en plusieurs fois pour Ã©viter le probleme : cudaErrorLaunchTimeout
 		if (threeD == 1)
 			cuda3DFittingGPU(d_data, sizeStk, sizeDataX, sizeDataY, d_nbStruct, d_pointsList, 20*6, size, sigmaX, sigmaY, angle);
 		else // 2D // threeD == 0
 			cuda2DFittingGPU(d_data, sizeStk, sizeDataX, sizeDataY, d_nbStruct, d_pointsList, 30, size, sigmaX);
 
 		cudaError err = cudaThreadSynchronize();
-		//printf("Error : %d \n", err);
 		cutilSafeCall( cudaMemcpy( list, d_pointsList, _maxNbPoints * sizeof(double) * 10, cudaMemcpyDeviceToHost) );
 
 		// Cleanup memory
