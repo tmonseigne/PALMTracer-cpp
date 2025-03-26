@@ -4,7 +4,7 @@
  * PANTHEON Project
  *
  * GREYC IMAGE
- * 6 Boulevard Maréchal Juin
+ * 6 Boulevard Marï¿½chal Juin
  * F-14050 Caen Cedex France
  *
  * This file is free software. You can use it, distribute it
@@ -17,8 +17,8 @@
  */
 
 /*
- * (C)Régis Clouard - 1999-10-08
- * (R)Régis Clouard - 2001-04-03 (version 3.00)
+ * (C)Rï¿½gis Clouard - 1999-10-08
+ * (R)Rï¿½gis Clouard - 2001-04-03 (version 3.00)
  */
 
 #ifndef	__PPANDOREH__
@@ -27,9 +27,8 @@
 #ifndef _WIN32
 #include <unistd.h>
 #endif
-#include <stdlib.h>
 #include <fcntl.h>
-
+#include <stdlib.h>
 #include <string>
 
 /*
@@ -68,8 +67,8 @@ typedef double Double;         // BASE
 /*
  * Definition des variables de limites de valeurs.
  */
-#include <limits.h>
 #include <float.h>
+#include <limits.h>
 
 #ifndef MINCHAR
 #define	MINCHAR SCHAR_MIN

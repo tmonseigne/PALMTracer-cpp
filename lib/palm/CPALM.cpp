@@ -2,7 +2,6 @@
 //
 
 #include "CPALM.h"
-
 #include "fit/GaussianFit2D.h"
 #include "fit/GaussianFit2D_Sigma.h"
 #include "fit/GaussianFit3D.h"
@@ -95,12 +94,8 @@ long CPALM::CPALMProcessing()
 	}
 	begin = clock();
 
-	if (_watershedRatio == 1.) {
-		if ((nbStruct = _segmentPub->segmentation(*_outputPub, *_segPub, 1e-8f, true, false)) < 0) return (nbStruct);
-	}
-	else {
-		if ((nbStruct = _segmentPub->watershedIntelligent(*_outputPub, *_segPub, 1e-8f, (float)_watershedRatio)) < 0) return (nbStruct);
-	}
+	if (_watershedRatio == 1.) { if ((nbStruct = _segmentPub->segmentation(*_outputPub, *_segPub, 1e-8f, true, false)) < 0) return (nbStruct); }
+	else { if ((nbStruct = _segmentPub->watershedIntelligent(*_outputPub, *_segPub, 1e-8f, (float)_watershedRatio)) < 0) return (nbStruct); }
 
 
 	if ((nbPointsSign = _segmentPub->computeStatistics(*_outputPub, *_segPub, _aTrousPub->wDecomp->data + _waveletNo * _sizeX * _sizeY, _gaussFit)) < 0) return (nbPointsSign);
@@ -164,7 +159,6 @@ long CPALM::CPALMProcessing()
 				// Gaussian fit of 2D
 				GaussianFit2D* fit = new GaussianFit2D();
 				fit->Run(_image, _sizeY, _sizeX, x0, y0, I0, sigmaX, offset, RSS, /*30*/10, _size);
-
 
 
 				_pointsList[currentPoint++] = sigmaX;

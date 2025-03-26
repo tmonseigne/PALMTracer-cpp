@@ -1,12 +1,10 @@
-#include <cstdio>
+#include "GaussianFit2D.h"
+#include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <cstdlib>
-
-#include "GaussianFit2D.h"
-
-#include <algorithm>
 
 // CPU version of gaussian fit 2D
 #define Npar 4 // I0, x0, y0, offset
@@ -45,8 +43,7 @@ float GaussianFit2D::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat
 	}
 
 	float* inter = (float*)malloc(Npar * Npnt * sizeof(float));
-	for (int elt = 0; elt < Npnt; elt++)
-		for (int i = 0; i < Npar; i++) inter[elt * Npar + i] = weight_sq[elt] * dydp[elt * Npar + i];
+	for (int elt = 0; elt < Npnt; elt++) for (int i = 0; i < Npar; i++) inter[elt * Npar + i] = weight_sq[elt] * dydp[elt * Npar + i];
 
 	// Computing alpha (A vérifier)
 	for (int j = 0; j < Npar; j++)
@@ -262,12 +259,12 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 
 				X2 = lm_matx(t/*IN*/, p/*IN*/, y_dat/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
 
-				lambda = std::max(lambda/lambda_DN_fac, 1.e-7f);
+				lambda = std::max(lambda / lambda_DN_fac, 1.e-7f);
 			}
 			else // it IS NOT better
 			{
 				X2 = X2_old; // do not accept a_try
-				lambda = std::min(lambda*lambda_UP_fac, 1.e7f);
+				lambda = std::min(lambda * lambda_UP_fac, 1.e7f);
 			}
 
 			max_ = 0;

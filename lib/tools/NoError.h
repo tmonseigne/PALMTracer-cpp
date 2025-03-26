@@ -1,6 +1,3 @@
-
-
-
 /*******************************************************************************************************************
 								This file define of the number error
 									Institut Curie
@@ -56,7 +53,7 @@
 #define ERR_FFT_DIM					-402
 #define ERR_FFT_SIZE				-403
 #define ERR_FFT						-404
-	
+
 
 //ReadWriteSTK
 #define ERR_READ_STK				-501
@@ -92,7 +89,7 @@
 #define T_ERR_BAD_MODEL				-808
 #define T_ERR_OOP					-809
 #define T_ERR_HTML					-810
-#define T_ERR_INVALIDE_DATA			-811		
+#define T_ERR_INVALIDE_DATA			-811
 
 //Control of allocation
 #define ERR_CONTROL_ALLOC_1			-901

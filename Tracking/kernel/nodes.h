@@ -6,11 +6,10 @@
 #ifndef __nodes__
 #define __nodes__
 
+#include <string.h>
+#include "chain_neighbor.h"
 #include "general.h"
 #include "info_node.h"
-
-#include "chain_neighbor.h"
-#include <string.h>
 
 
 #define DIST_SIGNIFICANT	10.

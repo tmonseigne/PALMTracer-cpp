@@ -100,8 +100,7 @@ double NodeDistanceIntensity::likenessMeanIntensity(Node* n)
 *********************************************************************************************/
 double NodeDistanceIntensity::likenessMeanIntensity(Node* n)
 {
-	if (n == NULL)
-		return (getLikeness(info->getMean(), publicParameters->stdMean * __max(1., 3.*publicParameters->stdDistance/this->distanceToBorder())));
+	if (n == NULL) return (getLikeness(info->getMean(), publicParameters->stdMean * __max(1., 3.*publicParameters->stdDistance/this->distanceToBorder())));
 
 	else return (getLikeness(info->getMean() - n->info->getMean(), publicParameters->stdMean));
 }
@@ -116,10 +115,8 @@ double NodeDistanceIntensity::likenessMeanIntensityFusion(Node* n1, Node* n2)
 {
 	if (n1 == NULL) return (0.); //Error ???
 	if (n2 == NULL) return (0.); //Error ???
-	if (publicParameters->nbDim == 2)
-		return (getLikeness(info->getMean() - (n1->info->getIntensity() + n2->info->getIntensity()) / (n1->info->getSurface() + n2->info->getSurface()), publicParameters->stdMean));
-	else
-		return (getLikeness(info->getMean() - (n1->info->getIntensity() + n2->info->getIntensity()) / (n1->info->getVolume() + n2->info->getVolume()), publicParameters->stdMean));
+	if (publicParameters->nbDim == 2) return (getLikeness(info->getMean() - (n1->info->getIntensity() + n2->info->getIntensity()) / (n1->info->getSurface() + n2->info->getSurface()), publicParameters->stdMean));
+	else return (getLikeness(info->getMean() - (n1->info->getIntensity() + n2->info->getIntensity()) / (n1->info->getVolume() + n2->info->getVolume()), publicParameters->stdMean));
 }
 
 
@@ -132,8 +129,7 @@ double NodeDistanceIntensity::likenessIntensity(Node* n)
 *********************************************************************************************/
 double NodeDistanceIntensity::likenessIntensity(Node* n)
 {
-	if (n == NULL)
-		return (getLikeness(info->getIntensity(), publicParameters->stdIntensity * __max(1., 3.*publicParameters->stdDistance/this->distanceToBorder()))); //__max(1., 3.*publicParameters->stdDistance/this->distanceToBorder())));
+	if (n == NULL) return (getLikeness(info->getIntensity(), publicParameters->stdIntensity * __max(1., 3.*publicParameters->stdDistance/this->distanceToBorder()))); //__max(1., 3.*publicParameters->stdDistance/this->distanceToBorder())));
 	else return (getLikeness(info->getIntensity() - n->info->getIntensity(), publicParameters->stdIntensity));
 }
 
@@ -1613,11 +1609,10 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage3(double limitLoss, ChainNe
 	//	1-----------3(cRand)
 	//	4-----------5(c)
 	//	NULL--------2
-	if (c == NULL) return (-1.);                                 //ERROR 
-	if (c->neighbor->connectionFusion1Past != NULL) return (-1); //error
-	if (c->neighbor->connectionFissionPast != NULL) return (-1); //error
-	if (c->neighbor != connectionFuture)
-		if (c->neighbor->connectionPast != NULL) return (-1); //error
+	if (c == NULL) return (-1.);                                                               //ERROR 
+	if (c->neighbor->connectionFusion1Past != NULL) return (-1);                               //error
+	if (c->neighbor->connectionFissionPast != NULL) return (-1);                               //error
+	if (c->neighbor != connectionFuture) if (c->neighbor->connectionPast != NULL) return (-1); //error
 
 	if (distance(cRand->neighbor) >= publicParameters->distMaxPastAndFuture) //distance is not respected
 		return (0.);
@@ -1701,8 +1696,7 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage0(double limitLoss)
 	bool exitFor = false;
 	long idRandNeighbor;
 
-	for (i = 0, cRand = neighborsBlinkFuture; cRand != NULL; cRand = cRand->next)
-		if ((cRand->neighbor->time - time == dt) && (cRand->neighbor->connectionPast == NULL) && (cRand->neighbor->connectionBlinkPast == NULL) && (cRand->neighbor->connectionFissionPast == NULL) && (cRand->neighbor->connectionFusion1Past == NULL)) nbNodeAtGoodTime++;
+	for (i = 0, cRand = neighborsBlinkFuture; cRand != NULL; cRand = cRand->next) if ((cRand->neighbor->time - time == dt) && (cRand->neighbor->connectionPast == NULL) && (cRand->neighbor->connectionBlinkPast == NULL) && (cRand->neighbor->connectionFissionPast == NULL) && (cRand->neighbor->connectionFusion1Past == NULL)) nbNodeAtGoodTime++;
 	if (nbNodeAtGoodTime == 0) return (0);
 
 	idRandNeighbor = rand() % nbNodeAtGoodTime;

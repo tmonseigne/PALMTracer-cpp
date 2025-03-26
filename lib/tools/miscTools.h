@@ -6,9 +6,9 @@
 #ifndef __MISC_TOOLD__
 #define __MISC_TOOLD__
 
-#include <stdio.h>
 #include <errno.h>
 #include <math.h>
+#include <stdio.h>
 #include "allDataLib.h"
 
 void printErrno(FILE* file, int errno);

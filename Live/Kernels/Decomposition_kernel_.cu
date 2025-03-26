@@ -4,7 +4,6 @@
 //#include <math_constants.h>
 #include <helper_cuda.h>
 #include <helper_timer.h>
-
 #include "../parameters.h"
 
 __global__ void GPUuSrtToFloat(unsigned short* input, float* output, unsigned short WIDTH, unsigned short HEIGHT);

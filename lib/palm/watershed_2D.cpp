@@ -85,8 +85,7 @@ int Segment2D::filterStructureWS(FltArray& potential, USrtArray& seg, float thre
 			}
 
 
-		for (i = 0; i < sizeDataX; i++)
-			for (j = 0; j < sizeDataY; j++) { if (seg.data[i * sizeDataY + j] != 0) { seg.data[i * sizeDataY + j] = (unsigned short)ptrStr[ptrStr[seg.data[i * sizeDataY + j]].structureToBecaume].newIndex; } }
+		for (i = 0; i < sizeDataX; i++) for (j = 0; j < sizeDataY; j++) { if (seg.data[i * sizeDataY + j] != 0) { seg.data[i * sizeDataY + j] = (unsigned short)ptrStr[ptrStr[seg.data[i * sizeDataY + j]].structureToBecaume].newIndex; } }
 	}
 
 	seg = (unsigned short)0;
@@ -127,11 +126,7 @@ int Segment2D::getLocalMax(FltArray& image, USrtArray& seg, float threshold)
 			if (image.data[i * sizeDataY + j] > threshold) {
 				err = false;
 				//test if it is a new maximum from the vicinity
-				for (ii = __max(i-1, 0); (ii <= __min(i+1, sizeDataX-1)) && !err; ii++)
-					for (jj = __max(j-1, 0); (jj <= __min(j+1, sizeDataY-1)) && !err; jj++) {
-						if ((ii != i) || (jj != j))
-							if (image.data[i * sizeDataY + j] < image.data[ii * sizeDataY + jj]) err = true;
-					}
+				for (ii = __max(i-1, 0); (ii <= __min(i+1, sizeDataX-1)) && !err; ii++) for (jj = __max(j-1, 0); (jj <= __min(j+1, sizeDataY-1)) && !err; jj++) { if ((ii != i) || (jj != j)) if (image.data[i * sizeDataY + j] < image.data[ii * sizeDataY + jj]) err = true; }
 				if (!err) { //new maximum found
 					unsigned short maxi = 0;
 					err = false;
@@ -183,9 +178,7 @@ int Segment2D::watershed(FltArray& potential, USrtArray& seg, float threshold)
 						if ((p1.x != p.x) || (p1.y != p.y))
 							if (p1.x >= 0)
 								if (p1.x < potential.size(0))
-									if (p1.y >= 0)
-										if (p1.y < potential.size(1))
-											if (seg.data[p1.x * sizeDataY + p1.y] == 0) vois = true;
+									if (p1.y >= 0) if (p1.y < potential.size(1)) if (seg.data[p1.x * sizeDataY + p1.y] == 0) vois = true;
 
 				// On empile les points frontieres.
 				if (vois) {
@@ -249,9 +242,9 @@ int Segment2D::watershedIntelligent(FltArray& potential, USrtArray& seg, float t
 		return (nbInfoStruct);
 	}
 
-	 //filter the germinates to minimize the oversegmentation
+	//filter the germinates to minimize the oversegmentation
 	if ((ret = filterStructureWS(potential, seg, thresholdRatio)) < 0) return (ret);
-	
+
 	//first watershed
 	if ((ret = watershed(potential, seg, threshold)) < 0) return (ret);
 	mixIndex(seg);
@@ -341,8 +334,7 @@ int Segment2D::filterStructureWS(USrtArray& potential, USrtArray& seg, float thr
 			}
 
 
-		for (i = 0; i < sizeDataX; i++)
-			for (j = 0; j < sizeDataY; j++) { if (seg.data[i * sizeDataY + j] != 0) { seg.data[i * sizeDataY + j] = (unsigned short)ptrStr[ptrStr[seg.data[i * sizeDataY + j]].structureToBecaume].newIndex; } }
+		for (i = 0; i < sizeDataX; i++) for (j = 0; j < sizeDataY; j++) { if (seg.data[i * sizeDataY + j] != 0) { seg.data[i * sizeDataY + j] = (unsigned short)ptrStr[ptrStr[seg.data[i * sizeDataY + j]].structureToBecaume].newIndex; } }
 	}
 
 	seg = (unsigned short)0;
@@ -382,11 +374,7 @@ int Segment2D::getLocalMax(USrtArray& image, USrtArray& seg, float threshold)
 			if (image.data[i * sizeDataY + j] > threshold) {
 				err = false;
 				//test if it is a new maximum from the vicinity
-				for (ii = __max(i-1, 0); (ii <= __min(i+1, sizeDataX-1)) && !err; ii++)
-					for (jj = __max(j-1, 0); (jj <= __min(j+1, sizeDataY-1)) && !err; jj++) {
-						if ((ii != i) || (jj != j))
-							if ((image.data[i * sizeDataY + j] < image.data[ii * sizeDataY + jj]) || (image.data[ii * sizeDataY + jj] <= threshold)) err = true;
-					}
+				for (ii = __max(i-1, 0); (ii <= __min(i+1, sizeDataX-1)) && !err; ii++) for (jj = __max(j-1, 0); (jj <= __min(j+1, sizeDataY-1)) && !err; jj++) { if ((ii != i) || (jj != j)) if ((image.data[i * sizeDataY + j] < image.data[ii * sizeDataY + jj]) || (image.data[ii * sizeDataY + jj] <= threshold)) err = true; }
 				if (!err) { //new maximum found. 
 					unsigned short maxi = 0;
 					err = false;
@@ -438,9 +426,7 @@ int Segment2D::watershed(USrtArray& potential, USrtArray& seg, float threshold)
 						if ((p1.x != p.x) || (p1.y != p.y))
 							if (p1.x >= 0)
 								if (p1.x < potential.size(0))
-									if (p1.y >= 0)
-										if (p1.y < potential.size(1))
-											if (seg.data[p1.x * sizeDataY + p1.y] == 0) vois = true;
+									if (p1.y >= 0) if (p1.y < potential.size(1)) if (seg.data[p1.x * sizeDataY + p1.y] == 0) vois = true;
 
 				// On empile les points frontieres.
 				if (vois) {

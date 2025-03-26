@@ -1,249 +1,216 @@
-
-
-
-
 #ifdef		_ARRAY_TYPE_
 
 
-
-
-
 //*****************		CONSTRUCTORS		DESTRUCTOR		ALLOC		**************
-ArrayType::ArrayType(){
-
-	data=NULL;
-	nbDim=0;
-	nbPoints=0;
-	sizeAllocated=0;
+ArrayType::ArrayType()
+{
+	data = NULL;
+	nbDim = 0;
+	nbPoints = 0;
+	sizeAllocated = 0;
 	//type=NB_TYPE;
-	#ifdef INTEGER
+#ifdef INTEGER
 	minVal=MINVAL;
 	maxVal=MAXVAL;
-	#endif
-	dataAllocatedByConstructor=false;
-
-
+#endif
+	dataAllocatedByConstructor = false;
 }
 
 
-ArrayType::ArrayType(const long i, const long j, const long k, const long l){
+ArrayType::ArrayType(const long i, const long j, const long k, const long l)
+{
 	int ret;
-	data=NULL;
-	sizeAllocated=0;
-	ret=alloc(i,j,k,l);
-	if(ret<0){
-
-		exit(ret);
-	}
+	data = NULL;
+	sizeAllocated = 0;
+	ret = alloc(i, j, k, l);
+	if (ret < 0) { exit(ret); }
 }
 
 
-
-ArrayType::ArrayType(DataType	*_data, const long i, const long j, const long k, const long l){
+ArrayType::ArrayType(DataType* _data, const long i, const long j, const long k, const long l)
+{
 	int ret;
-	data=NULL;
-	sizeAllocated=0;
-	ret=alloc(_data,i,j,k,l);
-	if(ret<0){
-
-		exit(ret);
-	}
-
+	data = NULL;
+	sizeAllocated = 0;
+	ret = alloc(_data, i, j, k, l);
+	if (ret < 0) { exit(ret); }
 }
 
 
-bool ArrayType::isThereData(void){
-	return(data!=NULL);
-}
+bool ArrayType::isThereData(void) { return (data != NULL); }
 
-int ArrayType::getDim(const long i, const long j, const long k, const long l){
-	int _nbDim=4;
-	if(l==1){
-		_nbDim=3;
-		if(k==1){
-			_nbDim=2;
-			if(j==1){
-				_nbDim=1;
-			}
+int ArrayType::getDim(const long i, const long j, const long k, const long l)
+{
+	int _nbDim = 4;
+	if (l == 1) {
+		_nbDim = 3;
+		if (k == 1) {
+			_nbDim = 2;
+			if (j == 1) { _nbDim = 1; }
 		}
 	}
-	return(_nbDim);
-} 
+	return (_nbDim);
+}
 
 
-
-int ArrayType::testDim(const long i, const long j, const long k, const long l){
-	if((i<0) || (j<0) || (k<0) || (l<0)){
-		nbDim=0;
-		nbPoints=0;
-		data=NULL;
-		sizeAllocated=0;
-		return(SIZE_ERR);
+int ArrayType::testDim(const long i, const long j, const long k, const long l)
+{
+	if ((i < 0) || (j < 0) || (k < 0) || (l < 0)) {
+		nbDim = 0;
+		nbPoints = 0;
+		data = NULL;
+		sizeAllocated = 0;
+		return (SIZE_ERR);
 	}
-	return(RET_OK);
+	return (RET_OK);
 }
 
-int ArrayType::getDepth(){
-	#ifdef COMPLEX
+int ArrayType::getDepth()
+{
+#ifdef COMPLEX
 		return(16*sizeof(DataTypeSimple));
-	#else
-		return(8*sizeof(DataType));
-	#endif
-	
+#else
+	return (8 * sizeof(DataType));
+#endif
 }
 
 
-int ArrayType::alloc(const long i, const long j, const long k, const long l){
+int ArrayType::alloc(const long i, const long j, const long k, const long l)
+{
 	long ret;
-	nbDim=getDim(i,j,k,l);
+	nbDim = getDim(i, j, k, l);
 
-	if((ret=testDim(i,j,k,l))<0) return(ret);
-	
-	if(isThereData()){
-		if(sizeAllocated>=(unsigned long)(i*j*k*l)){
-			nbPoints=i*j*k*l;
-			sizeData[0]=i;
-			sizeData[1]=j;
-			sizeData[2]=k;
-			sizeData[3]=l;
-		}else{
-			nbDim=0;
-			nbPoints=0;
-			data=NULL;
-			return(SIZE_ERR);
-		} 
-	}else{
-		data=new DataType[i*j*k*l];
-		if(data==NULL){
-			nbDim=0;
-			nbPoints=0;
-			sizeAllocated=0;
-			return(ALLOC_ERR);
-		}else{
-			sizeAllocated=(unsigned long)(i*j*k*l);
-			nbPoints=i*j*k*l;
-			sizeData[0]=i;
-			sizeData[1]=j;
-			sizeData[2]=k;
-			sizeData[3]=l;
-			dataAllocatedByConstructor=true;
+	if ((ret = testDim(i, j, k, l)) < 0) return (ret);
+
+	if (isThereData()) {
+		if (sizeAllocated >= (unsigned long)(i * j * k * l)) {
+			nbPoints = i * j * k * l;
+			sizeData[0] = i;
+			sizeData[1] = j;
+			sizeData[2] = k;
+			sizeData[3] = l;
+		}
+		else {
+			nbDim = 0;
+			nbPoints = 0;
+			data = NULL;
+			return (SIZE_ERR);
+		}
+	}
+	else {
+		data = new DataType[i * j * k * l];
+		if (data == NULL) {
+			nbDim = 0;
+			nbPoints = 0;
+			sizeAllocated = 0;
+			return (ALLOC_ERR);
+		}
+		else {
+			sizeAllocated = (unsigned long)(i * j * k * l);
+			nbPoints = i * j * k * l;
+			sizeData[0] = i;
+			sizeData[1] = j;
+			sizeData[2] = k;
+			sizeData[3] = l;
+			dataAllocatedByConstructor = true;
 			//type=NB_TYPE;
-			#ifdef INTEGER
+#ifdef INTEGER
 			minVal=MINVAL;
 			maxVal=MAXVAL;
-			#endif
+#endif
 		}
 	}
-	return(RET_OK);
+	return (RET_OK);
 }
 
 
-
-int	ArrayType::alloc(DataType	*_data, const long i, const long j, const long k, const long l){
+int ArrayType::alloc(DataType* _data, const long i, const long j, const long k, const long l)
+{
 	long ret;
-	nbDim=getDim(i,j,k,l);
+	nbDim = getDim(i, j, k, l);
 
-	if((ret=testDim(i,j,k,l))<0) return(ret);
+	if ((ret = testDim(i, j, k, l)) < 0) return (ret);
 
-	if(isThereData()){
-		if(dataAllocatedByConstructor){
-			nbDim=0;
-			nbPoints=0;
-			sizeAllocated=0;
+	if (isThereData()) {
+		if (dataAllocatedByConstructor) {
+			nbDim = 0;
+			nbPoints = 0;
+			sizeAllocated = 0;
 
 
-			return(ALLOC_ERR);
-		}else{
-			nbPoints=(unsigned long)(i*j*k*l);
-			sizeAllocated=0;
-			sizeData[0]=i;
-			sizeData[1]=j;
-			sizeData[2]=k;
-			sizeData[3]=l;
-			data=_data;
+			return (ALLOC_ERR);
 		}
-	}else{
-		sizeAllocated=0;
-		dataAllocatedByConstructor=false;
-		data=_data;
-		nbPoints=(unsigned long)(i*j*k*l);
-		sizeData[0]=i;
-		sizeData[1]=j;
-		sizeData[2]=k;
-		sizeData[3]=l;
+		else {
+			nbPoints = (unsigned long)(i * j * k * l);
+			sizeAllocated = 0;
+			sizeData[0] = i;
+			sizeData[1] = j;
+			sizeData[2] = k;
+			sizeData[3] = l;
+			data = _data;
+		}
+	}
+	else {
+		sizeAllocated = 0;
+		dataAllocatedByConstructor = false;
+		data = _data;
+		nbPoints = (unsigned long)(i * j * k * l);
+		sizeData[0] = i;
+		sizeData[1] = j;
+		sizeData[2] = k;
+		sizeData[3] = l;
 
-		#ifdef INTEGER
+#ifdef INTEGER
 		minVal=MINVAL;
 		maxVal=MAXVAL;
-		#endif
+#endif
 	}
-	return(RET_OK);
+	return (RET_OK);
 }
 
-int	ArrayType::realloc(const long i, const long j, const long k, const long l){
+int ArrayType::realloc(const long i, const long j, const long k, const long l)
+{
 	long ret;
-	nbDim=getDim(i,j,k,l);
-	if((ret=testDim(i,j,k,l))<0) return(ret);
-	if(isThereData() && !dataAllocatedByConstructor){
-
-		return(ALLOC_ERR);
-	}
-	if(isThereData()){
-		if(sizeAllocated>=(unsigned long)(i*j*k*l)){
-			nbPoints=(unsigned long)(i*j*k*l);
-			sizeData[0]=i;
-			sizeData[1]=j;
-			sizeData[2]=k;
-			sizeData[3]=l;
-		}else{
+	nbDim = getDim(i, j, k, l);
+	if ((ret = testDim(i, j, k, l)) < 0) return (ret);
+	if (isThereData() && !dataAllocatedByConstructor) { return (ALLOC_ERR); }
+	if (isThereData()) {
+		if (sizeAllocated >= (unsigned long)(i * j * k * l)) {
+			nbPoints = (unsigned long)(i * j * k * l);
+			sizeData[0] = i;
+			sizeData[1] = j;
+			sizeData[2] = k;
+			sizeData[3] = l;
+		}
+		else {
 			delete [] data;
-			data=NULL;
-			if((ret=alloc(i,j,k,l))<0) return(ret);
-		} 
-	}else
-		if((ret=alloc(i,j,k,l))<0) return(ret);
-	return(RET_OK);
+			data = NULL;
+			if ((ret = alloc(i, j, k, l)) < 0) return (ret);
+		}
+	}
+	else if ((ret = alloc(i, j, k, l)) < 0) return (ret);
+	return (RET_OK);
 }
 
 
-ArrayType::~ArrayType(){
-
-	if(dataAllocatedByConstructor){
-		if(isThereData())
-			delete [] data;	
-	}else
-		data=NULL;
-	
+ArrayType::~ArrayType()
+{
+	if (dataAllocatedByConstructor) { if (isThereData()) delete [] data; }
+	else data = NULL;
 }
-
 
 
 //**************		[]		*********************
-DataType &ArrayType::operator[](long i){
-
-	return(data[i]);
-}
+DataType&ArrayType::operator[](long i) { return (data[i]); }
 
 //**************		()		*********************
-DataType &ArrayType::operator()(long i){
+DataType&ArrayType::operator()(long i) { return (data[i]); }
 
-	return(data[i]);
-}
+DataType&ArrayType::operator()(long i, long j) { return (data[i * sizeData[1] + j]); }
 
-DataType &ArrayType::operator()(long i,long j){
+DataType&ArrayType::operator()(long i, long j, long k) { return (data[(i * sizeData[1] + j) * sizeData[2] + k]); }
 
-	return(data[i*sizeData[1]+j]);
-}
-
-DataType &ArrayType::operator()(long i,long j, long k){
-
-	return(data[(i*sizeData[1]+j)*sizeData[2]+k]);
-}
-
-DataType &ArrayType::operator()(long i,long j, long k, long l){
-
-	return(data[((i*sizeData[1]+j)*sizeData[2]+k)*sizeData[3]+l]);
-}
+DataType&ArrayType::operator()(long i, long j, long k, long l) { return (data[((i * sizeData[1] + j) * sizeData[2] + k) * sizeData[3] + l]); }
 
 
 //**************		OPERATORS	********************
@@ -360,7 +327,6 @@ ArrayType& ArrayType::operator--(void){
 #endif
 
 
-
 //*************		standard methods		*****************
 
 
@@ -372,24 +338,17 @@ void ArrayType::conjugate(){
 }
 #endif
 
-int ArrayType::size(int di){
-	return(sizeData[di]);
+int ArrayType::size(int di) { return (sizeData[di]); }
+
+void ArrayType::setSize(int di, int valSize)
+{
+	sizeData[di] = valSize;
+	nbDim = getDim(sizeData[0], sizeData[1], sizeData[2], sizeData[3]);
+	nbPoints = (unsigned long)(sizeData[0] * sizeData[1] * sizeData[2] * sizeData[3]);
+	if (nbPoints > sizeAllocated) { exit(SIZE_ERR); }
 }
 
-void ArrayType::setSize(int di, int valSize){
-	sizeData[di]=valSize;
-	nbDim=getDim(sizeData[0],sizeData[1],sizeData[2],sizeData[3]);
-	nbPoints=(unsigned long)(sizeData[0]*sizeData[1]*sizeData[2]*sizeData[3]);
-	if(nbPoints>sizeAllocated){
-		exit(SIZE_ERR);
-	}
-}
-
-int ArrayType::dim(){
-	return(nbDim);
-}
-
-
+int ArrayType::dim() { return (nbDim); }
 
 
 #ifndef BOOL_TYPE
@@ -649,7 +608,7 @@ void ArrayType::hardThresholdInterval( ArrayType &arrayType, DataType valMin, Da
 #endif
 #endif
 
- 
+
 #ifndef UNSIGNED
 #ifndef COMPLEX
 #ifndef BOOL_TYPE
@@ -713,72 +672,55 @@ void ArrayType::continuousThreshold(DataType val ){
 #endif
 
 //*******************		input and output		*********************
-void ArrayType::writeArray(wchar_t* fileName){
+void ArrayType::writeArray(wchar_t* fileName)
+{
 	int fileHandle;
 	int nbCharWrite;
 	HeaderFile header;
 	int ret;
 
-	header.nbDim=nbDim;
-	header.sizeData[0]=sizeData[0];
-	header.sizeData[1]=sizeData[1];
-	header.sizeData[2]=sizeData[2];
-	header.sizeData[3]=sizeData[3];
-	header.type=type();
+	header.nbDim = nbDim;
+	header.sizeData[0] = sizeData[0];
+	header.sizeData[1] = sizeData[1];
+	header.sizeData[2] = sizeData[2];
+	header.sizeData[3] = sizeData[3];
+	header.type = type();
 
-	if( (ret = _wsopen_s( &fileHandle, fileName, _O_RDWR | _O_CREAT | _O_BINARY, _SH_DENYRD, _S_IWRITE )) ==0 ){
+	if ((ret = _wsopen_s(&fileHandle, fileName, _O_RDWR | _O_CREAT | _O_BINARY, _SH_DENYRD, _S_IWRITE)) == 0) {
+		if ((nbCharWrite = _write(fileHandle, (void*)&header, sizeof(HeaderFile))) == -1) { exit(WRITING_FILE_ERR); }
 
-		if((nbCharWrite=_write( fileHandle, (void*)&header, sizeof(HeaderFile)))==-1){
-			exit(WRITING_FILE_ERR);
-		}
+		if ((nbCharWrite = _write(fileHandle, data, sizeof(DataType) * nbPoints)) == -1) { exit(WRITING_FILE_ERR); }
 
-		if((nbCharWrite=_write( fileHandle, data, sizeof(DataType)*nbPoints ))==-1){
-			exit(WRITING_FILE_ERR);
-		}
-
-		_close( fileHandle );
-	}else{
-		exit(OPENING_FILE_ERR);
+		_close(fileHandle);
 	}
+	else { exit(OPENING_FILE_ERR); }
 }
 
 
-void ArrayType::readArray(wchar_t* fileName){
+void ArrayType::readArray(wchar_t* fileName)
+{
 	int fileHandle;
 
-int ret;
+	int ret;
 	HeaderFile header;
 
-	if( (ret = _wsopen_s( &fileHandle, fileName, _O_RDONLY | _O_BINARY, _SH_DENYWR, _S_IREAD )) ==0 ){
+	if ((ret = _wsopen_s(&fileHandle, fileName, _O_RDONLY | _O_BINARY, _SH_DENYWR, _S_IREAD)) == 0) {
 		int nb;
 
-		if((nb=_read( fileHandle, &header, sizeof(HeaderFile)))==-1){
+		if ((nb = _read(fileHandle, &header, sizeof(HeaderFile))) == -1) { exit(READING_FILE_ERR); }
 
-			exit(READING_FILE_ERR);
+		switch (header.nbDim) {
+			case 1: alloc(header.sizeData[0]);
+			case 2: alloc(header.sizeData[0], header.sizeData[1]);
+			case 3: alloc(header.sizeData[0], header.sizeData[1], header.sizeData[2]);
+			case 4: alloc(header.sizeData[0], header.sizeData[1], header.sizeData[2], header.sizeData[3]);
 		}
 
-		switch(header.nbDim){
-		case 1:
-			alloc(header.sizeData[0]);
-		case 2:
-			alloc(header.sizeData[0],header.sizeData[1]);
-		case 3:
-			alloc(header.sizeData[0],header.sizeData[1],header.sizeData[2]);
-		case 4:
-			alloc(header.sizeData[0],header.sizeData[1],header.sizeData[2],header.sizeData[3]);
-		}
-
-		if(_read( fileHandle, data, sizeof(DataType)*nbPoints)==-1){
-			exit(READING_FILE_ERR);
-		}
-		_close( fileHandle );
-
-	}else{
-		exit(OPENING_FILE_ERR);
+		if (_read(fileHandle, data, sizeof(DataType) * nbPoints) == -1) { exit(READING_FILE_ERR); }
+		_close(fileHandle);
 	}
+	else { exit(OPENING_FILE_ERR); }
 }
 
 
 #endif
-
-

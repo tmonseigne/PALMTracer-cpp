@@ -1,7 +1,3 @@
-
-
-
-
 #ifndef		_FLT_ARRAY_
 #define		_FLT_ARRAY_
 
@@ -18,4 +14,3 @@
 #undef NB_TYPE
 
 #endif
-

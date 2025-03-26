@@ -5,10 +5,10 @@
 #ifndef __HTML_PRINT__
 #define __HTML_PRINT__
 class PublicParameters;
-#include <stdio.h>
-#include <string.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include "..\kernel\general.h"
 //#include <mbstring.h>

@@ -1,9 +1,9 @@
 #ifndef _FITTING_KERNEL_H_
 #define _FITTING_KERNEL_H_
 
-#include <math_constants.h>
 #include <helper_cuda.h>
 #include <helper_timer.h>
+#include <math_constants.h>
 #include "../parameters.h"
 
 // Levenberg fit --> simple precision (float)
@@ -339,30 +339,30 @@ __global__ void GPU3DFitting_7x7(unsigned int nbPoints, float* pointsList, unsig
 					float Zval = 999999;
 					float Zerror = 1000.0;
 
-						float ZYfunc, ZXfunc;
-						float a;
-						float val;
-						float delta;
-						float val_pixel;
-						float sX = p[3] / sqrtf(2.);
-						float sY = p[4] / sqrtf(2.);
+					float ZYfunc, ZXfunc;
+					float a;
+					float val;
+					float delta;
+					float val_pixel;
+					float sX = p[3] / sqrtf(2.);
+					float sY = p[4] / sqrtf(2.);
 
-						for (delta = (int)-(ThreeDThickness * 500); delta <= (int)(ThreeDThickness * 500); delta += (int)(ThreeDSampling * 1000)) // Delta en nm pour valeurs entières
-						{
-							val = delta / 1000.0; // Retour en um pour calibration
+					for (delta = (int)-(ThreeDThickness * 500); delta <= (int)(ThreeDThickness * 500); delta += (int)(ThreeDSampling * 1000)) // Delta en nm pour valeurs entières
+					{
+						val = delta / 1000.0; // Retour en um pour calibration
 
-							//INVERSION SIGMA_X et SIGMA_Y
+						//INVERSION SIGMA_X et SIGMA_Y
 
-							ZYfunc = SigmaXCoefs[4] * sqrtf(1.0 + powf((val - SigmaXCoefs[0]) / SigmaXCoefs[1], 2) + SigmaXCoefs[2] * powf((val - SigmaXCoefs[0]) / SigmaXCoefs[1], 3) + SigmaXCoefs[3] * powf((val - SigmaXCoefs[0]) / SigmaXCoefs[1], 4));
-							ZXfunc = SigmaYCoefs[4] * sqrtf(1.0 + powf((val - SigmaYCoefs[0]) / SigmaYCoefs[1], 2) + SigmaYCoefs[2] * powf((val - SigmaYCoefs[0]) / SigmaYCoefs[1], 3) + SigmaYCoefs[3] * powf((val - SigmaYCoefs[0]) / SigmaYCoefs[1], 4));
+						ZYfunc = SigmaXCoefs[4] * sqrtf(1.0 + powf((val - SigmaXCoefs[0]) / SigmaXCoefs[1], 2) + SigmaXCoefs[2] * powf((val - SigmaXCoefs[0]) / SigmaXCoefs[1], 3) + SigmaXCoefs[3] * powf((val - SigmaXCoefs[0]) / SigmaXCoefs[1], 4));
+						ZXfunc = SigmaYCoefs[4] * sqrtf(1.0 + powf((val - SigmaYCoefs[0]) / SigmaYCoefs[1], 2) + SigmaYCoefs[2] * powf((val - SigmaYCoefs[0]) / SigmaYCoefs[1], 3) + SigmaYCoefs[3] * powf((val - SigmaYCoefs[0]) / SigmaYCoefs[1], 4));
 
-							a = (powf(sX * pixelSize/*0.1*//*0.16*/ - ZXfunc, 2) + powf(sY * pixelSize/*0.1*//*0.16*/ - ZYfunc, 2)) / (powf(ZXfunc, 2) + powf(ZYfunc, 2));
+						a = (powf(sX * pixelSize/*0.1*//*0.16*/ - ZXfunc, 2) + powf(sY * pixelSize/*0.1*//*0.16*/ - ZYfunc, 2)) / (powf(ZXfunc, 2) + powf(ZYfunc, 2));
 
-							if (a < Zerror) {
-								Zerror = a;
-								Zval = val;
-							}
+						if (a < Zerror) {
+							Zerror = a;
+							Zval = val;
 						}
+					}
 
 					if (Zerror < 0.4) pointsList[NbSegParams * index + 10] = Zval;
 					else pointsList[NbSegParams * index + 10] = 999999;
@@ -427,7 +427,6 @@ extern "C"void cuda3DFittingGPU_7x7(unsigned short* data, unsigned int numImages
 
 	// '64' au lieu de '256'
 	GPU3DFitting_7x7<<< grid, threads >>>(nbPoints, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX, sigmaY, angle, computeZ, SigmaXCoefs, SigmaYCoefs, ThreeDThickness/*um*/, ThreeDSampling/*um*/, pixelSize/*um*/);
-
 }
 
 //#endif // dimFit

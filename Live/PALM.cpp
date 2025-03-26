@@ -2,24 +2,20 @@
 //
 
 //#include <GL\glut.h>
-#include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
+#include <cuda_runtime.h>
 #include <cufft.h>
-
 #include <helper_cuda.h>
 #include <helper_cuda_gl.h>
-
 #include <helper_functions.h>
 #include <math_constants.h>
 
 //#include "PALM.h"
-#include "PALM_Class.h"
-
 #include "GaussianFit2D.h"
 #include "GaussianFit2D_Sigma.h"
 #include "GaussianFit3D.h"
 #include "GaussianFit3D_Theta.h"
-
+#include "PALM_Class.h"
 #include "palm/parameters.h"
 
 #ifdef _MANAGED
@@ -194,21 +190,14 @@ long CPALM::CPALMProcessing()
 			_segPub->data[j] = 0;
 			_outputPub->data[j] = 0;
 		}
-
 	}
 	end = clock();
 	begin = clock();
 
-	if (_watershedRatio == 1.) {
-		if ((nbStruct = _segmentPub->segmentation(*_outputPub, *_segPub, 1e-8f, true, false)) < 0) return (nbStruct);
-	}
-	else {
-		if ((nbStruct = _segmentPub->watershedIntelligent(*_outputPub, *_segPub, 1e-8f, (float)_watershedRatio)) < 0) return (nbStruct);
-	}
+	if (_watershedRatio == 1.) { if ((nbStruct = _segmentPub->segmentation(*_outputPub, *_segPub, 1e-8f, true, false)) < 0) return (nbStruct); }
+	else { if ((nbStruct = _segmentPub->watershedIntelligent(*_outputPub, *_segPub, 1e-8f, (float)_watershedRatio)) < 0) return (nbStruct); }
 
-	end = clock();
-
-	;
+	end = clock();;
 	begin = clock();
 
 
@@ -278,15 +267,9 @@ _declspec(dllexport) void _stdcall __OpenPALMProcessing(unsigned short* image, d
 	c = new CPALM(image, pointsList, pointsListSize, sizeX, sizeY, waveletNo, thresholdVal, watershedRatio, volMin, intMin, gaussFit, sigmaX, sigmaY, angle, size);
 }
 
-_declspec(dllexport) long _stdcall __PALMProcessing()
-{
-	return c->CPALMProcessing();
-}
+_declspec(dllexport) long _stdcall __PALMProcessing() { return c->CPALMProcessing(); }
 
-_declspec(dllexport) void _stdcall __closePALMProcessing()
-{
-	delete c;
-}
+_declspec(dllexport) void _stdcall __closePALMProcessing() { delete c; }
 
 
 unsigned short* stack;
@@ -295,14 +278,9 @@ _declspec(dllexport) void _stdcall AllocateMemory(unsigned short frameCount, uns
 {
 	//stack = (unsigned short*)malloc(frameCount * width * height * sizeof(unsigned short));
 	stack = new unsigned short[frameCount * width * height];
-
 }
 
-_declspec(dllexport) void _stdcall CopyFrame(unsigned short numImage, unsigned short* image, unsigned short frameCount, unsigned short width, unsigned short height)
-{
-	memcpy(stack + numImage * width * height, image, width * height * sizeof(unsigned short));
-
-}
+_declspec(dllexport) void _stdcall CopyFrame(unsigned short numImage, unsigned short* image, unsigned short frameCount, unsigned short width, unsigned short height) { memcpy(stack + numImage * width * height, image, width * height * sizeof(unsigned short)); }
 
 _declspec(dllexport) void _stdcall InitializeMemory(unsigned short* frames) { stack = frames; }
 
@@ -310,7 +288,6 @@ _declspec(dllexport) void _stdcall InitializeMemory(unsigned short* frames) { st
 _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigned long pointsListSize, unsigned short sizeStk, unsigned short sizeDataX, unsigned short sizeDataY, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short size, unsigned short iterNum, unsigned short fromcplusplus, unsigned short computeZ, double* SigmaXCoefs, double* SigmaYCoefs, double ThreeDThickness/*µm*/, double ThreeDSampling/*µm*/, double pixelSize /*µm*/)
 {
 	if ((gaussFit >= 1) && (gaussFit <= 4)) {
-
 		// Checking the available memory
 		cudaDeviceProp deviceProp;
 		cudaGetDeviceProperties(&deviceProp, 0);
@@ -353,9 +330,8 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 				numFrame++;
 				if (numFrame == sizeStk) break;
 				nbStruct[numFrame] = 0;
-
 			}
-			else {nbStruct[numFrame]++;}
+			else { nbStruct[numFrame]++; }
 		}
 
 		// Checking the available maximum sizes of each dimension of a grid (GPU launching)
@@ -552,10 +528,9 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 		if (fromcplusplus != 1)
 			for (int i = 0; i < sizeStk /*host*/; i++) {
 				for (int s = 0; s < nbStruct[i]; s++) {
-
-					pointsList[ind_pointsList++] = (double)list[ind_list++]; // sigmaX
-					pointsList[ind_pointsList++] = (double)list[ind_list++]; // sigmaY
-					pointsList[ind_pointsList++] = (double)list[ind_list++]; // Theta
+					pointsList[ind_pointsList++] = (double)list[ind_list++];   // sigmaX
+					pointsList[ind_pointsList++] = (double)list[ind_list++];   // sigmaY
+					pointsList[ind_pointsList++] = (double)list[ind_list++];   // Theta
 					pointsList[ind_pointsList++] = (double)list[ind_list + 1]; // X
 					pointsList[ind_pointsList++] = (double)list[ind_list];     // Y
 					ind_list += 2;
@@ -636,7 +611,6 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 		free(list);
 
 		if (fromcplusplus != 1) delete[] stack;
-
 	}
 }
 

@@ -1,9 +1,9 @@
 #ifndef _FITTING_KERNEL_H_
 #define _FITTING_KERNEL_H_
 
-#include <math_constants.h>
 #include <helper_cuda.h>
 #include <helper_timer.h>
+#include <math_constants.h>
 #include "../parameters.h"
 
 extern "C"unsigned int nextPow2(unsigned int x);
@@ -346,7 +346,6 @@ __global__ void GPUFitting_5x5_2D(unsigned int nbPoints, float* pointsList, unsi
 
 extern "C"void cuda2DFittingGPU_5x5(unsigned short* data, unsigned int numImages, unsigned short width, unsigned short height, unsigned short* nbStruct, float* pointsList, unsigned int nbPoints, unsigned int iterNum, unsigned short sizeFit, float sigmaX)
 {
-
 	printf("Optimized version\n");
 
 

@@ -872,8 +872,7 @@ void IFD::print()
 						case 28:
 						case 29: if (mmTAGS->bufMM14[j] != NULL) {
 								fprintf(debugStreamALS, "MMTagID:%d\tX(*, *) (*, *)\n", j);
-								for (k = 0; k < (long)mmTAGS->nbPlanes; k++)
-									fprintf(debugStreamALS, "\t%d %d %d %d\n", *((long*)mmTAGS->bufMM14[j] + k * 4), *((long*)mmTAGS->bufMM14[j] + k * 4 + 1), *((long*)mmTAGS->bufMM14[j] + k * 4 + 2), *((long*)mmTAGS->bufMM14[j] + k * 4 + 3));
+								for (k = 0; k < (long)mmTAGS->nbPlanes; k++) fprintf(debugStreamALS, "\t%d %d %d %d\n", *((long*)mmTAGS->bufMM14[j] + k * 4), *((long*)mmTAGS->bufMM14[j] + k * 4 + 1), *((long*)mmTAGS->bufMM14[j] + k * 4 + 2), *((long*)mmTAGS->bufMM14[j] + k * 4 + 3));
 							}
 							break;
 						case 40:
@@ -895,8 +894,7 @@ void IFD::print()
 					}
 				break;
 			case MMUIC2: fprintf(debugStreamALS, "MMUIC2 Z distance (*/*), creation date *, time *, mod date *, time *\n");
-				for (j = 0; j < (long)tags[i]->count; j++)
-					fprintf(debugStreamALS, "\t(%d, %d), %d, %d, %d, %d\n", mmTAGS->bufMM2[j * 6], mmTAGS->bufMM2[j * 6 + 1], mmTAGS->bufMM2[j * 6 + 2], mmTAGS->bufMM2[j * 6 + 3], mmTAGS->bufMM2[j * 6 + 4], mmTAGS->bufMM2[j * 6 + 5]);
+				for (j = 0; j < (long)tags[i]->count; j++) fprintf(debugStreamALS, "\t(%d, %d), %d, %d, %d, %d\n", mmTAGS->bufMM2[j * 6], mmTAGS->bufMM2[j * 6 + 1], mmTAGS->bufMM2[j * 6 + 2], mmTAGS->bufMM2[j * 6 + 3], mmTAGS->bufMM2[j * 6 + 4], mmTAGS->bufMM2[j * 6 + 5]);
 				break;
 			case MMUIC3: fprintf(debugStreamALS, "MMUIC3 wavelength (*/*)\n");
 				for (j = 0; j < (long)tags[i]->count; j++) fprintf(debugStreamALS, "\t(%d, %d)\n", mmTAGS->bufMM3[j * 2], mmTAGS->bufMM3[j * 2 + 1]);
@@ -1022,9 +1020,7 @@ int TIFFImage::readImageInfo(char* _fileName)
 	strcpy(fileName, _fileName); //wcscpy
 	//Reading the hearder file
 	in = fopen(fileName, "rb");
-	if (in == NULL) {
-		return (ERR_READ_STK);
-	}
+	if (in == NULL) { return (ERR_READ_STK); }
 
 	//going to the begining of the file
 	if (fseek(in, 0,SEEK_SET) != 0) {
@@ -1157,9 +1153,7 @@ int TIFFImage::readData(void* _buffer)
 { //this buffer have to be allocate (getSizeOfData) before calling readData
 	sizeOfData = width * height * samplesPerPixel * nbPlanes * depth / 8;
 	FILE* in = fopen(fileName, "rb");
-	if (in == NULL) {
-		return (ERR_READ_STK);
-	}
+	if (in == NULL) { return (ERR_READ_STK); }
 
 	if (fseek(in, firstPlaneOffset,SEEK_SET) != 0) return (ERR_READ_STK);
 	int readDataCount;
@@ -1180,8 +1174,7 @@ int TIFFImage::readData(void* _buffer)
 
 int TIFFImage::readData()
 {
-	if (buffer == NULL)
-		if (allocData() == NULL) return (ALLOC_ERR);
+	if (buffer == NULL) if (allocData() == NULL) return (ALLOC_ERR);
 	return (readData(buffer));
 }
 
@@ -1209,9 +1202,7 @@ int TIFFImage::writeImage(char* _fileName, void* data)
 	sizeOfData = width * height * samplesPerPixel * nbPlanes * depth / 8;
 
 	in = fopen(_fileName, "wb");
-	if (in == NULL) {
-		return (ERR_WRITE_STK);
-	}
+	if (in == NULL) { return (ERR_WRITE_STK); }
 
 	fseek(in, 0,SEEK_SET); //go to the begining of the file
 	//writing the header file
@@ -1328,8 +1319,7 @@ int TIFFImage::addToString(char* stringToAdd)
 	if ((tag = ifd->getTag(TIFFTAG_IMAGEDESCRIPTION, tmp)) == NULL) {
 		//return(ERR_BAD_FORMAT);
 		tmpBuf = (char*)malloc(sizeof(char) * __max(2*nbPlanes, 5));
-		if (5 > 2 * nbPlanes)
-			for (i = 0; i < 5; i++) tmpBuf[i] = 0;
+		if (5 > 2 * nbPlanes) for (i = 0; i < 5; i++) tmpBuf[i] = 0;
 		else
 			for (i = 0; i < (long)nbPlanes; i++) {
 				tmpBuf[2 * i] = ' ';
@@ -1344,8 +1334,7 @@ int TIFFImage::addToString(char* stringToAdd)
 
 	countStrings = 0;
 
-	for (i = 0; i < (long)tag->count; i++)
-		if (((char*)(tag->valBuf))[i] == 0) countStrings++;
+	for (i = 0; i < (long)tag->count; i++) if (((char*)(tag->valBuf))[i] == 0) countStrings++;
 
 
 	countSlashN = 0;

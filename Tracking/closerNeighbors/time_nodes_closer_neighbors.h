@@ -7,8 +7,8 @@
 #ifndef __time_nodes_closer_neighbors__
 #define __time_nodes_closer_neighbors__
 
-#include "../kernel/time_nodes.h"
 #include "nodes_closer_neighbors.h"
+#include "../kernel/time_nodes.h"
 
 
 class TimeNodesCloserNeighbors : public TimeNodes

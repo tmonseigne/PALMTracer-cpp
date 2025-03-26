@@ -3,7 +3,6 @@
 
 #include <helper_cuda.h>
 #include <helper_timer.h>
-
 #include "../parameters.h"
 
 __global__ void GPUuSrtToFloat(unsigned short* input, float* output, unsigned short WIDTH, unsigned short HEIGHT);
@@ -36,14 +35,11 @@ __global__ void GPU_Trous2D_Y(unsigned short step, float* input, float* output, 
 	const int iy = blockDim.y * blockIdx.y + threadIdx.y;
 
 	if (ix < WIDTH && iy < HEIGHT) {
-		if (iy < 2 * step)
-			output[iy * WIDTH + ix] = coeffH0 * input[iy * WIDTH + ix] + coeffH1 * (input[offset(ix, iy - step, WIDTH, HEIGHT)] + input[offset(ix, iy + step, WIDTH, HEIGHT)]) + coeffH2 * (input[offset(ix, iy - 2 * step, WIDTH, HEIGHT)] + input[offset(ix, iy + 2 * step, WIDTH, HEIGHT)]);
+		if (iy < 2 * step) output[iy * WIDTH + ix] = coeffH0 * input[iy * WIDTH + ix] + coeffH1 * (input[offset(ix, iy - step, WIDTH, HEIGHT)] + input[offset(ix, iy + step, WIDTH, HEIGHT)]) + coeffH2 * (input[offset(ix, iy - 2 * step, WIDTH, HEIGHT)] + input[offset(ix, iy + 2 * step, WIDTH, HEIGHT)]);
 
-		if (iy >= 2 * step && iy < HEIGHT - 2 * step)
-			output[iy * WIDTH + ix] = coeffH0 * input[iy * WIDTH + ix] + coeffH1 * (input[(iy - step) * WIDTH + ix] + input[(iy + step) * WIDTH + ix]) + coeffH2 * (input[(iy - 2 * step) * WIDTH + ix] + input[(iy + 2 * step) * WIDTH + ix]);
+		if (iy >= 2 * step && iy < HEIGHT - 2 * step) output[iy * WIDTH + ix] = coeffH0 * input[iy * WIDTH + ix] + coeffH1 * (input[(iy - step) * WIDTH + ix] + input[(iy + step) * WIDTH + ix]) + coeffH2 * (input[(iy - 2 * step) * WIDTH + ix] + input[(iy + 2 * step) * WIDTH + ix]);
 
-		if (iy >= HEIGHT - 2 * step)
-			output[iy * WIDTH + ix] = coeffH0 * input[iy * WIDTH + ix] + coeffH1 * (input[offset(ix, iy - step, WIDTH, HEIGHT)] + input[offset(ix, iy + step, WIDTH, HEIGHT)]) + coeffH2 * (input[offset(ix, iy - 2 * step, WIDTH, HEIGHT)] + input[offset(ix, iy + 2 * step, WIDTH, HEIGHT)]);
+		if (iy >= HEIGHT - 2 * step) output[iy * WIDTH + ix] = coeffH0 * input[iy * WIDTH + ix] + coeffH1 * (input[offset(ix, iy - step, WIDTH, HEIGHT)] + input[offset(ix, iy + step, WIDTH, HEIGHT)]) + coeffH2 * (input[offset(ix, iy - 2 * step, WIDTH, HEIGHT)] + input[offset(ix, iy + 2 * step, WIDTH, HEIGHT)]);
 
 		ptr[iy * WIDTH + ix] -= output[iy * WIDTH + ix];
 	}
@@ -56,14 +52,11 @@ __global__ void GPU_Trous2D_X(unsigned short step, float* input, float* output, 
 	const int iy = blockDim.y * blockIdx.y + threadIdx.y;
 
 	if (ix < WIDTH && iy < HEIGHT) {
-		if (ix < 2 * step)
-			output[iy * WIDTH + ix] = coeffH0 * input[iy * WIDTH + ix] + coeffH1 * (input[offset(ix - step, iy, WIDTH, HEIGHT)] + input[offset(ix + step, iy, WIDTH, HEIGHT)]) + coeffH2 * (input[offset(ix - 2 * step, iy, WIDTH, HEIGHT)] + input[offset(ix + 2 * step, iy, WIDTH, HEIGHT)]);
+		if (ix < 2 * step) output[iy * WIDTH + ix] = coeffH0 * input[iy * WIDTH + ix] + coeffH1 * (input[offset(ix - step, iy, WIDTH, HEIGHT)] + input[offset(ix + step, iy, WIDTH, HEIGHT)]) + coeffH2 * (input[offset(ix - 2 * step, iy, WIDTH, HEIGHT)] + input[offset(ix + 2 * step, iy, WIDTH, HEIGHT)]);
 
-		if (ix >= 2 * step && ix < WIDTH - 2 * step)
-			output[iy * WIDTH + ix] = coeffH0 * input[iy * WIDTH + ix] + coeffH1 * (input[iy * WIDTH + ix - step] + input[iy * WIDTH + ix + step]) + coeffH2 * (input[iy * WIDTH + ix - 2 * step] + input[iy * WIDTH + ix + 2 * step]);
+		if (ix >= 2 * step && ix < WIDTH - 2 * step) output[iy * WIDTH + ix] = coeffH0 * input[iy * WIDTH + ix] + coeffH1 * (input[iy * WIDTH + ix - step] + input[iy * WIDTH + ix + step]) + coeffH2 * (input[iy * WIDTH + ix - 2 * step] + input[iy * WIDTH + ix + 2 * step]);
 
-		if (ix >= WIDTH - 2 * step)
-			output[iy * WIDTH + ix] = coeffH0 * input[iy * WIDTH + ix] + coeffH1 * (input[offset(ix - step, iy, WIDTH, HEIGHT)] + input[offset(ix + step, iy, WIDTH, HEIGHT)]) + coeffH2 * (input[offset(ix - 2 * step, iy, WIDTH, HEIGHT)] + input[offset(ix + 2 * step, iy, WIDTH, HEIGHT)]);
+		if (ix >= WIDTH - 2 * step) output[iy * WIDTH + ix] = coeffH0 * input[iy * WIDTH + ix] + coeffH1 * (input[offset(ix - step, iy, WIDTH, HEIGHT)] + input[offset(ix + step, iy, WIDTH, HEIGHT)]) + coeffH2 * (input[offset(ix - 2 * step, iy, WIDTH, HEIGHT)] + input[offset(ix + 2 * step, iy, WIDTH, HEIGHT)]);
 	}
 }
 
@@ -114,8 +107,7 @@ __global__ void GPU_projectionV02D_Y(float* input, float* output, unsigned short
 
 	for (unsigned short y = 0; y < H; y++) {
 		index = (threadIdx.x + bx * WIDTH_PORTION) + (blockIdx.y * HEIGHT_PORTION + y) * WIDTH;
-		if (((threadIdx.x + bx * WIDTH_PORTION) < WIDTH) && ((blockIdx.y * HEIGHT_PORTION + y) < HEIGHT))
-			output[idImage * imageSize + index] = _coeffH0 * sData[threadIdx.x + (y + 1) * WIDTH_PORTION] + _coeffH1 * (sData[threadIdx.x + __min(y + 2, yn - 1) * WIDTH_PORTION] + sData[threadIdx.x + __max(y, y0) * WIDTH_PORTION]);
+		if (((threadIdx.x + bx * WIDTH_PORTION) < WIDTH) && ((blockIdx.y * HEIGHT_PORTION + y) < HEIGHT)) output[idImage * imageSize + index] = _coeffH0 * sData[threadIdx.x + (y + 1) * WIDTH_PORTION] + _coeffH1 * (sData[threadIdx.x + __min(y + 2, yn - 1) * WIDTH_PORTION] + sData[threadIdx.x + __max(y, y0) * WIDTH_PORTION]);
 	}
 }
 
@@ -165,8 +157,7 @@ __global__ void GPU_projectionV02D_X(float* input, float* output, unsigned short
 
 	for (unsigned short x = 0; x < W; x++) {
 		index = (x + bx * WIDTH_PORTION) + (blockIdx.y * HEIGHT_PORTION + threadIdx.y) * WIDTH;
-		if (((x + bx * WIDTH_PORTION) < WIDTH) && ((blockIdx.y * HEIGHT_PORTION + threadIdx.y) < HEIGHT))
-			output[idImage * imageSize + index] = _coeffH0 * sData[(x + 1) * HEIGHT_PORTION + threadIdx.y] + _coeffH1 * (sData[__min(x + 2, xn - 1) * HEIGHT_PORTION + threadIdx.y] + sData[__max(x, x0) * HEIGHT_PORTION + threadIdx.y]);
+		if (((x + bx * WIDTH_PORTION) < WIDTH) && ((blockIdx.y * HEIGHT_PORTION + threadIdx.y) < HEIGHT)) output[idImage * imageSize + index] = _coeffH0 * sData[(x + 1) * HEIGHT_PORTION + threadIdx.y] + _coeffH1 * (sData[__min(x + 2, xn - 1) * HEIGHT_PORTION + threadIdx.y] + sData[__max(x, x0) * HEIGHT_PORTION + threadIdx.y]);
 	}
 }
 

@@ -1,9 +1,9 @@
 #ifndef _FITTING_KERNEL_H_
 #define _FITTING_KERNEL_H_
 
-#include <math_constants.h>
 #include <helper_cuda.h>
 #include <helper_timer.h>
+#include <math_constants.h>
 #include "../parameters.h"
 
 extern "C"unsigned int nextPow2(unsigned int x)

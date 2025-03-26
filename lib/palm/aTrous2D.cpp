@@ -93,8 +93,7 @@ void ATrous::projectionV02D(unsigned short* srcData, float* destData, unsigned l
 		for (j = 0; j < (long)sizeDataY; j++) {
 			offs = OFFSET(i, j);
 			destData[offs] = 0.0;
-			for (cur_i = -1; cur_i < 2; cur_i++)
-				for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
+			for (cur_i = -1; cur_i < 2; cur_i++) for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
 		}
 
 
@@ -102,34 +101,29 @@ void ATrous::projectionV02D(unsigned short* srcData, float* destData, unsigned l
 			j = 0;
 			offs = OFFSET(i, j);
 			destData[offs] = 0.0;
-			for (cur_i = -1; cur_i < 2; cur_i++)
-				for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
+			for (cur_i = -1; cur_i < 2; cur_i++) for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
 
 
 			for (j = 1; j < (long)sizeDataY - 1; j++) {
 				offs = OFFSET(i, j);
 				destData[offs] = 0.0;
-				for (cur_i = -1; cur_i < 2; cur_i++)
-					for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
+				for (cur_i = -1; cur_i < 2; cur_i++) for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
 			}
 
 			j = sizeDataY - 1;
 			offs = OFFSET(i, j);
 			destData[offs] = 0.0;
-			for (cur_i = -1; cur_i < 2; cur_i++)
-				for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
+			for (cur_i = -1; cur_i < 2; cur_i++) for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
 		}
 
 		i = sizeDataX - 1;
 		for (j = 0; j < (long)sizeDataY; j++) {
 			offs = OFFSET(i, j);
 			destData[offs] = 0.0;
-			for (cur_i = -1; cur_i < 2; cur_i++)
-				for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
+			for (cur_i = -1; cur_i < 2; cur_i++) for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
 		}
 	}
-	else
-		for (i = 0; i < (long)(sizeDataX * sizeDataY); i++) destData[i] = (float)srcData[i];
+	else for (i = 0; i < (long)(sizeDataX * sizeDataY); i++) destData[i] = (float)srcData[i];
 }
 
 void ATrous::projectionV02D(float* srcData, float* destData, unsigned long realProj, unsigned long sizeDataX, unsigned long sizeDataY)
@@ -144,8 +138,7 @@ void ATrous::projectionV02D(float* srcData, float* destData, unsigned long realP
 		for (j = 0; j < (long)(sizeDataY); j++) {
 			offs = OFFSET(i, j);
 			destData[offs] = 0.0;
-			for (cur_i = -1; cur_i < 2; cur_i++)
-				for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
+			for (cur_i = -1; cur_i < 2; cur_i++) for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
 		}
 
 
@@ -153,34 +146,29 @@ void ATrous::projectionV02D(float* srcData, float* destData, unsigned long realP
 			j = 0;
 			offs = OFFSET(i, j);
 			destData[offs] = 0.0;
-			for (cur_i = -1; cur_i < 2; cur_i++)
-				for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
+			for (cur_i = -1; cur_i < 2; cur_i++) for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
 
 
 			for (j = 1; j < (long)sizeDataY - 1; j++) {
 				offs = OFFSET(i, j);
 				destData[offs] = 0.0;
-				for (cur_i = -1; cur_i < 2; cur_i++)
-					for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
+				for (cur_i = -1; cur_i < 2; cur_i++) for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
 			}
 
 			j = sizeDataY - 1;
 			offs = OFFSET(i, j);
 			destData[offs] = 0.0;
-			for (cur_i = -1; cur_i < 2; cur_i++)
-				for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
+			for (cur_i = -1; cur_i < 2; cur_i++) for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
 		}
 
 		i = sizeDataX - 1;
 		for (j = 0; j < (long)sizeDataY; j++) {
 			offs = OFFSET(i, j);
 			destData[offs] = 0.0;
-			for (cur_i = -1; cur_i < 2; cur_i++)
-				for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
+			for (cur_i = -1; cur_i < 2; cur_i++) for (cur_j = -1; cur_j < 2; cur_j++) destData[offs] += (float)(srcData[OFFSETTEST(i+cur_i, j+cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
 		}
 	}
-	else
-		for (i = 0; i < (long)(sizeDataX * sizeDataY); i++) destData[i] = (float)srcData[i];
+	else for (i = 0; i < (long)(sizeDataX * sizeDataY); i++) destData[i] = (float)srcData[i];
 }
 
 

@@ -1,6 +1,3 @@
-
-
-
 /*******************************************************************************************************************
 								This file define of the general parameters
 									Institut Curie
@@ -11,7 +8,6 @@
 
 #ifndef __GENRAL_PARAM__
 #define __GENRAL_PARAM__
-
 
 
 #include "NoError.h"

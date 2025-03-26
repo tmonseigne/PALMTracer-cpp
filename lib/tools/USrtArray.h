@@ -1,6 +1,3 @@
-
-
-
 /*******************************************************************************************************************
 								Pactage for general unsigned interger 16bit array
 									Institut Curie
@@ -28,4 +25,4 @@
 #undef _ARRAY_TYPE_
 #undef NB_TYPE
 
-#endif 
+#endif

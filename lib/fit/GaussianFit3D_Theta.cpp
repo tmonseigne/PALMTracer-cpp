@@ -1,13 +1,11 @@
+#include "GaussianFit3D_Theta.h"
+#include <algorithm>
+#include <cfloat>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
-#include <cmath>
 #include <cstring>
 #include <ctime>
-#include <cfloat>
-
-#include "GaussianFit3D_Theta.h"
-
-#include <algorithm>
 
 // CPU version of gaussian fit 3D
 #define Npar 7 // I0, x0, y0, sigmaX, sigmaY, angle, offset
@@ -81,8 +79,7 @@ float GaussianFit3D_Theta::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float*
 
 	//float inter[Npar * Npnt];
 	float* inter = (float*)malloc(Npar * Npnt * sizeof(float));
-	for (int elt = 0; elt < Npnt; elt++)
-		for (int i = 0; i < Npar; i++) inter[elt * Npar + i] = weight_sq[elt] * dydp[elt * Npar + i];
+	for (int elt = 0; elt < Npnt; elt++) for (int i = 0; i < Npar; i++) inter[elt * Npar + i] = weight_sq[elt] * dydp[elt * Npar + i];
 
 	// Computing alpha (A vérifier)
 	for (int j = 0; j < Npar; j++)
@@ -197,8 +194,8 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 				t[((ii + dimFit / 2) + (jj + dimFit / 2) * dimFit) * 2] = (int)x0 + ii;
 				t[((ii + dimFit / 2) + (jj + dimFit / 2) * dimFit) * 2 + 1] = (int)y0 + jj;
 
-				max_intensity = std::max(max_intensity, y_dat[(ii + dimFit/2) + (jj + dimFit/2) * dimFit]);
-				min_intensity = std::min(min_intensity, y_dat[(ii + dimFit/2) + (jj + dimFit/2) * dimFit]);
+				max_intensity = std::max(max_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]);
+				min_intensity = std::min(min_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]);
 			}
 
 		p[0] = max_intensity - min_intensity;
@@ -308,12 +305,12 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 
 				X2 = lm_matx(t/*IN*/, p/*IN*/, y_dat/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
 
-				lambda = std::max(lambda/lambda_DN_fac, 1.e-7f);
+				lambda = std::max(lambda / lambda_DN_fac, 1.e-7f);
 			}
 			else // it IS NOT better
 			{
 				X2 = X2_old; // do not accept a_try
-				lambda = std::min(lambda*lambda_UP_fac, 1.e7f);
+				lambda = std::min(lambda * lambda_UP_fac, 1.e7f);
 			}
 
 			max_ = 0;

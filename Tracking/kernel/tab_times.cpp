@@ -61,8 +61,7 @@ int TabTimes::initialisation()
 	if ((ret = linkNeighborsBeforeAndAfter()) < 0) return (ret);
 	if ((ret = sortByIntensityAllNeighbors()) < 0) return (ret);
 
-	if (publicParameters->nbTemporalWindows > 1)
-		if ((ret = linkNeighborsBlinkBeforeAndAfter()) < 0) return (ret);
+	if (publicParameters->nbTemporalWindows > 1) if ((ret = linkNeighborsBlinkBeforeAndAfter()) < 0) return (ret);
 
 	checkLinksHomogeneity(L"initalisation");
 	srand((unsigned)time(NULL));
@@ -140,26 +139,26 @@ int TabTimes::printConnectionsASCII_trc()
 					double y = nodeConnection->info->getY();
 					double r = 1;
 
-						publicParameters->trc[index++] = node->trackedStructureIndex;
-						publicParameters->trc[index++] = nodeConnection->time + 1;
-						publicParameters->trc[index++] = nodeConnection->info->getX();
-						publicParameters->trc[index++] = nodeConnection->info->getY();
+					publicParameters->trc[index++] = node->trackedStructureIndex;
+					publicParameters->trc[index++] = nodeConnection->time + 1;
+					publicParameters->trc[index++] = nodeConnection->info->getX();
+					publicParameters->trc[index++] = nodeConnection->info->getY();
 
-						if (publicParameters->nbDim == 3) {
-							publicParameters->trc[index++] = nodeConnection->info->getZ();
-							publicParameters->trc[index++] = nodeConnection->info->getVolume();
-						}
-						else publicParameters->trc[index++] = nodeConnection->info->getSurface();
-
-						publicParameters->trc[index++] = nodeConnection->info->getIntensity();
-
+					if (publicParameters->nbDim == 3) {
 						publicParameters->trc[index++] = nodeConnection->info->getZ();
+						publicParameters->trc[index++] = nodeConnection->info->getVolume();
+					}
+					else publicParameters->trc[index++] = nodeConnection->info->getSurface();
 
-						publicParameters->trc[index++] = nodeConnection->info->getColor();
-						publicParameters->trc[index++] = nodeConnection->info->getMolId();
+					publicParameters->trc[index++] = nodeConnection->info->getIntensity();
 
-						// The number of trajectory
-						publicParameters->nbTraj = node->trackedStructureIndex;
+					publicParameters->trc[index++] = nodeConnection->info->getZ();
+
+					publicParameters->trc[index++] = nodeConnection->info->getColor();
+					publicParameters->trc[index++] = nodeConnection->info->getMolId();
+
+					// The number of trajectory
+					publicParameters->nbTraj = node->trackedStructureIndex;
 				}
 			}
 		}
@@ -270,8 +269,7 @@ int TabTimes::readStatFile()
 
 				if (publicParameters->maxX < (*localTimeNodes)(node)->info->getX()) publicParameters->maxX = (*localTimeNodes)(node)->info->getX();
 				if (publicParameters->maxY < (*localTimeNodes)(node)->info->getY()) publicParameters->maxY = (*localTimeNodes)(node)->info->getY();
-				if (publicParameters->nbDim == 3)
-					if (publicParameters->maxZ < (*localTimeNodes)(node)->info->getZ()) publicParameters->maxZ = (*localTimeNodes)(node)->info->getZ();
+				if (publicParameters->nbDim == 3) if (publicParameters->maxZ < (*localTimeNodes)(node)->info->getZ()) publicParameters->maxZ = (*localTimeNodes)(node)->info->getZ();
 			}
 
 			//Sorting the nodes by the intensity for one time
@@ -358,8 +356,7 @@ int TabTimes::readPointsList()
 
 			if (publicParameters->maxX < (*localTimeNodes)(node)->info->getX()) publicParameters->maxX = (*localTimeNodes)(node)->info->getX();
 			if (publicParameters->maxY < (*localTimeNodes)(node)->info->getY()) publicParameters->maxY = (*localTimeNodes)(node)->info->getY();
-			if (publicParameters->nbDim == 3)
-				if (publicParameters->maxZ < (*localTimeNodes)(node)->info->getZ()) publicParameters->maxZ = (*localTimeNodes)(node)->info->getZ();
+			if (publicParameters->nbDim == 3) if (publicParameters->maxZ < (*localTimeNodes)(node)->info->getZ()) publicParameters->maxZ = (*localTimeNodes)(node)->info->getZ();
 		}
 
 		//Sorting the nodes by the intensity for one time
@@ -422,8 +419,7 @@ int TabTimes::linkNeighborsBlinkBeforeAndAfter()
 {
 	int ret;
 	for (long time_ = 0; time_ < nbTimes; time_++)
-		for (long dt = 2; dt <= publicParameters->nbTemporalWindows; dt++)
-			if (time_ + dt < nbTimes) if ((ret = timeNodes[time_]->linkNeighborsBlinkBeforeAndAfter(*(timeNodes[time_ + dt]))) < 0) return (ret);
+		for (long dt = 2; dt <= publicParameters->nbTemporalWindows; dt++) if (time_ + dt < nbTimes) if ((ret = timeNodes[time_]->linkNeighborsBlinkBeforeAndAfter(*(timeNodes[time_ + dt]))) < 0) return (ret);
 	return (RET_OK);
 }
 

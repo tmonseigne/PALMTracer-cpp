@@ -1,8 +1,8 @@
 #ifndef __link_2D__
 #define __link_2D__
 
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
 #include "tools/allDataLib.h"
 
 extern int __nbInfoStrucAlloc;

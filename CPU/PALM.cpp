@@ -3,9 +3,8 @@
 
 
 #include "PALM.h"
-#include "palm/CPALM.h"
-
 #include "fit/CalibrationFit.h"
+#include "palm/CPALM.h"
 
 #ifdef _MANAGED
 #pragma managed(push, off)
@@ -103,8 +102,7 @@ _declspec(dllexport) void _stdcall GaussianVisuCPU(double* gaussianPointsList/*(
 				float A = 10000 / (2 * 3.14 * sigma * sigma);                                          //photonsNbr / (2 * 3.14 * sigma * sigma);
 
 				if (((unsigned int)y0 >= sizeRegH) && ((unsigned int)y0 <= (height * zoom) - 1 - sizeRegH) && ((unsigned int)x0 >= sizeRegH) && ((unsigned int)x0 <= (width * zoom) - 1 - sizeRegH))
-					for (int jj = -sizeRegH; jj <= sizeRegH; jj++)
-						for (int ii = -sizeRegH; ii <= sizeRegH; ii++) gaussianPointsList[index * sizeReg * sizeReg + (ii + sizeRegH) + (jj + sizeRegH) * sizeReg] = GaussianFunction_2D(x0 - (int)(x0 - ii), y0 - (int)(y0 - jj), A, sigma); // 1000.0f, /*I0*/, 1.0f/*sigma*/);			
+					for (int jj = -sizeRegH; jj <= sizeRegH; jj++) for (int ii = -sizeRegH; ii <= sizeRegH; ii++) gaussianPointsList[index * sizeReg * sizeReg + (ii + sizeRegH) + (jj + sizeRegH) * sizeReg] = GaussianFunction_2D(x0 - (int)(x0 - ii), y0 - (int)(y0 - jj), A, sigma); // 1000.0f, /*I0*/, 1.0f/*sigma*/);			
 			}
 			index++;
 		}

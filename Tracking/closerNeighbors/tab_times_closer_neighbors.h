@@ -6,8 +6,8 @@
 #ifndef __tab_times_closer_neighbors__
 #define __tab_times_closer_neighbors__
 #
-#include "../kernel/tab_times.h"
 #include "time_nodes_closer_neighbors.h"
+#include "../kernel/tab_times.h"
 
 class TabTimesCloserNeighbors : public TabTimes
 {

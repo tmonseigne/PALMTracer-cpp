@@ -1,7 +1,6 @@
-#include "tools/allDataLib.h"
-
 #include "aTrous.h"
 #include "segmentation_2D.h"
+#include "tools/allDataLib.h"
 
 // Cette classe est exportée de PALM.dll
 //class PALM_API CPALM {

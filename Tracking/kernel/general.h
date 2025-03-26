@@ -4,13 +4,12 @@
 
 #ifndef __general__
 #define __general__
-#include <io.h>
 #include <fcntl.h>
-#include <sys/stat.h>
-#include <stdio.h>
+#include <io.h>
 #include <math.h>
+#include <stdio.h>
 #include <wchar.h>
-
+#include <sys/stat.h>
 #include "../HTML/print.h"
 #define	MIN(i,j)	((i)<(j) ? (i) : (j) )
 

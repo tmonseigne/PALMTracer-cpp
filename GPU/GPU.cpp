@@ -128,10 +128,7 @@ int GPU::runGPU()
 
 GPU* g;
 
-_declspec(dllexport) void _stdcall OpenPALMProcessing(unsigned short* images, double* pointsList, unsigned long pointsListSize, unsigned long sizeStk, unsigned long sizeDataX, unsigned long sizeDataY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short size, unsigned short IsComputingZ, double* SigmaXCoefs, double* SigmaYCoefs, double ThreeDThickness/*µm*/, double ThreeDSampling/*µm*/, double pixelSize /*µm*/)
-{
-	g = new GPU(images, pointsList, pointsListSize, sizeStk, sizeDataY, sizeDataX, waveletNo, thresholdVal, watershedRatio, volMin, intMin, gaussFit, sigmaX, sigmaY, angle, size, IsComputingZ, SigmaXCoefs, SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize /*µm*/);
-}
+_declspec(dllexport) void _stdcall OpenPALMProcessing(unsigned short* images, double* pointsList, unsigned long pointsListSize, unsigned long sizeStk, unsigned long sizeDataX, unsigned long sizeDataY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short size, unsigned short IsComputingZ, double* SigmaXCoefs, double* SigmaYCoefs, double ThreeDThickness/*µm*/, double ThreeDSampling/*µm*/, double pixelSize /*µm*/) { g = new GPU(images, pointsList, pointsListSize, sizeStk, sizeDataY, sizeDataX, waveletNo, thresholdVal, watershedRatio, volMin, intMin, gaussFit, sigmaX, sigmaY, angle, size, IsComputingZ, SigmaXCoefs, SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize /*µm*/); }
 
 _declspec(dllexport) long _stdcall PALMProcessing()
 {

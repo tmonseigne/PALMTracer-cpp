@@ -50,7 +50,6 @@ ArrayType::ArrayType(DataType* _data, const long i, const long j, const long k, 
 		closeDebugStreamALS();
 		exit(ret);
 	}
-
 }
 
 
@@ -235,31 +234,16 @@ ArrayType::~ArrayType()
 
 
 //**************		[]		*********************
-DataType&ArrayType::operator[](long i)
-{
-	return (data[i]);
-}
+DataType&ArrayType::operator[](long i) { return (data[i]); }
 
 //**************		()		*********************
-DataType&ArrayType::operator()(long i)
-{
-	return (data[i]);
-}
+DataType&ArrayType::operator()(long i) { return (data[i]); }
 
-DataType&ArrayType::operator()(long i, long j)
-{
-	return (data[i * sizeData[1] + j]);
-}
+DataType&ArrayType::operator()(long i, long j) { return (data[i * sizeData[1] + j]); }
 
-DataType&ArrayType::operator()(long i, long j, long k)
-{
-	return (data[(i * sizeData[1] + j) * sizeData[2] + k]);
-}
+DataType&ArrayType::operator()(long i, long j, long k) { return (data[(i * sizeData[1] + j) * sizeData[2] + k]); }
 
-DataType&ArrayType::operator()(long i, long j, long k, long l)
-{
-	return (data[((i * sizeData[1] + j) * sizeData[2] + k) * sizeData[3] + l]);
-}
+DataType&ArrayType::operator()(long i, long j, long k, long l) { return (data[((i * sizeData[1] + j) * sizeData[2] + k) * sizeData[3] + l]); }
 
 
 //**************		OPERATORS	********************
@@ -415,8 +399,7 @@ DataType ArrayType::min(void)
 		exit(ALLOC_ERR);
 	}
 	DataType _min = data[0];
-	for (unsigned long i = 0; i < nbPoints; i++)
-		if (_min > data[i]) _min = data[i];
+	for (unsigned long i = 0; i < nbPoints; i++) if (_min > data[i]) _min = data[i];
 	return (_min);
 }
 #endif
@@ -433,8 +416,7 @@ DataType ArrayType::max(void)
 		exit(ALLOC_ERR);
 	}
 	DataType _max = data[0];
-	for (unsigned long i = 0; i < nbPoints; i++)
-		if (_max < data[i]) _max = data[i];
+	for (unsigned long i = 0; i < nbPoints; i++) if (_max < data[i]) _max = data[i];
 	return (_max);
 }
 #endif
@@ -569,8 +551,7 @@ DataType ArrayType::sum(){
 void ArrayType::hardThresholdPositive(DataType val)
 {
 	unsigned long i;
-	for (i = 0; i < nbPoints; i++)
-		if (data[i] < val) data[i] = (DataType)0;
+	for (i = 0; i < nbPoints; i++) if (data[i] < val) data[i] = (DataType)0;
 }
 #endif
 #endif
@@ -593,8 +574,7 @@ void ArrayType::hardThresholdPositive(ArrayType& arrayType, DataType val)
 void ArrayType::hardThresholdNegative(DataType val)
 {
 	unsigned long i;
-	for (i = 0; i < nbPoints; i++)
-		if (data[i] > val) data[i] = (DataType)0;
+	for (i = 0; i < nbPoints; i++) if (data[i] > val) data[i] = (DataType)0;
 }
 #endif
 #endif
@@ -630,13 +610,9 @@ void ArrayType::softThresholdPositive(DataType val)
 void ArrayType::hardThresholdInterval(DataType valMin, DataType valMax, bool between)
 {
 	unsigned long i;
-	if (between) {
-		for (i = 0; i < nbPoints; i++)
-			if ((data[i] < valMin) || (data[i] > valMax)) data[i] = (DataType)0;
-	}
+	if (between) { for (i = 0; i < nbPoints; i++) if ((data[i] < valMin) || (data[i] > valMax)) data[i] = (DataType)0; }
 	else
-		for (i = 0; i < nbPoints; i++)
-			if ((data[i] > valMin) && (data[i] < valMax)) data[i] = (DataType)0;
+		for (i = 0; i < nbPoints; i++) if ((data[i] > valMin) && (data[i] < valMax)) data[i] = (DataType)0;
 }
 #endif
 #endif
@@ -666,8 +642,7 @@ void ArrayType::hardThresholdInterval(ArrayType& arrayType, DataType valMin, Dat
 void ArrayType::hardThresholdPosNeg(DataType val)
 {
 	unsigned long i;
-	for (i = 0; i < nbPoints; i++)
-		if ((data[i] < val) && (data[i] > -val)) data[i] = (DataType)0;
+	for (i = 0; i < nbPoints; i++) if ((data[i] < val) && (data[i] > -val)) data[i] = (DataType)0;
 }
 #endif
 #endif

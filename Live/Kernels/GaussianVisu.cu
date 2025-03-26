@@ -1,9 +1,9 @@
 #ifndef _GAUSSIAN_VISU_H_
 #define _GAUSSIAN_VISU_H_
 
-#include <math_constants.h>
 #include <helper_cuda.h>
 #include <helper_timer.h>
+#include <math_constants.h>
 #include "../parameters.h"
 
 #define NbSegParams 13
@@ -37,8 +37,7 @@ __global__ void GaussianVisu_kernel(double* gaussianPointsList, double* pointsLi
 
 		/*if ((int)pointsList[index * NbSegParams + 3] != 0)*/
 		if (((unsigned int)y0 >= sizeRegH) && ((unsigned int)y0 <= (height * zoom) - 1 - sizeRegH) && ((unsigned int)x0 >= sizeRegH) && ((unsigned int)x0 <= (width * zoom) - 1 - sizeRegH))
-			for (int j = -sizeRegH; j <= sizeRegH; j++)
-				for (int i = -sizeRegH; i <= sizeRegH; i++) gaussianPointsList[index * sizeReg * sizeReg + (i + sizeRegH) + (j + sizeRegH) * sizeReg] = GaussianFunction_2D(x0 - (int)(x0 - i), y0 - (int)(y0 - j), A, sigma); //1000.0f/*I0*/, 1.0f/*sigma*/);
+			for (int j = -sizeRegH; j <= sizeRegH; j++) for (int i = -sizeRegH; i <= sizeRegH; i++) gaussianPointsList[index * sizeReg * sizeReg + (i + sizeRegH) + (j + sizeRegH) * sizeReg] = GaussianFunction_2D(x0 - (int)(x0 - i), y0 - (int)(y0 - j), A, sigma); //1000.0f/*I0*/, 1.0f/*sigma*/);
 	}
 }
 

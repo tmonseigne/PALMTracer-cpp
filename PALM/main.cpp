@@ -1,17 +1,17 @@
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
-#include <cmath>
 #include <gsl/gsl_bspline.h>
 #include <gsl/gsl_multifit.h>
-#include <gsl\gsl_rng.h>
 #include <gsl\gsl_randist.h>
+#include <gsl\gsl_rng.h>
 #include <gsl\gsl_statistics.h>
 
 using namespace std;
 #include <fstream>
-#include <vector>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #define  ARMA_DONT_USE_WRAPPER
 #include <armadillo>

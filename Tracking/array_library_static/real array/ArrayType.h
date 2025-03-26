@@ -6,17 +6,17 @@
 
 
 //LIBERARY
-#include <stdio.h>
-#include <iostream>
-#include <stdlib.h>
-#include <math.h>
-#include <io.h>
 #include <fcntl.h>
-#include <sys/stat.h>
+#include <io.h>
+#include <iostream>
+#include <math.h>
 #include <memory.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include "../../DebugMIA/controlAlloc.h"
 #include "../../DebugMIA/print_debug.h"
 #include "../../generalParam/generalParam.h"
-#include "../../DebugMIA/controlAlloc.h"
 //extern "C"{
 
 
