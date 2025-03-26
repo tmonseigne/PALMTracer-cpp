@@ -42,15 +42,11 @@
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BlArray.cpp" />
-    <ClCompile Include="FltArray.cpp" />
     <ClCompile Include="GaussianFit2D.cpp" />
     <ClCompile Include="GaussianFit2D_Sigma.cpp" />
     <ClCompile Include="GaussianFit3D.cpp" />
     <ClCompile Include="GaussianFit3D_Theta.cpp" />
-    <ClCompile Include="miscTools.cpp" />
     <ClCompile Include="PALM.cpp" />
-    <ClCompile Include="USrtArray.cpp" />
     <ClCompile Include="..\lib\palm\aTrous.cpp">
       <Filter>Palm</Filter>
     </ClCompile>
@@ -72,21 +68,33 @@
     <ClCompile Include="..\lib\palm\segmentation_2D.cpp">
       <Filter>Palm</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\tools\arrayType.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tools\BlArray.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tools\FltArray.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tools\miscTools.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tools\operators.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tools\USrtArray.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="allDataLib.h" />
-    <ClInclude Include="allRealDataLib.h" />
-    <ClInclude Include="errc.h" />
     <ClInclude Include="GaussianFit.h" />
     <ClInclude Include="GaussianFit2D.h" />
     <ClInclude Include="GaussianFit2D_Sigma.h" />
     <ClInclude Include="GaussianFit3D.h" />
     <ClInclude Include="GaussianFit3D_Theta.h" />
-    <ClInclude Include="lists.h" />
-    <ClInclude Include="miscTools.h" />
     <ClInclude Include="PALM.h" />
     <ClInclude Include="PALM_Class.h" />
-    <ClInclude Include="pandore.h" />
     <ClInclude Include="..\lib\palm\aTrous.h">
       <Filter>Palm</Filter>
     </ClInclude>
@@ -105,6 +113,42 @@
     <ClInclude Include="..\lib\palm\segmentation_2D.h">
       <Filter>Palm</Filter>
     </ClInclude>
+    <ClInclude Include="..\lib\tools\arrayType.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\BlArray.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\errc.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\FltArray.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\generalParam.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\lists.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\miscTools.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\NoError.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\pandore.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\USrtArray.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\allDataLib.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tools\allRealDataLib.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="PALM.def" />
@@ -115,6 +159,9 @@
     </Filter>
     <Filter Include="Palm">
       <UniqueIdentifier>{c4219c61-75d9-4bed-b2df-6805d06716d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tools">
+      <UniqueIdentifier>{b632a25e-533e-4e38-9565-91e966458756}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
