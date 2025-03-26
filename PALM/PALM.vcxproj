@@ -144,6 +144,38 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='EmuRelease|x64'">$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='EmuRelease|x64'">false</LinkIncremental>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>C:\Git\vcpkg\installed\x64-windows\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Git\vcpkg\installed\x64-windows\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='EmuDebug|Win32'">
+    <IncludePath>C:\Git\vcpkg\installed\x64-windows\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Git\vcpkg\installed\x64-windows\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='EmuRelease|Win32'">
+    <IncludePath>C:\Git\vcpkg\installed\x64-windows\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Git\vcpkg\installed\x64-windows\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>C:\Git\vcpkg\installed\x64-windows\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Git\vcpkg\installed\x64-windows\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>C:\Git\vcpkg\installed\x64-windows\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Git\vcpkg\installed\x64-windows\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='EmuDebug|x64'">
+    <IncludePath>C:\Git\vcpkg\installed\x64-windows\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Git\vcpkg\installed\x64-windows\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='EmuRelease|x64'">
+    <IncludePath>C:\Git\vcpkg\installed\x64-windows\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Git\vcpkg\installed\x64-windows\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>C:\Git\vcpkg\installed\x64-windows\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Git\vcpkg\installed\x64-windows\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -158,7 +190,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>cudart.lib;cutil32.lib;cudpp32.lib;shrUtils32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gsl.lib;gslcblas.lib;cudart.lib;cutil32.lib;cudpp32.lib;shrUtils32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>Debug/PALM.exe</OutputFile>
       <AdditionalLibraryDirectories>$(CUDA_LIB_PATH)/../lib;../../common/lib;../../../shared/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -185,7 +217,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>gsl.lib;cblas.lib;blas_win32_MT.lib;lapack_win32_MT.lib</AdditionalDependencies>
+      <AdditionalDependencies>gsl.lib;gslcblas.lib;gsl.lib;cblas.lib;blas_win32_MT.lib;lapack_win32_MT.lib</AdditionalDependencies>
       <OutputFile>PALM.exe</OutputFile>
       <AdditionalLibraryDirectories>lib/;$(CUDA_LIB_PATH);../../common/lib;../../../shared/lib;C:\Program Files\Microsoft HPC Pack 2008 SDK\Lib\i386;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>
@@ -217,7 +249,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>cudart.lib;cutil32.lib;libtiff.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gsl.lib;gslcblas.lib;cudart.lib;cutil32.lib;libtiff.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../bin/win32/$(Configuration)/template.exe</OutputFile>
       <AdditionalLibraryDirectories>$(CUDA_LIB_PATH)/../lib;../../common/lib;C:\Program Files\GnuWin32\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -245,7 +277,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>cudart.lib;cutil32.lib;libtiff.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gsl.lib;gslcblas.lib;cudart.lib;cutil32.lib;libtiff.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../bin/win32/$(Configuration)/template.exe</OutputFile>
       <AdditionalLibraryDirectories>$(CUDA_LIB_PATH)/../lib;../../common/lib;C:\Program Files\GnuWin32\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -278,7 +310,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>cudart.lib;cutil64D.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gsl.lib;gslcblas.lib;cudart.lib;cutil64D.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../bin/win64/$(Configuration)/template.exe</OutputFile>
       <AdditionalLibraryDirectories>$(CUDA_LIB_PATH)/../lib64;../../common/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -308,7 +340,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>cudart.lib;cutil64.lib;cudpp64.lib;shrUtils64.lib;GPU_PALM.lib;CPU_PALM.lib;Tracking.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gsl.lib;gslcblas.lib;cudart.lib;cutil64.lib;cudpp64.lib;shrUtils64.lib;GPU_PALM.lib;CPU_PALM.lib;Tracking.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>PALM.exe</OutputFile>
       <AdditionalLibraryDirectories>$(CUDA_LIB_PATH);../../common/lib;../../../shared/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -341,7 +373,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>cudartemu.lib;cutil64D.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gsl.lib;gslcblas.lib;cudartemu.lib;cutil64D.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../bin/win64/$(Configuration)/template.exe</OutputFile>
       <AdditionalLibraryDirectories>$(CUDA_LIB_PATH)/../lib64;../../common/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -372,7 +404,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>cudartemu.lib;cutil64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gsl.lib;gslcblas.lib;cudartemu.lib;cutil64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../bin/win64/$(Configuration)/template.exe</OutputFile>
       <AdditionalLibraryDirectories>$(CUDA_LIB_PATH)/../lib64;../../common/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
