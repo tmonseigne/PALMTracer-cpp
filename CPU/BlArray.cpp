@@ -1,9 +1,5 @@
-
-
-
 #include "stdafx.h"
 #include "allRealDataLib.h"
-
 
 
 #define	_ARRAY_TYPE_

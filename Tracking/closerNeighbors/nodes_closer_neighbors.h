@@ -1,6 +1,3 @@
-
-
-
 /*******************************************************************************************************************
 									Nodes closer neighbors Class
 									It is derived from the class Nodes
@@ -13,16 +10,14 @@
 #include "../kernel/nodes.h"
 
 
-
-class NodeCloserNeighbors:public Node{
+class NodeCloserNeighbors : public Node
+{
 private:
 
 public:
-	NodeCloserNeighbors(int _time, PublicParameters *_publicParameters);
+	NodeCloserNeighbors(int _time, PublicParameters* _publicParameters);
 
 	void makeConnection(void);
-
-
 };
 
 

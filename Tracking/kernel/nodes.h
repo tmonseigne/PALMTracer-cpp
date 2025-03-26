@@ -1,6 +1,3 @@
-
-
-
 /*******************************************************************************************************************
 									Node Class
 								  Node representing one structure
@@ -20,38 +17,37 @@
 #define DIST_INFINITY		1.e10
 
 
-
-class Node{
-	
+class Node
+{
 protected:
-	
+
 public:
 	InfoNode* info;
 	//int n;
-	
-	Node(int _time, PublicParameters *_publicParameters);
-	~Node();
-	
-	float distance(Node *node);
-	float distance(Node *n1, Node *n2);
 
-	PublicParameters *publicParameters;
+	Node(int _time, PublicParameters* _publicParameters);
+	~Node();
+
+	float distance(Node* node);
+	float distance(Node* n1, Node* n2);
+
+	PublicParameters* publicParameters;
 	//InfoData2D	info;
 
 	bool checkLinksHomogeneity(wchar_t* st);
 	bool checkLinksHomogeneityInVicinity(wchar_t* st);
-	bool checkLinksHomogeneityInVicinity(wchar_t* st, Node*p1, Node*p2=NULL, Node*p3=NULL, Node*p4=NULL, Node*p5=NULL, Node*p6=NULL);
+	bool checkLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2 = NULL, Node* p3 = NULL, Node* p4 = NULL, Node* p5 = NULL, Node* p6 = NULL);
 	int time;
-	Node*	connectionFuture;
-	Node*	connectionBlinkFuture;
-	Node*	connectionPast;
-	Node*	connectionBlinkPast;
-	Node*	connectionFission1Future;
-	Node*	connectionFission2Future;
-	Node*	connectionFissionPast;
-	Node*	connectionFusion1Past;
-	Node*	connectionFusion2Past;
-	Node*	connectionFusionFuture;
+	Node* connectionFuture;
+	Node* connectionBlinkFuture;
+	Node* connectionPast;
+	Node* connectionBlinkPast;
+	Node* connectionFission1Future;
+	Node* connectionFission2Future;
+	Node* connectionFissionPast;
+	Node* connectionFusion1Past;
+	Node* connectionFusion2Past;
+	Node* connectionFusionFuture;
 	unsigned long trackedStructureIndex;
 	unsigned long trackedStructureAmiraIndex;
 	unsigned short colorIndex[2];
@@ -71,22 +67,71 @@ public:
 
 
 	int sortByIntersityNeighbors(ChainNeighbor** neighborsHead);
-	virtual double likeness(Node* n){exit(T_ERR_OOP);return(0);}
-	virtual double likenessMeanIntensity(Node* n){exit(T_ERR_OOP);return(0);}
-	virtual double likenessIntensity(Node* n){exit(T_ERR_OOP);return(0);}
-	virtual double likenessDistance(Node* n){exit(T_ERR_OOP);return(0);}
-	virtual double likenessFusion(Node* n1, Node* n2){exit(T_ERR_OOP);return(0);}
-	virtual double likenessIntensityFusion(Node* n1, Node* n2){exit(T_ERR_OOP);return(0);}
-	virtual double likenessMeanIntensityFusion(Node* n1, Node* n2){exit(T_ERR_OOP);return(0);}
-	virtual double likenessDistanceFusion(Node* n1, Node* n2){exit(T_ERR_OOP);return(0);}
-	virtual double likenessFission(Node* n1, Node* n2){exit(T_ERR_OOP);return(0);}
-	virtual double likenessBlink(Node* n){exit(T_ERR_OOP);return(0);}
+
+	virtual double likeness(Node* n)
+	{
+		exit(T_ERR_OOP);
+		return (0);
+	}
+
+	virtual double likenessMeanIntensity(Node* n)
+	{
+		exit(T_ERR_OOP);
+		return (0);
+	}
+
+	virtual double likenessIntensity(Node* n)
+	{
+		exit(T_ERR_OOP);
+		return (0);
+	}
+
+	virtual double likenessDistance(Node* n)
+	{
+		exit(T_ERR_OOP);
+		return (0);
+	}
+
+	virtual double likenessFusion(Node* n1, Node* n2)
+	{
+		exit(T_ERR_OOP);
+		return (0);
+	}
+
+	virtual double likenessIntensityFusion(Node* n1, Node* n2)
+	{
+		exit(T_ERR_OOP);
+		return (0);
+	}
+
+	virtual double likenessMeanIntensityFusion(Node* n1, Node* n2)
+	{
+		exit(T_ERR_OOP);
+		return (0);
+	}
+
+	virtual double likenessDistanceFusion(Node* n1, Node* n2)
+	{
+		exit(T_ERR_OOP);
+		return (0);
+	}
+
+	virtual double likenessFission(Node* n1, Node* n2)
+	{
+		exit(T_ERR_OOP);
+		return (0);
+	}
+
+	virtual double likenessBlink(Node* n)
+	{
+		exit(T_ERR_OOP);
+		return (0);
+	}
 
 
 	double distanceToBorder(void);
 	double stericEffect(void);
 };
-
 
 
 #endif//	__nodes__ 

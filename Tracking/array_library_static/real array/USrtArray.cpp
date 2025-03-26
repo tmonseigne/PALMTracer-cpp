@@ -8,7 +8,6 @@
 #include "allRealDataLib.h"
 
 
-
 #define	_ARRAY_TYPE_
 #define DataType	unsigned short
 #define ArrayType	USrtArray

@@ -14,7 +14,7 @@ private:
 
 public :
 	float sigmaFunc(float Z, float C0, float C1, float C2, float C3, float C4);
-	float Run(float* sigma, float* Z, unsigned short pointsNbr, unsigned short iterNum, float &C0, float &C1, float &C2, float &C3, float &C4);
+	float Run(float* sigma, float* Z, unsigned short pointsNbr, unsigned short iterNum, float& C0, float& C1, float& C2, float& C3, float& C4);
 };
 
 #endif // #ifndef _CalibrationFit_H_

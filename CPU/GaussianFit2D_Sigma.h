@@ -1,4 +1,3 @@
-
 #include "GaussianFit.h"
 
 
@@ -18,8 +17,8 @@ public :
 	unsigned short Npnt;
 	float ref;
 
-	void Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float &x0, float &y0, float &I0, float &sigmaX, float &offset, float &RSS, int iterNum, unsigned short size);
-	
+	void Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& offset, float& RSS, int iterNum, unsigned short size);
+
 	GaussianFit2D_Sigma()
 	{
 		dimFit = 0;

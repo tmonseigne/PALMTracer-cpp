@@ -1,5 +1,3 @@
-
-
 #ifndef __segmentation__
 #define __segmentation__
 
@@ -13,7 +11,7 @@
 
 
 #include "allDataLib.h"
-#include "lists.h" 
+#include "lists.h"
 //#include "../ReadWriteSTKNew/ReadWriteSTK.h"
 #include "generalParam.h"
 
@@ -22,13 +20,14 @@
 #define SIZE_CROSS	4
 
 
-class Segment{
+class Segment
+{
 protected:
 	//infoStruct2D *infoStruct;
 	unsigned long nbInfoStruct;
 
 	//int alloc(unsigned long nbStruct);
-	void inc( unsigned long &nSeg, unsigned long **ptr, long &sizePtr );
+	void inc(unsigned long& nSeg, unsigned long** ptr, long& sizePtr);
 	int locateStringInFile(wchar_t* st, FILE* file);
 
 

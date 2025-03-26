@@ -14,17 +14,16 @@
 /********************************************************************************************************************
 ChainNeighbor(Node*	_neighbor, ChainNeighbor* _next) of ChainNeighbor class.
 ********************************************************************************************************************/
-ChainNeighbor::ChainNeighbor(Node*	_neighbor, ChainNeighbor* _next, PublicParameters *_publicParameters){
+ChainNeighbor::ChainNeighbor(Node* _neighbor, ChainNeighbor* _next, PublicParameters* _publicParameters)
+{
 	publicParameters = _publicParameters;
 
-	neighbor=_neighbor;
-	next=_next;
+	neighbor = _neighbor;
+	next = _next;
 	publicParameters->nbChainNeighborAllocated++;
 }
 
 /********************************************************************************************************************
 Destructuor() of ChainLink class.
 ********************************************************************************************************************/
-ChainNeighbor::~ChainNeighbor(){
-	publicParameters->nbChainNeighborDeallocated++;
-}
+ChainNeighbor::~ChainNeighbor() { publicParameters->nbChainNeighborDeallocated++; }

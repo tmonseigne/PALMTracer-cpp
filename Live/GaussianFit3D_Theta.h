@@ -26,5 +26,5 @@ public:
 		ref = 0.;
 	}
 
-	void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float &x0, float &y0, float &I0, float &sigmaX, float &sigmaY, float &angle, float &offset, float &RSS, int iterNum, unsigned short size);
+	void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& sigmaY, float& angle, float& offset, float& RSS, int iterNum, unsigned short size);
 };

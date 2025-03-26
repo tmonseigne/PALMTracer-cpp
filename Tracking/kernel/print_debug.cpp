@@ -9,16 +9,10 @@
 
 //char debugLine[256];
 
-FILE *debugStream;
+FILE* debugStream;
 
 
-void openDebugStream(void){
-	debugStream = fopen( "c:\\debug.out", "a" );
-}
+void openDebugStream(void) { debugStream = fopen("c:\\debug.out", "a"); }
 
 
-
-
-void closeDebugStream(void){
-   fclose( debugStream );
-}
+void closeDebugStream(void) { fclose(debugStream); }

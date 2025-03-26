@@ -1,5 +1,3 @@
-
-
 #ifndef __ALL_REAL_DATA_LIB__
 #define __ALL_REAL_DATA_LIB__
 
@@ -28,4 +26,3 @@ class BlArray;
 //void test(void);
 
 #endif
-

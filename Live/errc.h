@@ -27,7 +27,7 @@
 #include <memory.h>
 #include "pandore.h"
 
-typedef enum { FAILURE=0, SUCCESS } FS_t;
+typedef enum { FAILURE = 0, SUCCESS } FS_t;
 
 class Errc;
 
@@ -56,119 +56,141 @@ void Exit(Double);
  * SUCCESS and FAILURE).
  * <i>However, <code>Errc </code>cannot be of type int</i>.
  */
-class Errc {
+class Errc
+{
 private:
-   enum { FS_RET
-	  ,Char_RET
-	  ,Uchar_RET
-	  ,Short_RET
-	  ,Ushort_RET
-	  ,Long_RET
-	  ,Ulong_RET
-	  ,Float_RET
-	  ,Double_RET
-   }ret; 
-   
+	enum
+	{
+		FS_RET,
+		Char_RET,
+		Uchar_RET,
+		Short_RET,
+		Ushort_RET,
+		Long_RET,
+		Ulong_RET,
+		Float_RET,
+		Double_RET
+	} ret;
+
 public :
-   /**
-    * Create a return value from
-    * the predefined SUCCESS or FAILURE
-    */
-   Errc(const FS_t f = SUCCESS) {
-      ret = FS_RET;
-      val.fs = f;
-   }
-   
-   /**
-    * Creates a return value from the 
-    * given boolean value.
-    */
-   Errc(const bool f) {
-      ret = FS_RET;
-      val.fs = (f)? SUCCESS: FAILURE;
-   }
-   
-   /**
-    * Creates a return value from the 
-    * given Char value.
-    */
-    Errc(Char l) {
-      ret = Char_RET;
-      val.v_Char = l;
-    }
-   /**
-    * Creates a return value from the 
-    * given Uchar value.
-    */
-    Errc(Uchar l) {
-      ret = Uchar_RET;
-      val.v_Uchar = l;
-    }
-   /**
-    * Creates a return value from the 
-    * given Short value.
-    */
-    Errc(Short l) {
-      ret = Short_RET;
-      val.v_Short = l;
-    }
-   /**
-    * Creates a return value from the 
-    * given Ushort value.
-    */
-    Errc(Ushort l) {
-      ret = Ushort_RET;
-      val.v_Ushort = l;
-    }
-   /**
-    * Creates a return value from the 
-    * given Long value.
-    */
-    Errc(Long l) {
-      ret = Long_RET;
-      val.v_Long = l;
-    }
-   /**
-    * Creates a return value from the 
-    * given Ulong value.
-    */
-    Errc(Ulong l) {
-      ret = Ulong_RET;
-      val.v_Ulong = l;
-    }
-   /**
-    * Creates a return value from the 
-    * given Float value.
-    */
-    Errc(Float l) {
-      ret = Float_RET;
-      val.v_Float = l;
-    }
-   /**
-    * Creates a return value from the 
-    * given Double value.
-    */
-    Errc(Double l) {
-      ret = Double_RET;
-      val.v_Double = l;
-    }
-      
-    /**
-     * Creates a return value from the
-     * given Errc value
-     */
-    Errc(const Errc& o) {
-       ret = o.ret;
-       memcpy(&val,&o.val,sizeof(val));
-    }
-   
-   Errc& operator=(const Errc& o) {
-      ret = o.ret;
-      memcpy(&val,&o.val,sizeof(val));
-      return *this;
-   }
-   
-   operator bool() { return ret!=FS_RET || val.fs==SUCCESS ; }
+	/**
+	 * Create a return value from
+	 * the predefined SUCCESS or FAILURE
+	 */
+	Errc(const FS_t f = SUCCESS)
+	{
+		ret = FS_RET;
+		val.fs = f;
+	}
+
+	/**
+	 * Creates a return value from the 
+	 * given boolean value.
+	 */
+	Errc(const bool f)
+	{
+		ret = FS_RET;
+		val.fs = (f) ? SUCCESS : FAILURE;
+	}
+
+	/**
+	 * Creates a return value from the 
+	 * given Char value.
+	 */
+	Errc(Char l)
+	{
+		ret = Char_RET;
+		val.v_Char = l;
+	}
+
+	/**
+	 * Creates a return value from the 
+	 * given Uchar value.
+	 */
+	Errc(Uchar l)
+	{
+		ret = Uchar_RET;
+		val.v_Uchar = l;
+	}
+
+	/**
+	 * Creates a return value from the 
+	 * given Short value.
+	 */
+	Errc(Short l)
+	{
+		ret = Short_RET;
+		val.v_Short = l;
+	}
+
+	/**
+	 * Creates a return value from the 
+	 * given Ushort value.
+	 */
+	Errc(Ushort l)
+	{
+		ret = Ushort_RET;
+		val.v_Ushort = l;
+	}
+
+	/**
+	 * Creates a return value from the 
+	 * given Long value.
+	 */
+	Errc(Long l)
+	{
+		ret = Long_RET;
+		val.v_Long = l;
+	}
+
+	/**
+	 * Creates a return value from the 
+	 * given Ulong value.
+	 */
+	Errc(Ulong l)
+	{
+		ret = Ulong_RET;
+		val.v_Ulong = l;
+	}
+
+	/**
+	 * Creates a return value from the 
+	 * given Float value.
+	 */
+	Errc(Float l)
+	{
+		ret = Float_RET;
+		val.v_Float = l;
+	}
+
+	/**
+	 * Creates a return value from the 
+	 * given Double value.
+	 */
+	Errc(Double l)
+	{
+		ret = Double_RET;
+		val.v_Double = l;
+	}
+
+	/**
+	 * Creates a return value from the
+	 * given Errc value
+	 */
+	Errc(const Errc& o)
+	{
+		ret = o.ret;
+		memcpy(&val, &o.val, sizeof(val));
+	}
+
+	Errc& operator=(const Errc& o)
+	{
+		ret = o.ret;
+		memcpy(&val, &o.val, sizeof(val));
+		return *this;
+	}
+
+	operator bool() { return ret != FS_RET || val.fs == SUCCESS; }
 #ifndef _WIN32
       operator FS_t() { return val.fs ; }
       operator Char() { return val.v_Char; }
@@ -179,21 +201,22 @@ public :
       operator Ulong() { return val.v_Ulong; }
       operator Float() { return val.v_Float; }
       operator Double() { return val.v_Double; }
-#endif   
-   void Exit() const;
-   
+#endif
+	void Exit() const;
+
 private:
-   union {
-      FS_t fs;
-      Char v_Char;
-      Uchar v_Uchar;
-      Short v_Short;
-      Ushort v_Ushort;
-      Long v_Long;
-      Ulong v_Ulong;
-      Float v_Float;
-      Double v_Double;
-   } val;
+	union
+	{
+		FS_t fs;
+		Char v_Char;
+		Uchar v_Uchar;
+		Short v_Short;
+		Ushort v_Ushort;
+		Long v_Long;
+		Ulong v_Ulong;
+		Float v_Float;
+		Double v_Double;
+	} val;
 };
 
 #endif // __PERRCH__

@@ -56,14 +56,14 @@
  * preprocessor macro `forallbaseimage')
  * DO NOT DELETE this comment!
  */
-typedef	char		Char;	// BASE
-typedef	unsigned char	Uchar;	// BASE IMAGE
-typedef	short		Short;	// BASE
-typedef	unsigned short	Ushort;	// BASE
-typedef	long		Long;	// BASE IMAGE
-typedef	unsigned long	Ulong;  // BASE
-typedef	float		Float;	// BASE IMAGE
-typedef	double		Double;	// BASE
+typedef char Char;             // BASE
+typedef unsigned char Uchar;   // BASE IMAGE
+typedef short Short;           // BASE
+typedef unsigned short Ushort; // BASE
+typedef long Long;             // BASE IMAGE
+typedef unsigned long Ulong;   // BASE
+typedef float Float;           // BASE IMAGE
+typedef double Double;         // BASE
 
 /*
  * Definition des variables de limites de valeurs.
@@ -134,9 +134,9 @@ typedef	double		Double;	// BASE
 #include "plimits.h"
 #include "collection.h"*/
 
- /*
-  *  Some macro functions
-  */
+/*
+ *  Some macro functions
+ */
 #ifndef MIN
 #define	MIN(x,y) (((x)<(y))? (x) : (y))
 #endif

@@ -23,4 +23,3 @@
 #undef INTEGER
 #undef MAXVAL
 #undef MINVAL
-

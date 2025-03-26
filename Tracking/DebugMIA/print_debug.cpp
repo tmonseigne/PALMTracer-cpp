@@ -9,20 +9,16 @@
 
 //char debugLine[256];
 
-FILE *debugStreamALS;
+FILE* debugStreamALS;
 
 
+void openDebugStreamALS(void) { debugStreamALS = _wfopen(L"c:\\debug_ALS.out", L"a"); }
 
-void openDebugStreamALS(void){
-	debugStreamALS = _wfopen( L"c:\\debug_ALS.out", L"a" );
+void emptyALS(void)
+{
+	debugStreamALS = _wfopen(L"c:\\debug_ALS.out", L"w");
+	fclose(debugStreamALS);
 }
 
-void emptyALS(void){
-	debugStreamALS = _wfopen( L"c:\\debug_ALS.out", L"w" );
-	fclose( debugStreamALS );
-}
 
-
-void closeDebugStreamALS(void){
-   fclose( debugStreamALS );
-}
+void closeDebugStreamALS(void) { fclose(debugStreamALS); }

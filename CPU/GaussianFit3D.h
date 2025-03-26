@@ -1,4 +1,3 @@
-
 #include "GaussianFit.h"
 
 
@@ -20,7 +19,8 @@ public:
 	float ref;
 	float ANGLE;
 
-	void Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float &x0, float &y0, float &I0, float &sigmaX, float &sigmaY, float &angle, float &offset, float &RSS, int iterNum, unsigned short size);
+	void Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& sigmaY, float& angle, float& offset, float& RSS, int iterNum, unsigned short size);
+
 	GaussianFit3D()
 	{
 		dimFit = 0;

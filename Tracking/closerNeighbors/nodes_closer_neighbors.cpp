@@ -13,10 +13,7 @@
 /********************************************************************************************************************
 Constructuor(int _time) of NodeCloserNeighbors class.
 ********************************************************************************************************************/
-NodeCloserNeighbors::NodeCloserNeighbors(int _time, PublicParameters *_publicParameters):Node(_time, _publicParameters){
-
-}
-
+NodeCloserNeighbors::NodeCloserNeighbors(int _time, PublicParameters* _publicParameters): Node(_time, _publicParameters) { }
 
 
 /*void NodeCloserNeighbors::makeConnection(void){
@@ -38,24 +35,25 @@ NodeCloserNeighbors::NodeCloserNeighbors(int _time, PublicParameters *_publicPar
 }*/
 
 
-void NodeCloserNeighbors::makeConnection(void){
-	ChainNeighbor*c;
-	Node*nMin=NULL;
-	double distMin=-1.;
-	for(c=neighborsFuture;c!=NULL;c=c->next){
-		if(c->neighbor->connectionPast==NULL){
-			if(distMin<0.){
-				distMin=distance(c->neighbor);
-				nMin=c->neighbor;
-			}else
-				if(distance(c->neighbor)<distMin){
-					distMin=distance(c->neighbor);
-					nMin=c->neighbor;
-				}
+void NodeCloserNeighbors::makeConnection(void)
+{
+	ChainNeighbor* c;
+	Node* nMin = NULL;
+	double distMin = -1.;
+	for (c = neighborsFuture; c != NULL; c = c->next) {
+		if (c->neighbor->connectionPast == NULL) {
+			if (distMin < 0.) {
+				distMin = distance(c->neighbor);
+				nMin = c->neighbor;
+			}
+			else if (distance(c->neighbor) < distMin) {
+				distMin = distance(c->neighbor);
+				nMin = c->neighbor;
+			}
 		}
 	}
-	if(nMin!=NULL){
-		nMin->connectionPast=this;
-		connectionFuture=nMin;
+	if (nMin != NULL) {
+		nMin->connectionPast = this;
+		connectionFuture = nMin;
 	}
 }
