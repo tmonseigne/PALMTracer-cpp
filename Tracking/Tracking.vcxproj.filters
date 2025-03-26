@@ -23,7 +23,6 @@
     <ClCompile Include="kernel\info_node.cpp" />
     <ClCompile Include="kernel\nodes.cpp" />
     <ClCompile Include="kernel\print_debug.cpp" />
-    <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="kernel\tab_times.cpp" />
     <ClCompile Include="kernel\time_nodes.cpp" />
     <ClCompile Include="Tracking.cpp" />
@@ -69,7 +68,6 @@
     <ClInclude Include="kernel\info_node.h" />
     <ClInclude Include="kernel\nodes.h" />
     <ClInclude Include="kernel\print_debug.h" />
-    <ClInclude Include="stdafx.h" />
     <ClInclude Include="kernel\tab_times.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="kernel\time_nodes.h" />

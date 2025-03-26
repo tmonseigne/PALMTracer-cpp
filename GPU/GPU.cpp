@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -12,7 +11,7 @@ _declspec(dllexport) long _stdcall __PALMProcessing();
 _declspec(dllexport) void _stdcall __closePALMProcessing();
 
 _declspec(dllexport) void _stdcall InitializeMemory(unsigned short* frames);
-_declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigned long pointsListSize, unsigned short sizeStk, unsigned short sizeDataX, unsigned short sizeDataY, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short size, unsigned short iterNum, unsigned short fromcplusplus, unsigned short computeZ, double* SigmaXCoefs, double* SigmaYCoefs, double ThreeDThickness/*µm*/, double ThreeDSampling/*µm*/, double pixelSize /*µm*/);
+_declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigned long pointsListSize, unsigned short sizeStk, unsigned short sizeDataX, unsigned short sizeDataY, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short size, unsigned short iterNum, unsigned short fromcplusplus, unsigned short computeZ, double* SigmaXCoefs, double* SigmaYCoefs, double ThreeDThickness/*ï¿½m*/, double ThreeDSampling/*ï¿½m*/, double pixelSize /*ï¿½m*/);
 
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
@@ -26,7 +25,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 	return TRUE;
 }
 
-GPU::GPU(unsigned short* _images, double* _pointsList, unsigned long _pointsListSize, unsigned long _sizeStk, unsigned long _sizeDataX, unsigned long _sizeDataY, unsigned long _waveletNo, double _thresholdVal, double _watershedRatio, double _volMin, double _intMin, unsigned short _gaussFit, double _sigmaX, double _sigmaY, double _angle, unsigned short _size, unsigned short _IsComputingZ, double* _SigmaXCoefs, double* _SigmaYCoefs, double _ThreeDThickness/*µm*/, double _ThreeDSampling/*µm*/, double _pixelSize /*µm*/)
+GPU::GPU(unsigned short* _images, double* _pointsList, unsigned long _pointsListSize, unsigned long _sizeStk, unsigned long _sizeDataX, unsigned long _sizeDataY, unsigned long _waveletNo, double _thresholdVal, double _watershedRatio, double _volMin, double _intMin, unsigned short _gaussFit, double _sigmaX, double _sigmaY, double _angle, unsigned short _size, unsigned short _IsComputingZ, double* _SigmaXCoefs, double* _SigmaYCoefs, double _ThreeDThickness/*ï¿½m*/, double _ThreeDSampling/*ï¿½m*/, double _pixelSize /*ï¿½m*/)
 {
 	images = _images;
 	pointsList = _pointsList;
@@ -140,7 +139,7 @@ int GPU::runGPU()
 	if (gaussFit == 4) iterNum = 20 * 7;
 
 
-	LaunchGaussianFit(pointsList, pointsListSize, sizeStk, sizeDataY, sizeDataX, gaussFit, sigmaX, sigmaY, angle, sizeFit, iterNum, 1, IsComputingZ, SigmaXCoefs, SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize /* µm */);
+	LaunchGaussianFit(pointsList, pointsListSize, sizeStk, sizeDataY, sizeDataX, gaussFit, sigmaX, sigmaY, angle, sizeFit, iterNum, 1, IsComputingZ, SigmaXCoefs, SigmaYCoefs, ThreeDThickness/*ï¿½m*/, ThreeDSampling/*ï¿½m*/, pixelSize /* ï¿½m */);
 
 	//FILE* fl = fopen("D:\\Test.txt","w");
 	//for(int li = 0; li < nb_points+sizeStk; li++)
@@ -152,13 +151,13 @@ int GPU::runGPU()
 
 GPU* g;
 
-_declspec(dllexport) void _stdcall OpenPALMProcessing(unsigned short* images, double* pointsList, unsigned long pointsListSize, unsigned long sizeStk, unsigned long sizeDataX, unsigned long sizeDataY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short size, unsigned short IsComputingZ, double* SigmaXCoefs, double* SigmaYCoefs, double ThreeDThickness/*µm*/, double ThreeDSampling/*µm*/, double pixelSize /*µm*/)
+_declspec(dllexport) void _stdcall OpenPALMProcessing(unsigned short* images, double* pointsList, unsigned long pointsListSize, unsigned long sizeStk, unsigned long sizeDataX, unsigned long sizeDataY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short size, unsigned short IsComputingZ, double* SigmaXCoefs, double* SigmaYCoefs, double ThreeDThickness/*ï¿½m*/, double ThreeDSampling/*ï¿½m*/, double pixelSize /*ï¿½m*/)
 {
 	//FILE* f= fopen("C:\\log.txt", "w");
 	//fprintf(f,"I'm here !!!!!!!!!!!");
 	//fclose(f);
 
-	g = new GPU(images, pointsList, pointsListSize, sizeStk, sizeDataY, sizeDataX, waveletNo, thresholdVal, watershedRatio, volMin, intMin, gaussFit, sigmaX, sigmaY, angle, size, IsComputingZ, SigmaXCoefs, SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize /*µm*/);
+	g = new GPU(images, pointsList, pointsListSize, sizeStk, sizeDataY, sizeDataX, waveletNo, thresholdVal, watershedRatio, volMin, intMin, gaussFit, sigmaX, sigmaY, angle, size, IsComputingZ, SigmaXCoefs, SigmaYCoefs, ThreeDThickness/*ï¿½m*/, ThreeDSampling/*ï¿½m*/, pixelSize /*ï¿½m*/);
 }
 
 _declspec(dllexport) long _stdcall PALMProcessing()
@@ -167,7 +166,7 @@ _declspec(dllexport) long _stdcall PALMProcessing()
 	//fprintf(f, "%s\n", "before");
 	//fclose(f);
 
-	long ret_val = (long)g->runGPU(); // nombre de points détectés  
+	long ret_val = (long)g->runGPU(); // nombre de points dï¿½tectï¿½s  
 
 	//f = fopen("C:\\debug.txt", "a+");
 	//fprintf(f, "%s\n", "after");

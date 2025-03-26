@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include <cstdio>
 #include <cmath>
 #include <cstring>
@@ -6,6 +5,8 @@
 #include <cstdlib>
 
 #include "GaussianFit2D_Sigma.h"
+
+#include <algorithm>
 
 // CPU version of gaussian fit 2D
 //#define dimFit 7
@@ -64,7 +65,7 @@ float GaussianFit2D_Sigma::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float*
 	for (int elt = 0; elt < Npnt; elt++)
 		for (int i = 0; i < Npar; i++) inter[elt * Npar + i] = weight_sq[elt] * dydp[elt * Npar + i];
 
-	// Computing alpha (A vérifier)
+	// Computing alpha (A vï¿½rifier)
 	for (int j = 0; j < Npar; j++)
 		for (int i = 0; i < Npar; i++) {
 			alpha[Npar * j + i] = 0;
@@ -125,7 +126,7 @@ void GaussianFit2D_Sigma::inverse(float* MM, float* Minv)
 		// Copy Mi1 to Minv
 		for (int index = 0; index < Npar * Npar; index++) Minv[index] = Mi1[index];
 
-		for (int k = 0; k < Npar; k++) // mise zéros de la colonne
+		for (int k = 0; k < Npar; k++) // mise zï¿½ros de la colonne
 			if (k != i)
 				for (int j = 0; j < Npar; j++) {
 					M1[k * Npar + j] = MM[k * Npar + j] - MM[i * Npar + j] * MM[k * Npar + i];
@@ -177,7 +178,7 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 		float* weight_sq = (float*)malloc(Npnt * sizeof(float));
 		unsigned int* t = (unsigned int*)malloc(2 * Npnt * sizeof(unsigned int));
 
-		// Initialization of y_dat & t (A vérifier)
+		// Initialization of y_dat & t (A vï¿½rifier)
 		for (int jj = -dimFit / 2; jj <= dimFit / 2; jj++)
 			for (int ii = -dimFit / 2; ii <= dimFit / 2; ii++) {
 				y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit] = (float)image[((int)x0 + ii) + ((int)y0 + jj) * sizeX];
@@ -210,7 +211,7 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 		X2 = lm_matx(t/*IN*/, p/*IN*/, y_dat/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
 
 		float max_ = 0;
-		for (int ii = 0; ii < Npar; ii++) max_ = max(max_, abs(beta[ii]));
+		for (int ii = 0; ii < Npar; ii++) max_ = std::max(max_, abs(beta[ii]));
 
 		unsigned int stop = 0;
 		if (max_ < epsilon_1) stop = 1;
@@ -254,7 +255,7 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 
 			for (int ii = 0; ii < Npar; ii++) {
 				p_try[ii] = p[ii] + delta_p[ii];
-				p_try[ii] = min(max(p_min[ii], p_try[ii]), p_max[ii]);
+				p_try[ii] = std::min(std::max(p_min[ii], p_try[ii]), p_max[ii]);
 			}
 
 			for (int ii = 0; ii < Npnt; ii++) delta_y[ii] = y_dat[ii] - PSF((float)t[ii * 2], (float)t[ii * 2 + 1], p_try[0], p_try[1], p_try[2], p_try[3], p_try[4]);
@@ -284,23 +285,23 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 
 				X2 = lm_matx(t/*IN*/, p/*IN*/, y_dat/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
 
-				lambda = max(lambda/lambda_DN_fac, 1.e-7);
+				lambda = std::max(lambda/lambda_DN_fac, 1.e-7f);
 			}
 			else // it IS NOT better
 			{
 				X2 = X2_old; // do not accept a_try
-				lambda = min(lambda*lambda_UP_fac, 1.e7);
+				lambda = std::min(lambda*lambda_UP_fac, 1.e7f);
 			}
 
 			max_ = 0;
-			for (int ii = 0; ii < Npar; ii++) max_ = max(max_, abs(delta_p[ii] / p[ii]));
+			for (int ii = 0; ii < Npar; ii++) max_ = std::max(max_, abs(delta_p[ii] / p[ii]));
 
 			if ((max_ < epsilon_2) && (iteration > 2)) stop = 1;
 
 			if ((X2 / Npnt < epsilon_3) && (iteration > 2)) stop = 1;
 
 			max_ = 0;
-			for (int ii = 0; ii < Npar; ii++) max_ = max(max_, abs(beta[ii]));
+			for (int ii = 0; ii < Npar; ii++) max_ = std::max(max_, abs(beta[ii]));
 
 			if ((max_ < epsilon_1) && (iteration > 2)) stop = 1;
 

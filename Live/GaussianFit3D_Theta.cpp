@@ -7,6 +7,8 @@
 
 #include "GaussianFit3D_Theta.h"
 
+#include <algorithm>
+
 // CPU version of gaussian fit 3D
 //#define dimFit 13
 #define Npar 7 // I0, x0, y0, sigmaX, sigmaY, angle, offset
@@ -247,7 +249,7 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 		X2 = lm_matx(t/*IN*/, p/*IN*/, y_dat/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
 
 		float max_ = 0;
-		for (int ii = 0; ii < Npar; ii++) max_ = max(max_, abs(beta[ii]));
+		for (int ii = 0; ii < Npar; ii++) max_ = std::max(max_, abs(beta[ii]));
 
 		unsigned int stop = 0;
 		if (max_ < epsilon_1) stop = 1;
@@ -293,7 +295,7 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 
 			for (int ii = 0; ii < Npar; ii++) {
 				p_try[ii] = p[ii] + delta_p[ii];
-				p_try[ii] = min(max(p_min[ii], p_try[ii]), p_max[ii]);
+				p_try[ii] = std::min(std::max(p_min[ii], p_try[ii]), p_max[ii]);
 			}
 
 			for (int ii = 0; ii < Npnt; ii++) delta_y[ii] = y_dat[ii] - PSF((float)t[ii * 2], (float)t[ii * 2 + 1], p_try[0], p_try[1], p_try[2], p_try[3], p_try[4], p_try[5], p_try[6]);
@@ -325,23 +327,23 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 
 				X2 = lm_matx(t/*IN*/, p/*IN*/, y_dat/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
 
-				lambda = max(lambda/lambda_DN_fac, 1.e-7);
+				lambda = std::max(lambda/lambda_DN_fac, 1.e-7f);
 			}
 			else // it IS NOT better
 			{
 				X2 = X2_old; // do not accept a_try
-				lambda = min(lambda*lambda_UP_fac, 1.e7);
+				lambda = std::min(lambda*lambda_UP_fac, 1.e7f);
 			}
 
 			max_ = 0;
-			for (int ii = 0; ii < Npar; ii++) max_ = max(max_, abs(delta_p[ii] / p[ii]));
+			for (int ii = 0; ii < Npar; ii++) max_ = std::max(max_, abs(delta_p[ii] / p[ii]));
 
 			if ((max_ < epsilon_2) && (iteration > 2)) stop = 1;
 
 			if ((X2 / Npnt < epsilon_3) && (iteration > 2)) stop = 1;
 
 			max_ = 0;
-			for (int ii = 0; ii < Npar; ii++) max_ = max(max_, abs(beta[ii]));
+			for (int ii = 0; ii < Npar; ii++) max_ = std::max(max_, abs(beta[ii]));
 
 			if ((max_ < epsilon_1) && (iteration > 2)) stop = 1;
 

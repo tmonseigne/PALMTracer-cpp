@@ -1,0 +1,120 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CudaCompile Include="Kernels\GaussianFit2DDouble.cu">
+      <Filter>Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Kernels\GaussianFit3D_11x11.cu">
+      <Filter>Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Kernels\GaussianFit3D_7x7.cu">
+      <Filter>Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Kernels\GaussianFit3D_9x9.cu">
+      <Filter>Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Kernels\GaussianFit3D_13x13.cu">
+      <Filter>Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Kernels\GaussianFit3D_Theta_13x13.cu">
+      <Filter>Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Kernels\GaussianFit3D_Theta_9x9.cu">
+      <Filter>Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Kernels\GaussianVisu.cu">
+      <Filter>Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Kernels\Decomposition_kernel.cu">
+      <Filter>Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Kernels\GaussianFit2D_7x7.cu">
+      <Filter>Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Kernels\GaussianFit2D_5x5.cu">
+      <Filter>Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Kernels\GaussianFit2D_Sigma_5x5.cu">
+      <Filter>Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Kernels\GaussianFit2D_Sigma_7x7.cu">
+      <Filter>Cuda</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BlArray.cpp" />
+    <ClCompile Include="FltArray.cpp" />
+    <ClCompile Include="GaussianFit2D.cpp" />
+    <ClCompile Include="GaussianFit2D_Sigma.cpp" />
+    <ClCompile Include="GaussianFit3D.cpp" />
+    <ClCompile Include="GaussianFit3D_Theta.cpp" />
+    <ClCompile Include="miscTools.cpp" />
+    <ClCompile Include="PALM.cpp" />
+    <ClCompile Include="USrtArray.cpp" />
+    <ClCompile Include="..\lib\palm\aTrous.cpp">
+      <Filter>Palm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\palm\aTrous2D.cpp">
+      <Filter>Palm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\palm\info_2D.cpp">
+      <Filter>Palm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\palm\segmentation.cpp">
+      <Filter>Palm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\palm\watershed_2D.cpp">
+      <Filter>Palm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\palm\CPALM.cpp">
+      <Filter>Palm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\palm\segmentation_2D.cpp">
+      <Filter>Palm</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="allDataLib.h" />
+    <ClInclude Include="allRealDataLib.h" />
+    <ClInclude Include="errc.h" />
+    <ClInclude Include="GaussianFit.h" />
+    <ClInclude Include="GaussianFit2D.h" />
+    <ClInclude Include="GaussianFit2D_Sigma.h" />
+    <ClInclude Include="GaussianFit3D.h" />
+    <ClInclude Include="GaussianFit3D_Theta.h" />
+    <ClInclude Include="lists.h" />
+    <ClInclude Include="miscTools.h" />
+    <ClInclude Include="PALM.h" />
+    <ClInclude Include="PALM_Class.h" />
+    <ClInclude Include="pandore.h" />
+    <ClInclude Include="..\lib\palm\aTrous.h">
+      <Filter>Palm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\palm\info_2D.h">
+      <Filter>Palm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\palm\CPALM.h">
+      <Filter>Palm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\palm\parameters.h">
+      <Filter>Palm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\palm\segmentation.h">
+      <Filter>Palm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\palm\segmentation_2D.h">
+      <Filter>Palm</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="PALM.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Cuda">
+      <UniqueIdentifier>{ed823729-34be-45d9-b989-fab2993cc4cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Palm">
+      <UniqueIdentifier>{c4219c61-75d9-4bed-b2df-6805d06716d9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

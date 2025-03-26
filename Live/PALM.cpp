@@ -1,9 +1,7 @@
-// PALM.cpp : définit le point d'entrée pour l'application DLL.
+// PALM.cppï¿½: dï¿½finit le point d'entrï¿½e pour l'application DLL.
 //
 
 //#include <GL\glut.h>
-#include "stdafx.h"
-
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #include <cufft.h>
@@ -155,7 +153,7 @@ int aTrousDecomposition2D(unsigned short* d_inputData, float* d_outputData, unsi
 	}
 
 	if (planC == true) {
-		// Copier le dernier plan lissé Cn
+		// Copier le dernier plan lissï¿½ Cn
 		checkCudaErrors(cudaMemcpy(d_outputData + currentPlane * sizeStk * sizeDataX * sizeDataY, d_buffer1, sizeStk * sizeDataX * sizeDataY * sizeof(float), cudaMemcpyDeviceToDevice));
 
 		float* data = (float*)malloc(sizeDataX * sizeDataY * sizeof(float));
@@ -382,7 +380,7 @@ suite:
 
 	//return 0;
 
-	// le nombre de points détectés ne doit pas dépasser _nbPointsMaxPerPlane --> problème d'espace mémoire
+	// le nombre de points dï¿½tectï¿½s ne doit pas dï¿½passer _nbPointsMaxPerPlane --> problï¿½me d'espace mï¿½moire
 	for (int i = 1; i <= min(nbStruct, _nbPointsMaxPerPlane - 2); i++) {
 		_pointsList[currentPoint++] = 0.;
 		_pointsList[currentPoint++] = 0.;
@@ -529,7 +527,7 @@ _declspec(dllexport) void _stdcall CopyFrame(unsigned short numImage, unsigned s
 _declspec(dllexport) void _stdcall InitializeMemory(unsigned short* frames) { stack = frames; }
 
 
-_declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigned long pointsListSize, unsigned short sizeStk, unsigned short sizeDataX, unsigned short sizeDataY, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short size, unsigned short iterNum, unsigned short fromcplusplus, unsigned short computeZ, double* SigmaXCoefs, double* SigmaYCoefs, double ThreeDThickness/*µm*/, double ThreeDSampling/*µm*/, double pixelSize /*µm*/)
+_declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigned long pointsListSize, unsigned short sizeStk, unsigned short sizeDataX, unsigned short sizeDataY, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short size, unsigned short iterNum, unsigned short fromcplusplus, unsigned short computeZ, double* SigmaXCoefs, double* SigmaYCoefs, double ThreeDThickness/*ï¿½m*/, double ThreeDSampling/*ï¿½m*/, double pixelSize /*ï¿½m*/)
 {
 	if ((gaussFit >= 1) && (gaussFit <= 4)) {
 		// debug
@@ -564,7 +562,7 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 		iter = 0;
 		r = 0;
 
-		// A vérifier
+		// A vï¿½rifier
 		if (kernelExecTimeoutEnabled == 1) newSizeStk = 80;
 
 		//newSizeStk = 80;
@@ -773,13 +771,13 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 
 			if (gaussFit == 3) // 3D with constant Theta
 			{
-				if ((size <= 7) || (size == 8)) cuda3DFittingGPU_7x7(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/);
+				if ((size <= 7) || (size == 8)) cuda3DFittingGPU_7x7(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*ï¿½m*/, ThreeDSampling/*ï¿½m*/, pixelSize/*ï¿½m*/);
 
-				if ((size == 9) || (size == 10)) cuda3DFittingGPU_9x9(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/);
+				if ((size == 9) || (size == 10)) cuda3DFittingGPU_9x9(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*ï¿½m*/, ThreeDSampling/*ï¿½m*/, pixelSize/*ï¿½m*/);
 
-				if ((size == 11) || (size == 12)) cuda3DFittingGPU_11x11(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/);
+				if ((size == 11) || (size == 12)) cuda3DFittingGPU_11x11(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*ï¿½m*/, ThreeDSampling/*ï¿½m*/, pixelSize/*ï¿½m*/);
 
-				if (size >= 13) cuda3DFittingGPU_13x13(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/);
+				if (size >= 13) cuda3DFittingGPU_13x13(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*ï¿½m*/, ThreeDSampling/*ï¿½m*/, pixelSize/*ï¿½m*/);
 			}
 			if (gaussFit == 4) // 3D with Theta
 			{
@@ -839,13 +837,13 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 
 			if (gaussFit == 3) // 3D with constant Theta
 			{
-				if ((size <= 7) || (size == 8)) cuda3DFittingGPU_7x7(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/);
+				if ((size <= 7) || (size == 8)) cuda3DFittingGPU_7x7(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*ï¿½m*/, ThreeDSampling/*ï¿½m*/, pixelSize/*ï¿½m*/);
 
-				if ((size == 9) || (size == 10)) cuda3DFittingGPU_9x9(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/);
+				if ((size == 9) || (size == 10)) cuda3DFittingGPU_9x9(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*ï¿½m*/, ThreeDSampling/*ï¿½m*/, pixelSize/*ï¿½m*/);
 
-				if ((size == 11) || (size == 12)) cuda3DFittingGPU_11x11(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/);
+				if ((size == 11) || (size == 12)) cuda3DFittingGPU_11x11(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*ï¿½m*/, ThreeDSampling/*ï¿½m*/, pixelSize/*ï¿½m*/);
 
-				if (size >= 13) cuda3DFittingGPU_13x13(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/);
+				if (size >= 13) cuda3DFittingGPU_13x13(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*ï¿½m*/, ThreeDSampling/*ï¿½m*/, pixelSize/*ï¿½m*/);
 			}
 			if (gaussFit == 4) // 3D with Theta
 			{
