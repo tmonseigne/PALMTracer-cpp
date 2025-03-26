@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "segmentation.h"
 int __nbInfoStrucAlloc;
 int __nbInfoStrucDealloc;

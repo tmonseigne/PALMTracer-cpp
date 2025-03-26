@@ -127,19 +127,20 @@
     <ClCompile Include="..\lib\fit\GaussianFit2D_Sigma.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit3D.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit3D_Theta.cpp" />
+    <ClCompile Include="..\lib\palm\aTrous.cpp" />
+    <ClCompile Include="..\lib\palm\aTrous2D.cpp" />
+    <ClCompile Include="..\lib\palm\CPALM.cpp" />
+    <ClCompile Include="..\lib\palm\info_2D.cpp" />
+    <ClCompile Include="..\lib\palm\segmentation.cpp" />
+    <ClCompile Include="..\lib\palm\segmentation_2D.cpp" />
+    <ClCompile Include="..\lib\palm\watershed_2D.cpp" />
     <ClCompile Include="..\lib\tools\arrayType.cpp" />
     <ClCompile Include="..\lib\tools\BlArray.cpp" />
     <ClCompile Include="..\lib\tools\FltArray.cpp" />
     <ClCompile Include="..\lib\tools\miscTools.cpp" />
     <ClCompile Include="..\lib\tools\operators.cpp" />
     <ClCompile Include="..\lib\tools\USrtArray.cpp" />
-    <ClCompile Include="aTrous.cpp" />
-    <ClCompile Include="aTrous2D.cpp" />
-    <ClCompile Include="info_2D.cpp" />
     <ClCompile Include="PALM.cpp" />
-    <ClCompile Include="segmentation.cpp" />
-    <ClCompile Include="segmentation_2D.cpp" />
-    <ClCompile Include="watershed_2D.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PALM.def" />
@@ -151,6 +152,12 @@
     <ClInclude Include="..\lib\fit\GaussianFit2D_Sigma.h" />
     <ClInclude Include="..\lib\fit\GaussianFit3D.h" />
     <ClInclude Include="..\lib\fit\GaussianFit3D_Theta.h" />
+    <ClInclude Include="..\lib\palm\aTrous.h" />
+    <ClInclude Include="..\lib\palm\CPALM.h" />
+    <ClInclude Include="..\lib\palm\info_2D.h" />
+    <ClInclude Include="..\lib\palm\parameters.h" />
+    <ClInclude Include="..\lib\palm\segmentation.h" />
+    <ClInclude Include="..\lib\palm\segmentation_2D.h" />
     <ClInclude Include="..\lib\tools\allDataLib.h" />
     <ClInclude Include="..\lib\tools\allRealDataLib.h" />
     <ClInclude Include="..\lib\tools\arrayType.h" />
@@ -163,13 +170,7 @@
     <ClInclude Include="..\lib\tools\NoError.h" />
     <ClInclude Include="..\lib\tools\pandore.h" />
     <ClInclude Include="..\lib\tools\USrtArray.h" />
-    <ClInclude Include="aTrous.h" />
-    <ClInclude Include="info_2D.h" />
     <ClInclude Include="PALM.h" />
-    <ClInclude Include="PALM_Class.h" />
-    <ClInclude Include="parameters.h" />
-    <ClInclude Include="segmentation.h" />
-    <ClInclude Include="segmentation_2D.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

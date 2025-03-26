@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "info_2D.h"
 
 

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "segmentation_2D.h"
 
 #define MAX_ELEMENTS 10000000

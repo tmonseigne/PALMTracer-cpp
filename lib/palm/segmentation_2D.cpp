@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "segmentation_2D.h"
 
 #define SEG(i,j)	seg.data[(i)*sizeDataY+(j)]

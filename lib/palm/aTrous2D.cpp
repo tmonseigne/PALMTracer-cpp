@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "ATrous.h"
 
 
