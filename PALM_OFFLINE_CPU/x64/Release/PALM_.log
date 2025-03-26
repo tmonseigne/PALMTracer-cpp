@@ -1,0 +1,146 @@
+﻿La génération a démarré 14/04/2018 08:42:13.
+     1>Projet "G:\.net projects x64\A transferer STORM x64\PALM_OFFLINE_CPU\PALM_.vcxproj" sur le nœud 2 (rebuild cible(s)).
+     1>PrepareForBuild:
+         Création du répertoire "G:\.net projects x64\A transferer STORM x64\PALM\x64\Release\".
+       InitializeBuildStatus:
+         Création de "x64\Release\PALM_Offline_CPU.unsuccessfulbuild", car "AlwaysCreate" a été spécifié.
+       ClCompile:
+         C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W3 /WX- /O2 /GL /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D PALM_EXPORTS /D _WINDLL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Yc"StdAfx.h" /Fp"x64\Release\PALM_Offline_CPU.pch" /Fo"x64\Release\\" /Fd"x64\Release\vc100.pdb" /Gd /TP /errorReport:prompt stdafx.cpp
+         stdafx.cpp
+         C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W3 /WX- /O2 /GL /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D PALM_EXPORTS /D _WINDLL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"x64\Release\PALM_Offline_CPU.pch" /Fo"x64\Release\\" /Fd"x64\Release\vc100.pdb" /Gd /TP /errorReport:prompt aTrous.cpp aTrous2D.cpp BlArray.cpp CalibrationFit.cpp FltArray.cpp GaussianFit2D.cpp GaussianFit2D_Sigma.cpp GaussianFit3D.cpp GaussianFit3D_Theta.cpp info_2D.cpp miscTools.cpp PALM.cpp segmentation.cpp segmentation_2D.cpp USrtArray.cpp watershed_2D.cpp
+         aTrous.cpp
+         aTrous2D.cpp
+         BlArray.cpp
+         CalibrationFit.cpp
+     1>CalibrationFit.cpp(205): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>CalibrationFit.cpp(206): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>CalibrationFit.cpp(207): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>CalibrationFit.cpp(208): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>CalibrationFit.cpp(209): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>CalibrationFit.cpp(311): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>CalibrationFit.cpp(316): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+         FltArray.cpp
+         after ArrayType
+         GaussianFit2D.cpp
+     1>GaussianFit2D.cpp(168): warning C4244: '=' : conversion de 'int' en 'float', perte possible de données
+     1>GaussianFit2D.cpp(225): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit2D.cpp(226): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit2D.cpp(227): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit2D.cpp(228): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit2D.cpp(229): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit2D.cpp(330): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>GaussianFit2D.cpp(335): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>GaussianFit2D.cpp(173): warning C4101: 'time_final' : variable locale non référencée
+     1>GaussianFit2D.cpp(172): warning C4101: 'time_initial' : variable locale non référencée
+         GaussianFit2D_Sigma.cpp
+     1>GaussianFit2D_Sigma.cpp(175): warning C4244: '=' : conversion de 'int' en 'float', perte possible de données
+     1>GaussianFit2D_Sigma.cpp(194): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit2D_Sigma.cpp(231): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit2D_Sigma.cpp(232): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit2D_Sigma.cpp(233): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit2D_Sigma.cpp(234): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit2D_Sigma.cpp(235): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit2D_Sigma.cpp(337): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>GaussianFit2D_Sigma.cpp(342): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>GaussianFit2D_Sigma.cpp(179): warning C4101: 'time_final' : variable locale non référencée
+     1>GaussianFit2D_Sigma.cpp(178): warning C4101: 'time_initial' : variable locale non référencée
+         GaussianFit3D.cpp
+     1>GaussianFit3D.cpp(202): warning C4244: '=' : conversion de 'int' en 'float', perte possible de données
+     1>GaussianFit3D.cpp(218): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit3D.cpp(218): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit3D.cpp(219): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>GaussianFit3D.cpp(219): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>GaussianFit3D.cpp(254): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit3D.cpp(255): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit3D.cpp(256): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit3D.cpp(257): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit3D.cpp(258): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit3D.cpp(361): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>GaussianFit3D.cpp(366): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>GaussianFit3D.cpp(455): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>GaussianFit3D.cpp(456): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>GaussianFit3D.cpp(207): warning C4101: 'time_final' : variable locale non référencée
+     1>GaussianFit3D.cpp(206): warning C4101: 'time_initial' : variable locale non référencée
+         GaussianFit3D_Theta.cpp
+     1>GaussianFit3D_Theta.cpp(215): warning C4244: '=' : conversion de 'int' en 'float', perte possible de données
+     1>GaussianFit3D_Theta.cpp(230): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit3D_Theta.cpp(230): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit3D_Theta.cpp(231): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>GaussianFit3D_Theta.cpp(231): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>GaussianFit3D_Theta.cpp(268): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit3D_Theta.cpp(269): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit3D_Theta.cpp(270): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit3D_Theta.cpp(271): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit3D_Theta.cpp(272): warning C4305: 'initialisation' : troncation de 'double' à 'float'
+     1>GaussianFit3D_Theta.cpp(378): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>GaussianFit3D_Theta.cpp(383): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>GaussianFit3D_Theta.cpp(472): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>GaussianFit3D_Theta.cpp(473): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>GaussianFit3D_Theta.cpp(219): warning C4101: 'time_final' : variable locale non référencée
+     1>GaussianFit3D_Theta.cpp(218): warning C4101: 'time_initial' : variable locale non référencée
+         info_2D.cpp
+         miscTools.cpp
+         PALM.cpp
+     1>PALM.cpp(136): warning C4244: 'initialisation' : conversion de 'clock_t' en 'float', perte possible de données
+     1>PALM.cpp(164): warning C4244: '=' : conversion de 'clock_t' en 'float', perte possible de données
+     1>PALM.cpp(207): warning C4244: '=' : conversion de 'clock_t' en 'float', perte possible de données
+     1>PALM.cpp(262): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(263): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(306): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(307): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(354): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(355): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(394): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(395): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(438): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(439): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(679): warning C4018: '<' : incompatibilité signed/unsigned
+     1>PALM.cpp(691): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(692): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(697): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(698): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(699): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(700): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(701): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+     1>PALM.cpp(704): warning C4018: '>=' : incompatibilité signed/unsigned
+     1>PALM.cpp(704): warning C4018: '<=' : incompatibilité signed/unsigned
+     1>PALM.cpp(704): warning C4018: '>=' : incompatibilité signed/unsigned
+     1>PALM.cpp(704): warning C4018: '<=' : incompatibilité signed/unsigned
+         segmentation.cpp
+         segmentation_2D.cpp
+         USrtArray.cpp
+         watershed_2D.cpp
+     1>C:\Program Files\MSBuild\Microsoft.Cpp\v4.0\Microsoft.CppBuild.targets(990,5): warning MSB8012: TargetPath(G:\.net projects x64\A transferer STORM x64\PALM\x64\Release\PALM_Offline_CPU.dll) ne correspond pas à la valeur de la propriété OutputFile (G:\.net projects x64\A transferer STORM x64\PALM\CPU_PALM.dll) de Linker. Cela peut entraîner une génération incorrecte de votre projet. Pour corriger ce problème, vérifiez que les valeurs des propriétés $(OutDir), $(TargetName) et $(TargetExt) correspondent à la valeur spécifiée dans %(Link.OutputFile).
+     1>C:\Program Files\MSBuild\Microsoft.Cpp\v4.0\Microsoft.CppBuild.targets(992,5): warning MSB8012: TargetName(PALM_Offline_CPU) ne correspond pas à la valeur de la propriété OutputFile (CPU_PALM) de Linker. Cela peut entraîner une génération incorrecte de votre projet. Pour corriger ce problème, vérifiez que les valeurs des propriétés $(OutDir), $(TargetName) et $(TargetExt) correspondent à la valeur spécifiée dans %(Link.OutputFile).
+       Link:
+         C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"../PALM\CPU_PALM.dll" /INCREMENTAL:NO /NOLOGO /LIBPATH:../_lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /DEF:".\PALM.def" /MANIFEST /ManifestFile:"x64\Release\PALM_Offline_CPU.dll.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"G:\.net projects x64\A transferer STORM x64\PALM\x64\Release\PALM_Offline_CPU.pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE:NO /MACHINE:X64 /DLL x64\Release\aTrous.obj
+         x64\Release\aTrous2D.obj
+         x64\Release\BlArray.obj
+         x64\Release\CalibrationFit.obj
+         x64\Release\FltArray.obj
+         x64\Release\GaussianFit2D.obj
+         x64\Release\GaussianFit2D_Sigma.obj
+         x64\Release\GaussianFit3D.obj
+         x64\Release\GaussianFit3D_Theta.obj
+         x64\Release\info_2D.obj
+         x64\Release\miscTools.obj
+         x64\Release\PALM.obj
+         x64\Release\segmentation.obj
+         x64\Release\segmentation_2D.obj
+         x64\Release\stdafx.obj
+         x64\Release\USrtArray.obj
+         x64\Release\watershed_2D.obj
+            Création de la bibliothèque ../PALM\CPU_PALM.lib et de l'objet ../PALM\CPU_PALM.exp
+         Génération de code en cours
+         Fin de la génération du code
+         PALM_.vcxproj -> G:\.net projects x64\A transferer STORM x64\PALM\x64\Release\PALM_Offline_CPU.dll
+       Manifest:
+         C:\Program Files\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"../PALM\CPU_PALM.dll;#2" /manifest x64\Release\PALM_Offline_CPU.dll.intermediate.manifest
+       FinalizeBuildStatus:
+         Suppression du fichier "x64\Release\PALM_Offline_CPU.unsuccessfulbuild".
+         Mise à jour de l'horodatage "x64\Release\PALM_Offline_CPU.lastbuildstate".
+     1>Génération du projet "G:\.net projects x64\A transferer STORM x64\PALM_OFFLINE_CPU\PALM_.vcxproj" terminée (rebuild cible(s)).
+
+La génération a réussi.
+
+Temps écoulé 00:00:13.38

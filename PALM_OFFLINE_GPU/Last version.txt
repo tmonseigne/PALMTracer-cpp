@@ -1,0 +1,32 @@
+Gaussian fit
+		// For test
+		float* d_data;
+		unsigned short* d_images;
+		cutilSafeCall( cudaMalloc( (void**) &d_data, sizeStk * sizeDataX * sizeDataY * sizeof(float) ) );
+		cutilSafeCall( cudaMalloc( (void**) &d_images, sizeStk * sizeDataX * sizeDataY * sizeof(unsigned short) ) );
+
+		cutilSafeCall( cudaMemcpy( d_images, images, sizeStk * sizeDataX * sizeDataY * sizeof(unsigned short), cudaMemcpyHostToDevice) );
+
+		{
+			test(d_images, d_data, sizeStk, sizeDataX, sizeDataY);
+
+			// cleanup memory
+			cutilSafeCall( cudaFree(d_images) );
+		}
+		// End test
+		;
+
+		// Apparement il faut traiter les images en plusieurs fois pour éviter le probleme : cudaErrorLaunchTimeout
+		if (threeD == 1)
+			cuda3DFittingGPU(d_data, sizeStk, sizeDataX, sizeDataY, d_nbStruct, d_pointsList, 20*6, size, sigmaX, sigmaY, angle);
+		else // 2D // threeD == 0
+			cuda2DFittingGPU(d_data, sizeStk, sizeDataX, sizeDataY, d_nbStruct, d_pointsList, 30, size, sigmaX);
+
+		cudaError err = cudaThreadSynchronize();
+		//printf("Error : %d \n", err);
+		cutilSafeCall( cudaMemcpy( list, d_pointsList, _maxNbPoints * sizeof(double) * 10, cudaMemcpyDeviceToHost) );
+
+		// Cleanup memory
+		cutilSafeCall( cudaFree(d_data) );
+		cutilSafeCall( cudaFree(d_pointsList) );
+		cutilSafeCall( cudaFree(d_nbStruct) );

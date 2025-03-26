@@ -1,0 +1,6 @@
+LIBRARY	"GPU_PALM.dll"
+
+EXPORTS
+	OpenPALMProcessing
+	PALMProcessing
+	closePALMProcessing

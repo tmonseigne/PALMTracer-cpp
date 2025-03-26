@@ -1,0 +1,29 @@
+
+#include "GaussianFit.h"
+
+
+class GaussianFit2D : GaussianFit
+{
+private:
+	float PSF(float x, float y, float I0, float x0, float y0, float offset);
+	float deriv1I0(float x, float y, float I0, float x0, float y0);
+	float deriv1x0(float x, float y, float I0, float x0, float y0);
+	float deriv1y0(float x, float y, float I0, float x0, float y0);
+	float lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat/*IN*/, float* weight_sq/*IN*/, float* alpha/*OUT*/, float* beta/*OUT*/, float* y_hat/*OUT*/);
+	void inverse(float* MM, float* Minv);
+
+public :
+	unsigned short dimFit;
+	unsigned short Npnt;
+	float ref;
+	float sigma;
+
+	void Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float &x0, float &y0, float &I0, float &sigmaX, float &offset, float &RSS, int iterNum, unsigned short size);
+	
+	GaussianFit2D()
+	{
+		dimFit = 0;
+		Npnt = 0;
+		ref = 0.;
+	}
+};

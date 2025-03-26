@@ -1,0 +1,8 @@
+LIBRARY "CPU_PALM.dll"
+
+EXPORTS
+	_OpenPALMProcessing
+	_PALMProcessing
+	_closePALMProcessing
+	RunCalibrationFit
+	GaussianVisuCPU

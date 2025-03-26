@@ -1,0 +1,5 @@
+LIBRARY "Tracking.dll"
+
+EXPORTS
+	Tracking
+	tracking_30

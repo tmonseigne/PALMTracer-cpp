@@ -1,0 +1,289 @@
+#include "stdafx.h"
+
+
+
+/*******************************************************************************************************************
+									TabTimesDistanceIntensity Class
+									It is derived from the class TabTimes
+								This class find the neighbor with the best likeness.
+								Likeness depend on the distance and the intensity.
+*******************************************************************************************************************/
+
+
+#include "tab_times_dist_inten.h"
+
+//extern PublicParameters *publicParameters;
+
+/********************************************************************************************************************
+Constructuor() of TabTimesDistanceIntensity class.
+********************************************************************************************************************/
+TabTimesDistanceIntensity::TabTimesDistanceIntensity(PublicParameters *_publicParameters):TabTimes(_publicParameters){
+	publicParameters = _publicParameters;
+}
+
+/********************************************************************************************************************
+Destructor() of TabTimesDistanceIntensity class.
+********************************************************************************************************************/
+TabTimesDistanceIntensity::~TabTimesDistanceIntensity(){
+
+}
+
+
+
+/********************************************************************************************************************
+allocTabTimes(int _nbTimes) alloc an array of _nbTimes long 
+********************************************************************************************************************/
+TimeNodes* TabTimesDistanceIntensity::allocTimeNodes(long _time, long _nbNodes){
+	return(new TimeNodesDistanceIntensity(_time,_nbNodes, publicParameters));
+}
+
+
+/********************************************************************************************************************
+getLikenessGlobal() compute the totalLikeness of hte system
+********************************************************************************************************************/
+double TabTimesDistanceIntensity::getLikenessGlobal(){
+	double _likeness=0.;
+	for(int _time=0;_time<nbTimes;_time++)
+		_likeness+=((TimeNodesDistanceIntensity*)(timeNodes[_time]))->getLikenessTime(nbTimes);
+
+	return(_likeness);
+}
+
+/********************************************************************************************************************
+computeConstantes() compute by convergence the values 
+publicParameters->stdIntensity
+publicParameters->stdMean
+publicParameters->stdDistance
+********************************************************************************************************************/
+void TabTimesDistanceIntensity::computeConstantes(void){
+
+	publicParameters->stdIntensity=1000;
+	publicParameters->stdMean=1000;
+	publicParameters->stdDistance=1000;
+	double stdMeanComputing=0;
+	double stdDistanceComputing=0;
+	double stdIntensityComputing=0;
+	long countStdInt, countStdMean, coutStdDist;
+
+	int _time;
+
+
+	for(int k=0; k<20;k++){
+		countStdInt=0;
+		countStdMean=0;
+		coutStdDist=0;
+		stdMeanComputing=0;
+		stdDistanceComputing=0;
+		stdIntensityComputing=0;
+
+
+		for(_time=0;_time<nbTimes-1;_time++){
+			((TimeNodesDistanceIntensity*)(timeNodes[_time]))->computeConstantSigmas(stdIntensityComputing, countStdInt,
+				stdMeanComputing, countStdMean, stdDistanceComputing, coutStdDist,false);//, true);
+		}
+		
+		if((stdIntensityComputing>1e-8)&&(countStdInt>0))
+			publicParameters->stdIntensity=stdIntensityComputing/countStdInt;//*1.0275;//3.4352;
+		publicParameters->stdIntensity=sqrt(publicParameters->stdIntensity);
+
+		if((stdMeanComputing>1e-8)&&(countStdMean>0))
+			publicParameters->stdMean=stdMeanComputing/countStdMean;//*1.0275;//3.4352;
+		publicParameters->stdMean=sqrt(publicParameters->stdMean);
+
+		if((stdDistanceComputing>1e-8)&&(coutStdDist>0))
+			publicParameters->stdDistance=stdDistanceComputing/coutStdDist;//*1.0275;//3.4352;
+		publicParameters->stdDistance=sqrt(publicParameters->stdDistance); 
+
+		
+	}
+
+	
+
+//#ifdef DEBUG_AT
+/*	wchar_t filenameLine[1024];
+	long t;
+	if(publicParameters->folderOut[wcslen(publicParameters->folderOut)]!=L'\\')
+			wcscat(publicParameters->folderOut,L"\\");
+	
+	swprintf(filenameLine, L"%lsDistanceHisto.txt", publicParameters->folderOut);
+
+	FILE*fid=_wfopen(filenameLine,L"w");
+
+	fwprintf(fid, L"Computed constants\tD=%f\tI=%f\tM=%f\n\n", publicParameters->stdDistance, publicParameters->stdIntensity, 
+		publicParameters->stdMean);
+
+
+	long *dist;
+	dist=new long[publicParameters->distMaxPastAndFuture+1];
+	for( t=0;t<publicParameters->distMaxPastAndFuture+1;t++)
+		dist[t]=0;
+	for(_time=0;_time<nbTimes-1;_time++){
+			((TimeNodesDistanceIntensity*)(timeNodes[_time]))->computeConstantSigmas(stdIntensityComputing, countStdInt,
+				stdMeanComputing, countStdMean, stdDistanceComputing, coutStdDist, true, dist);
+		}
+	if(fid!=NULL){
+		for( t=0;t<publicParameters->distMaxPastAndFuture+1;t++)
+			fwprintf(fid, L"%d\t%d\n",t, dist[t]);
+		fclose(fid);
+	}
+	delete dist;*/
+	
+//#endif
+	publicParameters->stdDistance/=3;//attention au /3 c'est just pour augmenter l'influence de la distance
+	//publicParameters->stdDistance*=3;//attention au /3 c'est just pour diminuer l'influence de la distance
+	
+
+
+}
+
+/********************************************************************************************************************
+updateConstantes() ones the Tracking in compute, compute the constant
+********************************************************************************************************************/
+void TabTimesDistanceIntensity::updateConstantes(void){
+	
+	
+
+	/*wchar_t filenameLine[1024];
+	long t;
+	if(publicParameters->folderOut[wcslen(publicParameters->folderOut)]!=L'\\')
+			wcscat(publicParameters->folderOut,L"\\");
+	
+	swprintf(filenameLine, L"%lsDistanceHisto.txt", publicParameters->folderOut);
+
+	FILE*fid=_wfopen(filenameLine,L"w");
+
+	fwprintf(fid, L"D\tdI\tdM\n");
+
+
+
+	for(t=0;t<nbTimes;t++){
+		TimeNodes* _localTimeNodes=timeNodes[t];
+		for(int n=0;n<_localTimeNodes->nbNodes;n++){
+			Node* node=_localTimeNodes->tabNodes[n];
+			if(node->connectionFuture!=NULL){
+				fwprintf(fid, L"%f\t%f\t%f\n", node->distance(node->connectionFuture),
+					node->info->getIntensity()-node->connectionFuture->info->getIntensity(),node->info->getMean()-node->connectionFuture->info->getMean());
+			}
+		}
+	}
+	fclose(fid);*/
+	long t;
+	long cpt=0;
+	double covID=0;
+	double covDM=0;
+
+
+	publicParameters->stdDistance=0;
+	publicParameters->stdIntensity=0;
+	publicParameters->stdMean=0;
+	publicParameters->covMeanIntensity=0;
+	for(t=0;t<nbTimes;t++){
+		TimeNodes* _localTimeNodes=timeNodes[t];
+		for(int n=0;n<_localTimeNodes->nbNodes;n++){
+			Node* node=_localTimeNodes->tabNodes[n];
+			if(node->connectionFuture!=NULL){
+				publicParameters->stdDistance+=node->distance(node->connectionFuture)*node->distance(node->connectionFuture);
+				publicParameters->stdIntensity+=(node->info->getIntensity()-node->connectionFuture->info->getIntensity())*(node->info->getIntensity()-node->connectionFuture->info->getIntensity());
+				publicParameters->stdMean+=(node->info->getMean()-node->connectionFuture->info->getMean())*(node->info->getMean()-node->connectionFuture->info->getMean());
+				covID+=(node->info->getIntensity()-node->connectionFuture->info->getIntensity())*node->distance(node->connectionFuture);
+				publicParameters->covMeanIntensity+=(node->info->getIntensity()-node->connectionFuture->info->getIntensity())*(node->info->getMean()-node->connectionFuture->info->getMean());
+				covDM+=node->distance(node->connectionFuture)*(node->info->getMean()-node->connectionFuture->info->getMean());
+				cpt++;
+			}
+		}
+	}
+	publicParameters->stdDistance/=cpt;
+	publicParameters->stdIntensity/=cpt;
+	publicParameters->stdMean/=cpt;
+	covID/=cpt;
+	publicParameters->covMeanIntensity/=cpt;
+	covDM/=cpt;
+	publicParameters->stdIntensity=sqrt(publicParameters->stdIntensity);
+	publicParameters->stdDistance=sqrt(publicParameters->stdDistance);
+	publicParameters->stdMean=sqrt(publicParameters->stdMean);
+
+
+	//wprintf(L"covID %f  covIM %f covDM %f\n", covID, publicParameters->covMeanIntensity, covDM);
+
+	//wprintf(L"det(Cov)MI %f\n", publicParameters->stdIntensity*publicParameters->stdIntensity * publicParameters->stdMean * publicParameters->stdMean - publicParameters->covMeanIntensity*publicParameters->covMeanIntensity);
+
+	//wprintf(L"covIM^2 (%f^2) - covII(%f)*covMM(%f)=%f\n", publicParameters->covMeanIntensity, publicParameters->stdIntensity*publicParameters->stdIntensity, publicParameters->stdMean*publicParameters->stdMean, publicParameters->covMeanIntensity*publicParameters->covMeanIntensity- publicParameters->stdIntensity*publicParameters->stdIntensity*publicParameters->stdMean*publicParameters->stdMean);
+
+}
+
+
+/********************************************************************************************************************
+runModel() is the core of the application, it links the structures according the selected model
+********************************************************************************************************************/
+int TabTimesDistanceIntensity::runModel(){
+	
+	double totalLikeness;
+	double deltaLikeness;
+
+	double error;
+	int _time;
+	long cpt;
+
+	long countLearning = 5;
+
+	for(long iLearning=0; iLearning<countLearning; iLearning++){
+		if(iLearning == countLearning-1){
+			error = 20;
+		}else{
+
+			error = 0;
+		}
+		cpt=0;
+		
+		if(iLearning == 0){
+			computeConstantes();
+			for(_time=0; _time<nbTimes-1; _time++){
+				((TimeNodesDistanceIntensity*)(timeNodes[_time]))->makeAllInitializationConnections();
+			}
+		}else{
+			updateConstantes();
+		}
+			
+		wprintf(L"iLearning:\t%d/%d\nkInt %f  kMean %f kDistance %f\n", iLearning, countLearning, publicParameters->stdIntensity, 
+			publicParameters->stdMean, publicParameters->stdDistance);
+		
+		totalLikeness = getLikenessGlobal();
+
+		int nbInt = 0;
+		//if(publicParameters->temperatureDecrease<=0) return(RET_OK);
+
+		wprintf(L"**********Global Likeness: %f ***********\n", totalLikeness);
+		int bcl = 0;
+		do{
+			if(iLearning == countLearning-1){
+				error *= (1.-(float)publicParameters->temperatureDecrease/100.);
+			}
+
+			nbInt++;
+			
+			deltaLikeness = 0;
+			/*for(int i=0; i<300; i++){*/
+			for(int i=0; i<publicParameters->NbIterations; i++){
+				for(int _time=0; _time<nbTimes-1; _time++){
+					deltaLikeness += ((TimeNodesDistanceIntensity*)(timeNodes[_time]))->tryRandomChange(error);
+				}
+			}
+			totalLikeness += deltaLikeness;
+
+			//wprintf(L"%d\tObjective function: %lf, T: %lf, cpt: %d\n", nbInt, totalLikeness, error, cpt);
+
+			if(fabs(deltaLikeness) < 1e-8)
+				cpt++;
+			else 
+				cpt = 0;
+
+			bcl++;
+
+		}while(cpt < 10);
+			
+		printf("bcl : %d\n", bcl);
+
+	}
+
+	return(RET_OK);
+}
