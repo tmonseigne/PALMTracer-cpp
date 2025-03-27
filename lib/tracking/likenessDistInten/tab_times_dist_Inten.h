@@ -8,7 +8,7 @@
 #define __tab_times_distance_intensity__
 
 #include "time_nodes_dist_inten.h"
-#include "../kernel/tab_times.h"
+#include "tracking/tab_times.h"
 
 class TabTimesDistanceIntensity : public TabTimes
 {

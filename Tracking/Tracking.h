@@ -5,11 +5,11 @@
 #ifndef __tracking__
 #define __tracking__
 #include <stdio.h>
-#include "closerNeighbors/tab_times_closer_neighbors.h"
-#include "kernel/general.h"
-#include "kernel/print_debug.h"
-#include "kernel/tab_times.h"
-#include "likenessDistInten/tab_times_dist_inten.h"
+#include "tracking/general.h"
+#include "tracking/print_debug.h"
+#include "tracking/tab_times.h"
+#include "tracking/closerNeighbors/tab_times_closer_neighbors.h"
+#include "tracking/likenessDistInten/tab_times_dist_inten.h"
 
 
 #endif	//__tracking__

@@ -8,8 +8,8 @@
 #ifndef __node_distance_intensity__
 #define __node_distance_intensity__
 
-#include "../kernel/general.h"
-#include "../kernel/nodes.h"
+#include "tracking/general.h"
+#include "tracking/nodes.h"
 
 
 #define STD_NOISE	40

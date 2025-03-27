@@ -7,7 +7,7 @@
 #define __tab_times_closer_neighbors__
 #
 #include "time_nodes_closer_neighbors.h"
-#include "../kernel/tab_times.h"
+#include "tracking/tab_times.h"
 
 class TabTimesCloserNeighbors : public TabTimes
 {

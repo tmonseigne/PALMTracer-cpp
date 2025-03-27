@@ -6,6 +6,7 @@
 #ifndef __nodes__
 #define __nodes__
 
+#include <cstdlib>
 #include <string.h>
 #include "chain_neighbor.h"
 #include "general.h"

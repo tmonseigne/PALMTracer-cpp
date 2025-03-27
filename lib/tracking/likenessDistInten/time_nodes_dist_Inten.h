@@ -9,7 +9,7 @@
 #define __time_nodes_dist_inten__
 
 #include "nodes_dist_inten.h"
-#include "../kernel/time_nodes.h"
+#include "tracking/time_nodes.h"
 
 
 class TimeNodesDistanceIntensity : public TimeNodes

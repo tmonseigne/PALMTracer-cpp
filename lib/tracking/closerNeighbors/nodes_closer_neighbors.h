@@ -7,7 +7,7 @@
 #ifndef __node_closer_neighbors__
 #define __node_closer_neighbors__
 
-#include "../kernel/nodes.h"
+#include "tracking/nodes.h"
 
 
 class NodeCloserNeighbors : public Node
