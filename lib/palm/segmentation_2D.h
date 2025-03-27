@@ -36,7 +36,7 @@ private:
 public:
 	Segment2D();
 	Segment2D(unsigned long _nbInfoStruct);
-	~Segment2D();
+	~Segment2D() override;
 
 	unsigned short segmentation(FltArray& data, USrtArray& seg, double val, bool diagonal, bool fillHoles);
 

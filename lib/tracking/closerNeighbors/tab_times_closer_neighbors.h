@@ -12,14 +12,14 @@
 class TabTimesCloserNeighbors : public TabTimes
 {
 protected:
-	TimeNodes* allocTimeNodes(long time, long nbNodes);
+	TimeNodes* allocTimeNodes(long time, long nbNodes) override;
 	void allocNode();
 
 public:
 	TabTimesCloserNeighbors(PublicParameters* publicParameters);
 	~TabTimesCloserNeighbors();
 
-	int runModel();
+	int runModel() override;
 };
 
 

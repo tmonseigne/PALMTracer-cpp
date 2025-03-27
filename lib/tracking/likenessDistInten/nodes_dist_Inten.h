@@ -18,14 +18,14 @@ class NodeDistanceIntensity : public Node
 {
 private:
 	double getLikeness(double difference, double sigma);
-	double likenessDistance(Node* n);
-	double likenessDistanceFusion(Node* n1, Node* n2);
-	double likenessFusion(Node* n1, Node* n2);
-	double likenessFission(Node* n1, Node* n2);
-	double likenessIntensity(Node* n);
-	double likenessIntensityFusion(Node* n1, Node* n2);
-	double likenessMeanIntensity(Node* n);
-	double likenessMeanIntensityFusion(Node* n1, Node* n2);
+	double likenessDistance(Node* n) override;
+	double likenessDistanceFusion(Node* n1, Node* n2) override;
+	double likenessFusion(Node* n1, Node* n2) override;
+	double likenessFission(Node* n1, Node* n2) override;
+	double likenessIntensity(Node* n) override;
+	double likenessIntensityFusion(Node* n1, Node* n2) override;
+	double likenessMeanIntensity(Node* n) override;
+	double likenessMeanIntensityFusion(Node* n1, Node* n2) override;
 	double makeChangeSimpleLinkage(double limit);
 	double makeChangeSimpleLinkage0(double limit);
 	double makeChangeSimpleLinkage1(double limit, ChainNeighbor* cRand);
@@ -69,8 +69,8 @@ public:
 	void computeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean, double& stdDistanceComputing, long& countStdDist, bool sigmaClipping, long* hist);
 	double getLikenessOfLocalNode(int lastTime);
 	double makeChange(double limit);
-	double likeness(Node* n);
-	double likenessBlink(Node* n);
+	double likeness(Node* n) override;
+	double likenessBlink(Node* n) override;
 	NodeDistanceIntensity(int _time, PublicParameters* _publicParameters);
 	double makeInitializationConnection();
 };

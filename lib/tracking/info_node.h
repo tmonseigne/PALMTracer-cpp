@@ -52,37 +52,37 @@ class InfoNode2D : public InfoNode
 {
 public:
 	InfoNode2D(PublicParameters* _publicParameters): InfoNode(_publicParameters) { };
-	float distance(InfoNode* infoData);
-	float distance(InfoNode* i1, InfoNode* i2);
+	float distance(InfoNode* infoData) override;
+	float distance(InfoNode* i1, InfoNode* i2) override;
 	InfoData2D info;
-	double getMean();
-	double getX();
-	double getY();
-	double getZ();
-	double getIntensity();
-	long getSurface();
-	unsigned long getIndex();
-	unsigned long getTime();
-	unsigned long sizeofInfoData();
-	void* getPtrInfoData();
+	double getMean() override;
+	double getX() override;
+	double getY() override;
+	double getZ() override;
+	double getIntensity() override;
+	long getSurface() override;
+	unsigned long getIndex() override;
+	unsigned long getTime() override;
+	unsigned long sizeofInfoData() override;
+	void* getPtrInfoData() override;
 
-	void setSurface(long s);
-	void setX(double x);
-	void setY(double y);
-	void setZ(double z);
-	void setIntensity(double I);
-	void setIndex(unsigned long i);
-	void setTime(unsigned long t);
-	void setMean(double m);
+	void setSurface(long s) override;
+	void setX(double x) override;
+	void setY(double y) override;
+	void setZ(double z) override;
+	void setIntensity(double I) override;
+	void setIndex(unsigned long i) override;
+	void setTime(unsigned long t) override;
+	void setMean(double m) override;
 
 	// added by Adel
 	double Z;
 	double Color;
 	double MolId;
-	void setColor(double z);
-	void setMolId(double molId);
-	double getColor();
-	double getMolId();
+	void setColor(double z) override;
+	void setMolId(double molId) override;
+	double getColor() override;
+	double getMolId() override;
 };
 
 
@@ -90,28 +90,28 @@ class InfoNode3D : public InfoNode
 {
 public:
 	InfoNode3D(PublicParameters* _publicParameters): InfoNode(_publicParameters) { };
-	float distance(InfoNode* infoData);
-	float distance(InfoNode* i1, InfoNode* i2);
+	float distance(InfoNode* infoData) override;
+	float distance(InfoNode* i1, InfoNode* i2) override;
 	InfoData3D info;
-	double getMean();
-	double getX();
-	double getY();
-	double getZ();
-	double getIntensity();
-	long getVolume();
-	unsigned long getIndex();
-	unsigned long getTime();
-	unsigned long sizeofInfoData();
-	void* getPtrInfoData();
+	double getMean() override;
+	double getX() override;
+	double getY() override;
+	double getZ() override;
+	double getIntensity() override;
+	long getVolume() override;
+	unsigned long getIndex() override;
+	unsigned long getTime() override;
+	unsigned long sizeofInfoData() override;
+	void* getPtrInfoData() override;
 
-	void setSurface(long s);
-	void setX(double x);
-	void setY(double y);
-	void setZ(double z);
-	void setIntensity(double I);
-	void setIndex(unsigned long i);
-	void setTime(unsigned long t);
-	void setMean(double m);
+	void setSurface(long s) override;
+	void setX(double x) override;
+	void setY(double y) override;
+	void setZ(double z) override;
+	void setIntensity(double I) override;
+	void setIndex(unsigned long i) override;
+	void setTime(unsigned long t) override;
+	void setMean(double m) override;
 };
 
 #endif //__info_node__

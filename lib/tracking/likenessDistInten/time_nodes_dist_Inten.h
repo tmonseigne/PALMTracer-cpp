@@ -15,7 +15,7 @@
 class TimeNodesDistanceIntensity : public TimeNodes
 {
 protected:
-	Node* allocNode();
+	Node* allocNode() override;
 
 public:
 	TimeNodesDistanceIntensity(int _time, int _nbNodes, PublicParameters* _publicParameters);
