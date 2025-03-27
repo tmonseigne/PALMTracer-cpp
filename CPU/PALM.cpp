@@ -18,7 +18,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 		case DLL_PROCESS_ATTACH:
 		case DLL_THREAD_ATTACH:
 		case DLL_THREAD_DETACH:
-		case DLL_PROCESS_DETACH: break;
+		case DLL_PROCESS_DETACH: 
+		default: break;
 	}
 	return TRUE;
 }
@@ -81,7 +82,6 @@ float GaussianFunction_2D(float x, float y, float I0, float sigma) { return I0 *
 _declspec(dllexport) void _stdcall GaussianVisuCPU(double* gaussianPointsList/*(sizeReg*sizeReg*nbPoints)*/, double* pointsList, unsigned long pointsListSize, unsigned short sizeStk, unsigned short width, unsigned short height, unsigned short sizeReg, unsigned short zoom, double conversionRatio, double pixelSize)
 {
 	unsigned int index = 0;
-	float x0, y0;
 	unsigned long NbSegParams = 13;
 
 	for (int i = 0; i < pointsListSize / NbSegParams; i++) {
@@ -89,8 +89,8 @@ _declspec(dllexport) void _stdcall GaussianVisuCPU(double* gaussianPointsList/*(
 			if ((int)pointsList[NbSegParams * i + 3] != -1) {
 				int sizeRegH = sizeReg / 2;
 
-				x0 = (float)pointsList[NbSegParams * i + 4];
-				y0 = (float)pointsList[NbSegParams * i + 3];
+				float x0 = (float)pointsList[NbSegParams * i + 4];
+				float y0 = (float)pointsList[NbSegParams * i + 3];
 
 				x0 = x0 * (float)zoom + 0.5 * ((float)zoom - 1.0);
 				y0 = y0 * (float)zoom + 0.5 * ((float)zoom - 1.0);

@@ -20,8 +20,7 @@ void** Segment2D::getTabInfo() { return (void**)tabInfo; }
 
 void Segment2D::desalloc()
 {
-	InfoStruct2D* ptr;
-	ptr = headInfo;
+	InfoStruct2D* ptr = headInfo;
 	while (ptr != NULL) {
 		headInfo = ptr;
 		ptr = ptr->next;
@@ -52,9 +51,6 @@ Segment2D::~Segment2D() { desalloc(); }
 
 int Segment2D::alloc(unsigned long nbStruct)
 {
-	InfoStruct2D* ptr;
-	unsigned long ind;
-
 	desalloc();
 
 	tabInfo = new InfoStruct2D*[nbStruct + 1];
@@ -66,8 +62,8 @@ int Segment2D::alloc(unsigned long nbStruct)
 
 		tabInfo[0] = NULL;
 		tabInfo[1] = headInfo;
-		ptr = headInfo;
-		for (ind = 2; ind <= nbStruct; ind++) {
+		InfoStruct2D* ptr = headInfo;
+		for (unsigned long ind = 2; ind <= nbStruct; ind++) {
 			ptr->next = new InfoStruct2D(ind);
 			tabInfo[ind] = ptr->next;
 			if (ptr->next == NULL) { return S_ALLOC_ERR; }
@@ -88,7 +84,7 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 	InfoStruct2D* ptrMax;
 	InfoStruct2D* ptrOld = NULL;
 	unsigned long ind = 0;
-	long i, indexFilter;
+	long i;
 	bool unselected;
 	float valMax;
 	long nbInfoStructOld = nbInfoStruct;
@@ -180,7 +176,7 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 	}
 
 
-	for (indexFilter = 9; indexFilter <= 11; indexFilter++) {
+	for (long indexFilter = 9; indexFilter <= 11; indexFilter++) {
 		if (useParam[indexFilter] == 1 && nbInfoStruct > param[indexFilter] && (long)param[indexFilter] > 0) {
 			//N first structure with the biggest surface (indexFilter=9), the biggest surface (indexFilter=10) or 
 			//the biggest total intensity (indexFilter=11)
@@ -197,6 +193,7 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 						break;
 					case 11: valMax = (float)ptr->data.max.val;
 						break;
+					default: ;
 				}
 
 				ptrMax = NULL;
@@ -218,6 +215,7 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 								ptrMax = ptr;
 							}
 							break;
+						default: ;
 					}
 					ptr = ptr->next;
 				}
@@ -293,7 +291,6 @@ float Segment2D::tic()
 
 int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData, unsigned short gaussFit, bool doRealoc)
 {
-	unsigned short i, j;
 	double val;
 	unsigned long ind;
 	unsigned long cptPoints = 0;
@@ -338,8 +335,8 @@ int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData
 		tabInfo[ind]->data.nbSubstructures = 0;
 	}
 
-	for (i = 0; i < sizeDataX; i++) {
-		for (j = 0; j < sizeDataY; j++) {
+	for (unsigned short i = 0; i < sizeDataX; i++) {
+		for (unsigned short j = 0; j < sizeDataY; j++) {
 			if (seg.data[i * sizeDataY + j] > 0) {
 				cptPoints++;
 				val = data.data[i * sizeDataY + j];
@@ -460,8 +457,7 @@ unsigned short Segment2D::segmentation(FltArray& data, USrtArray& seg, double va
 
 	ret = segmentationNegativeValues(data, *segHoles, val, !diagonal);
 
-	unsigned long* ptr;
-	ptr = (unsigned long*)malloc(sizeof(long) * (ret + 1));
+	unsigned long* ptr = (unsigned long*)malloc(sizeof(long) * (ret + 1));
 	for (i = 0; i <= ret; i++) { ptr[i] = i; }
 	for (i = 0; i < sizeDataY; i++) {
 		ptr[(*segHoles)(0, i)] = 0;
@@ -490,9 +486,7 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 	**/
 	unsigned long* ptr;
 
-	unsigned long* ptr2;
 	long i, j;
-	unsigned long nSeg;
 	int structFinded;
 	int mini;
 	//int max;
@@ -508,7 +502,7 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 	//initialisation of ptr
 	for (i = 0; i < MAX_TAB; i++) { ptr[i] = (unsigned short)i; }
 	//nSeg indicate the number of the next unused structure
-	nSeg = 1;
+	unsigned long nSeg = 1;
 
 
 	//initialisation of seg
@@ -612,7 +606,7 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 	//assembling structures
 
 
-	ptr2 = (unsigned long*)malloc(sizeof(long) * nSeg);
+	unsigned long* ptr2 = (unsigned long*)malloc(sizeof(long) * nSeg);
 	for (i = 0; i < (long)nSeg; i++) { ptr2[i] = 0; }
 	structFinded = 1;
 	for (i = 1; i < (long)nSeg; i++) {
@@ -642,9 +636,7 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	**/
 	unsigned long* ptr;
 
-	unsigned long* ptr2;
 	long i, j;
-	unsigned long nSeg;
 	int structFinded;
 	int mini;
 	//int max;
@@ -660,7 +652,7 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	//initialisation of ptr
 	for (i = 0; i < MAX_TAB; i++) { ptr[i] = (unsigned short)i; }
 	//nSeg indicate the number of the next unused structure
-	nSeg = 1;
+	unsigned long nSeg = 1;
 
 
 	//initialisation of seg
@@ -764,7 +756,7 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	//assembling structures
 
 
-	ptr2 = (unsigned long*)malloc(sizeof(long) * nSeg);
+	unsigned long* ptr2 = (unsigned long*)malloc(sizeof(long) * nSeg);
 	for (i = 0; i < (long)nSeg; i++) { ptr2[i] = 0; }
 	structFinded = 1;
 	for (i = 1; i < (long)nSeg; i++) {
@@ -793,9 +785,7 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	**/
 	unsigned long* ptr;
 
-	unsigned long* ptr2;
 	long i, j;
-	unsigned long nSeg;
 	int structFinded;
 	int mini;
 	//int max;
@@ -811,7 +801,7 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	//initialisation of ptr
 	for (i = 0; i < MAX_TAB; i++) { ptr[i] = (unsigned short)i; }
 	//nSeg indicate the number of the next unused structure
-	nSeg = 1;
+	unsigned long nSeg = 1;
 
 
 	//initialisation of seg
@@ -915,7 +905,7 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	//assembling structures
 
 
-	ptr2 = (unsigned long*)malloc(sizeof(long) * nSeg);
+	unsigned long* ptr2 = (unsigned long*)malloc(sizeof(long) * nSeg);
 	for (i = 0; i < (long)nSeg; i++) { ptr2[i] = 0; }
 	structFinded = 1;
 	for (i = 1; i < (long)nSeg; i++) {
@@ -942,11 +932,11 @@ void Segment2D::mixIndex(USrtArray& seg)
 	(*mixer)(0) = 0;
 	srand(111);
 
-	long ind, val, i;
+	long i;
 	for (i = 1; i <= (long)nbInfoStruct; i++) { (*mixer)(i) = (unsigned short)i; }
 	for (i = 1; i <= (long)nbInfoStruct; i++) {
-		ind = rand() % nbInfoStruct + 1;
-		val = (*mixer)(ind);
+		long ind = rand() % nbInfoStruct + 1;
+		long val = (*mixer)(ind);
 		(*mixer)(ind) = (*mixer)(i);
 		(*mixer)(i) = (unsigned short)val;
 	}

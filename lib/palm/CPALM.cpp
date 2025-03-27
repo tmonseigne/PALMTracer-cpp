@@ -103,26 +103,9 @@ long CPALM::CPALMProcessing()
 
 	for (int i = 1; i <= min(nbStruct, _nbPointsMaxPerPlane - 2); i++) {
 		switch (_gaussFit) {
-			case 0: {
-				_pointsList[currentPoint++] = 0.;
-				_pointsList[currentPoint++] = 0.;
-				_pointsList[currentPoint++] = 0.;
-				_pointsList[currentPoint++] = p[i]->data.moment.x;
-				_pointsList[currentPoint++] = p[i]->data.moment.y;
-				_pointsList[currentPoint++] = 0.;
-				_pointsList[currentPoint++] = 0.;
-				_pointsList[currentPoint++] = 0.;
-				_pointsList[currentPoint++] = p[i]->data.intensity;
-				_pointsList[currentPoint++] = p[i]->data.surf;
-
-				_pointsList[currentPoint++] = 0.; // Z coordinate
-				_pointsList[currentPoint++] = 0.; // Spectral or other
-				_pointsList[currentPoint++] = 0.; // Other
-
-				break;
-			}
-
-			case 5: {
+			case 0: 
+			case 5:
+			{
 				_pointsList[currentPoint++] = 0.;
 				_pointsList[currentPoint++] = 0.;
 				_pointsList[currentPoint++] = 0.;
@@ -304,23 +287,17 @@ long CPALM::CPALMProcessing()
 
 				break;
 			}
+			default: // Error on Gauss Fit Param
+				std::fill_n(_pointsList + currentPoint, 13, -1);
+				currentPoint += 13;
+				break;
 		}
 	}
 
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
+	// Blank Line
+	std::fill_n(_pointsList + currentPoint, 13, -1);
+	currentPoint += 13;
 
-	_pointsList[currentPoint++] = -1; // Z coordinate
-	_pointsList[currentPoint++] = -1; // Spectral or other
-	_pointsList[currentPoint++] = -1; // Other
 	return currentPoint;
 }
 

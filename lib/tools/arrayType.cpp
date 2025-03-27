@@ -496,7 +496,6 @@ void ArrayType::continuousThreshold(DataType val)
 void ArrayType::writeArray(wchar_t* fileName)
 {
 	int fileHandle;
-	int nbCharWrite;
 	HeaderFile header;
 
 
@@ -509,8 +508,8 @@ void ArrayType::writeArray(wchar_t* fileName)
 
 
 	if ((fileHandle = _wopen(fileName, O_RDWR | O_CREAT | O_BINARY, S_IWRITE)) != -1) {
-		if ((nbCharWrite = write(fileHandle, (void*)&header, sizeof(HeaderFile))) == -1) { exit(WRITING_FILE_ERR); }
-		if ((nbCharWrite = write(fileHandle, data, sizeof(DataType) * nbPoints)) == -1) { exit(WRITING_FILE_ERR); }
+		if ((write(fileHandle, (void*)&header, sizeof(HeaderFile))) == -1) { exit(WRITING_FILE_ERR); }
+		if ((write(fileHandle, data, sizeof(DataType) * nbPoints)) == -1) { exit(WRITING_FILE_ERR); }
 		close(fileHandle);
 	}
 	else { exit(OPENING_FILE_ERR); }
@@ -526,9 +525,8 @@ void ArrayType::readArray(wchar_t* fileName)
 
 
 	if ((fileHandle = _wopen(fileName, O_RDONLY | O_BINARY, S_IREAD)) != -1) {
-		int nb;
 
-		if ((nb = read(fileHandle, &header, sizeof(HeaderFile))) == -1) { exit(READING_FILE_ERR); }
+		if ((read(fileHandle, &header, sizeof(HeaderFile))) == -1) { exit(READING_FILE_ERR); }
 
 
 		switch (header.nbDim) {
@@ -536,6 +534,7 @@ void ArrayType::readArray(wchar_t* fileName)
 			case 2: alloc(header.sizeData[0], header.sizeData[1]);
 			case 3: alloc(header.sizeData[0], header.sizeData[1], header.sizeData[2]);
 			case 4: alloc(header.sizeData[0], header.sizeData[1], header.sizeData[2], header.sizeData[3]);
+			default: ;
 		}
 
 		if (read(fileHandle, data, sizeof(DataType) * nbPoints) == -1) { exit(READING_FILE_ERR); }
