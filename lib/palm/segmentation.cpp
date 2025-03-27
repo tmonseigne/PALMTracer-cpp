@@ -9,22 +9,22 @@ void Segment::inc(unsigned long& nSeg, unsigned long** ptr, long& sizePtr)
 {
 	unsigned long* newPtr;
 	int i;
-	if (nSeg == 65535) return;
+	if (nSeg == 65535) { return; }
 	nSeg++;
-	if ((long)nSeg < sizePtr) return;
+	if ((long)nSeg < sizePtr) { return; }
 
 
 	newPtr = (unsigned long*)malloc(sizeof(long) * sizePtr);
 	//backup of data
-	for (i = 0; i < (long)sizePtr; i++) newPtr[i] = (*ptr)[i];
+	for (i = 0; i < (long)sizePtr; i++) { newPtr[i] = (*ptr)[i]; }
 
 	//reallocation of ptr
 	sizePtr += MAX_TAB;
 	(*ptr) = (unsigned long*)realloc((*ptr), sizeof(long) * sizePtr);
 
 	//copy back the data
-	for (i = 0; i < ((long)sizePtr - MAX_TAB); i++) (*ptr)[i] = newPtr[i];
-	for (i = sizePtr - MAX_TAB; i < (long)sizePtr; i++) (*ptr)[i] = i;
+	for (i = 0; i < ((long)sizePtr - MAX_TAB); i++) { (*ptr)[i] = newPtr[i]; }
+	for (i = sizePtr - MAX_TAB; i < (long)sizePtr; i++) { (*ptr)[i] = i; }
 	free(newPtr);
 }
 

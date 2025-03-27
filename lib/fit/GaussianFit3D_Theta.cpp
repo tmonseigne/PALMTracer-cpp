@@ -79,29 +79,30 @@ float GaussianFit3D_Theta::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float*
 
 	//float inter[Npar * Npnt];
 	float* inter = (float*)malloc(Npar * Npnt * sizeof(float));
-	for (int elt = 0; elt < Npnt; elt++) for (int i = 0; i < Npar; i++) inter[elt * Npar + i] = weight_sq[elt] * dydp[elt * Npar + i];
+	for (int elt = 0; elt < Npnt; elt++) { for (int i = 0; i < Npar; i++) { inter[elt * Npar + i] = weight_sq[elt] * dydp[elt * Npar + i]; } }
 
 	// Computing alpha (A vérifier)
-	for (int j = 0; j < Npar; j++)
+	for (int j = 0; j < Npar; j++) {
 		for (int i = 0; i < Npar; i++) {
 			alpha[Npar * j + i] = 0;
-			for (int cursor = 0; cursor < Npnt; cursor++) alpha[Npar * j + i] += dydp[cursor * Npar + j] * inter[cursor * Npar + i]; // dydp' * inter : dydp'[i*Npnt + cursor]
+			for (int cursor = 0; cursor < Npnt; cursor++) { alpha[Npar * j + i] += dydp[cursor * Npar + j] * inter[cursor * Npar + i]; } // dydp' * inter : dydp'[i*Npnt + cursor]
 		}
+	}
 
 	// Computing beta
 	//float inter1[Npnt];
 	float* inter1 = (float*)malloc(Npnt * sizeof(float));
 
-	for (int elt = 0; elt < Npnt; elt++) inter1[elt] = weight_sq[elt] * delta_y[elt];
+	for (int elt = 0; elt < Npnt; elt++) { inter1[elt] = weight_sq[elt] * delta_y[elt]; }
 
 	for (int j = 0; j < Npar; j++) {
 		beta[j] = 0;
-		for (int cursor = 0; cursor < Npnt; cursor++) beta[j] += dydp[cursor * Npar + j] * inter1[cursor]; // dydp' * inter : dydp'[j*Npnt + cursor]
+		for (int cursor = 0; cursor < Npnt; cursor++) { beta[j] += dydp[cursor * Npar + j] * inter1[cursor]; } // dydp' * inter : dydp'[j*Npnt + cursor]
 	}
 
 	// Computing Chi_sq
 	float Chi_sq = 0.;
-	for (int elt = 0; elt < Npnt; elt++) Chi_sq += delta_y[elt] * inter1[elt];
+	for (int elt = 0; elt < Npnt; elt++) { Chi_sq += delta_y[elt] * inter1[elt]; }
 
 	// cleanup memory
 	free(delta_y);
@@ -117,11 +118,11 @@ void GaussianFit3D_Theta::inverse(float* MM, float* Minv)
 	float M1[Npar * Npar];
 
 	// Copy MM to M1
-	for (int i = 0; i < Npar * Npar; i++) M1[i] = MM[i];
+	for (int i = 0; i < Npar * Npar; i++) { M1[i] = MM[i]; }
 
 	// Initializatiion of identity matrix
 	float Mi1[Npar * Npar];
-	for (int i = 0; i < Npar * Npar; i++) Mi1[i] = 0.;
+	for (int i = 0; i < Npar * Npar; i++) { Mi1[i] = 0.; }
 	Mi1[0 * Npar + 0] = 1;
 	Mi1[1 * Npar + 1] = 1;
 	Mi1[2 * Npar + 2] = 1;
@@ -131,7 +132,7 @@ void GaussianFit3D_Theta::inverse(float* MM, float* Minv)
 	Mi1[6 * Npar + 6] = 1;
 
 	// Copy Mi1 to Minv
-	for (int i = 0; i < Npar * Npar; i++) Minv[i] = Mi1[i];
+	for (int i = 0; i < Npar * Npar; i++) { Minv[i] = Mi1[i]; }
 
 	for (int i = 0; i < Npar; i++) {
 		for (int j = 0; j < Npar; j++) {
@@ -140,30 +141,34 @@ void GaussianFit3D_Theta::inverse(float* MM, float* Minv)
 		}
 
 		// Copy M1 to MM
-		for (int index = 0; index < Npar * Npar; index++) MM[index] = M1[index];
+		for (int index = 0; index < Npar * Npar; index++) { MM[index] = M1[index]; }
 
 		// Copy Mi1 to Minv
-		for (int index = 0; index < Npar * Npar; index++) Minv[index] = Mi1[index];
+		for (int index = 0; index < Npar * Npar; index++) { Minv[index] = Mi1[index]; }
 
-		for (int k = 0; k < Npar; k++) // mise zéros de la colonne
-			if (k != i)
+		for (int k = 0; k < Npar; k++) { // mise zéros de la colonne
+			if (k != i) {
 				for (int j = 0; j < Npar; j++) {
 					M1[k * Npar + j] = MM[k * Npar + j] - MM[i * Npar + j] * MM[k * Npar + i];
 					Mi1[k * Npar + j] = Minv[k * Npar + j] - Minv[i * Npar + j] * MM[k * Npar + i];
 				}
+			}
+		}
 
 		// Copy M1 to MM
-		for (int index = 0; index < Npar * Npar; index++) MM[index] = M1[index];
+		for (int index = 0; index < Npar * Npar; index++) { MM[index] = M1[index]; }
 
 		// Copy Mi1 to Minv
-		for (int index = 0; index < Npar * Npar; index++) Minv[index] = Mi1[index];
+		for (int index = 0; index < Npar * Npar; index++) { Minv[index] = Mi1[index]; }
 	}
 }
 
 
 void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& sigmaY, float& angle, float& offset, float& RSS, int iterNum, unsigned short size)
 {
-	if (size % 2 == 0) size--; // Not present in GPU original file why ?
+	if (size % 2 == 0) {
+		size--; // Not present in GPU original file why ?
+	}
 
 	dimFit = size;
 	Npnt = dimFit * dimFit;
@@ -188,7 +193,7 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 		// Initialization of y_dat & t (A vérifier)
 		float max_intensity = -70000; // Not present in GPU original file why ?
 		float min_intensity = +70000; // Not present in GPU original file why ?
-		for (int jj = -dimFit / 2; jj <= dimFit / 2; jj++)
+		for (int jj = -dimFit / 2; jj <= dimFit / 2; jj++) {
 			for (int ii = -dimFit / 2; ii <= dimFit / 2; ii++) {
 				y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit] = (float)image[((int)x0 + ii) + ((int)y0 + jj) * sizeX];
 				t[((ii + dimFit / 2) + (jj + dimFit / 2) * dimFit) * 2] = (int)x0 + ii;
@@ -197,6 +202,7 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 				max_intensity = std::max(max_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]); // Not present in GPU original file why ?
 				min_intensity = std::min(min_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]); // Not present in GPU original file why ?
 			}
+		}
 
 		p[0] = max_intensity - min_intensity; // Not present in GPU original file why ?
 		p[6] = min_intensity;                 // Not present in GPU original file why ?
@@ -227,10 +233,10 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 		X2 = lm_matx(t/*IN*/, p/*IN*/, y_dat/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
 
 		float max_ = 0;
-		for (int ii = 0; ii < Npar; ii++) max_ = std::max(max_, abs(beta[ii]));
+		for (int ii = 0; ii < Npar; ii++) { max_ = std::max(max_, abs(beta[ii])); }
 
 		unsigned int stop = 0;
-		if (max_ < epsilon_1) stop = 1;
+		if (max_ < epsilon_1) { stop = 1; }
 
 		lambda = lambda_0;
 		X2_old = X2;
@@ -257,7 +263,7 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 			float delta_p[Npar] = {0, 0, 0, 0, 0, 0, 0};
 
 			// Copy alpha to inter
-			for (int ii = 0; ii < Npar * Npar; ii++) inter[ii] = alpha[ii];
+			for (int ii = 0; ii < Npar * Npar; ii++) { inter[ii] = alpha[ii]; }
 
 			inter[0 * Npar + 0] += lambda * alpha[0 * Npar + 0];
 			inter[1 * Npar + 1] += lambda * alpha[1 * Npar + 1];
@@ -269,26 +275,24 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 
 			inverse(inter, inter1);
 
-			for (int ii = 0; ii < Npar; ii++) { for (int cursor = 0; cursor < Npar; cursor++) delta_p[ii] += inter1[ii * Npar + cursor] * beta[cursor]; }
+			for (int ii = 0; ii < Npar; ii++) { for (int cursor = 0; cursor < Npar; cursor++) { delta_p[ii] += inter1[ii * Npar + cursor] * beta[cursor]; } }
 
 			for (int ii = 0; ii < Npar; ii++) {
 				p_try[ii] = p[ii] + delta_p[ii];
 				p_try[ii] = std::min(std::max(p_min[ii], p_try[ii]), p_max[ii]);
 			}
 
-			for (int ii = 0; ii < Npnt; ii++) delta_y[ii] = y_dat[ii] - PSF((float)t[ii * 2], (float)t[ii * 2 + 1], p_try[0], p_try[1], p_try[2], p_try[3], p_try[4], p_try[5], p_try[6]);
+			for (int ii = 0; ii < Npnt; ii++) { delta_y[ii] = y_dat[ii] - PSF((float)t[ii * 2], (float)t[ii * 2 + 1], p_try[0], p_try[1], p_try[2], p_try[3], p_try[4], p_try[5], p_try[6]); }
 
-			for (int ii = 0; ii < Npnt; ii++) // delta_y .* weight_sq
-				inter2[ii] = delta_y[ii] * weight_sq[ii];
+			for (int ii = 0; ii < Npnt; ii++) { inter2[ii] = delta_y[ii] * weight_sq[ii]; } // delta_y .* weight_sq
 
 			X2_try = 0;
-			for (int ii = 0; ii < Npnt; ii++) X2_try += delta_y[ii] * inter2[ii];
+			for (int ii = 0; ii < Npnt; ii++) { X2_try += delta_y[ii] * inter2[ii]; }
 
-			for (int ii = 0; ii < Npar; ii++) // lambda * delta_p + beta
-				inter3[ii] = lambda * delta_p[ii] + beta[ii];
+			for (int ii = 0; ii < Npar; ii++) { inter3[ii] = lambda * delta_p[ii] + beta[ii]; } // lambda * delta_p + beta
 
 			m = 0;
-			for (int ii = 0; ii < Npar; ii++) m += delta_p[ii] * inter3[ii];
+			for (int ii = 0; ii < Npar; ii++) { m += delta_p[ii] * inter3[ii]; }
 			m *= 2;
 
 			rho = (X2 - X2_try) / m;
@@ -314,18 +318,18 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 			}
 
 			max_ = 0;
-			for (int ii = 0; ii < Npar; ii++) max_ = std::max(max_, abs(delta_p[ii] / p[ii]));
+			for (int ii = 0; ii < Npar; ii++) { max_ = std::max(max_, abs(delta_p[ii] / p[ii])); }
 
-			if ((max_ < epsilon_2) && (iteration > 2)) stop = 1;
+			if ((max_ < epsilon_2) && (iteration > 2)) { stop = 1; }
 
-			if ((X2 / Npnt < epsilon_3) && (iteration > 2)) stop = 1;
+			if ((X2 / Npnt < epsilon_3) && (iteration > 2)) { stop = 1; }
 
 			max_ = 0;
-			for (int ii = 0; ii < Npar; ii++) max_ = std::max(max_, abs(beta[ii]));
+			for (int ii = 0; ii < Npar; ii++) { max_ = std::max(max_, abs(beta[ii])); }
 
-			if ((max_ < epsilon_1) && (iteration > 2)) stop = 1;
+			if ((max_ < epsilon_1) && (iteration > 2)) { stop = 1; }
 
-			if (iteration == iterNum) stop = 1;
+			if (iteration == iterNum) { stop = 1; }
 		}
 
 		// computing "y_dat" mean & "y_hat" mean
@@ -364,8 +368,8 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 		sigmaY = p[4] / sqrt(2.);
 		angle = p[5];
 		offset = p[6]/*iteration*/;
-		if (_isnan(R_sq)) RSS = static_cast<float>(0);
-		else RSS = R_sq;
+		if (_isnan(R_sq)) { RSS = static_cast<float>(0); }
+		else { RSS = R_sq; }
 
 		// cleanup memory
 		free(y_dat);

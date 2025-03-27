@@ -59,28 +59,29 @@ float CalibrationFit::lm_matx(float* Z/*IN*/, float* p/*IN*/, float* y_dat/*IN*/
 	}
 
 	float* inter = (float*)malloc(Npar * Npnt * sizeof(float));
-	for (int elt = 0; elt < Npnt; elt++) for (int i = 0; i < Npar; i++) inter[elt * Npar + i] = weight_sq[elt] * dydp[elt * Npar + i];
+	for (int elt = 0; elt < Npnt; elt++) { for (int i = 0; i < Npar; i++) { inter[elt * Npar + i] = weight_sq[elt] * dydp[elt * Npar + i]; } }
 
 	// Computing alpha (A vérifier)
-	for (int j = 0; j < Npar; j++)
+	for (int j = 0; j < Npar; j++) {
 		for (int i = 0; i < Npar; i++) {
 			alpha[Npar * j + i] = 0;
-			for (int cursor = 0; cursor < Npnt; cursor++) alpha[Npar * j + i] += dydp[cursor * Npar + j] * inter[cursor * Npar + i]; // dydp' * inter : dydp'[i*Npnt + cursor]
+			for (int cursor = 0; cursor < Npnt; cursor++) { alpha[Npar * j + i] += dydp[cursor * Npar + j] * inter[cursor * Npar + i]; } // dydp' * inter : dydp'[i*Npnt + cursor]
 		}
+	}
 
 	// Computing beta
 	//float inter1[Npnt];
 	float* inter1 = (float*)malloc(Npnt * sizeof(float));
-	for (int elt = 0; elt < Npnt; elt++) inter1[elt] = weight_sq[elt] * delta_y[elt];
+	for (int elt = 0; elt < Npnt; elt++) { inter1[elt] = weight_sq[elt] * delta_y[elt]; }
 
 	for (int j = 0; j < Npar; j++) {
 		beta[j] = 0;
-		for (int cursor = 0; cursor < Npnt; cursor++) beta[j] += dydp[cursor * Npar + j] * inter1[cursor]; // dydp' * inter : dydp'[j*Npnt + cursor]
+		for (int cursor = 0; cursor < Npnt; cursor++) { beta[j] += dydp[cursor * Npar + j] * inter1[cursor]; } // dydp' * inter : dydp'[j*Npnt + cursor]
 	}
 
 	// Computing Chi_sq
 	float Chi_sq = 0.;
-	for (int elt = 0; elt < Npnt; elt++) Chi_sq += delta_y[elt] * inter1[elt];
+	for (int elt = 0; elt < Npnt; elt++) { Chi_sq += delta_y[elt] * inter1[elt]; }
 
 	// cleanup memory
 	free(delta_y);
@@ -96,11 +97,11 @@ void CalibrationFit::inverse(float* MM, float* Minv)
 	float M1[Npar * Npar];
 
 	// Copy MM to M1
-	for (int i = 0; i < Npar * Npar; i++) M1[i] = MM[i];
+	for (int i = 0; i < Npar * Npar; i++) { M1[i] = MM[i]; }
 
 	// Initializatiion of identity matrix
 	float Mi1[Npar * Npar];
-	for (int i = 0; i < Npar * Npar; i++) Mi1[i] = 0.;
+	for (int i = 0; i < Npar * Npar; i++) { Mi1[i] = 0.; }
 	Mi1[0 * Npar + 0] = 1;
 	Mi1[1 * Npar + 1] = 1;
 	Mi1[2 * Npar + 2] = 1;
@@ -108,7 +109,7 @@ void CalibrationFit::inverse(float* MM, float* Minv)
 	Mi1[4 * Npar + 4] = 1;
 
 	// Copy Mi1 to Minv
-	for (int i = 0; i < Npar * Npar; i++) Minv[i] = Mi1[i];
+	for (int i = 0; i < Npar * Npar; i++) { Minv[i] = Mi1[i]; }
 
 	for (int i = 0; i < Npar; i++) {
 		for (int j = 0; j < Npar; j++) {
@@ -117,23 +118,25 @@ void CalibrationFit::inverse(float* MM, float* Minv)
 		}
 
 		// Copy M1 to MM
-		for (int index = 0; index < Npar * Npar; index++) MM[index] = M1[index];
+		for (int index = 0; index < Npar * Npar; index++) { MM[index] = M1[index]; }
 
 		// Copy Mi1 to Minv
-		for (int index = 0; index < Npar * Npar; index++) Minv[index] = Mi1[index];
+		for (int index = 0; index < Npar * Npar; index++) { Minv[index] = Mi1[index]; }
 
-		for (int k = 0; k < Npar; k++) // mise zéros de la colonne
-			if (k != i)
+		for (int k = 0; k < Npar; k++) { // mise zéros de la colonne
+			if (k != i) {
 				for (int j = 0; j < Npar; j++) {
 					M1[k * Npar + j] = MM[k * Npar + j] - MM[i * Npar + j] * MM[k * Npar + i];
 					Mi1[k * Npar + j] = Minv[k * Npar + j] - Minv[i * Npar + j] * MM[k * Npar + i];
 				}
+			}
+		}
 
 		// Copy M1 to MM
-		for (int index = 0; index < Npar * Npar; index++) MM[index] = M1[index];
+		for (int index = 0; index < Npar * Npar; index++) { MM[index] = M1[index]; }
 
 		// Copy Mi1 to Minv
-		for (int index = 0; index < Npar * Npar; index++) Minv[index] = Mi1[index];
+		for (int index = 0; index < Npar * Npar; index++) { Minv[index] = Mi1[index]; }
 	}
 }
 
@@ -147,9 +150,9 @@ float CalibrationFit::Run(float* sigma, float* Z, unsigned short pointsNbr, unsi
 	float zMin = +999999;
 	float zMax = -999999;
 	for (int i = 0; i < pointsNbr; i++) {
-		if (zMin > Z[i]) zMin = Z[i];
+		if (zMin > Z[i]) { zMin = Z[i]; }
 
-		if (zMax < Z[i]) zMax = Z[i];
+		if (zMax < Z[i]) { zMax = Z[i]; }
 	}
 
 	zMax += 2.0;
@@ -187,10 +190,10 @@ float CalibrationFit::Run(float* sigma, float* Z, unsigned short pointsNbr, unsi
 	X2 = lm_matx(Z/*IN*/, p/*IN*/, sigma/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
 
 	float max_ = 0;
-	for (int ii = 0; ii < Npar; ii++) max_ = std::max(max_, abs(beta[ii]));
+	for (int ii = 0; ii < Npar; ii++) { max_ = std::max(max_, abs(beta[ii])); }
 
 	unsigned int stop = 0;
-	if (max_ < epsilon_1) stop = 1;
+	if (max_ < epsilon_1) { stop = 1; }
 
 	lambda = lambda_0;
 	X2_old = X2;
@@ -217,7 +220,7 @@ float CalibrationFit::Run(float* sigma, float* Z, unsigned short pointsNbr, unsi
 		float delta_p[Npar] = {0, 0, 0, 0, 0};
 
 		// Copy alpha to inter
-		for (int ii = 0; ii < Npar * Npar; ii++) inter[ii] = alpha[ii];
+		for (int ii = 0; ii < Npar * Npar; ii++) { inter[ii] = alpha[ii]; }
 
 		inter[0 * Npar + 0] += lambda * alpha[0 * Npar + 0];
 		inter[1 * Npar + 1] += lambda * alpha[1 * Npar + 1];
@@ -227,26 +230,24 @@ float CalibrationFit::Run(float* sigma, float* Z, unsigned short pointsNbr, unsi
 
 		inverse(inter, inter1);
 
-		for (int ii = 0; ii < Npar; ii++) { for (int cursor = 0; cursor < Npar; cursor++) delta_p[ii] += inter1[ii * Npar + cursor] * beta[cursor]; }
+		for (int ii = 0; ii < Npar; ii++) { for (int cursor = 0; cursor < Npar; cursor++) { delta_p[ii] += inter1[ii * Npar + cursor] * beta[cursor]; } }
 
 		for (int ii = 0; ii < Npar; ii++) {
 			p_try[ii] = p[ii] + delta_p[ii];
 			p_try[ii] = std::min(std::max(p_min[ii], p_try[ii]), p_max[ii]);
 		}
 
-		for (int ii = 0; ii < Npnt; ii++) delta_y[ii] = sigma[ii] - sigmaFunc(Z[ii], p_try[0], p_try[1], p_try[2], p_try[3], p_try[4]);
+		for (int ii = 0; ii < Npnt; ii++) { delta_y[ii] = sigma[ii] - sigmaFunc(Z[ii], p_try[0], p_try[1], p_try[2], p_try[3], p_try[4]); }
 
-		for (int ii = 0; ii < Npnt; ii++) // delta_y .* weight_sq
-			inter2[ii] = delta_y[ii] * weight_sq[ii];
+		for (int ii = 0; ii < Npnt; ii++) { inter2[ii] = delta_y[ii] * weight_sq[ii]; } // delta_y .* weight_sq
 
 		X2_try = 0;
-		for (int ii = 0; ii < Npnt; ii++) X2_try += delta_y[ii] * inter2[ii];
+		for (int ii = 0; ii < Npnt; ii++) { X2_try += delta_y[ii] * inter2[ii]; }
 
-		for (int ii = 0; ii < Npar; ii++) // lambda * delta_p + beta
-			inter3[ii] = lambda * delta_p[ii] + beta[ii];
+		for (int ii = 0; ii < Npar; ii++) { inter3[ii] = lambda * delta_p[ii] + beta[ii]; } // lambda * delta_p + beta
 
 		m = 0;
-		for (int ii = 0; ii < Npar; ii++) m += delta_p[ii] * inter3[ii];
+		for (int ii = 0; ii < Npar; ii++) { m += delta_p[ii] * inter3[ii]; }
 		m *= 2;
 
 		rho = (X2 - X2_try) / m;
@@ -270,18 +271,18 @@ float CalibrationFit::Run(float* sigma, float* Z, unsigned short pointsNbr, unsi
 		}
 
 		max_ = 0;
-		for (int ii = 0; ii < Npar; ii++) max_ = std::max(max_, abs(delta_p[ii] / p[ii]));
+		for (int ii = 0; ii < Npar; ii++) { max_ = std::max(max_, abs(delta_p[ii] / p[ii])); }
 
-		if ((max_ < epsilon_2) && (iteration > 2)) stop = 1;
+		if ((max_ < epsilon_2) && (iteration > 2)) { stop = 1; }
 
-		if ((X2 / Npnt < epsilon_3) && (iteration > 2)) stop = 1;
+		if ((X2 / Npnt < epsilon_3) && (iteration > 2)) { stop = 1; }
 
 		max_ = 0;
-		for (int ii = 0; ii < Npar; ii++) max_ = std::max(max_, abs(beta[ii]));
+		for (int ii = 0; ii < Npar; ii++) { max_ = std::max(max_, abs(beta[ii])); }
 
-		if ((max_ < epsilon_1) && (iteration > 2)) stop = 1;
+		if ((max_ < epsilon_1) && (iteration > 2)) { stop = 1; }
 
-		if (iteration == iterNum) stop = 1;
+		if (iteration == iterNum) { stop = 1; }
 	}
 
 	// computing "y_dat" mean & "y_hat" mean
@@ -320,8 +321,8 @@ float CalibrationFit::Run(float* sigma, float* Z, unsigned short pointsNbr, unsi
 	C4 = p[4];
 
 	float RSS;
-	if (_isnan((double)R_sq)) RSS = (float)0;
-	else RSS = R_sq;
+	if (_isnan((double)R_sq)) { RSS = (float)0; }
+	else { RSS = R_sq; }
 
 	// cleanup memory
 	free(weight);

@@ -88,12 +88,12 @@ __device__ float lm_matx_7x7(/*unsigned int* tIN,*/ float* p/*IN*/, float* y_dat
 	for (int j = 0; j < Npar; j++) {
 		for (int i = 0; i < Npar; i++) {
 			alpha[Npar * j + i] = 0;
-			for (int cursor = 0; cursor < Npnt; cursor++) alpha[Npar * j + i] += dydp[cursor * Npar + j] * dydp[cursor * Npar + i]; // dydp' * inter : dydp'[i*Npnt + cursor]
+			for (int cursor = 0; cursor < Npnt; cursor++) { alpha[Npar * j + i] += dydp[cursor * Npar + j] * dydp[cursor * Npar + i]; } // dydp' * inter : dydp'[i*Npnt + cursor]
 		}
 
 		// Computing beta
 		beta[j] = 0;
-		for (int cursor = 0; cursor < Npnt; cursor++) beta[j] += dydp[cursor * Npar + j] * delta_y[cursor]; // dydp' * inter : dydp'[j*Npnt + cursor]
+		for (int cursor = 0; cursor < Npnt; cursor++) { beta[j] += dydp[cursor * Npar + j] * delta_y[cursor]; } // dydp' * inter : dydp'[j*Npnt + cursor]
 	}
 
 	return Chi_sq;
@@ -107,12 +107,12 @@ __device__ void inverse_7x7(float* MM, float* Minv)
 	float M1[Npar * Npar];
 
 	// Copy MM to M1
-	for (int i = 0; i < Npar * Npar; i++) M1[i] = MM[i];
+	for (int i = 0; i < Npar * Npar; i++) { M1[i] = MM[i]; }
 	//M1[i] = MM[shift_ + (id + i * 16)];
 
 	// Initializatiion of identity matrix
 	float Mi1[Npar * Npar];
-	for (int i = 0; i < Npar * Npar; i++) Mi1[i] = 0.;
+	for (int i = 0; i < Npar * Npar; i++) { Mi1[i] = 0.; }
 	Mi1[0 * Npar + 0] = 1;
 	Mi1[1 * Npar + 1] = 1;
 	Mi1[2 * Npar + 2] = 1;
@@ -121,7 +121,7 @@ __device__ void inverse_7x7(float* MM, float* Minv)
 	Mi1[5 * Npar + 5] = 1;
 
 	// Copy Mi1 to Minv
-	for (int i = 0; i < Npar * Npar; i++) Minv[i] = Mi1[i];
+	for (int i = 0; i < Npar * Npar; i++) { Minv[i] = Mi1[i]; }
 
 	for (int i = 0; i < Npar; i++) {
 		for (int j = 0; j < Npar; j++) {
@@ -138,14 +138,16 @@ __device__ void inverse_7x7(float* MM, float* Minv)
 			Minv[index] = Mi1[index];
 		}
 
-		for (int k = 0; k < Npar; k++) // mise zéros de la colonne
-			if (k != i)
+		for (int k = 0; k < Npar; k++) { // mise zéros de la colonne
+			if (k != i) {
 				for (int j = 0; j < Npar; j++) {
 					M1[k * Npar + j] = MM[k * Npar + j] - MM[i * Npar + j] * MM[k * Npar + i];
 					Mi1[k * Npar + j] = Minv[k * Npar + j] - Minv[i * Npar + j] * MM[k * Npar + i];
 					//M1[k*Npar+j] = MM[shift_ + (id + (k*Npar+j) * 16)] - MM[shift_ + (id + (i*Npar+j) * 16)] * MM[shift_ + (id + (k*Npar+i) * 16)];
 					//Mi1[k*Npar+j] = Minv[k*Npar+j] - Minv[i*Npar+j] * MM[shift_ + (id + (k*Npar+i) * 16)];
 				}
+			}
+		}
 
 		// Copy M1 to MM & Copy Mi1 to Minv
 		for (int index = 0; index < Npar * Npar; index++) {
@@ -184,13 +186,14 @@ __global__ void GPU3DFitting_7x7(unsigned int nbPoints, float* pointsList, unsig
 				// Initialization of y_dat & t
 				float max_intensity = -70000;
 				float min_intensity = +70000;
-				for (int jj = -dimFit / 2; jj <= dimFit / 2; jj++)
+				for (int jj = -dimFit / 2; jj <= dimFit / 2; jj++) {
 					for (int ii = -dimFit / 2; ii <= dimFit / 2; ii++) {
 						y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit] = (float)data[idImage * imageSize + (x + ii) + (y + jj) * WIDTH];
 
 						max_intensity = fmaxf(max_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]);
 						min_intensity = fminf(min_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]);
 					}
+				}
 
 				p[0] = max_intensity - min_intensity;
 				p[5] = min_intensity;
@@ -206,10 +209,10 @@ __global__ void GPU3DFitting_7x7(unsigned int nbPoints, float* pointsList, unsig
 
 				float max__;
 				float max_ = 0;
-				for (int ii = 0; ii < Npar; ii++) max_ = fmaxf(max_, fabsf(beta[ii]));
+				for (int ii = 0; ii < Npar; ii++) { max_ = fmaxf(max_, fabsf(beta[ii])); }
 
 				unsigned int stop = 0;
-				if (max_ < epsilon_1) stop = 1;
+				if (max_ < epsilon_1) { stop = 1; }
 
 				lambda = lambda_0;
 				X2_old = X2;
@@ -237,7 +240,7 @@ __global__ void GPU3DFitting_7x7(unsigned int nbPoints, float* pointsList, unsig
 					float delta_p[Npar] = {0., 0., 0., 0., 0., 0.};
 
 					// Copy alpha to inter
-					for (int ii = 0; ii < Npar * Npar; ii++) inter[ii] = alpha[ii];
+					for (int ii = 0; ii < Npar * Npar; ii++) { inter[ii] = alpha[ii]; }
 
 					inter[0 * Npar + 0] += lambda * alpha[0 * Npar + 0];
 					inter[1 * Npar + 1] += lambda * alpha[1 * Npar + 1];
@@ -251,7 +254,7 @@ __global__ void GPU3DFitting_7x7(unsigned int nbPoints, float* pointsList, unsig
 
 					m = 0;
 					for (int ii = 0; ii < Npar; ii++) {
-						for (int cursor = 0; cursor < Npar; cursor++) delta_p[ii] += inter1[ii * Npar + cursor] * beta[cursor];
+						for (int cursor = 0; cursor < Npar; cursor++) { delta_p[ii] += inter1[ii * Npar + cursor] * beta[cursor]; }
 
 						// Computing p_try
 						p_try[ii] = fminf(fmaxf(p_min[ii], p[ii] + delta_p[ii]), p_max[ii]);
@@ -273,7 +276,9 @@ __global__ void GPU3DFitting_7x7(unsigned int nbPoints, float* pointsList, unsig
 					if (rho > epsilon_4) // it IS significantly better
 					{
 						X2_old = X2;
-						for (int ii = 0; ii < Npar; ii++) p[ii] = p_try[ii]; // accept p_try
+						for (int ii = 0; ii < Npar; ii++) {
+							p[ii] = p_try[ii]; // accept p_try
+						}
 
 						X2 = lm_matx_7x7(p/*IN*/, y_dat/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/, angle);
 
@@ -292,9 +297,9 @@ __global__ void GPU3DFitting_7x7(unsigned int nbPoints, float* pointsList, unsig
 						max__ = fmaxf(max__, fabsf(beta[ii]));
 					}
 
-					if (((max_ < epsilon_2) || (X2 / Npnt < epsilon_3) || (max__ < epsilon_1)) && (iteration > 2)) stop = 1;
+					if (((max_ < epsilon_2) || (X2 / Npnt < epsilon_3) || (max__ < epsilon_1)) && (iteration > 2)) { stop = 1; }
 
-					if (iteration == iterNum) stop = 1;
+					if (iteration == iterNum) { stop = 1; }
 				}
 
 				// Computing statistics
@@ -364,8 +369,8 @@ __global__ void GPU3DFitting_7x7(unsigned int nbPoints, float* pointsList, unsig
 						}
 					}
 
-					if (Zerror < 0.4) pointsList[NbSegParams * index + 10] = Zval;
-					else pointsList[NbSegParams * index + 10] = 999999;
+					if (Zerror < 0.4) { pointsList[NbSegParams * index + 10] = Zval; }
+					else { pointsList[NbSegParams * index + 10] = 999999; }
 				}
 
 
@@ -383,8 +388,8 @@ __global__ void GPU3DFitting_7x7(unsigned int nbPoints, float* pointsList, unsig
 				pointsList[NbSegParams * index + 5] = p[0];
 				pointsList[NbSegParams * index + 6] = p[5];
 
-				if (isnan(R_sq) || (isinf(R_sq))) pointsList[NbSegParams * index + 7] = (float)0;
-				else pointsList[NbSegParams * index + 7] = R_sq;
+				if (isnan(R_sq) || (isinf(R_sq))) { pointsList[NbSegParams * index + 7] = (float)0; }
+				else { pointsList[NbSegParams * index + 7] = R_sq; }
 
 				pointsList[NbSegParams * index + 11] = 0.;
 				pointsList[NbSegParams * index + 12] = 0.;

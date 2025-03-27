@@ -118,7 +118,7 @@ wchar_t* stringReplace(wchar_t s, wchar_t d, wchar_t* st)
 {
 	wchar_t* ptrSt = st;
 	while (*ptrSt != '\0') {
-		if (*ptrSt == s) *ptrSt = d;
+		if (*ptrSt == s) { *ptrSt = d; }
 		ptrSt++;
 	}
 	return (st);
@@ -127,7 +127,7 @@ wchar_t* stringReplace(wchar_t s, wchar_t d, wchar_t* st)
 
 unsigned long twoToThe(unsigned long val)
 {
-	if (val == 0) return (1);
+	if (val == 0) { return (1); }
 	return (((unsigned long)1) << val);
 }
 
@@ -139,7 +139,7 @@ double distance2(double X1, double Y1, double X2, double Y2)
 {
 	double res;
 	res = (X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2);
-	if (res < 0) return (0.);
+	if (res < 0) { return (0.); }
 	return (res);
 }
 
@@ -147,22 +147,22 @@ double distance2(double X1, double Y1, double Z1, double X2, double Y2, double Z
 {
 	double res;
 	res = (X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2) + (Z1 - Z2) * (Z1 - Z2);
-	if (res < 0) return (0.);
+	if (res < 0) { return (0.); }
 	return (res);
 }
 
 inline long turnClockwiseX(const long x, const long y)
 {
-	if (x != 0) return (0);
-	else if (y == 1) return (-1);
-	else return (1);
+	if (x != 0) { return (0); }
+	else if (y == 1) { return (-1); }
+	else { return (1); }
 }
 
 inline long turnClockwiseY(const long x, const long y)
 {
-	if (y != 0) return (0);
-	else if (x == 1) return (1);
-	else return (-1);
+	if (y != 0) { return (0); }
+	else if (x == 1) { return (1); }
+	else { return (-1); }
 }
 
 inline void turnClockwise(long& x, long& y)
@@ -214,10 +214,10 @@ inline void turnAntiClockwise(long& x, long& y)
 
 bool isOutside(USrtArray& mainSegmentation, const long structure, const long x, const long y, const long xSize, const long ySize)
 {
-	if (x < 0) return (true);
-	if (y < 0) return (true);
-	if (x >= xSize) return (true);
-	if (y >= ySize) return (true);
+	if (x < 0) { return (true); }
+	if (y < 0) { return (true); }
+	if (x >= xSize) { return (true); }
+	if (y >= ySize) { return (true); }
 	return (mainSegmentation.data[x * ySize + y] != structure);
 }
 

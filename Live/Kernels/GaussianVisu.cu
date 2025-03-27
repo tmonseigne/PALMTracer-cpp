@@ -36,8 +36,13 @@ __global__ void GaussianVisu_kernel(double* gaussianPointsList, double* pointsLi
 		float A = 10000 / (2 * 3.14 * sigma * sigma); //photonsNbr / (2 * 3.14 * sigma * sigma);10000 / (2 * 3.14 * sigma * sigma)
 
 		/*if ((int)pointsList[index * NbSegParams + 3] != 0)*/
-		if (((unsigned int)y0 >= sizeRegH) && ((unsigned int)y0 <= (height * zoom) - 1 - sizeRegH) && ((unsigned int)x0 >= sizeRegH) && ((unsigned int)x0 <= (width * zoom) - 1 - sizeRegH))
-			for (int j = -sizeRegH; j <= sizeRegH; j++) for (int i = -sizeRegH; i <= sizeRegH; i++) gaussianPointsList[index * sizeReg * sizeReg + (i + sizeRegH) + (j + sizeRegH) * sizeReg] = GaussianFunction_2D(x0 - (int)(x0 - i), y0 - (int)(y0 - j), A, sigma); //1000.0f/*I0*/, 1.0f/*sigma*/);
+		if (((unsigned int)y0 >= sizeRegH) && ((unsigned int)y0 <= (height * zoom) - 1 - sizeRegH) && ((unsigned int)x0 >= sizeRegH) && ((unsigned int)x0 <= (width * zoom) - 1 - sizeRegH)) {
+			for (int j = -sizeRegH; j <= sizeRegH; j++) {
+				for (int i = -sizeRegH; i <= sizeRegH; i++) {
+					gaussianPointsList[index * sizeReg * sizeReg + (i + sizeRegH) + (j + sizeRegH) * sizeReg] = GaussianFunction_2D(x0 - (int)(x0 - i), y0 - (int)(y0 - j), A, sigma); //1000.0f/*I0*/, 1.0f/*sigma*/);
+				}
+			}
+		}
 	}
 }
 

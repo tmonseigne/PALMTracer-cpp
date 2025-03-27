@@ -32,7 +32,7 @@ Delete all objets Node.
 ********************************************************************************************************************/
 TimeNodes::~TimeNodes()
 {
-	for (int i = 0; i < nbNodes; i++) delete tabNodes[i];
+	for (int i = 0; i < nbNodes; i++) { delete tabNodes[i]; }
 	delete [] tabNodes;
 }
 
@@ -48,13 +48,16 @@ int TimeNodes::linkNeighborsPresent()
 {
 	long i, j;
 
-	for (i = 0; i < nbNodes; i++)
-		for (j = 0; j < nbNodes; j++)
-			if (i != j)
+	for (i = 0; i < nbNodes; i++) {
+		for (j = 0; j < nbNodes; j++) {
+			if (i != j) {
 				if (tabNodes[i]->distance(tabNodes[j]) < publicParameters->distMaxNeighbour) {
 					tabNodes[i]->neighborsPresent = new ChainNeighbor(tabNodes[j], tabNodes[i]->neighborsPresent, publicParameters);
 					tabNodes[i]->neighborsPresentCount++;
 				}
+			}
+		}
+	}
 
 	return (RET_OK);
 }
@@ -68,14 +71,16 @@ int TimeNodes::linkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes)
 {
 	long presentNode, futureNode;
 
-	for (presentNode = 0; presentNode < nbNodes; presentNode++)
-		for (futureNode = 0; futureNode < futureTimeNodes.nbNodes; futureNode++)
+	for (presentNode = 0; presentNode < nbNodes; presentNode++) {
+		for (futureNode = 0; futureNode < futureTimeNodes.nbNodes; futureNode++) {
 			if (tabNodes[presentNode]->distance(futureTimeNodes.tabNodes[futureNode]) < publicParameters->distMaxPastAndFuture) {
 				tabNodes[presentNode]->neighborsFuture = new ChainNeighbor(futureTimeNodes.tabNodes[futureNode], tabNodes[presentNode]->neighborsFuture, publicParameters);
 				tabNodes[presentNode]->neighborsFutureCount++;
 				futureTimeNodes.tabNodes[futureNode]->neighborsPast = new ChainNeighbor(tabNodes[presentNode], futureTimeNodes.tabNodes[futureNode]->neighborsPast, publicParameters);
 				futureTimeNodes.tabNodes[futureNode]->neighborsPastCount++;
 			}
+		}
+	}
 
 	return (RET_OK);
 }
@@ -88,14 +93,16 @@ int TimeNodes::linkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes)
 {
 	long presentNode, futureNode;
 
-	for (presentNode = 0; presentNode < nbNodes; presentNode++)
-		for (futureNode = 0; futureNode < futureTimeNodes.nbNodes; futureNode++)
+	for (presentNode = 0; presentNode < nbNodes; presentNode++) {
+		for (futureNode = 0; futureNode < futureTimeNodes.nbNodes; futureNode++) {
 			if (tabNodes[presentNode]->distance(futureTimeNodes.tabNodes[futureNode]) < publicParameters->distMaxPastAndFuture) {
 				tabNodes[presentNode]->neighborsBlinkFuture = new ChainNeighbor(futureTimeNodes.tabNodes[futureNode], tabNodes[presentNode]->neighborsBlinkFuture, publicParameters);
 				tabNodes[presentNode]->neighborsBlinkFutureCount++;
 				futureTimeNodes.tabNodes[futureNode]->neighborsBlinkPast = new ChainNeighbor(tabNodes[presentNode], futureTimeNodes.tabNodes[futureNode]->neighborsBlinkPast, publicParameters);
 				futureTimeNodes.tabNodes[futureNode]->neighborsBlinkPastCount++;
 			}
+		}
+	}
 
 	return (RET_OK);
 }
@@ -107,9 +114,9 @@ int TimeNodes::sortByIntensityAllNeighbors()
 {
 	int ret;
 	for (int i = 0; i < nbNodes; i++) {
-		if ((ret = tabNodes[i]->sortByIntersityNeighbors(&(tabNodes[i]->neighborsPast))) < 0) return (ret);
-		if ((ret = tabNodes[i]->sortByIntersityNeighbors(&(tabNodes[i]->neighborsPresent))) < 0) return (ret);
-		if ((ret = tabNodes[i]->sortByIntersityNeighbors(&(tabNodes[i]->neighborsFuture))) < 0) return (ret);
+		if ((ret = tabNodes[i]->sortByIntersityNeighbors(&(tabNodes[i]->neighborsPast))) < 0) { return (ret); }
+		if ((ret = tabNodes[i]->sortByIntersityNeighbors(&(tabNodes[i]->neighborsPresent))) < 0) { return (ret); }
+		if ((ret = tabNodes[i]->sortByIntersityNeighbors(&(tabNodes[i]->neighborsFuture))) < 0) { return (ret); }
 	}
 	return (RET_OK);
 }
@@ -118,4 +125,4 @@ int TimeNodes::sortByIntensityAllNeighbors()
 /********************************************************************************************************************
 checkLinksHomogeneity() check all the connection to see the system homogeneity
 ********************************************************************************************************************/
-void TimeNodes::checkLinksHomogeneity(const wchar_t* st) { for (int i = 0; i < nbNodes; i++) tabNodes[i]->checkLinksHomogeneity(st); }
+void TimeNodes::checkLinksHomogeneity(const wchar_t* st) { for (int i = 0; i < nbNodes; i++) { tabNodes[i]->checkLinksHomogeneity(st); } }

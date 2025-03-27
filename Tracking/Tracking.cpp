@@ -6,10 +6,10 @@ void autoCompleteFilename(wchar_t* filename, wchar_t* filenameFolder)
 {
 	wchar_t buf[1024];
 
-	if (*filename == L'\0') return;
+	if (*filename == L'\0') { return; }
 	//test if the folder in embedded in the filename
 	long j, i, k;
-	for (i = 0; (filename[i] != L'\0') && (filename[i] != L':') && (filename[i] != L'\\'); i++);
+	for (i = 0; (filename[i] != L'\0') && (filename[i] != L':') && (filename[i] != L'\\'); i++) { ; }
 	if (filename[i] == L'\0') { // no folder in embedded in the filename
 
 		// test if filenameFolder contain a file
@@ -20,7 +20,7 @@ void autoCompleteFilename(wchar_t* filename, wchar_t* filenameFolder)
 				lastSlash = j;
 				lastPoint = -1;
 			}
-			if (filenameFolder[j] == L'.') lastPoint = j;
+			if (filenameFolder[j] == L'.') { lastPoint = j; }
 		}
 		if (lastSlash == -1) { // nothing to do, filename is up-to-date
 			return;
@@ -52,7 +52,7 @@ _declspec(dllexport) long _stdcall Tracking(/*wchar_t* statFile, wchar_t* folder
 	publicParameters->statFile[0] = L'\0';
 	publicParameters->fileResASCII[0] = L'\0';
 
-	if (publicParameters->fileResASCII[0] != L'\0') autoCompleteFilename(publicParameters->fileResASCII, publicParameters->folderOut);
+	if (publicParameters->fileResASCII[0] != L'\0') { autoCompleteFilename(publicParameters->fileResASCII, publicParameters->folderOut); }
 
 	publicParameters->nbDim = 2;
 	publicParameters->pointsList = pointsList;
@@ -86,17 +86,17 @@ _declspec(dllexport) long _stdcall Tracking(/*wchar_t* statFile, wchar_t* folder
 
 	float begin = clock();
 
-	if ((ret = tabTimes->initialisation()) < 0) return (ret);
+	if ((ret = tabTimes->initialisation()) < 0) { return (ret); }
 
 	float end = clock();
 	begin = clock();
 
-	if ((ret = tabTimes->runModel()) < 0) return (ret);
+	if ((ret = tabTimes->runModel()) < 0) { return (ret); }
 
 	end = clock();
 	begin = clock();
 
-	if ((ret = tabTimes->giveResult()) < 0) return (ret);
+	if ((ret = tabTimes->giveResult()) < 0) { return (ret); }
 
 	end = clock();
 
@@ -123,7 +123,7 @@ _declspec(dllexport) long _stdcall tracking_30(/*wchar_t* statFile, wchar_t* fol
 	publicParameters->statFile[0] = L'\0';
 	publicParameters->fileResASCII[0] = L'\0';
 
-	if (publicParameters->fileResASCII[0] != L'\0') autoCompleteFilename(publicParameters->fileResASCII, publicParameters->folderOut);
+	if (publicParameters->fileResASCII[0] != L'\0') { autoCompleteFilename(publicParameters->fileResASCII, publicParameters->folderOut); }
 
 	publicParameters->nbDim = 2;
 	publicParameters->pointsList = pointsList;
@@ -157,18 +157,18 @@ _declspec(dllexport) long _stdcall tracking_30(/*wchar_t* statFile, wchar_t* fol
 
 	float begin = clock();
 
-	if ((ret = tabTimes->initialisation()) < 0) return (ret);
+	if ((ret = tabTimes->initialisation()) < 0) { return (ret); }
 
 	float end = clock();
 
 	begin = clock();
 
-	if ((ret = tabTimes->runModel()) < 0) return (ret);
+	if ((ret = tabTimes->runModel()) < 0) { return (ret); }
 
 	end = clock();
 	begin = clock();
 
-	if ((ret = tabTimes->giveResult()) < 0) return (ret);
+	if ((ret = tabTimes->giveResult()) < 0) { return (ret); }
 
 	end = clock();
 

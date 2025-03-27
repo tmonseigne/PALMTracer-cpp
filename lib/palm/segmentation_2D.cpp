@@ -27,7 +27,7 @@ void Segment2D::desalloc()
 		ptr = ptr->next;
 		delete headInfo;
 	}
-	if (tabInfo != NULL) delete [] tabInfo;
+	if (tabInfo != NULL) { delete [] tabInfo; }
 	tabInfo = NULL;
 	nbInfoStruct = 0;
 	headInfo = NULL;
@@ -58,7 +58,7 @@ int Segment2D::alloc(unsigned long nbStruct)
 	desalloc();
 
 	tabInfo = new InfoStruct2D*[nbStruct + 1];
-	if (tabInfo == NULL) return (S_ALLOC_ERR);
+	if (tabInfo == NULL) { return (S_ALLOC_ERR); }
 
 
 	if (nbStruct > 0) {
@@ -70,7 +70,7 @@ int Segment2D::alloc(unsigned long nbStruct)
 		for (ind = 2; ind <= nbStruct; ind++) {
 			ptr->next = new InfoStruct2D(ind);
 			tabInfo[ind] = ptr->next;
-			if (ptr->next == NULL) return (S_ALLOC_ERR);
+			if (ptr->next == NULL) { return (S_ALLOC_ERR); }
 			ptr = ptr->next;
 		}
 	}
@@ -97,33 +97,29 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 	char* tabBound = NULL;
 	if (useParam[12] == 1) {
 		tabBound = new char[nbInfoStruct + 1];
-		for (i = 0; i < (long)(nbInfoStruct + 1); i++) tabBound[i] = 0;
+		for (i = 0; i < (long)(nbInfoStruct + 1); i++) { tabBound[i] = 0; }
 		for (i = 0; i < seg.size(0); i++) {
-			if (seg.data[i * sizeDataY] != 0) tabBound[seg.data[i * sizeDataY]] = 1;
-			if (seg.data[i * sizeDataY + seg.size(1) - 1] != 0) tabBound[seg.data[i * sizeDataY + seg.size(1) - 1]] = 1;
+			if (seg.data[i * sizeDataY] != 0) { tabBound[seg.data[i * sizeDataY]] = 1; }
+			if (seg.data[i * sizeDataY + seg.size(1) - 1] != 0) { tabBound[seg.data[i * sizeDataY + seg.size(1) - 1]] = 1; }
 		}
 		for (i = 1; i < seg.size(1) - 1; i++) {
-			if (seg.data[i] != 0) tabBound[seg.data[i]] = 1;
-			if (seg.data[(seg.size(0) - 1) * sizeDataY + i] != 0) tabBound[seg.data[(seg.size(0) - 1) * sizeDataY + i]] = 1;
+			if (seg.data[i] != 0) { tabBound[seg.data[i]] = 1; }
+			if (seg.data[(seg.size(0) - 1) * sizeDataY + i] != 0) { tabBound[seg.data[(seg.size(0) - 1) * sizeDataY + i]] = 1; }
 		}
 	}
 
 	while (ptr != NULL) {
 		ind++;
 		unselected = false;
-		if ((useParam[0] == 1) && (ptr->data.surf <= param[0])) unselected = true;                       //minSurf
-		else if ((useParam[1] == 1) && (ptr->data.surf >= param[1])) unselected = true;                  //maxSurf
-		else if ((useParam[2] == 1) && (ptr->data.mean * ptr->data.surf <= param[2])) unselected = true; //minInten
-		else if ((useParam[3] == 1) && (ptr->data.mean * ptr->data.surf >= param[3])) unselected = true; //maxInten
-		else if ((useParam[4] == 1) && (ptr->data.max.val <= param[4])) unselected = true;               //minMaxi
-		else if ((useParam[5] == 1) && (ptr->data.max.val >= param[5])) unselected = true;               //maxMaxi
-		else if (useParam[7] == 1) {
-			if (min(ptr->data.sigma.x, ptr->data.sigma.y) / max(ptr->data.sigma.x, ptr->data.sigma.y) >= param[7]) unselected = true; //minMorphParam
-		}
-		else if (useParam[8] == 1) {
-			if (min(ptr->data.sigma.x, ptr->data.sigma.y) / max(ptr->data.sigma.x, ptr->data.sigma.y) <= param[8]) unselected = true; //maxMorphParam
-		}
-		else if (useParam[12] == 1) if (tabBound[ind] == 1) unselected = true; //no struct on boundaries
+		if ((useParam[0] == 1) && (ptr->data.surf <= param[0])) { unselected = true; }                                                                               //minSurf
+		else if ((useParam[1] == 1) && (ptr->data.surf >= param[1])) { unselected = true; }                                                                          //maxSurf
+		else if ((useParam[2] == 1) && (ptr->data.mean * ptr->data.surf <= param[2])) { unselected = true; }                                                         //minInten
+		else if ((useParam[3] == 1) && (ptr->data.mean * ptr->data.surf >= param[3])) { unselected = true; }                                                         //maxInten
+		else if ((useParam[4] == 1) && (ptr->data.max.val <= param[4])) { unselected = true; }                                                                       //minMaxi
+		else if ((useParam[5] == 1) && (ptr->data.max.val >= param[5])) { unselected = true; }                                                                       //maxMaxi
+		else if (useParam[7] == 1) { if (min(ptr->data.sigma.x, ptr->data.sigma.y) / max(ptr->data.sigma.x, ptr->data.sigma.y) >= param[7]) { unselected = true; } } //minMorphParam
+		else if (useParam[8] == 1) { if (min(ptr->data.sigma.x, ptr->data.sigma.y) / max(ptr->data.sigma.x, ptr->data.sigma.y) <= param[8]) { unselected = true; } } //maxMorphParam
+		else if (useParam[12] == 1) { if (tabBound[ind] == 1) { unselected = true; } }                                                                               //no struct on boundaries
 		if (unselected) {
 			if (ptrOld == NULL) {
 				headInfo = ptr->next;
@@ -143,7 +139,7 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 			ptr = ptr->next;
 		}
 	}
-	if (useParam[12] == 1) delete [] tabBound;
+	if (useParam[12] == 1) { delete [] tabBound; }
 
 
 	if (useParam[6] == 1) {
@@ -153,11 +149,12 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 		while (ptr != NULL) {
 			ind++;
 			unselected = false;
-			for (i = 1; (i <= nbInfoStructOld) && !unselected; i++)
+			for (i = 1; (i <= nbInfoStructOld) && !unselected; i++) {
 				if (tabInfo[i] != NULL) {
 					double d = sqrt((double)((ptr->data.max.x - tabInfo[i]->data.max.x) * (ptr->data.max.x - tabInfo[i]->data.max.x) + (ptr->data.max.y - tabInfo[i]->data.max.y) * (ptr->data.max.y - tabInfo[i]->data.max.y)));
-					if ((d > 1) && (d < param[6]) && (tabInfo[i]->data.max.val > ptr->data.max.val)) unselected = true;
+					if ((d > 1) && (d < param[6]) && (tabInfo[i]->data.max.val > ptr->data.max.val)) { unselected = true; }
 				}
+			}
 
 			if (unselected) {
 				if (ptrOld == NULL) {
@@ -183,15 +180,15 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 	}
 
 
-	for (indexFilter = 9; indexFilter <= 11; indexFilter++)
+	for (indexFilter = 9; indexFilter <= 11; indexFilter++) {
 		if ((useParam[indexFilter] == 1) && (nbInfoStruct > param[indexFilter]) && ((long)param[indexFilter] > 0)) {
 			//N first structure with the biggest surface (indexFilter=9), the biggest surface (indexFilter=10) or 
 			//the biggest total intensity (indexFilter=11)
 
 			ptrOld = NULL;
 			for (i = 0; i < (long)param[indexFilter]; i++) {
-				if (ptrOld == NULL) ptr = headInfo;
-				else ptr = ptrOld->next;
+				if (ptrOld == NULL) { ptr = headInfo; }
+				else { ptr = ptrOld->next; }
 
 				switch (indexFilter) {
 					case 9: valMax = (float)ptr->data.surf;
@@ -240,8 +237,8 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 						ptrOld = headInfo;
 					}
 				}
-				else if (ptrOld == NULL) ptrOld = headInfo;
-				else ptrOld = ptrOld->next;
+				else if (ptrOld == NULL) { ptrOld = headInfo; }
+				else { ptrOld = ptrOld->next; }
 			}
 			ptr = ptrOld->next;
 			ptrOld->next = NULL;
@@ -253,6 +250,7 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 				ptr = ptrMax;
 			}
 		}
+	}
 
 
 	ptr = headInfo;
@@ -262,11 +260,12 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 	}
 
 
-	for (i = 0; i < (long)seg.nbPoints; i++)
+	for (i = 0; i < (long)seg.nbPoints; i++) {
 		if (seg.data[i] != 0) {
-			if (tabInfo[seg.data[i]] == NULL) seg.data[i] = 0;
-			else seg.data[i] = (unsigned short)tabInfo[seg.data[i]]->data.index;
+			if (tabInfo[seg.data[i]] == NULL) { seg.data[i] = 0; }
+			else { seg.data[i] = (unsigned short)tabInfo[seg.data[i]]->data.index; }
 		}
+	}
 
 
 	delete [] tabInfo;
@@ -304,7 +303,7 @@ int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData
 	unsigned short sizeDataY = data.size(1);
 
 
-	if (doRealoc) if ((ret = alloc(nbInfoStruct)) < 0) return (ret);
+	if (doRealoc) { if ((ret = alloc(nbInfoStruct)) < 0) { return (ret); } }
 
 
 	//initalisation of array
@@ -339,8 +338,8 @@ int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData
 		tabInfo[ind]->data.nbSubstructures = 0;
 	}
 
-	for (i = 0; i < sizeDataX; i++)
-		for (j = 0; j < sizeDataY; j++)
+	for (i = 0; i < sizeDataX; i++) {
+		for (j = 0; j < sizeDataY; j++) {
 			if (seg.data[i * sizeDataY + j] > 0) {
 				cptPoints++;
 				val = data.data[i * sizeDataY + j];
@@ -358,10 +357,10 @@ int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData
 				tabInfo[ind]->data.var.xy += val * i * j;
 				tabInfo[ind]->data.stdev += val * val;
 
-				if (tabInfo[ind]->data.boundingBox.xMax < i) tabInfo[ind]->data.boundingBox.xMax = i;
-				if (tabInfo[ind]->data.boundingBox.yMax < j) tabInfo[ind]->data.boundingBox.yMax = j;
-				if (tabInfo[ind]->data.boundingBox.xMin > i) tabInfo[ind]->data.boundingBox.xMin = i;
-				if (tabInfo[ind]->data.boundingBox.yMin > j) tabInfo[ind]->data.boundingBox.yMin = j;
+				if (tabInfo[ind]->data.boundingBox.xMax < i) { tabInfo[ind]->data.boundingBox.xMax = i; }
+				if (tabInfo[ind]->data.boundingBox.yMax < j) { tabInfo[ind]->data.boundingBox.yMax = j; }
+				if (tabInfo[ind]->data.boundingBox.xMin > i) { tabInfo[ind]->data.boundingBox.xMin = i; }
+				if (tabInfo[ind]->data.boundingBox.yMin > j) { tabInfo[ind]->data.boundingBox.yMin = j; }
 
 
 				if ((val > tabInfo[ind]->data.max.val) || (tabInfo[ind]->data.surf == 1)) {
@@ -376,17 +375,19 @@ int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData
 					tabInfo[ind]->data.min.y = j;
 				}
 
-				if (i == 0) tabInfo[ind]->data.peri++;
-				if (i == sizeDataX - 1) tabInfo[ind]->data.peri++;
-				if (j == 0) tabInfo[ind]->data.peri++;
-				if (j == sizeDataY - 1) tabInfo[ind]->data.peri++;
+				if (i == 0) { tabInfo[ind]->data.peri++; }
+				if (i == sizeDataX - 1) { tabInfo[ind]->data.peri++; }
+				if (j == 0) { tabInfo[ind]->data.peri++; }
+				if (j == sizeDataY - 1) { tabInfo[ind]->data.peri++; }
 				if ((i != 0) && (i != sizeDataX - 1) && (j != 0) && (j != sizeDataY - 1)) {
-					if (seg.data[(i - 1) * sizeDataY + j] != seg.data[i * sizeDataY + j]) tabInfo[ind]->data.peri++;
-					if (seg.data[(i + 1) * sizeDataY + j] != seg.data[i * sizeDataY + j]) tabInfo[ind]->data.peri++;
-					if (seg.data[i * sizeDataY + j - 1] != seg.data[i * sizeDataY + j]) tabInfo[ind]->data.peri++;
-					if (seg.data[i * sizeDataY + j + 1] != seg.data[i * sizeDataY + j]) tabInfo[ind]->data.peri++;
+					if (seg.data[(i - 1) * sizeDataY + j] != seg.data[i * sizeDataY + j]) { tabInfo[ind]->data.peri++; }
+					if (seg.data[(i + 1) * sizeDataY + j] != seg.data[i * sizeDataY + j]) { tabInfo[ind]->data.peri++; }
+					if (seg.data[i * sizeDataY + j - 1] != seg.data[i * sizeDataY + j]) { tabInfo[ind]->data.peri++; }
+					if (seg.data[i * sizeDataY + j + 1] != seg.data[i * sizeDataY + j]) { tabInfo[ind]->data.peri++; }
 				}
 			}
+		}
+	}
 
 
 	for (ind = 1; ind <= nbInfoStruct; ind++) {
@@ -448,20 +449,20 @@ int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData
 
 unsigned short Segment2D::segmentation(FltArray& data, USrtArray& seg, double val, bool diagonal, bool fillHoles)
 {
-	if (!fillHoles) return (segmentationPositiveValues(data, seg, val, diagonal));
+	if (!fillHoles) { return (segmentationPositiveValues(data, seg, val, diagonal)); }
 	int ret;
 	long i;
 	long sizeDataX = data.size(0);
 	long sizeDataY = data.size(1);
 
 	USrtArray* segHoles = new USrtArray;
-	if ((ret = segHoles->alloc(sizeDataX, sizeDataY)) < 0) return (ret);
+	if ((ret = segHoles->alloc(sizeDataX, sizeDataY)) < 0) { return (ret); }
 
 	ret = segmentationNegativeValues(data, *segHoles, val, !diagonal);
 
 	unsigned long* ptr;
 	ptr = (unsigned long*)malloc(sizeof(long) * (ret + 1));
-	for (i = 0; i <= ret; i++) ptr[i] = i;
+	for (i = 0; i <= ret; i++) { ptr[i] = i; }
 	for (i = 0; i < sizeDataY; i++) {
 		ptr[(*segHoles)(0, i)] = 0;
 		ptr[(*segHoles)(sizeDataX - 1, i)] = 0;
@@ -470,7 +471,7 @@ unsigned short Segment2D::segmentation(FltArray& data, USrtArray& seg, double va
 		ptr[(*segHoles)(i, 0)] = 0;
 		ptr[(*segHoles)(i, sizeDataY - 1)] = 0;
 	}
-	for (i = 0; i < sizeDataX * sizeDataY; i++) segHoles->data[i] = (unsigned short)ptr[segHoles->data[i]];
+	for (i = 0; i < sizeDataX * sizeDataY; i++) { segHoles->data[i] = (unsigned short)ptr[segHoles->data[i]]; }
 	ret = segmentationPositiveValues(data, seg, val, diagonal, *segHoles);
 	delete segHoles;
 
@@ -505,7 +506,7 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 	//if ptr[i]=j then structure i and structure j are same.
 	ptr = (unsigned long*)malloc(sizeof(long) * MAX_TAB);
 	//initialisation of ptr
-	for (i = 0; i < MAX_TAB; i++) ptr[i] = (unsigned short)i;
+	for (i = 0; i < MAX_TAB; i++) { ptr[i] = (unsigned short)i; }
 	//nSeg indicate the number of the next unused structure
 	nSeg = 1;
 
@@ -520,22 +521,21 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 	}
 
 	//first line
-	for (j = 1; j < sizeDataY; j++)
+	for (j = 1; j < sizeDataY; j++) {
 		if (fabs(data.data[j]) <= val) {
 			if (seg.data[j - 1] == 0) {
 				seg.data[j] = (unsigned short)nSeg;
 				inc(nSeg, &ptr, sizePtr);
 			}
-			else seg.data[j] = seg.data[j - 1];
+			else { seg.data[j] = seg.data[j - 1]; }
 		}
+	}
 
 	//the rest
 	for (i = 1; i < sizeDataX; i++) {
 		if (DATA(i, 0) <= val) {
-			if (SEG(i-1, 0) != 0)
-				SEG(i, 0) = SEG(i-1, 0);
-			else if (SEG(i-1, 1) != 0)
-				SEG(i, 0) = SEG(i-1, 1);
+			if (SEG(i-1, 0) != 0) { SEG(i, 0) = SEG(i-1, 0); }
+			else if (SEG(i-1, 1) != 0) { SEG(i, 0) = SEG(i-1, 1); }
 			else {
 				SEG(i, 0) = (unsigned short)nSeg;
 				inc(nSeg, &ptr, sizePtr);
@@ -549,7 +549,7 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 					SEG(i, j) = SEG(i, j-1);
 				}
 
-				if (diagonal)
+				if (diagonal) {
 					if (SEG(i-1, j-1) != 0) {
 						if (structFinded == 0) {
 							SEG(i, j) = SEG(i-1, j-1);
@@ -557,13 +557,14 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 						}
 						else if (structFinded != SEG(i-1, j-1)) {
 							mini = min(structFinded,SEG(i-1, j-1), ptr[structFinded], ptr[SEG(i-1, j-1)]);
-							if ((long)ptr[SEG(i-1, j-1)] <= mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j-1)) if (ptr[SEG(i-1, j-1)] == ptr[k]) ptr[k] = mini;
-							if ((long)ptr[SEG(i, j)] <= mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+							if ((long)ptr[SEG(i-1, j-1)] <= mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i-1, j-1)) { if (ptr[SEG(i-1, j-1)] == ptr[k]) { ptr[k] = mini; } } } }
+							if ((long)ptr[SEG(i, j)] <= mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i, j)) { if (ptr[SEG(i, j)] == ptr[k]) { ptr[k] = mini; } } } }
 							ptr[SEG(i-1, j-1)] = mini;
 							ptr[structFinded] = mini;
 							structFinded = mini;
 						}
 					}
+				}
 
 				if (SEG(i-1, j) != 0) {
 					if (structFinded == 0) {
@@ -572,16 +573,16 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 					}
 					else if (structFinded != SEG(i-1, j)) {
 						mini = min(structFinded,SEG(i-1, j), ptr[structFinded], ptr[SEG(i-1, j)]);
-						if ((long)ptr[SEG(i-1, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j)) if (ptr[SEG(i-1, j)] == ptr[k]) ptr[k] = mini;
-						if ((long)ptr[SEG(i, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+						if ((long)ptr[SEG(i-1, j)] > mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i-1, j)) { if (ptr[SEG(i-1, j)] == ptr[k]) { ptr[k] = mini; } } } }
+						if ((long)ptr[SEG(i, j)] > mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i, j)) { if (ptr[SEG(i, j)] == ptr[k]) { ptr[k] = mini; } } } }
 						ptr[SEG(i-1, j)] = mini;
 						ptr[structFinded] = mini;
 						structFinded = mini;
 					}
 				}
 
-				if (diagonal)
-					if (j + 1 < sizeDataY)
+				if (diagonal) {
+					if (j + 1 < sizeDataY) {
 						if (SEG(i-1, j+1) != 0) {
 							if (structFinded == 0) {
 								SEG(i, j) = SEG(i-1, j+1);
@@ -589,13 +590,15 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 							}
 							else if (structFinded != SEG(i-1, j+1)) {
 								mini = min(structFinded,SEG(i-1, j+1), ptr[structFinded], ptr[SEG(i-1, j+1)]);
-								if ((long)ptr[SEG(i-1, j+1)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j+1)) if (ptr[SEG(i-1, j+1)] == ptr[k]) ptr[k] = mini;
-								if ((long)ptr[SEG(i, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+								if ((long)ptr[SEG(i-1, j+1)] > mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i-1, j+1)) { if (ptr[SEG(i-1, j+1)] == ptr[k]) { ptr[k] = mini; } } } }
+								if ((long)ptr[SEG(i, j)] > mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i, j)) { if (ptr[SEG(i, j)] == ptr[k]) { ptr[k] = mini; } } } }
 								ptr[SEG(i-1, j+1)] = mini;
 								ptr[structFinded] = mini;
 								structFinded = mini;
 							}
 						}
+					}
+				}
 
 				if (structFinded == 0) {
 					SEG(i, j) = (unsigned short)nSeg;
@@ -610,16 +613,17 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 
 
 	ptr2 = (unsigned long*)malloc(sizeof(long) * nSeg);
-	for (i = 0; i < (long)nSeg; i++) ptr2[i] = 0;
+	for (i = 0; i < (long)nSeg; i++) { ptr2[i] = 0; }
 	structFinded = 1;
-	for (i = 1; i < (long)nSeg; i++)
+	for (i = 1; i < (long)nSeg; i++) {
 		if (ptr2[ptr[i]] == 0) {
 			ptr2[ptr[i]] = structFinded;
 			structFinded++;
 		}
+	}
 
 
-	for (i = 0; i < sizeDataX * sizeDataY; i++) seg.data[i] = (unsigned short)ptr2[ptr[seg.data[i]]];
+	for (i = 0; i < sizeDataX * sizeDataY; i++) { seg.data[i] = (unsigned short)ptr2[ptr[seg.data[i]]]; }
 
 	free(ptr);
 	free(ptr2);
@@ -654,7 +658,7 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	//if ptr[i]=j then structure i and structure j are same.
 	ptr = (unsigned long*)malloc(sizeof(long) * MAX_TAB);
 	//initialisation of ptr
-	for (i = 0; i < MAX_TAB; i++) ptr[i] = (unsigned short)i;
+	for (i = 0; i < MAX_TAB; i++) { ptr[i] = (unsigned short)i; }
 	//nSeg indicate the number of the next unused structure
 	nSeg = 1;
 
@@ -669,22 +673,21 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	}
 
 	//first line
-	for (j = 1; j < sizeDataY; j++)
+	for (j = 1; j < sizeDataY; j++) {
 		if (fabs(data.data[j]) > val) {
 			if (seg.data[j - 1] == 0) {
 				seg.data[j] = (unsigned short)nSeg;
 				inc(nSeg, &ptr, sizePtr);
 			}
-			else seg.data[j] = seg.data[j - 1];
+			else { seg.data[j] = seg.data[j - 1]; }
 		}
+	}
 
 	//the rest
 	for (i = 1; i < sizeDataX; i++) {
 		if (DATA(i, 0) > val) {
-			if (SEG(i-1, 0) != 0)
-				SEG(i, 0) = SEG(i-1, 0);
-			else if (SEG(i-1, 1) != 0)
-				SEG(i, 0) = SEG(i-1, 1);
+			if (SEG(i-1, 0) != 0) { SEG(i, 0) = SEG(i-1, 0); }
+			else if (SEG(i-1, 1) != 0) { SEG(i, 0) = SEG(i-1, 1); }
 			else {
 				SEG(i, 0) = (unsigned short)nSeg;
 				inc(nSeg, &ptr, sizePtr);
@@ -698,7 +701,7 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 					SEG(i, j) = SEG(i, j-1);
 				}
 
-				if (diagonal)
+				if (diagonal) {
 					if (SEG(i-1, j-1) != 0) {
 						if (structFinded == 0) {
 							SEG(i, j) = SEG(i-1, j-1);
@@ -706,13 +709,14 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 						}
 						else if (structFinded != SEG(i-1, j-1)) {
 							mini = min(structFinded,SEG(i-1, j-1), ptr[structFinded], ptr[SEG(i-1, j-1)]);
-							if ((long)ptr[SEG(i-1, j-1)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j-1)) if (ptr[SEG(i-1, j-1)] == ptr[k]) ptr[k] = mini;
-							if ((long)ptr[SEG(i, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+							if ((long)ptr[SEG(i-1, j-1)] > mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i-1, j-1)) { if (ptr[SEG(i-1, j-1)] == ptr[k]) { ptr[k] = mini; } } } }
+							if ((long)ptr[SEG(i, j)] > mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i, j)) { if (ptr[SEG(i, j)] == ptr[k]) { ptr[k] = mini; } } } }
 							ptr[SEG(i-1, j-1)] = mini;
 							ptr[structFinded] = mini;
 							structFinded = mini;
 						}
 					}
+				}
 
 				if (SEG(i-1, j) != 0) {
 					if (structFinded == 0) {
@@ -721,16 +725,16 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 					}
 					else if (structFinded != SEG(i-1, j)) {
 						mini = min(structFinded,SEG(i-1, j), ptr[structFinded], ptr[SEG(i-1, j)]);
-						if ((long)ptr[SEG(i-1, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j)) if (ptr[SEG(i-1, j)] == ptr[k]) ptr[k] = mini;
-						if ((long)ptr[SEG(i, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+						if ((long)ptr[SEG(i-1, j)] > mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i-1, j)) { if (ptr[SEG(i-1, j)] == ptr[k]) { ptr[k] = mini; } } } }
+						if ((long)ptr[SEG(i, j)] > mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i, j)) { if (ptr[SEG(i, j)] == ptr[k]) { ptr[k] = mini; } } } }
 						ptr[SEG(i-1, j)] = mini;
 						ptr[structFinded] = mini;
 						structFinded = mini;
 					}
 				}
 
-				if (diagonal)
-					if (j + 1 < sizeDataY)
+				if (diagonal) {
+					if (j + 1 < sizeDataY) {
 						if (SEG(i-1, j+1) != 0) {
 							if (structFinded == 0) {
 								SEG(i, j) = SEG(i-1, j+1);
@@ -738,13 +742,15 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 							}
 							else if (structFinded != SEG(i-1, j+1)) {
 								mini = min(structFinded,SEG(i-1, j+1), ptr[structFinded], ptr[SEG(i-1, j+1)]);
-								if ((long)ptr[SEG(i-1, j+1)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j+1)) if (ptr[SEG(i-1, j+1)] == ptr[k]) ptr[k] = mini;
-								if ((long)ptr[SEG(i, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+								if ((long)ptr[SEG(i-1, j+1)] > mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i-1, j+1)) { if (ptr[SEG(i-1, j+1)] == ptr[k]) { ptr[k] = mini; } } } }
+								if ((long)ptr[SEG(i, j)] > mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i, j)) { if (ptr[SEG(i, j)] == ptr[k]) { ptr[k] = mini; } } } }
 								ptr[SEG(i-1, j+1)] = mini;
 								ptr[structFinded] = mini;
 								structFinded = mini;
 							}
 						}
+					}
+				}
 
 				if (structFinded == 0) {
 					SEG(i, j) = (unsigned short)nSeg;
@@ -759,16 +765,17 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 
 
 	ptr2 = (unsigned long*)malloc(sizeof(long) * nSeg);
-	for (i = 0; i < (long)nSeg; i++) ptr2[i] = 0;
+	for (i = 0; i < (long)nSeg; i++) { ptr2[i] = 0; }
 	structFinded = 1;
-	for (i = 1; i < (long)nSeg; i++)
+	for (i = 1; i < (long)nSeg; i++) {
 		if (ptr2[ptr[i]] == 0) {
 			ptr2[ptr[i]] = structFinded;
 			structFinded++;
 		}
+	}
 
 
-	for (i = 0; i < sizeDataX * sizeDataY; i++) seg.data[i] = (unsigned short)ptr2[ptr[seg.data[i]]];
+	for (i = 0; i < sizeDataX * sizeDataY; i++) { seg.data[i] = (unsigned short)ptr2[ptr[seg.data[i]]]; }
 
 	free(ptr);
 	free(ptr2);
@@ -802,7 +809,7 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	//if ptr[i]=j then structure i and structure j are same.
 	ptr = (unsigned long*)malloc(sizeof(long) * MAX_TAB);
 	//initialisation of ptr
-	for (i = 0; i < MAX_TAB; i++) ptr[i] = (unsigned short)i;
+	for (i = 0; i < MAX_TAB; i++) { ptr[i] = (unsigned short)i; }
 	//nSeg indicate the number of the next unused structure
 	nSeg = 1;
 
@@ -817,22 +824,21 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	}
 
 	//first line
-	for (j = 1; j < sizeDataY; j++)
+	for (j = 1; j < sizeDataY; j++) {
 		if ((fabs(data.data[j]) > val) || (segHoles.data[j] != 0)) {
 			if (seg.data[j - 1] == 0) {
 				seg.data[j] = (unsigned short)nSeg;
 				inc(nSeg, &ptr, sizePtr);
 			}
-			else seg.data[j] = seg.data[j - 1];
+			else { seg.data[j] = seg.data[j - 1]; }
 		}
+	}
 
 	//the rest
 	for (i = 1; i < sizeDataX; i++) {
 		if ((DATA(i, 0) > val) || (SEGHoles(i, 0) != 0)) {
-			if (SEG(i-1, 0) != 0)
-				SEG(i, 0) = SEG(i-1, 0);
-			else if (SEG(i-1, 1) != 0)
-				SEG(i, 0) = SEG(i-1, 1);
+			if (SEG(i-1, 0) != 0) { SEG(i, 0) = SEG(i-1, 0); }
+			else if (SEG(i-1, 1) != 0) { SEG(i, 0) = SEG(i-1, 1); }
 			else {
 				SEG(i, 0) = (unsigned short)nSeg;
 				inc(nSeg, &ptr, sizePtr);
@@ -846,7 +852,7 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 					SEG(i, j) = SEG(i, j-1);
 				}
 
-				if (diagonal)
+				if (diagonal) {
 					if (SEG(i-1, j-1) != 0) {
 						if (structFinded == 0) {
 							SEG(i, j) = SEG(i-1, j-1);
@@ -854,13 +860,14 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 						}
 						else if (structFinded != SEG(i-1, j-1)) {
 							mini = min(structFinded,SEG(i-1, j-1), ptr[structFinded], ptr[SEG(i-1, j-1)]);
-							if ((long)ptr[SEG(i-1, j-1)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j-1)) if (ptr[SEG(i-1, j-1)] == ptr[k]) ptr[k] = mini;
-							if ((long)ptr[SEG(i, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+							if ((long)ptr[SEG(i-1, j-1)] > mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i-1, j-1)) { if (ptr[SEG(i-1, j-1)] == ptr[k]) { ptr[k] = mini; } } } }
+							if ((long)ptr[SEG(i, j)] > mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i, j)) { if (ptr[SEG(i, j)] == ptr[k]) { ptr[k] = mini; } } } }
 							ptr[SEG(i-1, j-1)] = mini;
 							ptr[structFinded] = mini;
 							structFinded = mini;
 						}
 					}
+				}
 
 				if (SEG(i-1, j) != 0) {
 					if (structFinded == 0) {
@@ -869,16 +876,16 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 					}
 					else if (structFinded != SEG(i-1, j)) {
 						mini = min(structFinded,SEG(i-1, j), ptr[structFinded], ptr[SEG(i-1, j)]);
-						if ((long)ptr[SEG(i-1, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j)) if (ptr[SEG(i-1, j)] == ptr[k]) ptr[k] = mini;
-						if ((long)ptr[SEG(i, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+						if ((long)ptr[SEG(i-1, j)] > mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i-1, j)) { if (ptr[SEG(i-1, j)] == ptr[k]) { ptr[k] = mini; } } } }
+						if ((long)ptr[SEG(i, j)] > mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i, j)) { if (ptr[SEG(i, j)] == ptr[k]) { ptr[k] = mini; } } } }
 						ptr[SEG(i-1, j)] = mini;
 						ptr[structFinded] = mini;
 						structFinded = mini;
 					}
 				}
 
-				if (diagonal)
-					if (j + 1 < sizeDataY)
+				if (diagonal) {
+					if (j + 1 < sizeDataY) {
 						if (SEG(i-1, j+1) != 0) {
 							if (structFinded == 0) {
 								SEG(i, j) = SEG(i-1, j+1);
@@ -886,13 +893,15 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 							}
 							else if (structFinded != SEG(i-1, j+1)) {
 								mini = min(structFinded,SEG(i-1, j+1), ptr[structFinded], ptr[SEG(i-1, j+1)]);
-								if ((long)ptr[SEG(i-1, j+1)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j+1)) if (ptr[SEG(i-1, j+1)] == ptr[k]) ptr[k] = mini;
-								if ((long)ptr[SEG(i, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+								if ((long)ptr[SEG(i-1, j+1)] > mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i-1, j+1)) { if (ptr[SEG(i-1, j+1)] == ptr[k]) { ptr[k] = mini; } } } }
+								if ((long)ptr[SEG(i, j)] > mini) { for (long k = mini; k < (long)nSeg; k++) { if (k != SEG(i, j)) { if (ptr[SEG(i, j)] == ptr[k]) { ptr[k] = mini; } } } }
 								ptr[SEG(i-1, j+1)] = mini;
 								ptr[structFinded] = mini;
 								structFinded = mini;
 							}
 						}
+					}
+				}
 
 				if (structFinded == 0) {
 					SEG(i, j) = (unsigned short)nSeg;
@@ -907,16 +916,17 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 
 
 	ptr2 = (unsigned long*)malloc(sizeof(long) * nSeg);
-	for (i = 0; i < (long)nSeg; i++) ptr2[i] = 0;
+	for (i = 0; i < (long)nSeg; i++) { ptr2[i] = 0; }
 	structFinded = 1;
-	for (i = 1; i < (long)nSeg; i++)
+	for (i = 1; i < (long)nSeg; i++) {
 		if (ptr2[ptr[i]] == 0) {
 			ptr2[ptr[i]] = structFinded;
 			structFinded++;
 		}
+	}
 
 
-	for (i = 0; i < sizeDataX * sizeDataY; i++) seg.data[i] = (unsigned short)ptr2[ptr[seg.data[i]]];
+	for (i = 0; i < sizeDataX * sizeDataY; i++) { seg.data[i] = (unsigned short)ptr2[ptr[seg.data[i]]]; }
 
 	free(ptr);
 	free(ptr2);

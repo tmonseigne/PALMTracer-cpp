@@ -43,7 +43,7 @@ public:
 	 */
 	Heap(int n): _size(n), _nitem(0)
 	{
-		if (n > 0) _data = new(Theap<T>[n]);
+		if (n > 0) { _data = new(Theap<T>[n]); }
 		else { }
 	}
 
@@ -107,7 +107,7 @@ public:
 
 		// Get top of the heap.
 		T item = _data[0].element;
-		if (kitem != NULL) *kitem = _data[0].key;
+		if (kitem != NULL) { *kitem = _data[0].key; }
 
 		--_nitem;
 		int parent = 0;
@@ -115,9 +115,9 @@ public:
 
 		// Move up the lower branch of the heap.
 		while (child < _nitem) {
-			if (child + 1 < _nitem && _data[child].key > _data[child + 1].key) child++;
+			if (child + 1 < _nitem && _data[child].key > _data[child + 1].key) { child++; }
 
-			if (_data[_nitem].key <= _data[child].key) break;
+			if (_data[_nitem].key <= _data[child].key) { break; }
 
 			// Move up child as parent.
 			_data[parent] = _data[child];
@@ -139,8 +139,8 @@ public:
 		bool result = false;
 		int i = 0;
 
-		for (; i < _nitem && _data[i].key != kitem; i++);
-		if (i >= _nitem) return false;
+		for (; i < _nitem && _data[i].key != kitem; i++) { ; }
+		if (i >= _nitem) { return false; }
 
 		--_nitem;
 		int parent = i;
@@ -148,9 +148,9 @@ public:
 
 		// Move up the lower branch of the heap.
 		while (child < _nitem) {
-			if (child + 1 < _nitem && _data[child].key > _data[child + 1].key) child++;
+			if (child + 1 < _nitem && _data[child].key > _data[child + 1].key) { child++; }
 
-			if (_data[_nitem].key <= _data[child].key) break;
+			if (_data[_nitem].key <= _data[child].key) { break; }
 
 			// Move up child as parent.
 			_data[parent] = _data[child];

@@ -68,11 +68,11 @@ CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsList
 	_angle = (float)angle;
 	_size = size;
 
-	for (int i = 0; i < 13; i++) _structFiltParam[i] = 0;
-	for (int i = 0; i < 13; i++) _structFiltParamUse[i] = 0;
-	for (int i = 0; i < 10; i++) _planesToUse[i] = 0;
-	for (int i = 0; i < 9; i++) _operators[i] = 0;
-	for (int i = 0; i < 9; i++) _threshold[i] = 0;
+	for (int i = 0; i < 13; i++) { _structFiltParam[i] = 0; }
+	for (int i = 0; i < 13; i++) { _structFiltParamUse[i] = 0; }
+	for (int i = 0; i < 10; i++) { _planesToUse[i] = 0; }
+	for (int i = 0; i < 9; i++) { _operators[i] = 0; }
+	for (int i = 0; i < 9; i++) { _threshold[i] = 0; }
 
 
 	_planesToUse[_waveletNo] = 2;
@@ -88,10 +88,10 @@ CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsList
 	}
 
 	_input = new USrtArray();
-	if ((ret = _input->alloc(_image, _sizeX, _sizeY)) < 0) return;
-	if ((ret = _aTrousPub->wDecomp->alloc(_sizeX, _sizeY, waveletNo + 2)) < 0) return;
-	if ((ret = _segPub->realloc(_sizeX, _sizeY)) < 0) return;
-	if ((ret = _outputPub->alloc(_sizeX, _sizeY)) < 0) return;
+	if ((ret = _input->alloc(_image, _sizeX, _sizeY)) < 0) { return; }
+	if ((ret = _aTrousPub->wDecomp->alloc(_sizeX, _sizeY, waveletNo + 2)) < 0) { return; }
+	if ((ret = _segPub->realloc(_sizeX, _sizeY)) < 0) { return; }
+	if ((ret = _outputPub->alloc(_sizeX, _sizeY)) < 0) { return; }
 
 
 	_planesToUseB = new BlArray(9);
@@ -99,14 +99,14 @@ CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsList
 	_nbPlane = 0;
 	for (int i = 0; i < 9; i++) {
 		(*_planesToUseB)(i) = (_planesToUse[i] != 0);
-		if ((*_planesToUseB)(i)) _nbPlane = i + 2;
+		if ((*_planesToUseB)(i)) { _nbPlane = i + 2; }
 	}
 	(*_planesToUseB)(8) = false;
 }
 
 unsigned long twoToThe_(unsigned long val)
 {
-	if (val == 0) return (1);
+	if (val == 0) { return (1); }
 	return (((unsigned long)1) << val);
 }
 
@@ -194,18 +194,18 @@ long CPALM::CPALMProcessing()
 	end = clock();
 	begin = clock();
 
-	if (_watershedRatio == 1.) { if ((nbStruct = _segmentPub->segmentation(*_outputPub, *_segPub, 1e-8f, true, false)) < 0) return (nbStruct); }
-	else { if ((nbStruct = _segmentPub->watershedIntelligent(*_outputPub, *_segPub, 1e-8f, (float)_watershedRatio)) < 0) return (nbStruct); }
+	if (_watershedRatio == 1.) { if ((nbStruct = _segmentPub->segmentation(*_outputPub, *_segPub, 1e-8f, true, false)) < 0) { return (nbStruct); } }
+	else { if ((nbStruct = _segmentPub->watershedIntelligent(*_outputPub, *_segPub, 1e-8f, (float)_watershedRatio)) < 0) { return (nbStruct); } }
 
 	end = clock();;
 	begin = clock();
 
 
-	if ((nbPointsSign = _segmentPub->computeStatistics(*_outputPub, *_segPub, _aTrousPub->wDecomp->data + _waveletNo * _sizeX * _sizeY, _gaussFit)) < 0) return (nbPointsSign);
+	if ((nbPointsSign = _segmentPub->computeStatistics(*_outputPub, *_segPub, _aTrousPub->wDecomp->data + _waveletNo * _sizeX * _sizeY, _gaussFit)) < 0) { return (nbPointsSign); }
 
 	begin = clock();
 
-	if ((_volMin > 0.) || (_intMin > 0.)) if ((nbStruct = _segmentPub->filterData(*_segPub, _structFiltParam, _structFiltParamUse)) < 0) return (ret);
+	if ((_volMin > 0.) || (_intMin > 0.)) { if ((nbStruct = _segmentPub->filterData(*_segPub, _structFiltParam, _structFiltParamUse)) < 0) { return (ret); } }
 
 	end = clock();
 
@@ -302,7 +302,7 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 		r = 0;
 
 		// A vérifier
-		if (kernelExecTimeoutEnabled == 1) newSizeStk = 80;
+		if (kernelExecTimeoutEnabled == 1) { newSizeStk = 80; }
 
 		//newSizeStk = 80;
 
@@ -328,7 +328,7 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 				nbPoints += nbStruct[numFrame];
 
 				numFrame++;
-				if (numFrame == sizeStk) break;
+				if (numFrame == sizeStk) { break; }
 				nbStruct[numFrame] = 0;
 			}
 			else { nbStruct[numFrame]++; }
@@ -347,7 +347,7 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 		int ind_src;
 		int ind_dst;
 
-		if (fromcplusplus == 1)
+		if (fromcplusplus == 1) {
 			for (int plane = 0; plane < sizeStk; plane++) {
 				for (int i = 0; i < nbStruct[plane]; i++) {
 					ind_src = cumNbStruct[plane] + plane + i;
@@ -368,9 +368,10 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 					list[ind_dst * NbSegParams + 12] = 0.;
 				}
 
-				if ((plane + 1) <= sizeStk) cumNbStruct[plane + 1] = cumNbStruct[plane] + nbStruct[plane];
+				if ((plane + 1) <= sizeStk) { cumNbStruct[plane + 1] = cumNbStruct[plane] + nbStruct[plane]; }
 			}
-		else
+		}
+		else {
 			for (int plane = 0; plane < sizeStk; plane++) {
 				for (int i = 0; i < nbStruct[plane]; i++) {
 					ind_src = cumNbStruct[plane] + plane + i;
@@ -391,8 +392,9 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 					list[ind_dst * NbSegParams + 12] = 0.;
 				}
 
-				if ((plane + 1) <= sizeStk) cumNbStruct[plane + 1] = cumNbStruct[plane] + nbStruct[plane];
+				if ((plane + 1) <= sizeStk) { cumNbStruct[plane + 1] = cumNbStruct[plane] + nbStruct[plane]; }
 			}
+		}
 
 		float* d_SigmaXCoefs;
 		float* d_SigmaYCoefs;
@@ -429,32 +431,32 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 
 			if (gaussFit == 1) // 2D with constant Sigma
 			{
-				if (size < 7) cuda2DFittingGPU_5x5(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*30*/, size, sigmaX);
+				if (size < 7) { cuda2DFittingGPU_5x5(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*30*/, size, sigmaX); }
 
-				if (size >= 7) cuda2DFittingGPU_7x7(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*30*/, size, sigmaX);
+				if (size >= 7) { cuda2DFittingGPU_7x7(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*30*/, size, sigmaX); }
 			}
 
 			if (gaussFit == 2) // 2D with Sigma
 			{
-				if (size < 7) cuda2DFittingGPU_Sigma_5x5(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*30*/, size, sigmaX);
+				if (size < 7) { cuda2DFittingGPU_Sigma_5x5(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*30*/, size, sigmaX); }
 
-				if (size >= 7) cuda2DFittingGPU_Sigma_7x7(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*30*/, size, sigmaX);
+				if (size >= 7) { cuda2DFittingGPU_Sigma_7x7(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*30*/, size, sigmaX); }
 			}
 
 			if (gaussFit == 3) // 3D with constant Theta
 			{
-				if ((size <= 7) || (size == 8)) cuda3DFittingGPU_7x7(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/);
+				if ((size <= 7) || (size == 8)) { cuda3DFittingGPU_7x7(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/); }
 
-				if ((size == 9) || (size == 10)) cuda3DFittingGPU_9x9(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/);
+				if ((size == 9) || (size == 10)) { cuda3DFittingGPU_9x9(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/); }
 
-				if ((size == 11) || (size == 12)) cuda3DFittingGPU_11x11(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/);
+				if ((size == 11) || (size == 12)) { cuda3DFittingGPU_11x11(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/); }
 
-				if (size >= 13) cuda3DFittingGPU_13x13(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/);
+				if (size >= 13) { cuda3DFittingGPU_13x13(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/); }
 			}
 			if (gaussFit == 4) // 3D with Theta
 			{
-				if (size <= 9) cuda3DFittingGPU_Theta_9x9(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum /*20*7*/, size, sigmaX, sigmaY, angle);
-				if (size > 9) cuda3DFittingGPU_Theta_13x13(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum /*20*7*/, size, sigmaX, sigmaY, angle);
+				if (size <= 9) { cuda3DFittingGPU_Theta_9x9(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum /*20*7*/, size, sigmaX, sigmaY, angle); }
+				if (size > 9) { cuda3DFittingGPU_Theta_13x13(d_images, newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (cumNbStruct[i * newSizeStk] - cumNbStruct[(i - 1) * newSizeStk]), iterNum /*20*7*/, size, sigmaX, sigmaY, angle); }
 			}
 
 			cudaError err = cudaThreadSynchronize();
@@ -484,29 +486,29 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 
 			if (gaussFit == 1) // 2D with constant Sigma
 			{
-				if (size < 7) cuda2DFittingGPU_5x5(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*30*/, size, sigmaX);
+				if (size < 7) { cuda2DFittingGPU_5x5(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*30*/, size, sigmaX); }
 
-				if (size >= 7) cuda2DFittingGPU_7x7(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*30*/, size, sigmaX);
+				if (size >= 7) { cuda2DFittingGPU_7x7(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*30*/, size, sigmaX); }
 			}
 
 			if (gaussFit == 2) // 2D with Sigma
 			{
-				if (size < 7) cuda2DFittingGPU_Sigma_5x5(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*30*/, size, sigmaX);
+				if (size < 7) { cuda2DFittingGPU_Sigma_5x5(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*30*/, size, sigmaX); }
 
-				if (size >= 7) cuda2DFittingGPU_Sigma_7x7(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*30*/, size, sigmaX);
+				if (size >= 7) { cuda2DFittingGPU_Sigma_7x7(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*30*/, size, sigmaX); }
 			}
 
 			if (gaussFit == 3) // 3D with constant Theta
 			{
-				if ((size <= 7) || (size == 8)) cuda3DFittingGPU_7x7(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/);
-				if ((size == 9) || (size == 10)) cuda3DFittingGPU_9x9(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/);
-				if ((size == 11) || (size == 12)) cuda3DFittingGPU_11x11(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/);
-				if (size >= 13) cuda3DFittingGPU_13x13(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/);
+				if ((size <= 7) || (size == 8)) { cuda3DFittingGPU_7x7(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/); }
+				if ((size == 9) || (size == 10)) { cuda3DFittingGPU_9x9(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/); }
+				if ((size == 11) || (size == 12)) { cuda3DFittingGPU_11x11(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/); }
+				if (size >= 13) { cuda3DFittingGPU_13x13(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*//*50*//*20*6*/, size, sigmaX, sigmaY, angle, computeZ, d_SigmaXCoefs, d_SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize/*µm*/); }
 			}
 			if (gaussFit == 4) // 3D with Theta
 			{
-				if (size <= 9) cuda3DFittingGPU_Theta_9x9(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*7*/, size, sigmaX, sigmaY, angle);
-				if (size > 9) cuda3DFittingGPU_Theta_13x13(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*7*/, size, sigmaX, sigmaY, angle);
+				if (size <= 9) { cuda3DFittingGPU_Theta_9x9(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*7*/, size, sigmaX, sigmaY, angle); }
+				if (size > 9) { cuda3DFittingGPU_Theta_13x13(d_images, sizeStk % newSizeStk, sizeDataY, sizeDataX, d_nbStruct, d_list, (nbPoints - cumNbStruct[iter * newSizeStk]), iterNum/*20*7*/, size, sigmaX, sigmaY, angle); }
 			}
 
 			cudaError err = cudaThreadSynchronize();
@@ -525,7 +527,7 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 		int ind_list = 0;
 		int ind_pointsList = 0;
 
-		if (fromcplusplus != 1)
+		if (fromcplusplus != 1) {
 			for (int i = 0; i < sizeStk /*host*/; i++) {
 				for (int s = 0; s < nbStruct[i]; s++) {
 					pointsList[ind_pointsList++] = (double)list[ind_list++];   // sigmaX
@@ -559,7 +561,8 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 				pointsList[ind_pointsList++] = -1;
 				pointsList[ind_pointsList++] = -1;
 			}
-		else
+		}
+		else {
 			for (int i = 0; i < sizeStk /*host*/; i++) {
 				//ind_list = (i * maxNbStruct/* + 1*/) * NbSegParams;
 				//while((int)list[ind_list + 2] != 0)
@@ -604,13 +607,14 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 				pointsList[ind_pointsList++] = -1;
 				pointsList[ind_pointsList++] = -1;
 			}
+		}
 
 		// cleanup memory
 		free(cumNbStruct);
 		free(nbStruct);
 		free(list);
 
-		if (fromcplusplus != 1) delete[] stack;
+		if (fromcplusplus != 1) { delete[] stack; }
 	}
 }
 
@@ -631,10 +635,10 @@ _declspec(dllexport) void _stdcall GaussianVisuGPU(double* gaussianPointsList/*(
 			nbPoints += nbStruct[numFrame];
 
 			numFrame++;
-			if (numFrame == sizeStk) break;
+			if (numFrame == sizeStk) { break; }
 			nbStruct[numFrame] = 0;
 		}
-		else nbStruct[numFrame]++;
+		else { nbStruct[numFrame]++; }
 	}
 
 	double* list = (double*)malloc(nbPoints * NbSegParams * sizeof(double));
@@ -659,7 +663,7 @@ _declspec(dllexport) void _stdcall GaussianVisuGPU(double* gaussianPointsList/*(
 			list[ind_dst * NbSegParams + 10] = pointsList[NbSegParams * ind_src + 5]; // Gaussian intensity
 		}
 
-		if ((plane + 1) <= sizeStk) cumNbStruct[plane + 1] = cumNbStruct[plane] + nbStruct[plane];
+		if ((plane + 1) <= sizeStk) { cumNbStruct[plane + 1] = cumNbStruct[plane] + nbStruct[plane]; }
 	}
 
 	double *d_gaussianPointsList, *d_pointsList;

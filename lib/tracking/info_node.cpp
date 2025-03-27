@@ -16,7 +16,7 @@ float InfoNode2D::distance(InfoNode* infoNode)
 	double dX = getX() - infoNode->getX();
 	double dY = getY() - infoNode->getY();
 	res = (float)sqrt(dX * dX + dY * dY);
-	if (res < 0.) return (0.);
+	if (res < 0.) { return (0.); }
 	return (res);
 }
 
@@ -28,8 +28,8 @@ float InfoNode2D::distance(InfoNode* i1, InfoNode* i2)
 	double dX = getX() - n1n2X;
 	double dY = getY() - n1n2Y;
 	res = (float)sqrt(dX * dX + dY * dY);
-	if (res < 0.) return (0.);
-	if (res < 1e-9) res += 0;
+	if (res < 0.) { return (0.); }
+	if (res < 1e-9) { res += 0; }
 	return (res);
 }
 
@@ -89,7 +89,7 @@ float InfoNode3D::distance(InfoNode* infoNode)
 	double dY = getY() - infoNode->getY();
 	double dZ = getZ() - infoNode->getZ();
 	res = (float)sqrt(dX * dX + dY * dY + dZ * dZ);
-	if (res < 0.) return (0.);
+	if (res < 0.) { return (0.); }
 	return (res);
 }
 
@@ -103,7 +103,7 @@ float InfoNode3D::distance(InfoNode* i1, InfoNode* i2)
 	double dY = getY() - n1n2Y;
 	double dZ = getZ() - n1n2Z;
 	res = (float)sqrt(dX * dX + dY * dY + dZ * dZ);
-	if (res < 0.) return (0.);
+	if (res < 0.) { return (0.); }
 	return (res);
 }
 

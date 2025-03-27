@@ -117,9 +117,9 @@ int GPU::runGPU()
 
 	unsigned short iterNum;
 
-	if ((gaussFit == 0) || (gaussFit == 5)) iterNum = 0;
-	if ((gaussFit == 1) || (gaussFit == 2) || (gaussFit == 3)) iterNum = 10;
-	if (gaussFit == 4) iterNum = 20 * 7;
+	if ((gaussFit == 0) || (gaussFit == 5)) { iterNum = 0; }
+	if ((gaussFit == 1) || (gaussFit == 2) || (gaussFit == 3)) { iterNum = 10; }
+	if (gaussFit == 4) { iterNum = 20 * 7; }
 
 	LaunchGaussianFit(pointsList, pointsListSize, sizeStk, sizeDataY, sizeDataX, gaussFit, sigmaX, sigmaY, angle, sizeFit, iterNum, 1, IsComputingZ, SigmaXCoefs, SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize /*µm*/);
 

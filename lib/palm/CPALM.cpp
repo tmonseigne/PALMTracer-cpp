@@ -34,11 +34,11 @@ CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsList
 	_angle = (float)angle;
 	_size = size;
 
-	for (int i = 0; i < 13; i++) _structFiltParam[i] = 0;
-	for (int i = 0; i < 13; i++) _structFiltParamUse[i] = 0;
-	for (int i = 0; i < 10; i++) _planesToUse[i] = 0;
-	for (int i = 0; i < 9; i++) _operators[i] = 0;
-	for (int i = 0; i < 9; i++) _threshold[i] = 0;
+	for (int i = 0; i < 13; i++) { _structFiltParam[i] = 0; }
+	for (int i = 0; i < 13; i++) { _structFiltParamUse[i] = 0; }
+	for (int i = 0; i < 10; i++) { _planesToUse[i] = 0; }
+	for (int i = 0; i < 9; i++) { _operators[i] = 0; }
+	for (int i = 0; i < 9; i++) { _threshold[i] = 0; }
 
 
 	_planesToUse[_waveletNo] = 2;
@@ -54,10 +54,10 @@ CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsList
 	}
 
 	_input = new USrtArray();
-	if ((ret = _input->alloc(_image, _sizeX, _sizeY)) < 0) return;
-	if ((ret = _aTrousPub->wDecomp->alloc(_sizeX, _sizeY, waveletNo + 2)) < 0) return;
-	if ((ret = _segPub->realloc(_sizeX, _sizeY)) < 0) return;
-	if ((ret = _outputPub->alloc(_sizeX, _sizeY)) < 0) return;
+	if ((ret = _input->alloc(_image, _sizeX, _sizeY)) < 0) { return; }
+	if ((ret = _aTrousPub->wDecomp->alloc(_sizeX, _sizeY, waveletNo + 2)) < 0) { return; }
+	if ((ret = _segPub->realloc(_sizeX, _sizeY)) < 0) { return; }
+	if ((ret = _outputPub->alloc(_sizeX, _sizeY)) < 0) { return; }
 
 
 	_planesToUseB = new BlArray(9);
@@ -65,7 +65,7 @@ CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsList
 	_nbPlane = 0;
 	for (int i = 0; i < 9; i++) {
 		(*_planesToUseB)(i) = (_planesToUse[i] != 0);
-		if ((*_planesToUseB)(i)) _nbPlane = i + 2;
+		if ((*_planesToUseB)(i)) { _nbPlane = i + 2; }
 	}
 	(*_planesToUseB)(8) = false;
 }
@@ -79,7 +79,7 @@ long CPALM::CPALMProcessing()
 
 	float begin = clock();
 
-	if ((ret = _aTrousPub->aTrousDecomposition2D(*_input, *(_aTrousPub->wDecomp), *_planesToUseB, _nbPlane, false)) < 0) return (ret);
+	if ((ret = _aTrousPub->aTrousDecomposition2D(*_input, *(_aTrousPub->wDecomp), *_planesToUseB, _nbPlane, false)) < 0) { return (ret); }
 
 	for (long j = 0; j < long(_sizeX * _sizeY); j++) {
 		long offs = _waveletNo * _sizeX * _sizeY;
@@ -94,15 +94,15 @@ long CPALM::CPALMProcessing()
 	}
 	begin = clock();
 
-	if (_watershedRatio == 1.) { if ((nbStruct = _segmentPub->segmentation(*_outputPub, *_segPub, 1e-8f, true, false)) < 0) return (nbStruct); }
-	else { if ((nbStruct = _segmentPub->watershedIntelligent(*_outputPub, *_segPub, 1e-8f, (float)_watershedRatio)) < 0) return (nbStruct); }
+	if (_watershedRatio == 1.) { if ((nbStruct = _segmentPub->segmentation(*_outputPub, *_segPub, 1e-8f, true, false)) < 0) { return (nbStruct); } }
+	else { if ((nbStruct = _segmentPub->watershedIntelligent(*_outputPub, *_segPub, 1e-8f, (float)_watershedRatio)) < 0) { return (nbStruct); } }
 
 
-	if ((nbPointsSign = _segmentPub->computeStatistics(*_outputPub, *_segPub, _aTrousPub->wDecomp->data + _waveletNo * _sizeX * _sizeY, _gaussFit)) < 0) return (nbPointsSign);
+	if ((nbPointsSign = _segmentPub->computeStatistics(*_outputPub, *_segPub, _aTrousPub->wDecomp->data + _waveletNo * _sizeX * _sizeY, _gaussFit)) < 0) { return (nbPointsSign); }
 
 	begin = clock();
 
-	if ((_volMin > 0.) || (_intMin > 0.)) if ((nbStruct = _segmentPub->filterData(*_segPub, _structFiltParam, _structFiltParamUse)) < 0) return (ret);
+	if ((_volMin > 0.) || (_intMin > 0.)) { if ((nbStruct = _segmentPub->filterData(*_segPub, _structFiltParam, _structFiltParamUse)) < 0) { return (ret); } }
 
 	InfoStruct2D** p;
 	p = (InfoStruct2D**)_segmentPub->getTabInfo();

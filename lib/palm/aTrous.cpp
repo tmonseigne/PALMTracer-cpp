@@ -37,15 +37,15 @@ double ATrous::stdRef(long dim, unsigned long realProj, unsigned long plan)
 	static double _3D[4] = {0.9500, 0.1200, 0.0360, 0.0180};
 	switch (dim) {
 		case 1: {
-			if (realProj) return _1DRealProj[plan];
+			if (realProj) { return _1DRealProj[plan]; }
 			return _1D[plan];
 		}
 		case 2: {
-			if (realProj) return _2DRealProj[plan];
+			if (realProj) { return _2DRealProj[plan]; }
 			return _2D[plan];
 		}
 		case 3: {
-			if (realProj) return _3DRealProj[plan];
+			if (realProj) { return _3DRealProj[plan]; }
 			return _3D[plan];
 		}
 	}

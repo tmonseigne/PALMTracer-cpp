@@ -39,12 +39,12 @@ public:
 // By default ignores repeated delimiters, unless argument rep == 1.
 vector<string>& splitstring::split(char delim, int rep)
 {
-	if (!flds.empty()) flds.clear(); // empty vector if necessary
+	if (!flds.empty()) { flds.clear(); } // empty vector if necessary
 	string work = data();
 	string buf = "";
 	int i = 0;
 	while (i < work.length()) {
-		if (work[i] != delim) buf += work[i];
+		if (work[i] != delim) { buf += work[i]; }
 		else if (rep == 1) {
 			flds.push_back(buf);
 			buf = "";
@@ -55,7 +55,7 @@ vector<string>& splitstring::split(char delim, int rep)
 		}
 		i++;
 	}
-	if (!buf.empty()) flds.push_back(buf);
+	if (!buf.empty()) { flds.push_back(buf); }
 	return flds;
 }
 
@@ -110,8 +110,8 @@ void computeBsplines(int n, gsl_vector* x, gsl_vector* y, int* nbPoints, vec* x_
 		std::vector<std::string> tokens = s.split('\t', 2);
 		double xi = atof(tokens[0].c_str());
 
-		if (xi < xMin) xMin = xi;
-		if (xi > xMax) xMax = xi;
+		if (xi < xMin) { xMin = xi; }
+		if (xi > xMax) { xMax = xi; }
 
 		double yi = atof(tokens[1].c_str());
 
@@ -220,7 +220,7 @@ int main(void)
 	}
 
 	FILE* f = fopen("Results.txt", "w");
-	for (double xi = x_sp(0); xi <= x_sp(nbPoints - 1); xi += 0.01) fprintf(f, "%f\t%f\n", xi, evalFunction(xi, nbPoints, x_sp, a, b, c, d));
+	for (double xi = x_sp(0); xi <= x_sp(nbPoints - 1); xi += 0.01) { fprintf(f, "%f\t%f\n", xi, evalFunction(xi, nbPoints, x_sp, a, b, c, d)); }
 	fclose(f);
 
 	return 0;

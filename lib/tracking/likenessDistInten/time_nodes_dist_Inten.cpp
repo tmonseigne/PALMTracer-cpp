@@ -55,9 +55,8 @@ It returns the gain in likeness computed with this change
 ********************************************************************************************************************/
 double TimeNodesDistanceIntensity::tryRandomChange(double limit)
 {
-	if (nbNodes < 1) //<=
-		return (0.);
-	if (nbNodes == 1) return (((NodeDistanceIntensity*)(tabNodes[0]))->makeChange(limit));
+	if (nbNodes < 1) { return 0.; } //<=
+	if (nbNodes == 1) { return (((NodeDistanceIntensity*)(tabNodes[0]))->makeChange(limit)); }
 	return (((NodeDistanceIntensity*)(tabNodes[rand() % (nbNodes/*-1*/)]))->makeChange(limit));
 }
 

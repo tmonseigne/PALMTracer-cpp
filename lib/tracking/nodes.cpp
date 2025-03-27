@@ -80,8 +80,8 @@ Node::Node(int _time, PublicParameters* _publicParameters)
 	connectionFusionFuture = NULL;
 	trackedStructureAmiraIndex = -1;
 	mSD = -1;
-	if (publicParameters->nbDim == 2) info = new InfoNode2D(publicParameters);
-	else info = new InfoNode3D(publicParameters);
+	if (publicParameters->nbDim == 2) { info = new InfoNode2D(publicParameters); }
+	else { info = new InfoNode3D(publicParameters); }
 
 	publicParameters->nbNodeAllocated++;
 }
@@ -139,8 +139,8 @@ int Node::sortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 	ChainNeighbor* l2;
 	ChainNeighbor* lOld;
 	bool change;
-	if (*neighborsHead != NULL)
-		if ((*neighborsHead)->next != NULL)
+	if (*neighborsHead != NULL) {
+		if ((*neighborsHead)->next != NULL) {
 			do {
 				change = false;
 				l = *neighborsHead;
@@ -148,8 +148,8 @@ int Node::sortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 				while (l->next != NULL) {
 					if (l->next->neighbor->info->getIntensity() > l->neighbor->info->getIntensity()) {
 						l2 = l->next;
-						if (lOld == NULL) *neighborsHead = l2;
-						else lOld->next = l2;
+						if (lOld == NULL) { *neighborsHead = l2; }
+						else { lOld->next = l2; }
 						l->next = l2->next;
 						l2->next = l;
 						change = true;
@@ -157,12 +157,14 @@ int Node::sortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 					}
 					else {
 						l = l->next;
-						if (lOld == NULL) lOld = *neighborsHead;
-						else lOld = lOld;
+						if (lOld == NULL) { lOld = *neighborsHead; }
+						else { lOld = lOld; }
 					}
 				}
 			}
 			while (change);
+		}
+	}
 	return (RET_OK);
 }
 

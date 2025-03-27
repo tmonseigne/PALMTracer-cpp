@@ -29,6 +29,6 @@ runModel() is the core of the application, it links the structures according the
 int TabTimesCloserNeighbors::runModel()
 {
 	int ret;
-	for (int _time = 0; _time < nbTimes - 1; _time++) if ((ret = ((TimeNodesCloserNeighbors*)(timeNodes[_time]))->makeAllConnections()) < 0) return (ret);
+	for (int _time = 0; _time < nbTimes - 1; _time++) { if ((ret = ((TimeNodesCloserNeighbors*)(timeNodes[_time]))->makeAllConnections()) < 0) { return (ret); } }
 	return (RET_OK);
 }

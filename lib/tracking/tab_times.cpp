@@ -37,7 +37,7 @@ Delete all objets TimeNodes.
 ********************************************************************************************************************/
 TabTimes::~TabTimes()
 {
-	for (int i = 0; i < nbTimes; i++) delete timeNodes[i];
+	for (int i = 0; i < nbTimes; i++) { delete timeNodes[i]; }
 	delete [] timeNodes;
 }
 
@@ -54,14 +54,14 @@ initialisation() initialisation of the data in memory
 int TabTimes::initialisation()
 {
 	int ret;
-	if (publicParameters->statFile[0] != L'\0') { if ((ret = readStatFile()) < 0) return (ret); }
-	else if ((ret = readPointsList()) < 0) return (ret);
+	if (publicParameters->statFile[0] != L'\0') { if ((ret = readStatFile()) < 0) { return (ret); } }
+	else if ((ret = readPointsList()) < 0) { return (ret); }
 
-	if ((ret = linkNeighborsPresent()) < 0) return (ret);
-	if ((ret = linkNeighborsBeforeAndAfter()) < 0) return (ret);
-	if ((ret = sortByIntensityAllNeighbors()) < 0) return (ret);
+	if ((ret = linkNeighborsPresent()) < 0) { return (ret); }
+	if ((ret = linkNeighborsBeforeAndAfter()) < 0) { return (ret); }
+	if ((ret = sortByIntensityAllNeighbors()) < 0) { return (ret); }
 
-	if (publicParameters->nbTemporalWindows > 1) if ((ret = linkNeighborsBlinkBeforeAndAfter()) < 0) return (ret);
+	if (publicParameters->nbTemporalWindows > 1) { if ((ret = linkNeighborsBlinkBeforeAndAfter()) < 0) { return (ret); } }
 
 	checkLinksHomogeneity(L"initalisation");
 	srand((unsigned)time(NULL));
@@ -100,7 +100,7 @@ int TabTimes::printConnectionsASCII()
 						fprintf(stream, "%f\t", nodeConnection->info->getZ());
 						fprintf(stream, "%d\t", nodeConnection->info->getVolume());
 					}
-					else fprintf(stream, "%d\t", nodeConnection->info->getSurface());
+					else { fprintf(stream, "%d\t", nodeConnection->info->getSurface()); }
 					fprintf(stream, "%f\n", nodeConnection->info->getIntensity());
 				}
 			}
@@ -148,7 +148,7 @@ int TabTimes::printConnectionsASCII_trc()
 						publicParameters->trc[index++] = nodeConnection->info->getZ();
 						publicParameters->trc[index++] = nodeConnection->info->getVolume();
 					}
-					else publicParameters->trc[index++] = nodeConnection->info->getSurface();
+					else { publicParameters->trc[index++] = nodeConnection->info->getSurface(); }
 
 					publicParameters->trc[index++] = nodeConnection->info->getIntensity();
 
@@ -183,14 +183,14 @@ void TabTimes::printCoveredArea()
 		_localTimeNodes = timeNodes[t];
 		for (int n = 0; n < _localTimeNodes->nbNodes; n++) {
 			node = _localTimeNodes->tabNodes[n];
-			if ((node->connectionPast == NULL) && (node->trackedStructureIndex > 0))
+			if ((node->connectionPast == NULL) && (node->trackedStructureIndex > 0)) {
 				if (node->connectionFuture != NULL) {
 					x = y = z = 0;
 					nbPoints = 0;
 					for (nodeConnection = node; nodeConnection != NULL; nodeConnection = nodeConnection->connectionFuture) {
 						x += nodeConnection->info->getX();
 						y += nodeConnection->info->getY();
-						if (publicParameters->nbDim == 3) z += nodeConnection->info->getZ();
+						if (publicParameters->nbDim == 3) { z += nodeConnection->info->getZ(); }
 						nbPoints++;
 					}
 
@@ -202,15 +202,16 @@ void TabTimes::printCoveredArea()
 						for (nodeConnection = node->connectionFuture; nodeConnection != NULL; nodeConnection = nodeConnection->connectionFuture) {
 							xT += (nodeConnection->info->getX() - x) * (nodeConnection->info->getX() - x);
 							yT += (nodeConnection->info->getY() - y) * (nodeConnection->info->getY() - y);
-							if (publicParameters->nbDim == 3) zT += (nodeConnection->info->getZ() - z) * (nodeConnection->info->getZ() - z);
+							if (publicParameters->nbDim == 3) { zT += (nodeConnection->info->getZ() - z) * (nodeConnection->info->getZ() - z); }
 						}
 						xT /= (double)nbPoints;
 						yT /= (double)nbPoints;
 						zT /= (double)nbPoints;
 						totalCA = sqrt(xT) * sqrt(yT);
-						if (publicParameters->nbDim == 3) totalCA *= zT;
+						if (publicParameters->nbDim == 3) { totalCA *= zT; }
 					}
 				}
+			}
 		}
 	}
 }
@@ -267,9 +268,9 @@ int TabTimes::readStatFile()
 
 				if (count != (long)(*localTimeNodes)(node)->info->sizeofInfoData()) { return (T_ERR_CORRUPT_FILE); }
 
-				if (publicParameters->maxX < (*localTimeNodes)(node)->info->getX()) publicParameters->maxX = (*localTimeNodes)(node)->info->getX();
-				if (publicParameters->maxY < (*localTimeNodes)(node)->info->getY()) publicParameters->maxY = (*localTimeNodes)(node)->info->getY();
-				if (publicParameters->nbDim == 3) if (publicParameters->maxZ < (*localTimeNodes)(node)->info->getZ()) publicParameters->maxZ = (*localTimeNodes)(node)->info->getZ();
+				if (publicParameters->maxX < (*localTimeNodes)(node)->info->getX()) { publicParameters->maxX = (*localTimeNodes)(node)->info->getX(); }
+				if (publicParameters->maxY < (*localTimeNodes)(node)->info->getY()) { publicParameters->maxY = (*localTimeNodes)(node)->info->getY(); }
+				if (publicParameters->nbDim == 3) { if (publicParameters->maxZ < (*localTimeNodes)(node)->info->getZ()) { publicParameters->maxZ = (*localTimeNodes)(node)->info->getZ(); } }
 			}
 
 			//Sorting the nodes by the intensity for one time
@@ -278,11 +279,12 @@ int TabTimes::readStatFile()
 			double maxIntensity;
 			for (i = 0; i < timeNodes[time_]->nbNodes - 1; i++) {
 				maxIntensity = -1.;
-				for (j = i; j < localTimeNodes->nbNodes; j++)
+				for (j = i; j < localTimeNodes->nbNodes; j++) {
 					if (maxIntensity < (*localTimeNodes)(j)->info->getIntensity()) {
 						maxIntensity = (*localTimeNodes)(j)->info->getIntensity();
 						indexMax = j;
 					}
+				}
 				nodeMax = localTimeNodes->tabNodes[indexMax];
 				localTimeNodes->tabNodes[indexMax] = localTimeNodes->tabNodes[i];
 				localTimeNodes->tabNodes[i] = nodeMax;
@@ -324,8 +326,10 @@ int TabTimes::readPointsList()
 		nbNodes = 0;
 		for (i = index; ; /*i+=4*/ i += publicParameters->NbSegParams) {
 			if (((int)publicParameters->pointsList[i + 9] != -1) && ((int)publicParameters->pointsList[i + 9] != 0)) // surface
+			{
 				nbNodes++;
-			else break;
+			}
+			else { break; }
 		}
 
 
@@ -354,9 +358,9 @@ int TabTimes::readPointsList()
 			str->setSurface((unsigned long)publicParameters->pointsList[index + node * publicParameters->NbSegParams + 9]);
 			str->setMean(publicParameters->pointsList[index + node * publicParameters->NbSegParams + 8] / (unsigned long)publicParameters->pointsList[index + node * publicParameters->NbSegParams + 9]);
 
-			if (publicParameters->maxX < (*localTimeNodes)(node)->info->getX()) publicParameters->maxX = (*localTimeNodes)(node)->info->getX();
-			if (publicParameters->maxY < (*localTimeNodes)(node)->info->getY()) publicParameters->maxY = (*localTimeNodes)(node)->info->getY();
-			if (publicParameters->nbDim == 3) if (publicParameters->maxZ < (*localTimeNodes)(node)->info->getZ()) publicParameters->maxZ = (*localTimeNodes)(node)->info->getZ();
+			if (publicParameters->maxX < (*localTimeNodes)(node)->info->getX()) { publicParameters->maxX = (*localTimeNodes)(node)->info->getX(); }
+			if (publicParameters->maxY < (*localTimeNodes)(node)->info->getY()) { publicParameters->maxY = (*localTimeNodes)(node)->info->getY(); }
+			if (publicParameters->nbDim == 3) { if (publicParameters->maxZ < (*localTimeNodes)(node)->info->getZ()) { publicParameters->maxZ = (*localTimeNodes)(node)->info->getZ(); } }
 		}
 
 		//Sorting the nodes by the intensity for one time
@@ -365,11 +369,12 @@ int TabTimes::readPointsList()
 		double maxIntensity;
 		for (i = 0; i < timeNodes[time_]->nbNodes - 1; i++) {
 			maxIntensity = -1.;
-			for (j = i; j < localTimeNodes->nbNodes; j++)
+			for (j = i; j < localTimeNodes->nbNodes; j++) {
 				if (maxIntensity < (*localTimeNodes)(j)->info->getIntensity()) {
 					maxIntensity = (*localTimeNodes)(j)->info->getIntensity();
 					indexMax = j;
 				}
+			}
 			nodeMax = localTimeNodes->tabNodes[indexMax];
 			localTimeNodes->tabNodes[indexMax] = localTimeNodes->tabNodes[i];
 			localTimeNodes->tabNodes[i] = nodeMax;
@@ -396,7 +401,7 @@ int linkNeighborsPresent() to link of the neighbors in the presents of all nodes
 int TabTimes::linkNeighborsPresent()
 {
 	int ret;
-	for (long time_ = 0; time_ < nbTimes; time_++) if ((ret = timeNodes[time_]->linkNeighborsPresent()) < 0) return (ret);
+	for (long time_ = 0; time_ < nbTimes; time_++) { if ((ret = timeNodes[time_]->linkNeighborsPresent()) < 0) { return (ret); } }
 	return (RET_OK);
 }
 
@@ -407,7 +412,7 @@ int linkNeighborsBeforeAndAfter() to link of the neighbors in the past and in th
 int TabTimes::linkNeighborsBeforeAndAfter()
 {
 	int ret;
-	for (long time_ = 0; time_ < nbTimes - 1; time_++) if ((ret = timeNodes[time_]->linkNeighborsBeforeAndAfter(*(timeNodes[time_ + 1]))) < 0) return (ret);
+	for (long time_ = 0; time_ < nbTimes - 1; time_++) { if ((ret = timeNodes[time_]->linkNeighborsBeforeAndAfter(*(timeNodes[time_ + 1]))) < 0) { return (ret); } }
 	return (RET_OK);
 }
 
@@ -418,8 +423,7 @@ all times for blinking purpose
 int TabTimes::linkNeighborsBlinkBeforeAndAfter()
 {
 	int ret;
-	for (long time_ = 0; time_ < nbTimes; time_++)
-		for (long dt = 2; dt <= publicParameters->nbTemporalWindows; dt++) if (time_ + dt < nbTimes) if ((ret = timeNodes[time_]->linkNeighborsBlinkBeforeAndAfter(*(timeNodes[time_ + dt]))) < 0) return (ret);
+	for (long time_ = 0; time_ < nbTimes; time_++) { for (long dt = 2; dt <= publicParameters->nbTemporalWindows; dt++) { if (time_ + dt < nbTimes) { if ((ret = timeNodes[time_]->linkNeighborsBlinkBeforeAndAfter(*(timeNodes[time_ + dt]))) < 0) { return (ret); } } } }
 	return (RET_OK);
 }
 
@@ -429,7 +433,7 @@ int sortByIntensityAllNeighbors() sort by intensity of the node neighbors of eac
 int TabTimes::sortByIntensityAllNeighbors()
 {
 	int ret;
-	for (long time_ = 0; time_ < nbTimes; time_++) if ((ret = timeNodes[time_]->sortByIntensityAllNeighbors()) < 0) return (ret);
+	for (long time_ = 0; time_ < nbTimes; time_++) { if ((ret = timeNodes[time_]->sortByIntensityAllNeighbors()) < 0) { return (ret); } }
 	return (RET_OK);
 }
 
@@ -465,7 +469,7 @@ void TabTimes::setColorToTrackedStructures()
 						else { //node->connectionFusion1Past==NULL
 							if (node->connectionFissionPast != NULL) {
 								node2 = (node == node->connectionFissionPast->connectionFission1Future) ? node->connectionFissionPast->connectionFission2Future : node->connectionFissionPast->connectionFission1Future;
-								for (nodePastFission = node->connectionFissionPast; nodePastFission != NULL; nodePastFission = nodePastFission->connectionPast) nodePastFission2 = nodePastFission;
+								for (nodePastFission = node->connectionFissionPast; nodePastFission != NULL; nodePastFission = nodePastFission->connectionPast) { nodePastFission2 = nodePastFission; }
 								if (nodePastFission2->connectionFusion1Past != NULL) {
 									nodePastFission3 = nodePastFission2->connectionFusion1Past;
 									nodePastFission4 = nodePastFission2->connectionFusion2Past;
@@ -518,7 +522,7 @@ void TabTimes::setColorToTrackedStructures()
 					node->colorIndex[1] = node->connectionPast->colorIndex[0];
 				}
 				if (node->connectionFission1Future != NULL) {
-					for (nodePastFission = node; nodePastFission != NULL; nodePastFission = nodePastFission->connectionPast) nodePastFission2 = nodePastFission;
+					for (nodePastFission = node; nodePastFission != NULL; nodePastFission = nodePastFission->connectionPast) { nodePastFission2 = nodePastFission; }
 					if (nodePastFission2->connectionFusion1Past != NULL) {
 						node->colorIndex[0] = nodePastFission2->connectionFusion1Past->colorIndex[0];
 						node->colorIndex[1] = nodePastFission2->connectionFusion2Past->colorIndex[0];
@@ -544,7 +548,7 @@ void TabTimes::setIndexToTrackedStructures()
 	Node* node;
 	Node* oldNode;
 	bool isNewIndex;
-	for (long time_ = 0; time_ < nbTimes; time_++)
+	for (long time_ = 0; time_ < nbTimes; time_++) {
 		for (long indexNode = 0; indexNode < timeNodes[time_]->nbNodes; indexNode++) {
 			if (timeNodes[time_]->tabNodes[indexNode]->connectionPast == NULL) {
 				for (node = timeNodes[time_]->tabNodes[indexNode], oldNode = NULL, nbSuccessiveNodes = 0; (node != NULL) && (nbSuccessiveNodes < publicParameters->nbMinSuccessiveStructures); node = node->connectionFuture, nbSuccessiveNodes++) {
@@ -553,14 +557,16 @@ void TabTimes::setIndexToTrackedStructures()
 				}
 				isNewIndex = false;
 				if (nbSuccessiveNodes >= publicParameters->nbMinSuccessiveStructures) //it was == 
+				{
 					isNewIndex = true;
-				if (timeNodes[time_]->tabNodes[indexNode]->connectionFissionPast != NULL) isNewIndex = true;
-				if (timeNodes[time_]->tabNodes[indexNode]->connectionFusion1Past != NULL) isNewIndex = true;
-				if (timeNodes[time_]->tabNodes[indexNode]->connectionBlinkPast != NULL) isNewIndex = true;
+				}
+				if (timeNodes[time_]->tabNodes[indexNode]->connectionFissionPast != NULL) { isNewIndex = true; }
+				if (timeNodes[time_]->tabNodes[indexNode]->connectionFusion1Past != NULL) { isNewIndex = true; }
+				if (timeNodes[time_]->tabNodes[indexNode]->connectionBlinkPast != NULL) { isNewIndex = true; }
 				if (oldNode != NULL) {
-					if (oldNode->connectionFission1Future != NULL) isNewIndex = true;
-					if (oldNode->connectionFusionFuture != NULL) isNewIndex = true;
-					if (oldNode->connectionBlinkFuture != NULL) isNewIndex = true;
+					if (oldNode->connectionFission1Future != NULL) { isNewIndex = true; }
+					if (oldNode->connectionFusionFuture != NULL) { isNewIndex = true; }
+					if (oldNode->connectionBlinkFuture != NULL) { isNewIndex = true; }
 				}
 
 				if (isNewIndex) {
@@ -570,6 +576,7 @@ void TabTimes::setIndexToTrackedStructures()
 			}
 			else { timeNodes[time_]->tabNodes[indexNode]->trackedStructureIndex = timeNodes[time_]->tabNodes[indexNode]->connectionPast->trackedStructureIndex; }
 		}
+	}
 }
 
 /********************************************************************************************************************
@@ -579,12 +586,13 @@ draw a segment between the nodes "node1" and "node2"
 void TabTimes::drawSegment(USrtArray& image, long time_, Node* node1, Node* node2)
 {
 	double dist = node1->distance(node2);
-	if (dist > 1e-8)
+	if (dist > 1e-8) {
 		for (double t = 0; t < dist; t++) {
 			long x = (long)(node2->info->getX() * (dist - t) / dist + node1->info->getX() * t / dist);
 			long y = (long)(node2->info->getY() * (dist - t) / dist + node1->info->getY() * t / dist);
 			image.data[time_ * image.size(1) * image.size(2) + image.size(1) * y + x] = (unsigned short)node1->colorIndex[0];
 		}
+	}
 }
 
 
@@ -600,10 +608,10 @@ int TabTimes::giveResult()
 	setColorToTrackedStructures();
 
 	if (publicParameters->fileResASCII[0] != L'\0') {
-		if ((ret = printConnectionsASCII()) < 0) return (ret);
-		if ((ret = printConnectionsASCII_trc()) < 0) return (ret); //(A enlever)
+		if ((ret = printConnectionsASCII()) < 0) { return (ret); }
+		if ((ret = printConnectionsASCII_trc()) < 0) { return (ret); } //(A enlever)
 	}
-	else if ((ret = printConnectionsASCII_trc()) < 0) return (ret);
+	else if ((ret = printConnectionsASCII_trc()) < 0) { return (ret); }
 
 	return (RET_OK);
 }
@@ -611,4 +619,4 @@ int TabTimes::giveResult()
 /********************************************************************************************************************
 void checkLinksHomogeneity() just call the function to display the result
 ********************************************************************************************************************/
-void TabTimes::checkLinksHomogeneity(const wchar_t* st) { for (long time_ = 0; time_ < nbTimes; time_++) timeNodes[time_]->checkLinksHomogeneity(st); }
+void TabTimes::checkLinksHomogeneity(const wchar_t* st) { for (long time_ = 0; time_ < nbTimes; time_++) { timeNodes[time_]->checkLinksHomogeneity(st); } }
