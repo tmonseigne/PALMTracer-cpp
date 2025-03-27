@@ -70,9 +70,7 @@ public:
 	void setSize(int di, int valSize);
 	int dim();
 	int getDepth();
-#ifdef COMPLEX
-		void conjugate();
-#endif
+
 	DataType& operator[](long i);
 	DataType& operator()(long i);
 	DataType& operator()(long i, long j);
@@ -90,29 +88,14 @@ public:
 	ArrayType& operator+=(const unsigned long val);
 	ArrayType& operator+=(const float val);
 	ArrayType& operator+=(const double val);
-#ifdef COMPLEX
-		ArrayType &operator+=(const ComplexChr val);
-		ArrayType &operator+=(const ComplexSrt val);
-		ArrayType &operator+=(const ComplexLng val);
-		ArrayType &operator+=(const ComplexFlt val);
-		ArrayType &operator+=(const ComplexDbl val);
-#endif
 
 	ArrayType& operator+=(const UChrArray& arrayType);
 	ArrayType& operator+=(const SrtArray& arrayType);
 	ArrayType& operator+=(const USrtArray& arrayType);
 	ArrayType& operator+=(const LngArray& arrayType);
-	ArrayType& operator+=(const ULngArray& arrayType);
 	ArrayType& operator+=(const FltArray& arrayType);
 	ArrayType& operator+=(const DblArray& arrayType);
 	ArrayType& operator+=(const BlArray& arrayType);
-#ifdef COMPLEX
-		ArrayType &operator+=(const CxChrArray &arrayType);
-		ArrayType &operator+=(const CxSrtArray &arrayType);
-		ArrayType &operator+=(const CxLngArray &arrayType);
-		ArrayType &operator+=(const CxFltArray &arrayType);
-		ArrayType &operator+=(const CxDblArray &arrayType);
-#endif
 #endif
 
 
@@ -126,28 +109,14 @@ public:
 	ArrayType& operator-=(const unsigned long val);
 	ArrayType& operator-=(const float val);
 	ArrayType& operator-=(const double val);
-#ifdef COMPLEX
-		ArrayType &operator-=(const ComplexChr val);
-		ArrayType &operator-=(const ComplexSrt val);
-		ArrayType &operator-=(const ComplexLng val);
-		ArrayType &operator-=(const ComplexFlt val);
-		ArrayType &operator-=(const ComplexDbl val);
-#endif
 
 	ArrayType& operator-=(const UChrArray& arrayType);
 	ArrayType& operator-=(const SrtArray& arrayType);
 	ArrayType& operator-=(const USrtArray& arrayType);
 	ArrayType& operator-=(const LngArray& arrayType);
-	ArrayType& operator-=(const ULngArray& arrayType);
 	ArrayType& operator-=(const FltArray& arrayType);
 	ArrayType& operator-=(const DblArray& arrayType);
-#ifdef COMPLEX
-		ArrayType &operator-=(const CxChrArray &arrayType);
-		ArrayType &operator-=(const CxSrtArray &arrayType);
-		ArrayType &operator-=(const CxLngArray &arrayType);
-		ArrayType &operator-=(const CxFltArray &arrayType);
-		ArrayType &operator-=(const CxDblArray &arrayType);
-#endif
+
 #endif
 
 	//**************		*=		*********************=
@@ -160,29 +129,15 @@ public:
 	ArrayType& operator*=(const unsigned long val);
 	ArrayType& operator*=(const float val);
 	ArrayType& operator*=(const double val);
-#ifdef COMPLEX
-		ArrayType &operator*=(const ComplexChr val);
-		ArrayType &operator*=(const ComplexSrt val);
-		ArrayType &operator*=(const ComplexLng val);
-		ArrayType &operator*=(const ComplexFlt val);
-		ArrayType &operator*=(const ComplexDbl val);
-#endif
 
 	ArrayType& operator*=(const UChrArray& arrayType);
 	ArrayType& operator*=(const SrtArray& arrayType);
 	ArrayType& operator*=(const USrtArray& arrayType);
 	ArrayType& operator*=(const LngArray& arrayType);
-	ArrayType& operator*=(const ULngArray& arrayType);
 	ArrayType& operator*=(const FltArray& arrayType);
 	ArrayType& operator*=(const DblArray& arrayType);
 	ArrayType& operator*=(const BlArray& arrayType);
-#ifdef COMPLEX
-		ArrayType &operator*=(const CxChrArray &arrayType);
-		ArrayType &operator*=(const CxSrtArray &arrayType);
-		ArrayType &operator*=(const CxLngArray &arrayType);
-		ArrayType &operator*=(const CxFltArray &arrayType);
-		ArrayType &operator*=(const CxDblArray &arrayType);
-#endif
+
 #endif
 
 	//**************		/=		*********************=
@@ -195,27 +150,14 @@ public:
 	ArrayType& operator/=(const unsigned long val);
 	ArrayType& operator/=(const float val);
 	ArrayType& operator/=(const double val);
-#ifdef COMPLEX
-		ArrayType &operator/=(const ComplexChr val);
-		ArrayType &operator/=(const ComplexSrt val);
-		ArrayType &operator/=(const ComplexLng val);
-		ArrayType &operator/=(const ComplexFlt val);
-		ArrayType &operator/=(const ComplexDbl val);
-#endif
+
 	ArrayType& operator/=(const UChrArray& arrayType);
 	ArrayType& operator/=(const SrtArray& arrayType);
 	ArrayType& operator/=(const USrtArray& arrayType);
 	ArrayType& operator/=(const LngArray& arrayType);
-	ArrayType& operator/=(const ULngArray& arrayType);
 	ArrayType& operator/=(const FltArray& arrayType);
 	ArrayType& operator/=(const DblArray& arrayType);
-#ifdef COMPLEX
-		ArrayType &operator/=(const CxChrArray &arrayType);
-		ArrayType &operator/=(const CxSrtArray &arrayType);
-		ArrayType &operator/=(const CxLngArray &arrayType);
-		ArrayType &operator/=(const CxFltArray &arrayType);
-		ArrayType &operator/=(const CxDblArray &arrayType);
-#endif
+
 #endif
 
 
@@ -229,40 +171,22 @@ public:
 	ArrayType& operator=(const float val);
 	ArrayType& operator=(const double val);
 	ArrayType& operator=(const bool val);
-#ifdef COMPLEX
-		ArrayType &operator=(const ComplexChr val);
-		ArrayType &operator=(const ComplexSrt val);
-		ArrayType &operator=(const ComplexLng val);
-		ArrayType &operator=(const ComplexFlt val);
-		ArrayType &operator=(const ComplexDbl val);
-#endif
 
 	ArrayType& operator=(const UChrArray& arrayType);
 	ArrayType& operator=(const SrtArray& arrayType);
 	ArrayType& operator=(const USrtArray& arrayType);
 	ArrayType& operator=(const LngArray& arrayType);
-	ArrayType& operator=(const ULngArray& arrayType);
 	ArrayType& operator=(const FltArray& arrayType);
 	ArrayType& operator=(const DblArray& arrayType);
 	ArrayType& operator=(const BlArray& arrayType);
-#ifdef COMPLEX
-		ArrayType &operator=(const CxChrArray &arrayType);
-		ArrayType &operator=(const CxSrtArray &arrayType);
-		ArrayType &operator=(const CxLngArray &arrayType);
-		ArrayType &operator=(const CxFltArray &arrayType);
-		ArrayType &operator=(const CxDblArray &arrayType);
-#endif
 
 #ifndef BOOL_TYPE
-#ifndef	COMPLEX
 	ArrayType& operator++(void);
 	ArrayType& operator--(void);
-#endif
 #endif
 	bool isThereData(void);
 
 #ifndef BOOL_TYPE
-#ifndef	COMPLEX
 #ifdef min
 #undef min
 #endif
@@ -275,25 +199,19 @@ public:
 	void renormalizeZD(double zero, double dilation);
 	void renormalizeZD(double zero, double dilation, long min, long max);
 #endif
-#endif
 
 
 #ifndef BOOL_TYPE
-#ifndef	COMPLEX
 	double sigma(void);
 	double power(void);
 #endif
-#endif
 
 #ifndef BOOL_TYPE
-#ifndef	COMPLEX
 	double mean(void);
 	double sum(void);
 #endif
-#endif
 
 #ifndef BOOL_TYPE
-#ifndef	COMPLEX
 	void hardThresholdPositive(DataType val);
 	void hardThresholdPositive(ArrayType& arrayType, DataType val);
 	void softThresholdPositive(DataType val);
@@ -307,7 +225,6 @@ public:
 	void hardThresholdPosNegContinue(DataType val);
 	void softThresholdPosNeg(DataType val);
 	void continuousThreshold(DataType val);
-#endif
 #endif
 #endif
 	void writeArray(wchar_t* fileName);

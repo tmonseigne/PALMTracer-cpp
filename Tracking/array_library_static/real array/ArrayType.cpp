@@ -82,11 +82,7 @@ int ArrayType::testDim(const long i, const long j, const long k, const long l)
 
 int ArrayType::getDepth()
 {
-#ifdef COMPLEX
-		return(16*sizeof(DataTypeSimple));
-#else
 	return (8 * sizeof(DataType));
-#endif
 }
 
 
@@ -272,12 +268,6 @@ DataType&ArrayType::operator()(long i, long j, long k, long l) { return (data[((
 #undef ArrayType2
 #undef DataType2
 
-#define DataType2 unsigned long
-#define ArrayType2 ULngArray
-#include "operators.cpp"
-#undef ArrayType2
-#undef DataType2
-
 #define DataType2 float
 #define ArrayType2 FltArray
 #include "operators.cpp"
@@ -299,45 +289,7 @@ DataType&ArrayType::operator()(long i, long j, long k, long l) { return (data[((
 #undef ArrayType2
 #undef DataType2
 
-#ifdef COMPLEX
-	#define COMPLEX2
-
-	#define DataType2 ComplexChr
-	#define ArrayType2 CxChrArray
-	#include "operators.cpp"
-	#undef ArrayType2
-	#undef DataType2
-
-	#define DataType2 ComplexSrt
-	#define ArrayType2 CxSrtArray
-	#include "operators.cpp"
-	#undef ArrayType2
-	#undef DataType2
-
-	#define DataType2 ComplexLng
-	#define ArrayType2 CxLngArray
-	#include "operators.cpp"
-	#undef ArrayType2
-	#undef DataType2
-
-	#define DataType2 ComplexFlt
-	#define ArrayType2 CxFltArray
-	#include "operators.cpp"
-	#undef ArrayType2
-	#undef DataType2
-
-	#define DataType2 ComplexDbl
-	#define ArrayType2 CxDblArray
-	#include "operators.cpp"
-	#undef ArrayType2
-	#undef DataType2
-	
-	#undef COMPLEX2
-#endif
-
-
 //**************		++		*********************
-#ifndef	COMPLEX
 #ifndef BOOL_TYPE
 ArrayType& ArrayType::operator++(void)
 {
@@ -345,10 +297,8 @@ ArrayType& ArrayType::operator++(void)
 	return (*this);
 }
 #endif
-#endif
 
 //**************		--		*********************
-#ifndef	COMPLEX
 #ifndef BOOL_TYPE
 ArrayType& ArrayType::operator--(void)
 {
@@ -356,19 +306,9 @@ ArrayType& ArrayType::operator--(void)
 	return (*this);
 }
 #endif
-#endif
 
 
 //*************		standard methods		*****************
-
-
-#ifdef	COMPLEX
-void ArrayType::conjugate(){
-	long l;
-	for(l=0;l<(long)nbPoints;l++)
-		data[l][1]=-data[l][1];
-}
-#endif
 
 int ArrayType::size(int di) { return (sizeData[di]); }
 
@@ -389,7 +329,6 @@ int ArrayType::dim() { return (nbDim); }
 
 
 #ifndef BOOL_TYPE
-#ifndef	COMPLEX
 DataType ArrayType::min(void)
 {
 	if (!isThereData()) {
@@ -403,10 +342,8 @@ DataType ArrayType::min(void)
 	return (_min);
 }
 #endif
-#endif
 
 #ifndef BOOL_TYPE
-#ifndef	COMPLEX
 DataType ArrayType::max(void)
 {
 	if (!isThereData()) {
@@ -420,10 +357,8 @@ DataType ArrayType::max(void)
 	return (_max);
 }
 #endif
-#endif
 
 #ifndef BOOL_TYPE
-#ifndef	COMPLEX
 void ArrayType::renormalize(double _min, double _max)
 {
 	DataType oldMin, oldMax;
@@ -438,10 +373,8 @@ void ArrayType::renormalize(double _min, double _max)
 	}
 }
 #endif
-#endif
 
 #ifndef BOOL_TYPE
-#ifndef	COMPLEX
 void ArrayType::renormalizeZD(double zero, double dilation)
 {
 	double val;
@@ -451,10 +384,8 @@ void ArrayType::renormalizeZD(double zero, double dilation)
 	}
 }
 #endif
-#endif
 
 #ifndef BOOL_TYPE
-#ifndef	COMPLEX
 void ArrayType::renormalizeZD(double zero, double dilation, long _min, long _max)
 {
 	double val;
@@ -466,9 +397,7 @@ void ArrayType::renormalizeZD(double zero, double dilation, long _min, long _max
 	}
 }
 #endif
-#endif
 
-#ifndef COMPLEX
 #ifndef BOOL_TYPE
 double ArrayType::sigma(void)
 {
@@ -483,9 +412,7 @@ double ArrayType::sigma(void)
 	else return (sqrt(var));
 }
 #endif
-#endif
 
-#ifndef COMPLEX
 #ifndef BOOL_TYPE
 double ArrayType::power(void)
 {
@@ -496,10 +423,8 @@ double ArrayType::power(void)
 	return (pow);
 }
 #endif
-#endif
 
 
-#ifndef COMPLEX
 #ifndef BOOL_TYPE
 double ArrayType::mean()
 {
@@ -510,9 +435,7 @@ double ArrayType::mean()
 	return (m);
 }
 #endif
-#endif
 
-#ifndef COMPLEX
 #ifndef BOOL_TYPE
 double ArrayType::sum()
 {
@@ -522,31 +445,9 @@ double ArrayType::sum()
 	return (m);
 }
 #endif
-#endif
-
-/*#ifdef COMPLEX
-DataType ArrayType::mean(){
-	unsigned long i;
-	DataType m=(DataTypeComplex)0.;
-	for(i=0;i<nbPoints;i++)
-		m+=data[i];
-	m/=(DataTypeComplex)nbPoints	return(m);
-}
-#endif
-
-#ifdef COMPLEX
-DataType ArrayType::sum(){
-	unsigned long i;
-	DataType m=(DataTypeComplex)0;
-	for(i=0;i<nbPoints;i++)
-		m+=data[i];
-	return(m);
-}
-#endif*/
 
 
 //****************		Threshold		*********************
-#ifndef COMPLEX
 #ifndef BOOL_TYPE
 void ArrayType::hardThresholdPositive(DataType val)
 {
@@ -554,10 +455,8 @@ void ArrayType::hardThresholdPositive(DataType val)
 	for (i = 0; i < nbPoints; i++) if (data[i] < val) data[i] = (DataType)0;
 }
 #endif
-#endif
 
 
-#ifndef COMPLEX
 #ifndef BOOL_TYPE
 void ArrayType::hardThresholdPositive(ArrayType& arrayType, DataType val)
 {
@@ -567,9 +466,7 @@ void ArrayType::hardThresholdPositive(ArrayType& arrayType, DataType val)
 		else data[i] = arrayType.data[i];
 }
 #endif
-#endif
 
-#ifndef COMPLEX
 #ifndef BOOL_TYPE
 void ArrayType::hardThresholdNegative(DataType val)
 {
@@ -577,9 +474,7 @@ void ArrayType::hardThresholdNegative(DataType val)
 	for (i = 0; i < nbPoints; i++) if (data[i] > val) data[i] = (DataType)0;
 }
 #endif
-#endif
 
-#ifndef COMPLEX
 #ifndef BOOL_TYPE
 void ArrayType::hardThresholdNegative(ArrayType& arrayType, DataType val)
 {
@@ -589,10 +484,8 @@ void ArrayType::hardThresholdNegative(ArrayType& arrayType, DataType val)
 		else data[i] = arrayType.data[i];
 }
 #endif
-#endif
 
 
-#ifndef COMPLEX
 #ifndef BOOL_TYPE
 void ArrayType::softThresholdPositive(DataType val)
 {
@@ -602,10 +495,8 @@ void ArrayType::softThresholdPositive(DataType val)
 		else data[i] -= val;
 }
 #endif
-#endif
 
 
-#ifndef COMPLEX
 #ifndef BOOL_TYPE
 void ArrayType::hardThresholdInterval(DataType valMin, DataType valMax, bool between)
 {
@@ -615,9 +506,7 @@ void ArrayType::hardThresholdInterval(DataType valMin, DataType valMax, bool bet
 		for (i = 0; i < nbPoints; i++) if ((data[i] > valMin) && (data[i] < valMax)) data[i] = (DataType)0;
 }
 #endif
-#endif
 
-#ifndef COMPLEX
 #ifndef BOOL_TYPE
 void ArrayType::hardThresholdInterval(ArrayType& arrayType, DataType valMin, DataType valMax, bool between)
 {
@@ -633,11 +522,9 @@ void ArrayType::hardThresholdInterval(ArrayType& arrayType, DataType valMin, Dat
 			else data[i] = arrayType.data[i];
 }
 #endif
-#endif
 
 
 #ifndef UNSIGNED
-#ifndef COMPLEX
 #ifndef BOOL_TYPE
 void ArrayType::hardThresholdPosNeg(DataType val)
 {
@@ -646,11 +533,9 @@ void ArrayType::hardThresholdPosNeg(DataType val)
 }
 #endif
 #endif
-#endif
 
 
 #ifndef UNSIGNED
-#ifndef COMPLEX
 #ifndef BOOL_TYPE
 void ArrayType::hardThresholdPosNegContinue(DataType val)
 {
@@ -661,10 +546,8 @@ void ArrayType::hardThresholdPosNegContinue(DataType val)
 }
 #endif
 #endif
-#endif
 
 #ifndef UNSIGNED
-#ifndef COMPLEX
 #ifndef BOOL_TYPE
 void ArrayType::softThresholdPosNeg(DataType val)
 {
@@ -678,10 +561,8 @@ void ArrayType::softThresholdPosNeg(DataType val)
 }
 #endif
 #endif
-#endif
 
 #ifndef UNSIGNED
-#ifndef COMPLEX
 #ifndef BOOL_TYPE
 void ArrayType::continuousThreshold(DataType val)
 {
@@ -690,7 +571,6 @@ void ArrayType::continuousThreshold(DataType val)
 	val_2 = val * val;
 	for (i = 0; i < nbPoints; i++) data[i] = (DataType)(data[i] * (1. - exp(-data[i] * data[i] * .5 / val_2)));
 }
-#endif
 #endif
 #endif
 
@@ -727,12 +607,6 @@ void ArrayType::writeArray(wchar_t* fileName)
 			closeDebugStreamALS();
 			exit(WRITING_FILE_ERR);
 		}
-		//		cout << nbCharWrite<< " " << sizeof(DataType)*nbPoints<<endl;
-#ifdef COMPLEX
-		//			cout << data[0][0] << data[0][1] << endl;
-#else
-		//			cout << data[0]<< endl;
-#endif
 		close(fileHandle);
 	}
 	else {

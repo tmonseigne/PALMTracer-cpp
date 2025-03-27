@@ -25,17 +25,7 @@ ArrayType& ArrayType::operator=(const ArrayType2& arrayType)
 			else
 				data[i]=true;
 #else
-#ifdef COMPLEX
-#ifdef COMPLEX2
-						data[i][0]=(DataTypeSimple)arrayType.data[i][0];
-						data[i][1]=(DataTypeSimple)arrayType.data[i][1];
-#else
-						data[i][0]=(DataTypeSimple)arrayType.data[i];
-						data[i][1]=(DataTypeSimple)0;
-#endif
-#else
 			data[i] = (DataType)arrayType.data[i];
-#endif
 #endif
 		}
 	return (*this);
@@ -49,25 +39,10 @@ ArrayType& ArrayType::operator=(const DataType2 val)
 	if(val==0) val2=false;
 	else val2=true;
 #else
-#ifdef COMPLEX
-#ifdef COMPLEX2
-				val2[0]=(DataTypeSimple)val[0];
-				val2[1]=(DataTypeSimple)val[1];
-#else
-				val2[0]=(DataTypeSimple)val;
-				val2[1]=(DataTypeSimple)0;
-#endif
-#else
 	val2 = (DataType)val;
 #endif
-#endif
 	for (unsigned long i = 0; i < nbPoints; i++) {
-#ifdef COMPLEX
-				data[i][0]=val2[0];
-				data[i][1]=val2[1];
-#else
 		data[i] = val2;
-#endif
 	}
 	return (*this);
 }
@@ -89,16 +64,7 @@ ArrayType& ArrayType::operator+=(const ArrayType2& arrayType)
 		if (arrayType.data[i]!=(DataType2)0)
 			data[i]=true;
 #else
-#ifdef COMPLEX
-#ifdef COMPLEX2
-					data[i][0]+=(DataTypeSimple)arrayType.data[i][0];
-					data[i][1]+=(DataTypeSimple)arrayType.data[i][1];
-#else
-					data[i][0]+=(DataTypeSimple)arrayType.data[i];
-#endif
-#else
 		data[i] += (DataType)arrayType.data[i];
-#endif
 #endif
 	}
 	return (*this);
@@ -108,28 +74,9 @@ ArrayType& ArrayType::operator+=(const ArrayType2& arrayType)
 ArrayType& ArrayType::operator+=(const DataType2 val)
 {
 	DataType val2;
-#ifdef COMPLEX
-#ifdef COMPLEX2
-			val2[0]=(DataTypeSimple)val[0];
-			val2[1]=(DataTypeSimple)val[1];
-#else
-			val2[0]=(DataTypeSimple)val;
-			val2[1]=(DataTypeSimple)0;
-#endif
-#else
 	val2 = (DataType)val;
-#endif
 	for (unsigned long i = 0; i < nbPoints; i++) {
-#ifdef COMPLEX
-#ifdef COMPLEX2
-			data[i][0]+=val2[0];
-			data[i][1]+=val2[1];
-#else
-			data[i][0]+=val2[0];
-#endif
-#else
 		data[i] += val2;
-#endif
 	}
 
 	return (*this);
@@ -150,16 +97,7 @@ ArrayType& ArrayType::operator-=(const ArrayType2& arrayType)
 		exit(SIZE_ERR);
 	}
 	for (unsigned long i = 0; i < nbPoints; i++) {
-#ifdef COMPLEX
-#ifdef COMPLEX2
-				data[i][0]-=(DataTypeSimple)arrayType.data[i][0];
-				data[i][1]-=(DataTypeSimple)arrayType.data[i][1];
-#else
-				data[i][0]-=(DataTypeSimple)arrayType.data[i];
-#endif
-#else
 		data[i] -= (DataType)arrayType.data[i];
-#endif
 	}
 	return (*this);
 }
@@ -167,30 +105,11 @@ ArrayType& ArrayType::operator-=(const ArrayType2& arrayType)
 ArrayType& ArrayType::operator-=(const DataType2 val)
 {
 	DataType val2;
-#ifdef COMPLEX
-#ifdef COMPLEX2
-			val2[0]=(DataTypeSimple)val[0];
-			val2[1]=(DataTypeSimple)val[1];
-#else
-			val2[0]=(DataTypeSimple)val;
-			val2[1]=(DataTypeSimple)0;
-#endif
-#else
 	val2 = (DataType)val;
-#endif
 
 
 	for (unsigned long i = 0; i < nbPoints; i++) {
-#ifdef COMPLEX
-#ifdef COMPLEX2
-			data[i][0]-=val2[0];
-			data[i][1]-=val2[1];
-#else
-			data[i][0]-=val2[0];
-#endif
-#else
 		data[i] -= val2;
-#endif
 	}
 	return (*this);
 }
@@ -210,18 +129,7 @@ ArrayType& ArrayType::operator*=(const ArrayType2& arrayType)
 			if(arrayType.data[i]==(DataType2)0)
 				data[i]=false;
 #else
-#ifdef COMPLEX
-#ifdef COMPLEX2
-					DataTypeSimple data_i__0_=data[i][0];
-					data[i][0]=data_i__0_*(DataTypeSimple)arrayType.data[i][0]-data[i][1]*(DataTypeSimple)arrayType.data[i][1];
-					data[i][1]=data[i][1]*(DataTypeSimple)arrayType.data[i][0]+data_i__0_*(DataTypeSimple)arrayType.data[i][1];
-#else
-					data[i][0]*=(DataTypeSimple)arrayType.data[i];
-					data[i][1]*=(DataTypeSimple)arrayType.data[i];
-#endif
-#else
 		data[i] *= (DataType)arrayType.data[i];
-#endif
 #endif
 	}
 	return (*this);
@@ -234,31 +142,10 @@ ArrayType& ArrayType::operator*=(const ArrayType2& arrayType)
 ArrayType& ArrayType::operator*=(const DataType2 val)
 {
 	DataType val2;
-#ifdef COMPLEX
-#ifdef COMPLEX2
-			val2[0]=(DataTypeSimple)val[0];
-			val2[1]=(DataTypeSimple)val[1];
-#else
-			val2[0]=(DataTypeSimple)val;
-			val2[1]=(DataTypeSimple)0;
-#endif
-#else
 	val2 = (DataType)val;
-#endif
 
 	for (unsigned long i = 0; i < nbPoints; i++) {
-#ifdef COMPLEX
-#ifdef COMPLEX2
-				DataTypeSimple data_i__0_=data[i][0];
-				data[i][0]=data_i__0_*val2[0]-data[i][1]*val2[1];
-				data[i][1]=data[i][1]*val2[0]+data_i__0_*val2[1];
-#else
-				data[i][0]*=val2[0];
-				data[i][1]*=val2[0];
-#endif
-#else
 		data[i] *= val2;
-#endif
 	}
 	return (*this);
 }
@@ -278,22 +165,7 @@ ArrayType& ArrayType::operator/=(const ArrayType2& arrayType)
 		exit(SIZE_ERR);
 	}
 	for (unsigned long i = 0; i < nbPoints; i++) {
-#ifdef COMPLEX
-#ifdef COMPLEX2
-				DataTypeSimple data_i__0_=data[i][0];
-				data[i][0]=(data_i__0_*(DataTypeSimple)arrayType.data[i][0]+data[i][1]*(DataTypeSimple)arrayType.data[i][1])
-					/((DataTypeSimple)arrayType.data[i][0]*(DataTypeSimple)arrayType.data[i][0]
-					+(DataTypeSimple)arrayType.data[i][1]*(DataTypeSimple)arrayType.data[i][1]);
-				data[i][1]=(data[i][1]*(DataTypeSimple)arrayType.data[i][0]-data_i__0_*(DataTypeSimple)arrayType.data[i][1])
-					/((DataTypeSimple)arrayType.data[i][0]*(DataTypeSimple)arrayType.data[i][0]
-					+(DataTypeSimple)arrayType.data[i][1]*(DataTypeSimple)arrayType.data[i][1]);
-#else
-				data[i][0]/=(DataTypeSimple)arrayType.data[i];
-				data[i][1]/=(DataTypeSimple)arrayType.data[i];
-#endif
-#else
 		data[i] /= (DataType)arrayType.data[i];
-#endif
 	}
 	return (*this);
 }
@@ -302,32 +174,9 @@ ArrayType& ArrayType::operator/=(const ArrayType2& arrayType)
 ArrayType& ArrayType::operator/=(const DataType2 val)
 {
 	DataType val2;
-#ifdef COMPLEX
-#ifdef COMPLEX2
-			val2[0]=(DataTypeSimple)val[0];
-			val2[1]=(DataTypeSimple)val[1];
-#else
-			val2[0]=(DataTypeSimple)val;
-			val2[1]=(DataTypeSimple)0;
-#endif
-#else
 	val2 = (DataType)val;
-#endif
 	for (unsigned long i = 0; i < nbPoints; i++) {
-#ifdef COMPLEX
-#ifdef COMPLEX2
-				DataTypeSimple data_i__0_=data[i][0];
-				data[i][0]=(data_i__0_*val2[0]+data[i][1]*val2[1])
-					/(val2[0]*val2[0]+val2[1]*val2[1]);
-				data[i][1]=(data[i][1]*val2[0]-data_i__0_*val2[1])
-					/(val2[0]*val2[0]+val2[1]*val2[1]);
-#else
-				data[i][0]/=val2[0];
-				data[i][1]/=val2[0];
-#endif
-#else
-		data[i] /= val2;;
-#endif
+		data[i] /= val2;
 	}
 	return (*this);
 }
