@@ -2,17 +2,13 @@
 
 /*******************************************************************************************************************
 								Link class to treat data from segmentation of images 3D (16bit only)
-									Institut Curie
-									UMR - 144
-									by Victor Racine
-									april 25th 2003
 *******************************************************************************************************************/
 
 #ifndef __link_3D__
 #define __link_3D__
 
 #include <stdio.h>
-#include "../array_library_static/allDataLib.h"
+#include "tools/allDataLib.h"
 extern int __nbInfoStrucAlloc;
 extern int __nbInfoStrucDealloc;
 

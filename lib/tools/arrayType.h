@@ -1,18 +1,20 @@
+/*******************************************************************************************************************
+								Pactage for general array use
+*******************************************************************************************************************/
+
 #ifdef		_ARRAY_TYPE_
 
 
-//LIBRARY
-//#include <iostream>
-//#include <stdio.h>
-#include <share.h>
-//#include <fstream>
+//LIBERARY
 #include <fcntl.h>
 #include <io.h>
+#include <iostream>
 #include <math.h>
 #include <memory.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include "GeneralParam.h"
+#include "tools/generalParam.h"
 //extern "C"{
 
 
@@ -87,7 +89,6 @@ public:
 	ArrayType& operator+=(const USrtArray& arrayType);
 	ArrayType& operator+=(const FltArray& arrayType);
 	ArrayType& operator+=(const BlArray& arrayType);
-
 #endif
 
 
@@ -133,7 +134,6 @@ public:
 	ArrayType& operator/=(const USrtArray& arrayType);
 	ArrayType& operator/=(const FltArray& arrayType);
 #endif
-
 
 	//**************		=		*********************=
 	ArrayType& operator=(const char val);
@@ -190,10 +190,10 @@ public:
 	void hardThresholdInterval(ArrayType& arrayType, DataType valMin, DataType valMax, bool between);
 
 #ifndef UNSIGNED
-		void hardThresholdPosNeg( DataType val );
-		void hardThresholdPosNegContinue( DataType val );
-		void softThresholdPosNeg( DataType val );
-		void continuousThreshold(DataType val);
+	void hardThresholdPosNeg(DataType val);
+	void hardThresholdPosNegContinue(DataType val);
+	void softThresholdPosNeg(DataType val);
+	void continuousThreshold(DataType val);
 #endif
 #endif
 	void writeArray(wchar_t* fileName);

@@ -12,7 +12,7 @@
 #define __link_2D__
 
 #include <stdio.h>
-#include "../array_library_static/allDataLib.h"
+#include "tools/allDataLib.h"
 extern int __nbInfoStrucAlloc;
 extern int __nbInfoStrucDealloc;
 

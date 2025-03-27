@@ -1,3 +1,7 @@
+/*******************************************************************************************************************
+								Pactage for general floating point array use
+*******************************************************************************************************************/
+
 #include "allRealDataLib.h"
 
 
@@ -5,7 +9,6 @@
 #define DataType	float
 #define ArrayType	FltArray
 #include "ArrayType.cpp"
-#pragma message("after ArrayType")
 #undef DataType
 #undef ArrayType
 #undef _ARRAY_TYPE_

@@ -1,9 +1,5 @@
 /*******************************************************************************************************************
-								Pactage for general boolean array
-									Institut Curie
-									UMR - 144
-									by Victor Racine
-									mars, 3rd 2003
+								Pactage for general boolean array									
 *******************************************************************************************************************/
 
 #ifndef		_BL_ARRAY_
@@ -14,13 +10,14 @@
 #define DataType	bool
 #define ArrayType	BlArray
 #define NB_TYPE	9
-#define TYPE_NAME L"BlArray"
+#define TYPE_NAME "BlArray"
 #include "ArrayType.h"
 #undef TYPE_NAME
-#undef _ARRAY_TYPE_
-#undef BOOL_TYPE
-#undef DataType
-#undef ArrayType
+
 #undef NB_TYPE
+#undef ArrayType
+#undef DataType
+#undef BOOL_TYPE
+#undef _ARRAY_TYPE_
 
 #endif

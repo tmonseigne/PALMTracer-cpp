@@ -557,10 +557,8 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 						}
 						else if (structFinded != SEG(i-1, j-1)) {
 							mini = min(structFinded,SEG(i-1, j-1), ptr[structFinded], ptr[SEG(i-1, j-1)]);
-							if ((long)ptr[SEG(i-1, j-1)] <= mini)
-								for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j-1)) if (ptr[SEG(i-1, j-1)] == ptr[k]) ptr[k] = mini;
-							if ((long)ptr[SEG(i, j)] <= mini)
-								for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+							if ((long)ptr[SEG(i-1, j-1)] <= mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j-1)) if (ptr[SEG(i-1, j-1)] == ptr[k]) ptr[k] = mini;
+							if ((long)ptr[SEG(i, j)] <= mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
 							ptr[SEG(i-1, j-1)] = mini;
 							ptr[structFinded] = mini;
 							structFinded = mini;
@@ -574,10 +572,8 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 					}
 					else if (structFinded != SEG(i-1, j)) {
 						mini = min(structFinded,SEG(i-1, j), ptr[structFinded], ptr[SEG(i-1, j)]);
-						if ((long)ptr[SEG(i-1, j)] > mini)
-							for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j)) if (ptr[SEG(i-1, j)] == ptr[k]) ptr[k] = mini;
-						if ((long)ptr[SEG(i, j)] > mini)
-							for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+						if ((long)ptr[SEG(i-1, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j)) if (ptr[SEG(i-1, j)] == ptr[k]) ptr[k] = mini;
+						if ((long)ptr[SEG(i, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
 						ptr[SEG(i-1, j)] = mini;
 						ptr[structFinded] = mini;
 						structFinded = mini;
@@ -593,10 +589,8 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 							}
 							else if (structFinded != SEG(i-1, j+1)) {
 								mini = min(structFinded,SEG(i-1, j+1), ptr[structFinded], ptr[SEG(i-1, j+1)]);
-								if ((long)ptr[SEG(i-1, j+1)] > mini)
-									for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j+1)) if (ptr[SEG(i-1, j+1)] == ptr[k]) ptr[k] = mini;
-								if ((long)ptr[SEG(i, j)] > mini)
-									for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+								if ((long)ptr[SEG(i-1, j+1)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j+1)) if (ptr[SEG(i-1, j+1)] == ptr[k]) ptr[k] = mini;
+								if ((long)ptr[SEG(i, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
 								ptr[SEG(i-1, j+1)] = mini;
 								ptr[structFinded] = mini;
 								structFinded = mini;
@@ -712,10 +706,8 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 						}
 						else if (structFinded != SEG(i-1, j-1)) {
 							mini = min(structFinded,SEG(i-1, j-1), ptr[structFinded], ptr[SEG(i-1, j-1)]);
-							if ((long)ptr[SEG(i-1, j-1)] > mini)
-								for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j-1)) if (ptr[SEG(i-1, j-1)] == ptr[k]) ptr[k] = mini;
-							if ((long)ptr[SEG(i, j)] > mini)
-								for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+							if ((long)ptr[SEG(i-1, j-1)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j-1)) if (ptr[SEG(i-1, j-1)] == ptr[k]) ptr[k] = mini;
+							if ((long)ptr[SEG(i, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
 							ptr[SEG(i-1, j-1)] = mini;
 							ptr[structFinded] = mini;
 							structFinded = mini;
@@ -729,10 +721,8 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 					}
 					else if (structFinded != SEG(i-1, j)) {
 						mini = min(structFinded,SEG(i-1, j), ptr[structFinded], ptr[SEG(i-1, j)]);
-						if ((long)ptr[SEG(i-1, j)] > mini)
-							for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j)) if (ptr[SEG(i-1, j)] == ptr[k]) ptr[k] = mini;
-						if ((long)ptr[SEG(i, j)] > mini)
-							for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+						if ((long)ptr[SEG(i-1, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j)) if (ptr[SEG(i-1, j)] == ptr[k]) ptr[k] = mini;
+						if ((long)ptr[SEG(i, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
 						ptr[SEG(i-1, j)] = mini;
 						ptr[structFinded] = mini;
 						structFinded = mini;
@@ -748,10 +738,8 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 							}
 							else if (structFinded != SEG(i-1, j+1)) {
 								mini = min(structFinded,SEG(i-1, j+1), ptr[structFinded], ptr[SEG(i-1, j+1)]);
-								if ((long)ptr[SEG(i-1, j+1)] > mini)
-									for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j+1)) if (ptr[SEG(i-1, j+1)] == ptr[k]) ptr[k] = mini;
-								if ((long)ptr[SEG(i, j)] > mini)
-									for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+								if ((long)ptr[SEG(i-1, j+1)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j+1)) if (ptr[SEG(i-1, j+1)] == ptr[k]) ptr[k] = mini;
+								if ((long)ptr[SEG(i, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
 								ptr[SEG(i-1, j+1)] = mini;
 								ptr[structFinded] = mini;
 								structFinded = mini;
@@ -866,10 +854,8 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 						}
 						else if (structFinded != SEG(i-1, j-1)) {
 							mini = min(structFinded,SEG(i-1, j-1), ptr[structFinded], ptr[SEG(i-1, j-1)]);
-							if ((long)ptr[SEG(i-1, j-1)] > mini)
-								for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j-1)) if (ptr[SEG(i-1, j-1)] == ptr[k]) ptr[k] = mini;
-							if ((long)ptr[SEG(i, j)] > mini)
-								for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+							if ((long)ptr[SEG(i-1, j-1)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j-1)) if (ptr[SEG(i-1, j-1)] == ptr[k]) ptr[k] = mini;
+							if ((long)ptr[SEG(i, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
 							ptr[SEG(i-1, j-1)] = mini;
 							ptr[structFinded] = mini;
 							structFinded = mini;
@@ -883,10 +869,8 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 					}
 					else if (structFinded != SEG(i-1, j)) {
 						mini = min(structFinded,SEG(i-1, j), ptr[structFinded], ptr[SEG(i-1, j)]);
-						if ((long)ptr[SEG(i-1, j)] > mini)
-							for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j)) if (ptr[SEG(i-1, j)] == ptr[k]) ptr[k] = mini;
-						if ((long)ptr[SEG(i, j)] > mini)
-							for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+						if ((long)ptr[SEG(i-1, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j)) if (ptr[SEG(i-1, j)] == ptr[k]) ptr[k] = mini;
+						if ((long)ptr[SEG(i, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
 						ptr[SEG(i-1, j)] = mini;
 						ptr[structFinded] = mini;
 						structFinded = mini;
@@ -902,10 +886,8 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 							}
 							else if (structFinded != SEG(i-1, j+1)) {
 								mini = min(structFinded,SEG(i-1, j+1), ptr[structFinded], ptr[SEG(i-1, j+1)]);
-								if ((long)ptr[SEG(i-1, j+1)] > mini)
-									for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j+1)) if (ptr[SEG(i-1, j+1)] == ptr[k]) ptr[k] = mini;
-								if ((long)ptr[SEG(i, j)] > mini)
-									for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
+								if ((long)ptr[SEG(i-1, j+1)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i-1, j+1)) if (ptr[SEG(i-1, j+1)] == ptr[k]) ptr[k] = mini;
+								if ((long)ptr[SEG(i, j)] > mini) for (long k = mini; k < (long)nSeg; k++) if (k != SEG(i, j)) if (ptr[SEG(i, j)] == ptr[k]) ptr[k] = mini;
 								ptr[SEG(i-1, j+1)] = mini;
 								ptr[structFinded] = mini;
 								structFinded = mini;

@@ -59,8 +59,7 @@ float CalibrationFit::lm_matx(float* Z/*IN*/, float* p/*IN*/, float* y_dat/*IN*/
 	}
 
 	float* inter = (float*)malloc(Npar * Npnt * sizeof(float));
-	for (int elt = 0; elt < Npnt; elt++)
-		for (int i = 0; i < Npar; i++) inter[elt * Npar + i] = weight_sq[elt] * dydp[elt * Npar + i];
+	for (int elt = 0; elt < Npnt; elt++) for (int i = 0; i < Npar; i++) inter[elt * Npar + i] = weight_sq[elt] * dydp[elt * Npar + i];
 
 	// Computing alpha (A vérifier)
 	for (int j = 0; j < Npar; j++)

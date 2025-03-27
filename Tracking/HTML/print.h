@@ -12,7 +12,7 @@ class PublicParameters;
 #include <time.h>
 #include "..\kernel\general.h"
 //#include <mbstring.h>
-#include "..\generalParam\noError.h"
+#include "tools/noError.h"
 int printHTML(FILE* file, const wchar_t* format, ...);
 int printTableLinesHTML(FILE* stream, const wchar_t* format, ...);
 int printTableLinesColorHTML(FILE* stream, const wchar_t* bGColor, const wchar_t* color, const wchar_t* format, ...);

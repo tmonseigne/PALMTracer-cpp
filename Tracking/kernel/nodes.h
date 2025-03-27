@@ -67,65 +67,16 @@ public:
 
 	int sortByIntersityNeighbors(ChainNeighbor** neighborsHead);
 
-	virtual double likeness(Node* n)
-	{
-		exit(T_ERR_OOP);
-		return (0);
-	}
-
-	virtual double likenessMeanIntensity(Node* n)
-	{
-		exit(T_ERR_OOP);
-		return (0);
-	}
-
-	virtual double likenessIntensity(Node* n)
-	{
-		exit(T_ERR_OOP);
-		return (0);
-	}
-
-	virtual double likenessDistance(Node* n)
-	{
-		exit(T_ERR_OOP);
-		return (0);
-	}
-
-	virtual double likenessFusion(Node* n1, Node* n2)
-	{
-		exit(T_ERR_OOP);
-		return (0);
-	}
-
-	virtual double likenessIntensityFusion(Node* n1, Node* n2)
-	{
-		exit(T_ERR_OOP);
-		return (0);
-	}
-
-	virtual double likenessMeanIntensityFusion(Node* n1, Node* n2)
-	{
-		exit(T_ERR_OOP);
-		return (0);
-	}
-
-	virtual double likenessDistanceFusion(Node* n1, Node* n2)
-	{
-		exit(T_ERR_OOP);
-		return (0);
-	}
-
-	virtual double likenessFission(Node* n1, Node* n2)
-	{
-		exit(T_ERR_OOP);
-		return (0);
-	}
-
-	virtual double likenessBlink(Node* n)
-	{
-		exit(T_ERR_OOP);
-		return (0);
-	}
+	virtual double likeness(Node* n) { exit(T_ERR_OOP); }
+	virtual double likenessMeanIntensity(Node* n) { exit(T_ERR_OOP); }
+	virtual double likenessIntensity(Node* n) { exit(T_ERR_OOP); }
+	virtual double likenessDistance(Node* n) { exit(T_ERR_OOP); }
+	virtual double likenessFusion(Node* n1, Node* n2) { exit(T_ERR_OOP); }
+	virtual double likenessIntensityFusion(Node* n1, Node* n2) { exit(T_ERR_OOP); }
+	virtual double likenessMeanIntensityFusion(Node* n1, Node* n2) { exit(T_ERR_OOP); }
+	virtual double likenessDistanceFusion(Node* n1, Node* n2) { exit(T_ERR_OOP); }
+	virtual double likenessFission(Node* n1, Node* n2) { exit(T_ERR_OOP); }
+	virtual double likenessBlink(Node* n) { exit(T_ERR_OOP); }
 
 
 	double distanceToBorder(void);
