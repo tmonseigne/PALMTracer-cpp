@@ -138,13 +138,10 @@ int TabTimesDistanceIntensity::runModel()
 		}
 		else { updateConstantes(); }
 
-		wprintf(L"iLearning:\t%d/%d\nkInt %f  kMean %f kDistance %f\n", iLearning, countLearning, publicParameters->stdIntensity, publicParameters->stdMean, publicParameters->stdDistance);
-
 		double totalLikeness = getLikenessGlobal();
 
 		int nbInt = 0;
 
-		wprintf(L"**********Global Likeness: %f ***********\n", totalLikeness);
 		int bcl = 0;
 		do {
 			if (iLearning == countLearning - 1) { error *= 1. - (float)publicParameters->temperatureDecrease / 100.; }
@@ -161,8 +158,6 @@ int TabTimesDistanceIntensity::runModel()
 			bcl++;
 		}
 		while (cpt < 10);
-
-		printf("bcl : %d\n", bcl);
 	}
 
 	return RET_OK;

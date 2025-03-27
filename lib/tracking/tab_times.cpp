@@ -512,7 +512,6 @@ int giveResult() just call the function to display the result
 ********************************************************************************************************************/
 int TabTimes::giveResult()
 {
-	printf("giveResult\n");
 	int ret;
 
 	setIndexToTrackedStructures();
