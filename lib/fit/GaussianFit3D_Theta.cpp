@@ -163,7 +163,7 @@ void GaussianFit3D_Theta::inverse(float* MM, float* Minv)
 
 void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& sigmaY, float& angle, float& offset, float& RSS, int iterNum, unsigned short size)
 {
-	if (size % 2 == 0) size--;
+	if (size % 2 == 0) size--; // Not present in GPU original file why ?
 
 	dimFit = size;
 	Npnt = dimFit * dimFit;
@@ -186,20 +186,20 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 		unsigned int* t = (unsigned int*)malloc(2 * Npnt * sizeof(unsigned int));
 
 		// Initialization of y_dat & t (A vérifier)
-		float max_intensity = -70000;
-		float min_intensity = +70000;
+		float max_intensity = -70000; // Not present in GPU original file why ?
+		float min_intensity = +70000; // Not present in GPU original file why ?
 		for (int jj = -dimFit / 2; jj <= dimFit / 2; jj++)
 			for (int ii = -dimFit / 2; ii <= dimFit / 2; ii++) {
 				y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit] = (float)image[((int)x0 + ii) + ((int)y0 + jj) * sizeX];
 				t[((ii + dimFit / 2) + (jj + dimFit / 2) * dimFit) * 2] = (int)x0 + ii;
 				t[((ii + dimFit / 2) + (jj + dimFit / 2) * dimFit) * 2 + 1] = (int)y0 + jj;
 
-				max_intensity = std::max(max_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]);
-				min_intensity = std::min(min_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]);
+				max_intensity = std::max(max_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]); // Not present in GPU original file why ?
+				min_intensity = std::min(min_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]); // Not present in GPU original file why ?
 			}
 
-		p[0] = max_intensity - min_intensity;
-		p[6] = min_intensity;
+		p[0] = max_intensity - min_intensity; // Not present in GPU original file why ?
+		p[6] = min_intensity;                 // Not present in GPU original file why ?
 
 		for (int ii = 0; ii < Npnt; ii++) {
 			weight[ii] = 1/*sqrt((Npnt-Npar+1) / (y_dat[ii]*y_dat[ii]))*/;
@@ -364,11 +364,8 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 		sigmaY = p[4] / sqrt(2.);
 		angle = p[5];
 		offset = p[6]/*iteration*/;
-
-		if (_isnan((double)R_sq)) RSS = (float)0;
+		if (_isnan(R_sq)) RSS = static_cast<float>(0);
 		else RSS = R_sq;
-
-		//RSS = R_sq;	
 
 		// cleanup memory
 		free(y_dat);

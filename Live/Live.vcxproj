@@ -121,6 +121,10 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\lib\fit\GaussianFit2D.cpp" />
+    <ClCompile Include="..\lib\fit\GaussianFit2D_Sigma.cpp" />
+    <ClCompile Include="..\lib\fit\GaussianFit3D.cpp" />
+    <ClCompile Include="..\lib\fit\GaussianFit3D_Theta.cpp" />
     <ClCompile Include="..\lib\palm\aTrous.cpp" />
     <ClCompile Include="..\lib\palm\aTrous2D.cpp" />
     <ClCompile Include="..\lib\palm\CPALM.cpp" />
@@ -134,10 +138,6 @@
     <ClCompile Include="..\lib\tools\miscTools.cpp" />
     <ClCompile Include="..\lib\tools\operators.cpp" />
     <ClCompile Include="..\lib\tools\USrtArray.cpp" />
-    <ClCompile Include="GaussianFit2D.cpp" />
-    <ClCompile Include="GaussianFit2D_Sigma.cpp" />
-    <ClCompile Include="GaussianFit3D.cpp" />
-    <ClCompile Include="GaussianFit3D_Theta.cpp" />
     <ClCompile Include="PALM.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -195,6 +195,11 @@
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\lib\fit\GaussianFit.h" />
+    <ClInclude Include="..\lib\fit\GaussianFit2D.h" />
+    <ClInclude Include="..\lib\fit\GaussianFit2D_Sigma.h" />
+    <ClInclude Include="..\lib\fit\GaussianFit3D.h" />
+    <ClInclude Include="..\lib\fit\GaussianFit3D_Theta.h" />
     <ClInclude Include="..\lib\palm\aTrous.h" />
     <ClInclude Include="..\lib\palm\CPALM.h" />
     <ClInclude Include="..\lib\palm\info_2D.h" />
@@ -213,11 +218,6 @@
     <ClInclude Include="..\lib\tools\NoError.h" />
     <ClInclude Include="..\lib\tools\pandore.h" />
     <ClInclude Include="..\lib\tools\USrtArray.h" />
-    <ClInclude Include="GaussianFit.h" />
-    <ClInclude Include="GaussianFit2D.h" />
-    <ClInclude Include="GaussianFit2D_Sigma.h" />
-    <ClInclude Include="GaussianFit3D.h" />
-    <ClInclude Include="GaussianFit3D_Theta.h" />
     <ClInclude Include="PALM.h" />
     <ClInclude Include="PALM_Class.h" />
   </ItemGroup>

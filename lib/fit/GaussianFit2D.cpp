@@ -54,7 +54,6 @@ float GaussianFit2D::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat
 		}
 
 	// Computing beta
-	//float inter1[Npnt];
 	float* inter1 = (float*)malloc(Npnt * sizeof(float));
 	for (int elt = 0; elt < Npnt; elt++) inter1[elt] = weight_sq[elt] * delta_y[elt];
 
@@ -124,7 +123,7 @@ void GaussianFit2D::inverse(float* MM, float* Minv)
 
 void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& offset, float& RSS, int iterNum, unsigned short size)
 {
-	if (size % 2 == 0) size--;
+	if (size % 2 == 0) size--; // Not present in GPU original file why ?
 
 	dimFit = size;
 	Npnt = dimFit * dimFit;
@@ -137,19 +136,10 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 	float time = 0;
 
 	if ((x0 >= (int)ref) && (x0 <= sizeX - (int)ref - 1) && (y0 >= (int)ref) && (y0 <= sizeY - (int)ref - 1)) {
-#ifdef SIMULATION
-
-		// for simulation
-		float p_min[5] = {0  , x0-1, y0-1, 1./*0.5*/, 200};
-		float p[5]     = {500, x0  , y0  , 1. , 1000};
-		float p_max[5] = {1000, x0+1, y0+1, 1./*1.5*/, 1700};
-
-#else
 		// for real data
 		float p_min[Npar] = {0., x0 - 1, y0 - 1, 0.};
 		float p[Npar] = {1000., x0, y0, 1000.};
 		float p_max[Npar] = {65535., x0 + 1, y0 + 1, 65535.};
-#endif
 
 		float* y_dat = (float*)malloc(Npnt * sizeof(float));
 		float* weight = (float*)malloc(Npnt * sizeof(float));
@@ -157,20 +147,20 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		unsigned int* t = (unsigned int*)malloc(2 * Npnt * sizeof(unsigned int));
 
 		// Initialization of y_dat & t (A vérifier)
-		float max_intensity = -70000;
-		float min_intensity = +70000;
+		float max_intensity = -70000; // Not present in GPU original file why ?
+		float min_intensity = +70000; // Not present in GPU original file why ?
 		for (int jj = -dimFit / 2; jj <= dimFit / 2; jj++)
 			for (int ii = -dimFit / 2; ii <= dimFit / 2; ii++) {
 				y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit] = (float)image[((int)x0 + ii) + ((int)y0 + jj) * sizeX];
 				t[((ii + dimFit / 2) + (jj + dimFit / 2) * dimFit) * 2] = (int)x0 + ii;
 				t[((ii + dimFit / 2) + (jj + dimFit / 2) * dimFit) * 2 + 1] = (int)y0 + jj;
 
-				max_intensity = std::max(max_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]);
-				min_intensity = std::min(min_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]);
+				max_intensity = std::max(max_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]); // Not present in GPU original file why ?
+				min_intensity = std::min(min_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]); // Not present in GPU original file why ?
 			}
 
-		p[0] = max_intensity - min_intensity;
-		p[3] = min_intensity;
+		p[0] = max_intensity - min_intensity; // Not present in GPU original file why ?
+		p[3] = min_intensity;                 // Not present in GPU original file why ?
 
 		for (int ii = 0; ii < Npnt; ii++) {
 			weight[ii] = 1/*sqrt((Npnt-Npar+1) / (y_dat[ii]*y_dat[ii]))*/;
@@ -328,11 +318,8 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		y0 = p[2];
 		I0 = p[0];
 		offset = p[3];
-
-		if (_isnan((double)R_sq)) RSS = (float)0;
+		if (_isnan(R_sq)) RSS = static_cast<float>(0);
 		else RSS = R_sq;
-
-		//RSS = R_sq;
 
 		// cleanup memory
 		free(y_dat);

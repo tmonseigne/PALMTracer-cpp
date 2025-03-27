@@ -176,8 +176,7 @@ int Segment2D::watershed(FltArray& potential, USrtArray& seg, float threshold)
 				for (p1.x = p.x - 1; (p1.x <= p.x + 1) && !vois; p1.x++)
 					for (p1.y = p.y - 1; (p1.y <= p.y + 1) && !vois; p1.y++)
 						if ((p1.x != p.x) || (p1.y != p.y))
-							if (p1.x >= 0)
-								if (p1.x < potential.size(0)) if (p1.y >= 0) if (p1.y < potential.size(1)) if (seg.data[p1.x * sizeDataY + p1.y] == 0) vois = true;
+							if (p1.x >= 0) if (p1.x < potential.size(0)) if (p1.y >= 0) if (p1.y < potential.size(1)) if (seg.data[p1.x * sizeDataY + p1.y] == 0) vois = true;
 
 				// On empile les points frontieres.
 				if (vois) {
@@ -423,8 +422,7 @@ int Segment2D::watershed(USrtArray& potential, USrtArray& seg, float threshold)
 				for (p1.x = p.x - 1; (p1.x <= p.x + 1) && !vois; p1.x++)
 					for (p1.y = p.y - 1; (p1.y <= p.y + 1) && !vois; p1.y++)
 						if ((p1.x != p.x) || (p1.y != p.y))
-							if (p1.x >= 0)
-								if (p1.x < potential.size(0)) if (p1.y >= 0) if (p1.y < potential.size(1)) if (seg.data[p1.x * sizeDataY + p1.y] == 0) vois = true;
+							if (p1.x >= 0) if (p1.x < potential.size(0)) if (p1.y >= 0) if (p1.y < potential.size(1)) if (seg.data[p1.x * sizeDataY + p1.y] == 0) vois = true;
 
 				// On empile les points frontieres.
 				if (vois) {

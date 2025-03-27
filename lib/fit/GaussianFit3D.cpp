@@ -149,7 +149,7 @@ void GaussianFit3D::inverse(float* MM, float* Minv)
 
 void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& sigmaY, float& angle, float& offset, float& RSS, int iterNum, unsigned short size)
 {
-	if (size % 2 == 0) size--;
+	if (size % 2 == 0) size--; // Not present in GPU original file why ?
 
 	dimFit = size;
 	Npnt = dimFit * dimFit;
@@ -181,12 +181,12 @@ void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 				t[((ii + dimFit / 2) + (jj + dimFit / 2) * dimFit) * 2] = (int)x0 + ii;
 				t[((ii + dimFit / 2) + (jj + dimFit / 2) * dimFit) * 2 + 1] = (int)y0 + jj;
 
-				max_intensity = std::max(max_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]);
-				min_intensity = std::min(min_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]);
+				max_intensity = std::max(max_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]); // Not present in GPU original file why ?
+				min_intensity = std::min(min_intensity, y_dat[(ii + dimFit / 2) + (jj + dimFit / 2) * dimFit]); // Not present in GPU original file why ?
 			}
 
-		p[0] = max_intensity - min_intensity;
-		p[5] = min_intensity;
+		p[0] = max_intensity - min_intensity; // Not present in GPU original file why ?
+		p[5] = min_intensity;                 // Not present in GPU original file why ?
 		for (int ii = 0; ii < Npnt; ii++) {
 			weight[ii] = 1/*sqrt((Npnt-Npar+1) / (y_dat[ii]*y_dat[ii]))*/;
 			weight_sq[ii] = pow(weight[ii], 2);
@@ -342,10 +342,8 @@ void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		sigmaY = p[4] / sqrt(2.);
 		offset = p[5];
 
-		if (_isnan((double)R_sq)) RSS = (float)0;
+		if (_isnan(R_sq)) RSS = static_cast<float>(0);
 		else RSS = R_sq;
-
-		//RSS = R_sq/*iteration*/;	
 
 		// cleanup memory
 		free(y_dat);

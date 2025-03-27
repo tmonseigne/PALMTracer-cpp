@@ -42,10 +42,6 @@
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GaussianFit2D.cpp" />
-    <ClCompile Include="GaussianFit2D_Sigma.cpp" />
-    <ClCompile Include="GaussianFit3D.cpp" />
-    <ClCompile Include="GaussianFit3D_Theta.cpp" />
     <ClCompile Include="PALM.cpp" />
     <ClCompile Include="..\lib\palm\aTrous.cpp">
       <Filter>Palm</Filter>
@@ -86,13 +82,20 @@
     <ClCompile Include="..\lib\tools\USrtArray.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\fit\GaussianFit2D.cpp">
+      <Filter>Fit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\fit\GaussianFit2D_Sigma.cpp">
+      <Filter>Fit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\fit\GaussianFit3D.cpp">
+      <Filter>Fit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\fit\GaussianFit3D_Theta.cpp">
+      <Filter>Fit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GaussianFit.h" />
-    <ClInclude Include="GaussianFit2D.h" />
-    <ClInclude Include="GaussianFit2D_Sigma.h" />
-    <ClInclude Include="GaussianFit3D.h" />
-    <ClInclude Include="GaussianFit3D_Theta.h" />
     <ClInclude Include="PALM.h" />
     <ClInclude Include="PALM_Class.h" />
     <ClInclude Include="..\lib\palm\aTrous.h">
@@ -149,6 +152,21 @@
     <ClInclude Include="..\lib\tools\allRealDataLib.h">
       <Filter>Tools</Filter>
     </ClInclude>
+    <ClInclude Include="..\lib\fit\GaussianFit.h">
+      <Filter>Fit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\fit\GaussianFit2D.h">
+      <Filter>Fit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\fit\GaussianFit2D_Sigma.h">
+      <Filter>Fit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\fit\GaussianFit3D.h">
+      <Filter>Fit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\fit\GaussianFit3D_Theta.h">
+      <Filter>Fit</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="PALM.def" />
@@ -162,6 +180,9 @@
     </Filter>
     <Filter Include="Tools">
       <UniqueIdentifier>{b632a25e-533e-4e38-9565-91e966458756}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fit">
+      <UniqueIdentifier>{684fba16-aea7-4a3f-b297-7afb0e5428fb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -1,8 +1,6 @@
 #include "segmentation.h"
 
-Segment::Segment()
-{
-}
+Segment::Segment() { }
 
 Segment::~Segment() { }
 
