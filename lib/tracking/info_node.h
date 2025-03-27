@@ -8,8 +8,8 @@
 #define __info_node__
 
 #include "general.h"
-#include "../Tracking/segmentationStatic/info_2D.h"
-#include "../Tracking/segmentationStatic/info_3D.h"
+#include "palm/info_2D.h"
+#include "palm/info_3D.h"
 
 class InfoNode
 {

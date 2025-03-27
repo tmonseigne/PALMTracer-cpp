@@ -1,13 +1,13 @@
+/*******************************************************************************************************************
+								Link class to treat data from segmentation of images 2D (16bit only)
+*******************************************************************************************************************/
+
 #ifndef __link_2D__
 #define __link_2D__
 
 #include <math.h>
 #include <stdio.h>
 #include "tools/allDataLib.h"
-
-extern int __nbInfoStrucAlloc;
-extern int __nbInfoStrucDealloc;
-
 
 #define MAX_NB_ANGLES_GABOR	8
 #define MAX_NB_FREQ_GABOR	13

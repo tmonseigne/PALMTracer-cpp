@@ -1,11 +1,7 @@
 #include "segmentation.h"
-int __nbInfoStrucAlloc;
-int __nbInfoStrucDealloc;
 
 Segment::Segment()
 {
-	__nbInfoStrucAlloc = 0;
-	__nbInfoStrucDealloc = 0;
 }
 
 Segment::~Segment() { }

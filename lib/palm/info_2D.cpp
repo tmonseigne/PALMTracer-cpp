@@ -1,3 +1,6 @@
+/*******************************************************************************************************************
+								Link class to treat data from segmentation of images 2D (16bit only)
+*******************************************************************************************************************/
 #include "info_2D.h"
 
 
@@ -6,7 +9,6 @@ InfoStruct2D::InfoStruct2D(int index)
 	data.index = index;
 	data.zOrderComputed = 0;
 	next = NULL;
-	__nbInfoStrucAlloc++;
 }
 
-InfoStruct2D::~InfoStruct2D() { __nbInfoStrucDealloc++; }
+InfoStruct2D::~InfoStruct2D() { }
