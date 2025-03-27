@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="HTML\print.cpp" />
     <ClCompile Include="likenessDistInten\nodes_dist_Inten.cpp" />
     <ClCompile Include="likenessDistInten\tab_times_dist_Inten.cpp" />
     <ClCompile Include="likenessDistInten\time_nodes_dist_Inten.cpp" />
@@ -34,7 +33,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="HTML\print.h" />
     <ClInclude Include="likenessDistInten\nodes_dist_Inten.h" />
     <ClInclude Include="likenessDistInten\tab_times_dist_Inten.h" />
     <ClInclude Include="likenessDistInten\time_nodes_dist_Inten.h" />

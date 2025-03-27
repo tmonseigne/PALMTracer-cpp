@@ -115,7 +115,6 @@
     <ClInclude Include="..\lib\tools\NoError.h" />
     <ClInclude Include="..\lib\tools\pandore.h" />
     <ClInclude Include="..\lib\tools\USrtArray.h" />
-    <ClInclude Include="HTML\print.h" />
     <ClInclude Include="likenessDistInten\nodes_dist_Inten.h" />
     <ClInclude Include="likenessDistInten\tab_times_dist_Inten.h" />
     <ClInclude Include="likenessDistInten\time_nodes_dist_Inten.h" />
@@ -137,7 +136,6 @@
     <ClCompile Include="..\lib\tools\miscTools.cpp" />
     <ClCompile Include="..\lib\tools\operators.cpp" />
     <ClCompile Include="..\lib\tools\USrtArray.cpp" />
-    <ClCompile Include="HTML\print.cpp" />
     <ClCompile Include="likenessDistInten\nodes_dist_Inten.cpp" />
     <ClCompile Include="likenessDistInten\tab_times_dist_Inten.cpp" />
     <ClCompile Include="likenessDistInten\time_nodes_dist_Inten.cpp" />
