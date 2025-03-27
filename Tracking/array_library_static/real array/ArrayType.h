@@ -14,8 +14,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include "../../DebugMIA/controlAlloc.h"
-#include "../../DebugMIA/print_debug.h"
 #include "../../generalParam/generalParam.h"
 //extern "C"{
 

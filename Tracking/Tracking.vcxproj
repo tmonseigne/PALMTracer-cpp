@@ -125,7 +125,6 @@
     <ClInclude Include="closerNeighbors\nodes_closer_neighbors.h" />
     <ClInclude Include="closerNeighbors\tab_times_closer_neighbors.h" />
     <ClInclude Include="closerNeighbors\time_nodes_closer_neighbors.h" />
-    <ClInclude Include="DebugMIA\controlAlloc.h" />
     <ClInclude Include="kernel\chain_neighbor.h" />
     <ClInclude Include="kernel\general.h" />
     <ClInclude Include="kernel\info_node.h" />
@@ -153,7 +152,6 @@
     <ClCompile Include="closerNeighbors\nodes_closer_neighbors.cpp" />
     <ClCompile Include="closerNeighbors\tab_times_closer_neighbors.cpp" />
     <ClCompile Include="closerNeighbors\time_nodes_closer_neighbors.cpp" />
-    <ClCompile Include="DebugMIA\controlAlloc.cpp" />
     <ClCompile Include="kernel\chain_neighbor.cpp" />
     <ClCompile Include="kernel\info_node.cpp" />
     <ClCompile Include="kernel\nodes.cpp" />
