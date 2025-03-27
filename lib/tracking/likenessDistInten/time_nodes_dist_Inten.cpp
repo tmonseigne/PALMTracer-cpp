@@ -9,9 +9,9 @@
 
 
 /********************************************************************************************************************
-allocNode(void) allocation of one node in the class TimeNodesDistanceIntensity
+allocNode() allocation of one node in the class TimeNodesDistanceIntensity
 ********************************************************************************************************************/
-Node* TimeNodesDistanceIntensity::allocNode(void) { return new NodeDistanceIntensity(time, publicParameters); }
+Node* TimeNodesDistanceIntensity::allocNode() { return new NodeDistanceIntensity(time, publicParameters); }
 
 /********************************************************************************************************************
 Constructor(int _time, int _nbNodes) is run after the base constructor TimeNodes::TimeNodes

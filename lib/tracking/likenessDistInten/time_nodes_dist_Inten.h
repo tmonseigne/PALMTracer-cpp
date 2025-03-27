@@ -15,12 +15,12 @@
 class TimeNodesDistanceIntensity : public TimeNodes
 {
 protected:
-	Node* allocNode(void);
+	Node* allocNode();
 
 public:
 	TimeNodesDistanceIntensity(int _time, int _nbNodes, PublicParameters* _publicParameters);
 	void computeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean, double& stdDistanceComputing, long& countStdDist, bool sigmaClipping, long* hist = NULL);
-	double makeAllInitializationConnections(void);
+	double makeAllInitializationConnections();
 	double tryRandomChange(double limit);
 
 	double getLikenessTime(long lastTime);

@@ -14,7 +14,7 @@
 class TimeNodesCloserNeighbors : public TimeNodes
 {
 protected:
-	Node* allocNode(void);
+	Node* allocNode();
 
 public:
 	TimeNodesCloserNeighbors(int _time, int _nbNodes, PublicParameters* _publicParameters);

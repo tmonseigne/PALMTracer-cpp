@@ -72,7 +72,7 @@ public:
 	double likeness(Node* n);
 	double likenessBlink(Node* n);
 	NodeDistanceIntensity(int _time, PublicParameters* _publicParameters);
-	double makeInitializationConnection(void);
+	double makeInitializationConnection();
 };
 
 

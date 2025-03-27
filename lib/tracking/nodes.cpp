@@ -13,10 +13,10 @@ links to the current objet.
 float globalDistMax;
 
 /*********************************************************************************************
-double distanceToBorder(void)
+double distanceToBorder()
   get the distance from this to the closer border
 *********************************************************************************************/
-double Node::distanceToBorder(void)
+double Node::distanceToBorder()
 {
 	double mini;
 	mini = info->getX();
@@ -27,10 +27,10 @@ double Node::distanceToBorder(void)
 }
 
 /*********************************************************************************************
-double stericEffect(void)
+double stericEffect()
   Compute the mean of radius of the node this
 *********************************************************************************************/
-double Node::stericEffect(void)
+double Node::stericEffect()
 {
 	double ret;
 	double val;

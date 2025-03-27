@@ -16,7 +16,7 @@ class TimeNodes
 {
 protected:
 	int time;
-	virtual Node* allocNode(void) =0;
+	virtual Node* allocNode() =0;
 
 public:
 	Node** tabNodes;

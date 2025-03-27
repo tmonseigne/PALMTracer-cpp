@@ -127,7 +127,6 @@
     <ClInclude Include="..\lib\tracking\likenessDistInten\tab_times_dist_Inten.h" />
     <ClInclude Include="..\lib\tracking\likenessDistInten\time_nodes_dist_Inten.h" />
     <ClInclude Include="..\lib\tracking\nodes.h" />
-    <ClInclude Include="..\lib\tracking\print_debug.h" />
     <ClInclude Include="..\lib\tracking\tab_times.h" />
     <ClInclude Include="..\lib\tracking\time_nodes.h" />
     <ClInclude Include="..\lib\tracking\tracking.h" />
@@ -151,7 +150,6 @@
     <ClCompile Include="..\lib\tracking\likenessDistInten\tab_times_dist_Inten.cpp" />
     <ClCompile Include="..\lib\tracking\likenessDistInten\time_nodes_dist_Inten.cpp" />
     <ClCompile Include="..\lib\tracking\nodes.cpp" />
-    <ClCompile Include="..\lib\tracking\print_debug.cpp" />
     <ClCompile Include="..\lib\tracking\tab_times.cpp" />
     <ClCompile Include="..\lib\tracking\time_nodes.cpp" />
     <ClCompile Include="Tracking.cpp" />

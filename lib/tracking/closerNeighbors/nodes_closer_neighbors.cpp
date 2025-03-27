@@ -13,27 +13,7 @@ Constructuor(int _time) of NodeCloserNeighbors class.
 ********************************************************************************************************************/
 NodeCloserNeighbors::NodeCloserNeighbors(int _time, PublicParameters* _publicParameters): Node(_time, _publicParameters) { }
 
-
-/*void NodeCloserNeighbors::makeConnection(void){
-	ChainNeighbor*c;
-	Node*nMin=NULL;
-	double diffIntensityMin=info->getIntensity();
-	for(c=neighborsFuture;c!=NULL;c=c->next){
-		if(c->neighbor->connectionPast==NULL){
-			if(fabs(c->neighbor->info->getIntensity()-info->getIntensity())<diffIntensityMin){
-				diffIntensityMin=fabs(c->neighbor->info->getIntensity()-info->getIntensity());
-				nMin=c->neighbor;
-			}
-		}
-	}
-	if(nMin!=NULL){
-		nMin->connectionPast=this;
-		connectionFuture=nMin;
-	}
-}*/
-
-
-void NodeCloserNeighbors::makeConnection(void)
+void NodeCloserNeighbors::makeConnection()
 {
 	ChainNeighbor* c;
 	Node* nMin = NULL;

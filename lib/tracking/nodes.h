@@ -19,8 +19,6 @@
 
 class Node
 {
-protected:
-
 public:
 	InfoNode* info;
 	//int n;
@@ -80,8 +78,8 @@ public:
 	virtual double likenessBlink(Node* n) { exit(T_ERR_OOP); }
 
 
-	double distanceToBorder(void);
-	double stericEffect(void);
+	double distanceToBorder();
+	double stericEffect();
 };
 
 

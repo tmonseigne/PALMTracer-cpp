@@ -17,7 +17,7 @@ private:
 public:
 	NodeCloserNeighbors(int _time, PublicParameters* _publicParameters);
 
-	void makeConnection(void);
+	void makeConnection();
 };
 
 

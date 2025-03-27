@@ -31,7 +31,7 @@ private:
 	unsigned short segmentationPositiveValues(FltArray& data, USrtArray& seg, double val, bool diagonal, USrtArray& segHoles);
 	unsigned short segmentationNegativeValues(FltArray& data, USrtArray& seg, double val, bool diagonal);
 
-	float tic(void);
+	float tic();
 
 public:
 	Segment2D();

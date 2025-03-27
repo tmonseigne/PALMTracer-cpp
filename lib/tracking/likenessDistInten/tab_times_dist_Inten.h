@@ -15,8 +15,8 @@ class TabTimesDistanceIntensity : public TabTimes
 protected:
 	TimeNodes* allocTimeNodes(long time, long nbNodes);
 	void allocNode();
-	void updateConstantes(void);
-	void computeConstantes(void);
+	void updateConstantes();
+	void computeConstantes();
 
 public:
 	TabTimesDistanceIntensity(PublicParameters* publicParameters);

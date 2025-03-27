@@ -246,7 +246,7 @@ void NodeDistanceIntensity::computeConstantSigmas(double& stdIntensityComputing,
 }
 
 /*********************************************************************************************
-double NodeDistanceIntensity::makeInitializationConnection(void)
+double NodeDistanceIntensity::makeInitializationConnection()
   Make the initial connections. For each strucutres, chose the one with the highest likeness 
   if it is avaliable. If it is not possible no connection.
 
@@ -254,7 +254,7 @@ double NodeDistanceIntensity::makeInitializationConnection(void)
 
   New version from 2005/01/12
 *********************************************************************************************/
-double NodeDistanceIntensity::makeInitializationConnection(void)
+double NodeDistanceIntensity::makeInitializationConnection()
 {
 	ChainNeighbor* c;
 	Node* nMax = NULL;

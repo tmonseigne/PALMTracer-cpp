@@ -41,7 +41,7 @@ ArrayType::ArrayType(DataType* _data, const long i, const long j, const long k, 
 }
 
 
-bool ArrayType::isThereData(void) { return data != NULL; }
+bool ArrayType::isThereData() { return data != NULL; }
 
 int ArrayType::getDim(const long i, const long j, const long k, const long l)
 {
@@ -232,7 +232,7 @@ DataType&ArrayType::operator()(long i, long j, long k, long l) { return data[((i
 
 //**************		++		*********************
 #ifndef BOOL_TYPE
-ArrayType& ArrayType::operator++(void)
+ArrayType& ArrayType::operator++()
 {
 	for (unsigned long i = 0; i < nbPoints; i++) { ++data[i]; }
 	return *this;
@@ -241,7 +241,7 @@ ArrayType& ArrayType::operator++(void)
 
 //**************		--		*********************
 #ifndef BOOL_TYPE
-ArrayType& ArrayType::operator--(void)
+ArrayType& ArrayType::operator--()
 {
 	for (unsigned long i = 0; i < nbPoints; i++) { ++data[i]; }
 	return *this;
@@ -265,7 +265,7 @@ int ArrayType::dim() { return nbDim; }
 
 
 #ifndef BOOL_TYPE
-DataType ArrayType::min(void)
+DataType ArrayType::min()
 {
 	if (!isThereData()) { exit(ALLOC_ERR); }
 	DataType _min = data[0];
@@ -275,7 +275,7 @@ DataType ArrayType::min(void)
 #endif
 
 #ifndef BOOL_TYPE
-DataType ArrayType::max(void)
+DataType ArrayType::max()
 {
 	if (!isThereData()) { exit(ALLOC_ERR); }
 	DataType _max = data[0];
@@ -325,7 +325,7 @@ void ArrayType::renormalizeZD(double zero, double dilation, long _min, long _max
 #endif
 
 #ifndef BOOL_TYPE
-double ArrayType::sigma(void)
+double ArrayType::sigma()
 {
 	double mean = 0.;
 	unsigned long i;
@@ -340,7 +340,7 @@ double ArrayType::sigma(void)
 #endif
 
 #ifndef BOOL_TYPE
-double ArrayType::power(void)
+double ArrayType::power()
 {
 	unsigned long i;
 	double pow = 0.;

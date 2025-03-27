@@ -284,7 +284,7 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 }
 
 
-float Segment2D::tic(void)
+float Segment2D::tic()
 {
 	SYSTEMTIME st_time;
 	GetSystemTime(&st_time);

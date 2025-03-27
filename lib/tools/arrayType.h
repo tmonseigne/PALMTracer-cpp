@@ -49,17 +49,17 @@ public:
 #endif
 
 private:
-	int getDim(const long i, const long j, const long k, const long l);
-	int testDim(const long i, const long j, const long k, const long l);
+	int getDim(long i, long j, long k, long l);
+	int testDim(long i, long j, long k, long l);
 
 public:
 	ArrayType();
-	ArrayType(const long i, const long j = 1L, const long k = 1L, const long l = 1L);
-	ArrayType(DataType* _data, const long i, const long j = 1L, const long k = 1L, const long l = 1L);
+	ArrayType(long i, long j = 1L, long k = 1L, long l = 1L);
+	ArrayType(DataType* _data, long i, long j = 1L, long k = 1L, long l = 1L);
 
-	int alloc(const long i, const long j = 1L, const long k = 1L, const long l = 1L);
-	int alloc(DataType* _data, const long i, const long j = 1L, const long k = 1L, const long l = 1L);
-	int realloc(const long i, const long j = 1L, const long k = 1L, const long l = 1L);
+	int alloc(long i, long j = 1L, long k = 1L, long l = 1L);
+	int alloc(DataType* _data, long i, long j = 1L, long k = 1L, long l = 1L);
+	int realloc(long i, long j = 1L, long k = 1L, long l = 1L);
 
 	~ArrayType();
 
@@ -78,14 +78,14 @@ public:
 
 	//**************		+=		*********************=
 #ifndef BOOL_TYPE
-	ArrayType& operator+=(const char val);
-	ArrayType& operator+=(const unsigned char val);
-	ArrayType& operator+=(const short val);
-	ArrayType& operator+=(const unsigned short val);
-	ArrayType& operator+=(const long val);
-	ArrayType& operator+=(const unsigned long val);
-	ArrayType& operator+=(const float val);
-	ArrayType& operator+=(const double val);
+	ArrayType& operator+=(char val);
+	ArrayType& operator+=(unsigned char val);
+	ArrayType& operator+=(short val);
+	ArrayType& operator+=(unsigned short val);
+	ArrayType& operator+=(long val);
+	ArrayType& operator+=(unsigned long val);
+	ArrayType& operator+=(float val);
+	ArrayType& operator+=(double val);
 	ArrayType& operator+=(const USrtArray& arrayType);
 	ArrayType& operator+=(const FltArray& arrayType);
 	ArrayType& operator+=(const BlArray& arrayType);
@@ -94,28 +94,28 @@ public:
 
 	//**************		-=		*********************=
 #ifndef BOOL_TYPE
-	ArrayType& operator-=(const char val);
-	ArrayType& operator-=(const unsigned char val);
-	ArrayType& operator-=(const short val);
-	ArrayType& operator-=(const unsigned short val);
-	ArrayType& operator-=(const long val);
-	ArrayType& operator-=(const unsigned long val);
-	ArrayType& operator-=(const float val);
-	ArrayType& operator-=(const double val);
+	ArrayType& operator-=(char val);
+	ArrayType& operator-=(unsigned char val);
+	ArrayType& operator-=(short val);
+	ArrayType& operator-=(unsigned short val);
+	ArrayType& operator-=(long val);
+	ArrayType& operator-=(unsigned long val);
+	ArrayType& operator-=(float val);
+	ArrayType& operator-=(double val);
 	ArrayType& operator-=(const USrtArray& arrayType);
 	ArrayType& operator-=(const FltArray& arrayType);
 #endif
 
 	//**************		*=		*********************=
 #ifndef BOOL_TYPE
-	ArrayType& operator*=(const char val);
-	ArrayType& operator*=(const unsigned char val);
-	ArrayType& operator*=(const short val);
-	ArrayType& operator*=(const unsigned short val);
-	ArrayType& operator*=(const long val);
-	ArrayType& operator*=(const unsigned long val);
-	ArrayType& operator*=(const float val);
-	ArrayType& operator*=(const double val);
+	ArrayType& operator*=(char val);
+	ArrayType& operator*=(unsigned char val);
+	ArrayType& operator*=(short val);
+	ArrayType& operator*=(unsigned short val);
+	ArrayType& operator*=(long val);
+	ArrayType& operator*=(unsigned long val);
+	ArrayType& operator*=(float val);
+	ArrayType& operator*=(double val);
 	ArrayType& operator*=(const USrtArray& arrayType);
 	ArrayType& operator*=(const FltArray& arrayType);
 	ArrayType& operator*=(const BlArray& arrayType);
@@ -123,37 +123,37 @@ public:
 
 	//**************		/=		*********************=
 #ifndef BOOL_TYPE
-	ArrayType& operator/=(const char val);
-	ArrayType& operator/=(const unsigned char val);
-	ArrayType& operator/=(const short val);
-	ArrayType& operator/=(const unsigned short val);
-	ArrayType& operator/=(const long val);
-	ArrayType& operator/=(const unsigned long val);
-	ArrayType& operator/=(const float val);
-	ArrayType& operator/=(const double val);
+	ArrayType& operator/=(char val);
+	ArrayType& operator/=(unsigned char val);
+	ArrayType& operator/=(short val);
+	ArrayType& operator/=(unsigned short val);
+	ArrayType& operator/=(long val);
+	ArrayType& operator/=(unsigned long val);
+	ArrayType& operator/=(float val);
+	ArrayType& operator/=(double val);
 	ArrayType& operator/=(const USrtArray& arrayType);
 	ArrayType& operator/=(const FltArray& arrayType);
 #endif
 
 	//**************		=		*********************=
-	ArrayType& operator=(const char val);
-	ArrayType& operator=(const unsigned char val);
-	ArrayType& operator=(const short val);
-	ArrayType& operator=(const unsigned short val);
-	ArrayType& operator=(const long val);
-	ArrayType& operator=(const unsigned long val);
-	ArrayType& operator=(const float val);
-	ArrayType& operator=(const double val);
-	ArrayType& operator=(const bool val);
+	ArrayType& operator=(char val);
+	ArrayType& operator=(unsigned char val);
+	ArrayType& operator=(short val);
+	ArrayType& operator=(unsigned short val);
+	ArrayType& operator=(long val);
+	ArrayType& operator=(unsigned long val);
+	ArrayType& operator=(float val);
+	ArrayType& operator=(double val);
+	ArrayType& operator=(bool val);
 	ArrayType& operator=(const USrtArray& arrayType);
 	ArrayType& operator=(const FltArray& arrayType);
 	ArrayType& operator=(const BlArray& arrayType);
 
 #ifndef BOOL_TYPE
-	ArrayType& operator++(void);
-	ArrayType& operator--(void);
+	ArrayType& operator++();
+	ArrayType& operator--();
 #endif
-	bool isThereData(void);
+	bool isThereData();
 
 #ifndef BOOL_TYPE
 #ifdef min
@@ -162,8 +162,8 @@ public:
 #ifdef max
 #undef max
 #endif
-	DataType min(void);
-	DataType max(void);
+	DataType min();
+	DataType max();
 	void renormalize(double min, double max);
 	void renormalizeZD(double zero, double dilation);
 	void renormalizeZD(double zero, double dilation, long min, long max);
@@ -171,13 +171,13 @@ public:
 
 
 #ifndef BOOL_TYPE
-	double sigma(void);
-	double power(void);
+	double sigma();
+	double power();
 #endif
 
 #ifndef BOOL_TYPE
-	double mean(void);
-	double sum(void);
+	double mean();
+	double sum();
 #endif
 
 #ifndef BOOL_TYPE

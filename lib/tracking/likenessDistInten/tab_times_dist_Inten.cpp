@@ -44,7 +44,7 @@ publicParameters->stdIntensity
 publicParameters->stdMean
 publicParameters->stdDistance
 ********************************************************************************************************************/
-void TabTimesDistanceIntensity::computeConstantes(void)
+void TabTimesDistanceIntensity::computeConstantes()
 {
 	publicParameters->stdIntensity = 1000;
 	publicParameters->stdMean = 1000;
@@ -85,7 +85,7 @@ void TabTimesDistanceIntensity::computeConstantes(void)
 /********************************************************************************************************************
 updateConstantes() ones the Tracking in compute, compute the constant
 ********************************************************************************************************************/
-void TabTimesDistanceIntensity::updateConstantes(void)
+void TabTimesDistanceIntensity::updateConstantes()
 {
 	long t;
 	long cpt = 0;

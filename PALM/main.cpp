@@ -174,7 +174,7 @@ void computeBsplines(int n, gsl_vector* x, gsl_vector* y, int* nbPoints, vec* x_
 	gsl_multifit_linear_free(mw);
 }
 
-int main(void)
+int main()
 {
 	const size_t n = N;
 	gsl_vector *x, *y;
