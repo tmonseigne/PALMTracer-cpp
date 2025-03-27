@@ -39,7 +39,7 @@ TimeNodes::~TimeNodes()
 /********************************************************************************************************************
 operator()(int i) to access to all Node objets. 
 ********************************************************************************************************************/
-Node* TimeNodes::operator()(int i) { return (tabNodes[i]); }
+Node* TimeNodes::operator()(int i) { return tabNodes[i]; }
 
 /********************************************************************************************************************
 linkNeighbors() build the chained list of all the neighbours of each nodes presents at this time. 
@@ -59,7 +59,7 @@ int TimeNodes::linkNeighborsPresent()
 		}
 	}
 
-	return (RET_OK);
+	return RET_OK;
 }
 
 
@@ -82,7 +82,7 @@ int TimeNodes::linkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes)
 		}
 	}
 
-	return (RET_OK);
+	return RET_OK;
 }
 
 /********************************************************************************************************************
@@ -104,7 +104,7 @@ int TimeNodes::linkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes)
 		}
 	}
 
-	return (RET_OK);
+	return RET_OK;
 }
 
 /********************************************************************************************************************
@@ -114,11 +114,11 @@ int TimeNodes::sortByIntensityAllNeighbors()
 {
 	int ret;
 	for (int i = 0; i < nbNodes; i++) {
-		if ((ret = tabNodes[i]->sortByIntersityNeighbors(&(tabNodes[i]->neighborsPast))) < 0) { return (ret); }
-		if ((ret = tabNodes[i]->sortByIntersityNeighbors(&(tabNodes[i]->neighborsPresent))) < 0) { return (ret); }
-		if ((ret = tabNodes[i]->sortByIntersityNeighbors(&(tabNodes[i]->neighborsFuture))) < 0) { return (ret); }
+		if ((ret = tabNodes[i]->sortByIntersityNeighbors(&tabNodes[i]->neighborsPast)) < 0) { return ret; }
+		if ((ret = tabNodes[i]->sortByIntersityNeighbors(&tabNodes[i]->neighborsPresent)) < 0) { return ret; }
+		if ((ret = tabNodes[i]->sortByIntersityNeighbors(&tabNodes[i]->neighborsFuture)) < 0) { return ret; }
 	}
-	return (RET_OK);
+	return RET_OK;
 }
 
 

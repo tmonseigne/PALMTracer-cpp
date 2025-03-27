@@ -15,25 +15,25 @@ float CalibrationFit::sigmaFunc(float Z, float C0, float C1, float C2, float C3,
 float CalibrationFit::deriv1C0(float Z, float C0, float C1, float C2, float C3, float C4)
 {
 	float cons = 2 * sqrt(1 + pow((Z - C0) / C1, 2) + C2 * pow((Z - C0) / C1, 3) + C3 * pow((Z - C0) / C1, 4));
-	return -(C4 / pow(C1, 2)) * ((2 * (Z - C0) + 3 * (C2 / C1) * pow(Z - C0, 2) + 4 * (C3 / pow(C1, 2)) * pow(Z - C0, 3)) / (cons));
+	return -(C4 / pow(C1, 2)) * ((2 * (Z - C0) + 3 * (C2 / C1) * pow(Z - C0, 2) + 4 * (C3 / pow(C1, 2)) * pow(Z - C0, 3)) / cons);
 }
 
 float CalibrationFit::deriv1C1(float Z, float C0, float C1, float C2, float C3, float C4)
 {
 	float cons = 2 * sqrt(1 + pow((Z - C0) / C1, 2) + C2 * pow((Z - C0) / C1, 3) + C3 * pow((Z - C0) / C1, 4));
-	return -(C4 / pow(C1, 3)) * ((2 * pow(Z - C0, 2) + 3 * (C2 / C1) * pow(Z - C0, 3) + 4 * (C3 / pow(C1, 2)) * pow(Z - C0, 4)) / (cons));
+	return -(C4 / pow(C1, 3)) * ((2 * pow(Z - C0, 2) + 3 * (C2 / C1) * pow(Z - C0, 3) + 4 * (C3 / pow(C1, 2)) * pow(Z - C0, 4)) / cons);
 }
 
 float CalibrationFit::deriv1C2(float Z, float C0, float C1, float C2, float C3, float C4)
 {
 	float cons = 2 * sqrt(1 + pow((Z - C0) / C1, 2) + C2 * pow((Z - C0) / C1, 3) + C3 * pow((Z - C0) / C1, 4));
-	return (C4 / pow(C1, 3)) * (pow(Z - C0, 3) / (cons));
+	return C4 / pow(C1, 3) * (pow(Z - C0, 3) / cons);
 }
 
 float CalibrationFit::deriv1C3(float Z, float C0, float C1, float C2, float C3, float C4)
 {
 	float cons = 2 * sqrt(1 + pow((Z - C0) / C1, 2) + C2 * pow((Z - C0) / C1, 3) + C3 * pow((Z - C0) / C1, 4));
-	return (C4 / pow(C1, 4)) * (pow(Z - C0, 4) / (cons));
+	return C4 / pow(C1, 4) * (pow(Z - C0, 4) / cons);
 }
 
 float CalibrationFit::deriv1C4(float Z, float C0, float C1, float C2, float C3, float C4) { return sqrt(1 + pow((Z - C0) / C1, 2) + C2 * pow((Z - C0) / C1, 3) + C3 * pow((Z - C0) / C1, 4)); }
@@ -51,11 +51,11 @@ float CalibrationFit::lm_matx(float* Z/*IN*/, float* p/*IN*/, float* y_dat/*IN*/
 	// Computing Jacobian matrix (dydp)
 	float* dydp = (float*)malloc(Npnt * Npar * sizeof(float));
 	for (int elt = 0; elt < Npnt; elt++) {
-		dydp[(0) + elt * Npar] = deriv1C0(Z[elt], p[0], p[1], p[2], p[3], p[4]); // C0
-		dydp[(1) + elt * Npar] = deriv1C1(Z[elt], p[0], p[1], p[2], p[3], p[4]); // C1
-		dydp[(2) + elt * Npar] = deriv1C2(Z[elt], p[0], p[1], p[2], p[3], p[4]); // C2
-		dydp[(3) + elt * Npar] = deriv1C3(Z[elt], p[0], p[1], p[2], p[3], p[4]); // C3
-		dydp[(4) + elt * Npar] = deriv1C4(Z[elt], p[0], p[1], p[2], p[3], p[4]); // C4
+		dydp[0 + elt * Npar] = deriv1C0(Z[elt], p[0], p[1], p[2], p[3], p[4]); // C0
+		dydp[1 + elt * Npar] = deriv1C1(Z[elt], p[0], p[1], p[2], p[3], p[4]); // C1
+		dydp[2 + elt * Npar] = deriv1C2(Z[elt], p[0], p[1], p[2], p[3], p[4]); // C2
+		dydp[3 + elt * Npar] = deriv1C3(Z[elt], p[0], p[1], p[2], p[3], p[4]); // C3
+		dydp[4 + elt * Npar] = deriv1C4(Z[elt], p[0], p[1], p[2], p[3], p[4]); // C4
 	}
 
 	float* inter = (float*)malloc(Npar * Npnt * sizeof(float));
@@ -214,7 +214,7 @@ float CalibrationFit::Run(float* sigma, float* Z, unsigned short pointsNbr, unsi
 	float m;
 	float rho;
 
-	while ((stop == 0) && (iteration < iterNum)) // Main Loop
+	while (stop == 0 && iteration < iterNum) // Main Loop
 	{
 		iteration++;
 		float delta_p[Npar] = {0, 0, 0, 0, 0};
@@ -273,14 +273,14 @@ float CalibrationFit::Run(float* sigma, float* Z, unsigned short pointsNbr, unsi
 		max_ = 0;
 		for (int ii = 0; ii < Npar; ii++) { max_ = std::max(max_, abs(delta_p[ii] / p[ii])); }
 
-		if ((max_ < epsilon_2) && (iteration > 2)) { stop = 1; }
+		if (max_ < epsilon_2 && iteration > 2) { stop = 1; }
 
-		if ((X2 / Npnt < epsilon_3) && (iteration > 2)) { stop = 1; }
+		if (X2 / Npnt < epsilon_3 && iteration > 2) { stop = 1; }
 
 		max_ = 0;
 		for (int ii = 0; ii < Npar; ii++) { max_ = std::max(max_, abs(beta[ii])); }
 
-		if ((max_ < epsilon_1) && (iteration > 2)) { stop = 1; }
+		if (max_ < epsilon_1 && iteration > 2) { stop = 1; }
 
 		if (iteration == iterNum) { stop = 1; }
 	}
@@ -304,9 +304,9 @@ float CalibrationFit::Run(float* sigma, float* Z, unsigned short pointsNbr, unsi
 	for (int ii = 0; ii < Npnt; ii++) {
 		diff_dat = sigma[ii] - y_dat_mean;
 		diff_hat = y_hat[ii] - y_hat_mean;
-		t1 += (diff_dat) * (diff_hat);
-		t2 += (diff_dat) * (diff_dat);
-		t3 += (diff_hat) * (diff_hat);
+		t1 += diff_dat * diff_hat;
+		t2 += diff_dat * diff_dat;
+		t3 += diff_hat * diff_hat;
 	}
 	t2 = sqrt(t2);
 	t3 = sqrt(t3);

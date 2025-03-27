@@ -49,7 +49,7 @@ int Segment2D::filterStructureWS(FltArray& potential, USrtArray& seg, float thre
 					}
 					for (ii = __max(i-1, 0); ii <= __min(i+1, sizeDataX-1); ii++) {
 						for (jj = __max(j-1, 0); jj <= __min(j+1, sizeDataY-1); jj++) {
-							if ((ii != i) || (jj != j)) {
+							if (ii != i || jj != j) {
 								if (seg.data[ii * sizeDataY + jj] != 0) {
 									if (seg.data[i * sizeDataY + j] != seg.data[ii * sizeDataY + jj]) {
 										if (potential.data[i * sizeDataY + j] > ptrStr[seg.data[i * sizeDataY + j]].maxPotentialWithNeighbor) {
@@ -69,7 +69,7 @@ int Segment2D::filterStructureWS(FltArray& potential, USrtArray& seg, float thre
 		change = false;
 		for (i = 1; i <= oldNbInfoStruct; i++) {
 			if (ptrStr[i].structureInContact > 0) {
-				if ((ptrStr[i].locked == false) && (ptrStr[ptrStr[i].structureInContact].locked == false)) {
+				if (ptrStr[i].locked == false && ptrStr[ptrStr[i].structureInContact].locked == false) {
 					ratio = (ptrStr[i].maxPotentialOnTheStructure - ptrStr[i].maxPotentialWithNeighbor) / (ptrStr[i].maxPotentialOnTheStructure - ptrStr[i].minPotentialOnTheStructure);
 
 					if (ratio < thresholdRatio) {
@@ -101,7 +101,7 @@ int Segment2D::filterStructureWS(FltArray& potential, USrtArray& seg, float thre
 	seg = (unsigned short)0;
 
 	label = 0;
-	if (nbInfoStruct == 0) { return (0); }
+	if (nbInfoStruct == 0) { return 0; }
 	for (i = 1; i <= (long)nbInfoStruct; i++) {
 		if (ptrStr[i].structureToBecaume == i) {
 			label++;
@@ -112,7 +112,7 @@ int Segment2D::filterStructureWS(FltArray& potential, USrtArray& seg, float thre
 
 	free(ptrStr);
 
-	return (label - 1);
+	return label - 1;
 }
 
 /********************************************************************************************************************
@@ -136,13 +136,13 @@ int Segment2D::getLocalMax(FltArray& image, USrtArray& seg, float threshold)
 			if (image.data[i * sizeDataY + j] > threshold) {
 				err = false;
 				//test if it is a new maximum from the vicinity
-				for (ii = __max(i-1, 0); (ii <= __min(i+1, sizeDataX-1)) && !err; ii++) { for (jj = __max(j-1, 0); (jj <= __min(j+1, sizeDataY-1)) && !err; jj++) { if ((ii != i) || (jj != j)) { if (image.data[i * sizeDataY + j] < image.data[ii * sizeDataY + jj]) { err = true; } } } }
+				for (ii = __max(i-1, 0); ii <= __min(i+1, sizeDataX-1) && !err; ii++) { for (jj = __max(j-1, 0); jj <= __min(j+1, sizeDataY-1) && !err; jj++) { if (ii != i || jj != j) { if (image.data[i * sizeDataY + j] < image.data[ii * sizeDataY + jj]) { err = true; } } } }
 				if (!err) { //new maximum found
 					unsigned short maxi = 0;
 					err = false;
-					for (ii = __max(i-1, 0); (ii <= __min(i+1, sizeDataX-1)) && !err; ii++) {
-						for (jj = __max(j-1, 0); (jj <= __min(j+1, sizeDataY-1)) && !err; jj++) {
-							if ((ii != i) || (jj != j)) {
+					for (ii = __max(i-1, 0); ii <= __min(i+1, sizeDataX-1) && !err; ii++) {
+						for (jj = __max(j-1, 0); jj <= __min(j+1, sizeDataY-1) && !err; jj++) {
+							if (ii != i || jj != j) {
 								if (maxi < seg.data[ii * sizeDataY + jj]) {
 									maxi = seg.data[ii * sizeDataY + jj];
 									err = true;
@@ -160,7 +160,7 @@ int Segment2D::getLocalMax(FltArray& image, USrtArray& seg, float threshold)
 		}
 	}
 
-	return (label - 1);
+	return label - 1;
 }
 
 
@@ -188,7 +188,7 @@ int Segment2D::watershed(FltArray& potential, USrtArray& seg, float threshold)
 			bool vois = false;
 
 			if (seg.data[p.x * sizeDataY + p.y] != 0) {
-				for (p1.x = p.x - 1; (p1.x <= p.x + 1) && !vois; p1.x++) { for (p1.y = p.y - 1; (p1.y <= p.y + 1) && !vois; p1.y++) { if ((p1.x != p.x) || (p1.y != p.y)) { if (p1.x >= 0) { if (p1.x < potential.size(0)) { if (p1.y >= 0) { if (p1.y < potential.size(1)) { if (seg.data[p1.x * sizeDataY + p1.y] == 0) { vois = true; } } } } } } } }
+				for (p1.x = p.x - 1; p1.x <= p.x + 1 && !vois; p1.x++) { for (p1.y = p.y - 1; p1.y <= p.y + 1 && !vois; p1.y++) { if (p1.x != p.x || p1.y != p.y) { if (p1.x >= 0) { if (p1.x < potential.size(0)) { if (p1.y >= 0) { if (p1.y < potential.size(1)) { if (seg.data[p1.x * sizeDataY + p1.y] == 0) { vois = true; } } } } } } } }
 
 				// On empile les points frontieres.
 				if (vois) {
@@ -207,7 +207,7 @@ int Segment2D::watershed(FltArray& potential, USrtArray& seg, float threshold)
 		p = tas.Pop();
 		for (p1.x = p.x - 1; p1.x <= p.x + 1; p1.x++) {
 			for (p1.y = p.y - 1; p1.y <= p.y + 1; p1.y++) {
-				if ((p1.x != p.x) || (p1.y != p.y)) {
+				if (p1.x != p.x || p1.y != p.y) {
 					if (p1.x >= 0) {
 						if (p1.x < potential.size(0)) {
 							if (p1.y >= 0) {
@@ -230,7 +230,7 @@ int Segment2D::watershed(FltArray& potential, USrtArray& seg, float threshold)
 		}
 	}
 
-	return (nbInfoStruct);
+	return nbInfoStruct;
 }
 
 
@@ -250,23 +250,23 @@ int Segment2D::watershedIntelligent(FltArray& potential, USrtArray& seg, float t
 	int ret;
 
 	//first, find the local maximum to set the different germinates
-	if ((nbInfoStruct = getLocalMax(potential, seg, threshold)) < 0) { return (nbInfoStruct); }
+	if ((nbInfoStruct = getLocalMax(potential, seg, threshold)) < 0) { return nbInfoStruct; }
 
 	//first watershed
-	if ((ret = watershed(potential, seg, threshold)) < 0) { return (ret); }
+	if ((ret = watershed(potential, seg, threshold)) < 0) { return ret; }
 
 	if (thresholdRatio == 0) {
 		mixIndex(seg);
-		return (nbInfoStruct);
+		return nbInfoStruct;
 	}
 
 	//filter the germinates to minimize the oversegmentation
-	if ((ret = filterStructureWS(potential, seg, thresholdRatio)) < 0) { return (ret); }
+	if ((ret = filterStructureWS(potential, seg, thresholdRatio)) < 0) { return ret; }
 
 	//first watershed
-	if ((ret = watershed(potential, seg, threshold)) < 0) { return (ret); }
+	if ((ret = watershed(potential, seg, threshold)) < 0) { return ret; }
 	mixIndex(seg);
-	return (nbInfoStruct);
+	return nbInfoStruct;
 }
 
 /********************************************************************************************************************
@@ -315,7 +315,7 @@ int Segment2D::filterStructureWS(USrtArray& potential, USrtArray& seg, float thr
 					}
 					for (ii = __max(i-1, 0); ii <= __min(i+1, sizeDataX-1); ii++) {
 						for (jj = __max(j-1, 0); jj <= __min(j+1, sizeDataY-1); jj++) {
-							if ((ii != i) || (jj != j)) {
+							if (ii != i || jj != j) {
 								if (seg.data[ii * sizeDataY + jj] != 0) {
 									if (seg.data[i * sizeDataY + j] != seg.data[ii * sizeDataY + jj]) {
 										if (potential.data[i * sizeDataY + j] > ptrStr[seg.data[i * sizeDataY + j]].maxPotentialWithNeighbor) {
@@ -335,7 +335,7 @@ int Segment2D::filterStructureWS(USrtArray& potential, USrtArray& seg, float thr
 		change = false;
 		for (i = 1; i <= oldNbInfoStruct; i++) {
 			if (ptrStr[i].structureInContact > 0) {
-				if ((ptrStr[i].locked == false) && (ptrStr[ptrStr[i].structureInContact].locked == false)) {
+				if (ptrStr[i].locked == false && ptrStr[ptrStr[i].structureInContact].locked == false) {
 					ratio = (ptrStr[i].maxPotentialOnTheStructure - ptrStr[i].maxPotentialWithNeighbor) / (ptrStr[i].maxPotentialOnTheStructure - ptrStr[i].minPotentialOnTheStructure);
 
 					if (ratio < thresholdRatio) {
@@ -377,7 +377,7 @@ int Segment2D::filterStructureWS(USrtArray& potential, USrtArray& seg, float thr
 
 	free(ptrStr);
 
-	return (label - 1);
+	return label - 1;
 }
 
 /********************************************************************************************************************
@@ -401,13 +401,13 @@ int Segment2D::getLocalMax(USrtArray& image, USrtArray& seg, float threshold)
 			if (image.data[i * sizeDataY + j] > threshold) {
 				err = false;
 				//test if it is a new maximum from the vicinity
-				for (ii = __max(i-1, 0); (ii <= __min(i+1, sizeDataX-1)) && !err; ii++) { for (jj = __max(j-1, 0); (jj <= __min(j+1, sizeDataY-1)) && !err; jj++) { if ((ii != i) || (jj != j)) { if ((image.data[i * sizeDataY + j] < image.data[ii * sizeDataY + jj]) || (image.data[ii * sizeDataY + jj] <= threshold)) { err = true; } } } }
+				for (ii = __max(i-1, 0); ii <= __min(i+1, sizeDataX-1) && !err; ii++) { for (jj = __max(j-1, 0); jj <= __min(j+1, sizeDataY-1) && !err; jj++) { if (ii != i || jj != j) { if (image.data[i * sizeDataY + j] < image.data[ii * sizeDataY + jj] || image.data[ii * sizeDataY + jj] <= threshold) { err = true; } } } }
 				if (!err) { //new maximum found. 
 					unsigned short maxi = 0;
 					err = false;
-					for (ii = __max(i-1, 0); (ii <= __min(i+1, sizeDataX-1)) && !err; ii++) {
-						for (jj = __max(j-1, 0); (jj <= __min(j+1, sizeDataY-1)) && !err; jj++) {
-							if ((ii != i) || (jj != j)) {
+					for (ii = __max(i-1, 0); ii <= __min(i+1, sizeDataX-1) && !err; ii++) {
+						for (jj = __max(j-1, 0); jj <= __min(j+1, sizeDataY-1) && !err; jj++) {
+							if (ii != i || jj != j) {
 								if (maxi < seg.data[ii * sizeDataY + jj]) {
 									maxi = seg.data[ii * sizeDataY + jj];
 									err = true;
@@ -425,7 +425,7 @@ int Segment2D::getLocalMax(USrtArray& image, USrtArray& seg, float threshold)
 		}
 	}
 
-	return (label - 1);
+	return label - 1;
 }
 
 
@@ -453,11 +453,11 @@ int Segment2D::watershed(USrtArray& potential, USrtArray& seg, float threshold)
 			bool vois = false;
 
 			if (seg.data[p.x * sizeDataY + p.y] != 0) {
-				for (p1.x = p.x - 1; (p1.x <= p.x + 1) && !vois; p1.x++) { for (p1.y = p.y - 1; (p1.y <= p.y + 1) && !vois; p1.y++) { if ((p1.x != p.x) || (p1.y != p.y)) { if (p1.x >= 0) { if (p1.x < potential.size(0)) { if (p1.y >= 0) { if (p1.y < potential.size(1)) { if (seg.data[p1.x * sizeDataY + p1.y] == 0) { vois = true; } } } } } } } }
+				for (p1.x = p.x - 1; p1.x <= p.x + 1 && !vois; p1.x++) { for (p1.y = p.y - 1; p1.y <= p.y + 1 && !vois; p1.y++) { if (p1.x != p.x || p1.y != p.y) { if (p1.x >= 0) { if (p1.x < potential.size(0)) { if (p1.y >= 0) { if (p1.y < potential.size(1)) { if (seg.data[p1.x * sizeDataY + p1.y] == 0) { vois = true; } } } } } } } }
 
 				// On empile les points frontieres.
 				if (vois) {
-					cle = (float)(-potential.data[p1.x * sizeDataY + p1.y]);
+					cle = (float)-potential.data[p1.x * sizeDataY + p1.y];
 					tas.Push(p, cle);
 				}
 			}
@@ -472,7 +472,7 @@ int Segment2D::watershed(USrtArray& potential, USrtArray& seg, float threshold)
 		p = tas.Pop();
 		for (p1.x = p.x - 1; p1.x <= p.x + 1; p1.x++) {
 			for (p1.y = p.y - 1; p1.y <= p.y + 1; p1.y++) {
-				if ((p1.x != p.x) || (p1.y != p.y)) {
+				if (p1.x != p.x || p1.y != p.y) {
 					if (p1.x >= 0) {
 						if (p1.x < potential.size(0)) {
 							if (p1.y >= 0) {
@@ -495,7 +495,7 @@ int Segment2D::watershed(USrtArray& potential, USrtArray& seg, float threshold)
 		}
 	}
 
-	return (nbInfoStruct);
+	return nbInfoStruct;
 }
 
 

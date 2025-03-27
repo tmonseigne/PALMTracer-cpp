@@ -11,7 +11,7 @@
 /********************************************************************************************************************
 allocNode(void) allocation of one node in the class TimeNodesDistanceIntensity
 ********************************************************************************************************************/
-Node* TimeNodesDistanceIntensity::allocNode(void) { return (new NodeDistanceIntensity(time, publicParameters)); }
+Node* TimeNodesDistanceIntensity::allocNode(void) { return new NodeDistanceIntensity(time, publicParameters); }
 
 /********************************************************************************************************************
 Constructor(int _time, int _nbNodes) is run after the base constructor TimeNodes::TimeNodes
@@ -46,7 +46,7 @@ double TimeNodesDistanceIntensity::makeAllInitializationConnections()
 		node = (NodeDistanceIntensity*)tabNodes[i];
 		globalLikeness += node->makeInitializationConnection();
 	}
-	return (globalLikeness);
+	return globalLikeness;
 }
 
 /********************************************************************************************************************
@@ -56,8 +56,8 @@ It returns the gain in likeness computed with this change
 double TimeNodesDistanceIntensity::tryRandomChange(double limit)
 {
 	if (nbNodes < 1) { return 0.; } //<=
-	if (nbNodes == 1) { return (((NodeDistanceIntensity*)(tabNodes[0]))->makeChange(limit)); }
-	return (((NodeDistanceIntensity*)(tabNodes[rand() % (nbNodes/*-1*/)]))->makeChange(limit));
+	if (nbNodes == 1) { return ((NodeDistanceIntensity*)tabNodes[0])->makeChange(limit); }
+	return ((NodeDistanceIntensity*)tabNodes[rand() % nbNodes/*-1*/])->makeChange(limit);
 }
 
 /********************************************************************************************************************
@@ -71,5 +71,5 @@ double TimeNodesDistanceIntensity::getLikenessTime(long lastTime)
 		node = (NodeDistanceIntensity*)tabNodes[i];
 		globalLikeness += node->getLikenessOfLocalNode(lastTime);
 	}
-	return (globalLikeness);
+	return globalLikeness;
 }

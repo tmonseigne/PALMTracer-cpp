@@ -90,7 +90,7 @@ public :
 	Errc(const bool f)
 	{
 		ret = FS_RET;
-		val.fs = (f) ? SUCCESS : FAILURE;
+		val.fs = f ? SUCCESS : FAILURE;
 	}
 
 	/**

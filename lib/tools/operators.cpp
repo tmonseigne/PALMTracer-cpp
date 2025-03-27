@@ -21,7 +21,7 @@ ArrayType& ArrayType::operator=(const ArrayType2& arrayType)
 #endif
 		}
 	}
-	return (*this);
+	return *this;
 }
 
 
@@ -35,7 +35,7 @@ ArrayType& ArrayType::operator=(const DataType2 val)
 	val2 = (DataType)val;
 #endif
 	for (unsigned long i = 0; i < nbPoints; i++) { data[i] = val2; }
-	return (*this);
+	return *this;
 }
 
 
@@ -52,7 +52,7 @@ ArrayType& ArrayType::operator+=(const ArrayType2& arrayType)
 		data[i] += (DataType)arrayType.data[i];
 #endif
 	}
-	return (*this);
+	return *this;
 }
 
 
@@ -62,7 +62,7 @@ ArrayType& ArrayType::operator+=(const DataType2 val)
 	val2 = (DataType)val;
 	for (unsigned long i = 0; i < nbPoints; i++) { data[i] += val2; }
 
-	return (*this);
+	return *this;
 }
 #endif
 #endif
@@ -75,7 +75,7 @@ ArrayType& ArrayType::operator-=(const ArrayType2& arrayType)
 {
 	if (nbPoints != arrayType.nbPoints) { exit(SIZE_ERR); }
 	for (unsigned long i = 0; i < nbPoints; i++) { data[i] -= (DataType)arrayType.data[i]; }
-	return (*this);
+	return *this;
 }
 
 ArrayType& ArrayType::operator-=(const DataType2 val)
@@ -85,7 +85,7 @@ ArrayType& ArrayType::operator-=(const DataType2 val)
 
 
 	for (unsigned long i = 0; i < nbPoints; i++) { data[i] -= val2; }
-	return (*this);
+	return *this;
 }
 
 
@@ -100,7 +100,7 @@ ArrayType& ArrayType::operator*=(const ArrayType2& arrayType)
 		data[i] *= (DataType)arrayType.data[i];
 #endif
 	}
-	return (*this);
+	return *this;
 }
 #endif
 #endif
@@ -113,7 +113,7 @@ ArrayType& ArrayType::operator*=(const DataType2 val)
 	val2 = (DataType)val;
 
 	for (unsigned long i = 0; i < nbPoints; i++) { data[i] *= val2; }
-	return (*this);
+	return *this;
 }
 #endif
 #endif
@@ -126,7 +126,7 @@ ArrayType& ArrayType::operator/=(const ArrayType2& arrayType)
 {
 	if (nbPoints != arrayType.nbPoints) { exit(SIZE_ERR); }
 	for (unsigned long i = 0; i < nbPoints; i++) { data[i] /= (DataType)arrayType.data[i]; }
-	return (*this);
+	return *this;
 }
 
 
@@ -135,7 +135,7 @@ ArrayType& ArrayType::operator/=(const DataType2 val)
 	DataType val2;
 	val2 = (DataType)val;
 	for (unsigned long i = 0; i < nbPoints; i++) { data[i] /= val2; }
-	return (*this);
+	return *this;
 }
 #endif
 #endif

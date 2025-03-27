@@ -84,7 +84,7 @@ _declspec(dllexport) void _stdcall GaussianVisuCPU(double* gaussianPointsList/*(
 	float x0, y0;
 	unsigned long NbSegParams = 13;
 
-	for (int i = 0; i < (pointsListSize / NbSegParams); i++) {
+	for (int i = 0; i < pointsListSize / NbSegParams; i++) {
 		if ((int)pointsList[NbSegParams * i + 9] > 0) {
 			if ((int)pointsList[NbSegParams * i + 3] != -1) {
 				int sizeRegH = sizeReg / 2;
@@ -97,11 +97,11 @@ _declspec(dllexport) void _stdcall GaussianVisuCPU(double* gaussianPointsList/*(
 
 				float photonsNbr = 2 * 3.14 * (float)pointsList[NbSegParams * i + 5] * (float)pointsList[NbSegParams * i + 0] * (float)pointsList[NbSegParams * i + 0];
 				photonsNbr = photonsNbr * conversionRatio;
-				float sigma = ((float)pointsList[NbSegParams * i + 0] * pixelSize) / sqrt(photonsNbr); // en nm
+				float sigma = (float)pointsList[NbSegParams * i + 0] * pixelSize / sqrt(photonsNbr); // en nm
 				sigma = sigma / (pixelSize / zoom);                                                    // in nm / (pixelSize / zoom); // en pixel SR space
 				float A = 10000 / (2 * 3.14 * sigma * sigma);                                          //photonsNbr / (2 * 3.14 * sigma * sigma);
 
-				if (((unsigned int)y0 >= sizeRegH) && ((unsigned int)y0 <= (height * zoom) - 1 - sizeRegH) && ((unsigned int)x0 >= sizeRegH) && ((unsigned int)x0 <= (width * zoom) - 1 - sizeRegH)) {
+				if ((unsigned int)y0 >= sizeRegH && (unsigned int)y0 <= height * zoom - 1 - sizeRegH && (unsigned int)x0 >= sizeRegH && (unsigned int)x0 <= width * zoom - 1 - sizeRegH) {
 					for (int jj = -sizeRegH; jj <= sizeRegH; jj++) {
 						for (int ii = -sizeRegH; ii <= sizeRegH; ii++) {
 							gaussianPointsList[index * sizeReg * sizeReg + (ii + sizeRegH) + (jj + sizeRegH) * sizeReg] = GaussianFunction_2D(x0 - (int)(x0 - ii), y0 - (int)(y0 - jj), A, sigma); // 1000.0f, /*I0*/, 1.0f/*sigma*/);			

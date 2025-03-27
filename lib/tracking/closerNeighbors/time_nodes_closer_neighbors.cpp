@@ -10,7 +10,7 @@
 /********************************************************************************************************************
 allocNode(void) allocation of one node in the class NodeCloserNeighbors
 ********************************************************************************************************************/
-Node* TimeNodesCloserNeighbors::allocNode(void) { return (new NodeCloserNeighbors(time, publicParameters)); }
+Node* TimeNodesCloserNeighbors::allocNode(void) { return new NodeCloserNeighbors(time, publicParameters); }
 
 /********************************************************************************************************************
 Constructor(int _time, int _nbNodes) is run after the base constructor TimeNodes::TimeNodes
@@ -28,5 +28,5 @@ int TimeNodesCloserNeighbors::makeAllConnections()
 		node = (NodeCloserNeighbors*)tabNodes[i];
 		node->makeConnection();
 	}
-	return (RET_OK);
+	return RET_OK;
 }

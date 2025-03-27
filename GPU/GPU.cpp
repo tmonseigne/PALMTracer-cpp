@@ -71,10 +71,10 @@ int GPU::runGPU()
 		ret_val = __PALMProcessing();
 		__closePALMProcessing();
 
-		nb_points += (ret_val / NbSegParams) - 1;
+		nb_points += ret_val / NbSegParams - 1;
 
 		// copy data from 'points' to 'pointsList'
-		for (int li = 0; li < ((ret_val / NbSegParams) - 1); li++) {
+		for (int li = 0; li < ret_val / NbSegParams - 1; li++) {
 			pointsList[currentPoint++] = 0.;
 			pointsList[currentPoint++] = 0.;
 			pointsList[currentPoint++] = 0.;
@@ -117,8 +117,8 @@ int GPU::runGPU()
 
 	unsigned short iterNum;
 
-	if ((gaussFit == 0) || (gaussFit == 5)) { iterNum = 0; }
-	if ((gaussFit == 1) || (gaussFit == 2) || (gaussFit == 3)) { iterNum = 10; }
+	if (gaussFit == 0 || gaussFit == 5) { iterNum = 0; }
+	if (gaussFit == 1 || gaussFit == 2 || gaussFit == 3) { iterNum = 10; }
 	if (gaussFit == 4) { iterNum = 20 * 7; }
 
 	LaunchGaussianFit(pointsList, pointsListSize, sizeStk, sizeDataY, sizeDataX, gaussFit, sigmaX, sigmaY, angle, sizeFit, iterNum, 1, IsComputingZ, SigmaXCoefs, SigmaYCoefs, ThreeDThickness/*µm*/, ThreeDSampling/*µm*/, pixelSize /*µm*/);

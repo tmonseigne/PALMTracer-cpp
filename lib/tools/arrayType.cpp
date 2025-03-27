@@ -41,7 +41,7 @@ ArrayType::ArrayType(DataType* _data, const long i, const long j, const long k, 
 }
 
 
-bool ArrayType::isThereData(void) { return (data != NULL); }
+bool ArrayType::isThereData(void) { return data != NULL; }
 
 int ArrayType::getDim(const long i, const long j, const long k, const long l)
 {
@@ -53,22 +53,22 @@ int ArrayType::getDim(const long i, const long j, const long k, const long l)
 			if (j == 1) { _nbDim = 1; }
 		}
 	}
-	return (_nbDim);
+	return _nbDim;
 }
 
 int ArrayType::testDim(const long i, const long j, const long k, const long l)
 {
-	if ((i < 0) || (j < 0) || (k < 0) || (l < 0)) {
+	if (i < 0 || j < 0 || k < 0 || l < 0) {
 		nbDim = 0;
 		nbPoints = 0;
 		data = NULL;
 		sizeAllocated = 0;
-		return (SIZE_ERR);
+		return SIZE_ERR;
 	}
-	return (RET_OK);
+	return RET_OK;
 }
 
-int ArrayType::getDepth() { return (8 * sizeof(DataType)); }
+int ArrayType::getDepth() { return 8 * sizeof(DataType); }
 
 
 int ArrayType::alloc(const long i, const long j, const long k, const long l)
@@ -76,7 +76,7 @@ int ArrayType::alloc(const long i, const long j, const long k, const long l)
 	long ret;
 	nbDim = getDim(i, j, k, l);
 
-	if ((ret = testDim(i, j, k, l)) < 0) { return (ret); }
+	if ((ret = testDim(i, j, k, l)) < 0) { return ret; }
 
 
 	if (isThereData()) {
@@ -91,7 +91,7 @@ int ArrayType::alloc(const long i, const long j, const long k, const long l)
 			nbDim = 0;
 			nbPoints = 0;
 			data = NULL;
-			return (SIZE_ERR);
+			return SIZE_ERR;
 		}
 	}
 	else {
@@ -100,7 +100,7 @@ int ArrayType::alloc(const long i, const long j, const long k, const long l)
 			nbDim = 0;
 			nbPoints = 0;
 			sizeAllocated = 0;
-			return (ALLOC_ERR);
+			return ALLOC_ERR;
 		}
 		else {
 			sizeAllocated = (unsigned long)(i * j * k * l);
@@ -117,7 +117,7 @@ int ArrayType::alloc(const long i, const long j, const long k, const long l)
 #endif
 		}
 	}
-	return (RET_OK);
+	return RET_OK;
 }
 
 
@@ -126,14 +126,14 @@ int ArrayType::alloc(DataType* _data, const long i, const long j, const long k, 
 	long ret;
 	nbDim = getDim(i, j, k, l);
 
-	if ((ret = testDim(i, j, k, l)) < 0) { return (ret); }
+	if ((ret = testDim(i, j, k, l)) < 0) { return ret; }
 
 	if (isThereData()) {
 		if (dataAllocatedByConstructor) {
 			nbDim = 0;
 			nbPoints = 0;
 			sizeAllocated = 0;
-			return (ALLOC_ERR);
+			return ALLOC_ERR;
 		}
 		else {
 			nbPoints = (unsigned long)(i * j * k * l);
@@ -160,15 +160,15 @@ int ArrayType::alloc(DataType* _data, const long i, const long j, const long k, 
 		maxVal = MAXVAL;
 #endif
 	}
-	return (RET_OK);
+	return RET_OK;
 }
 
 int ArrayType::realloc(const long i, const long j, const long k, const long l)
 {
 	long ret;
 	nbDim = getDim(i, j, k, l);
-	if ((ret = testDim(i, j, k, l)) < 0) { return (ret); }
-	if (isThereData() && !dataAllocatedByConstructor) { return (ALLOC_ERR); }
+	if ((ret = testDim(i, j, k, l)) < 0) { return ret; }
+	if (isThereData() && !dataAllocatedByConstructor) { return ALLOC_ERR; }
 	if (isThereData()) {
 		if (sizeAllocated >= (unsigned long)(i * j * k * l)) {
 			nbPoints = (unsigned long)(i * j * k * l);
@@ -180,11 +180,11 @@ int ArrayType::realloc(const long i, const long j, const long k, const long l)
 		else {
 			delete [] data;
 			data = NULL;
-			if ((ret = alloc(i, j, k, l)) < 0) { return (ret); }
+			if ((ret = alloc(i, j, k, l)) < 0) { return ret; }
 		}
 	}
-	else if ((ret = alloc(i, j, k, l)) < 0) { return (ret); }
-	return (RET_OK);
+	else if ((ret = alloc(i, j, k, l)) < 0) { return ret; }
+	return RET_OK;
 }
 
 
@@ -196,16 +196,16 @@ ArrayType::~ArrayType()
 
 
 //**************		[]		*********************
-DataType&ArrayType::operator[](long i) { return (data[i]); }
+DataType&ArrayType::operator[](long i) { return data[i]; }
 
 //**************		()		*********************
-DataType&ArrayType::operator()(long i) { return (data[i]); }
+DataType&ArrayType::operator()(long i) { return data[i]; }
 
-DataType&ArrayType::operator()(long i, long j) { return (data[i * sizeData[1] + j]); }
+DataType&ArrayType::operator()(long i, long j) { return data[i * sizeData[1] + j]; }
 
-DataType&ArrayType::operator()(long i, long j, long k) { return (data[(i * sizeData[1] + j) * sizeData[2] + k]); }
+DataType&ArrayType::operator()(long i, long j, long k) { return data[(i * sizeData[1] + j) * sizeData[2] + k]; }
 
-DataType&ArrayType::operator()(long i, long j, long k, long l) { return (data[((i * sizeData[1] + j) * sizeData[2] + k) * sizeData[3] + l]); }
+DataType&ArrayType::operator()(long i, long j, long k, long l) { return data[((i * sizeData[1] + j) * sizeData[2] + k) * sizeData[3] + l]; }
 
 
 //**************		OPERATORS	********************
@@ -235,7 +235,7 @@ DataType&ArrayType::operator()(long i, long j, long k, long l) { return (data[((
 ArrayType& ArrayType::operator++(void)
 {
 	for (unsigned long i = 0; i < nbPoints; i++) { ++data[i]; }
-	return (*this);
+	return *this;
 }
 #endif
 
@@ -244,14 +244,14 @@ ArrayType& ArrayType::operator++(void)
 ArrayType& ArrayType::operator--(void)
 {
 	for (unsigned long i = 0; i < nbPoints; i++) { ++data[i]; }
-	return (*this);
+	return *this;
 }
 #endif
 
 
 //*************		standard methods		*****************
 
-int ArrayType::size(int di) { return (sizeData[di]); }
+int ArrayType::size(int di) { return sizeData[di]; }
 
 void ArrayType::setSize(int di, int valSize)
 {
@@ -261,7 +261,7 @@ void ArrayType::setSize(int di, int valSize)
 	if (nbPoints > sizeAllocated) { exit(SIZE_ERR); }
 }
 
-int ArrayType::dim() { return (nbDim); }
+int ArrayType::dim() { return nbDim; }
 
 
 #ifndef BOOL_TYPE
@@ -270,7 +270,7 @@ DataType ArrayType::min(void)
 	if (!isThereData()) { exit(ALLOC_ERR); }
 	DataType _min = data[0];
 	for (unsigned long i = 0; i < nbPoints; i++) { if (_min > data[i]) { _min = data[i]; } }
-	return (_min);
+	return _min;
 }
 #endif
 
@@ -280,7 +280,7 @@ DataType ArrayType::max(void)
 	if (!isThereData()) { exit(ALLOC_ERR); }
 	DataType _max = data[0];
 	for (unsigned long i = 0; i < nbPoints; i++) { if (_max < data[i]) { _max = data[i]; } }
-	return (_max);
+	return _max;
 }
 #endif
 
@@ -334,8 +334,8 @@ double ArrayType::sigma(void)
 	mean /= (double)nbPoints;
 	for (i = 0; i < nbPoints; i++) { var += (data[i] - mean) * (data[i] - mean); }
 	var /= nbPoints;
-	if (var < 0) { return (0.); }
-	else { return (sqrt(var)); }
+	if (var < 0) { return 0.; }
+	else { return sqrt(var); }
 }
 #endif
 
@@ -344,9 +344,9 @@ double ArrayType::power(void)
 {
 	unsigned long i;
 	double pow = 0.;
-	for (i = 0; i < nbPoints; i++) { pow += (data[i]) * (data[i]); }
+	for (i = 0; i < nbPoints; i++) { pow += data[i] * data[i]; }
 	pow /= (double)nbPoints;
-	return (pow);
+	return pow;
 }
 #endif
 
@@ -358,7 +358,7 @@ double ArrayType::mean()
 	double m = 0.;
 	for (i = 0; i < nbPoints; i++) { m += data[i]; }
 	m /= (double)nbPoints;
-	return (m);
+	return m;
 }
 #endif
 
@@ -368,7 +368,7 @@ double ArrayType::sum()
 	unsigned long i;
 	double m = 0.;
 	for (i = 0; i < nbPoints; i++) { m += data[i]; }
-	return (m);
+	return m;
 }
 #endif
 
@@ -430,8 +430,8 @@ void ArrayType::softThresholdPositive(DataType val)
 void ArrayType::hardThresholdInterval(DataType valMin, DataType valMax, bool between)
 {
 	unsigned long i;
-	if (between) { for (i = 0; i < nbPoints; i++) { if ((data[i] < valMin) || (data[i] > valMax)) { data[i] = (DataType)0; } } }
-	else { for (i = 0; i < nbPoints; i++) { if ((data[i] > valMin) && (data[i] < valMax)) { data[i] = (DataType)0; } } }
+	if (between) { for (i = 0; i < nbPoints; i++) { if (data[i] < valMin || data[i] > valMax) { data[i] = (DataType)0; } } }
+	else { for (i = 0; i < nbPoints; i++) { if (data[i] > valMin && data[i] < valMax) { data[i] = (DataType)0; } } }
 }
 #endif
 
@@ -441,13 +441,13 @@ void ArrayType::hardThresholdInterval(ArrayType& arrayType, DataType valMin, Dat
 	unsigned long i;
 	if (between) {
 		for (i = 0; i < nbPoints; i++) {
-			if ((arrayType.data[i] < valMin) || (arrayType.data[i] > valMax)) { data[i] = (DataType)0; }
+			if (arrayType.data[i] < valMin || arrayType.data[i] > valMax) { data[i] = (DataType)0; }
 			else { data[i] = arrayType.data[i]; }
 		}
 	}
 	else {
 		for (i = 0; i < nbPoints; i++) {
-			if ((arrayType.data[i] > valMin) && (arrayType.data[i] < valMax)) { data[i] = (DataType)0; }
+			if (arrayType.data[i] > valMin && arrayType.data[i] < valMax) { data[i] = (DataType)0; }
 			else { data[i] = arrayType.data[i]; }
 		}
 	}

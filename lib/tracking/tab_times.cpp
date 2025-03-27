@@ -10,11 +10,6 @@ Class TabTimes contains several TabTimes objets for each time (nbTimes).
 
 #include "tab_times.h"
 
-//extern float globalDistMax;
-
-//extern PublicParameters *publicParameters;
-
-
 /********************************************************************************************************************
 Constructuor(int _nbTimes) of TabTimes class. 
 Create nbTimes objets TimeNodes.
@@ -54,18 +49,18 @@ initialisation() initialisation of the data in memory
 int TabTimes::initialisation()
 {
 	int ret;
-	if (publicParameters->statFile[0] != L'\0') { if ((ret = readStatFile()) < 0) { return (ret); } }
-	else if ((ret = readPointsList()) < 0) { return (ret); }
+	if (publicParameters->statFile[0] != L'\0') { if ((ret = readStatFile()) < 0) { return ret; } }
+	else if ((ret = readPointsList()) < 0) { return ret; }
 
-	if ((ret = linkNeighborsPresent()) < 0) { return (ret); }
-	if ((ret = linkNeighborsBeforeAndAfter()) < 0) { return (ret); }
-	if ((ret = sortByIntensityAllNeighbors()) < 0) { return (ret); }
+	if ((ret = linkNeighborsPresent()) < 0) { return ret; }
+	if ((ret = linkNeighborsBeforeAndAfter()) < 0) { return ret; }
+	if ((ret = sortByIntensityAllNeighbors()) < 0) { return ret; }
 
-	if (publicParameters->nbTemporalWindows > 1) { if ((ret = linkNeighborsBlinkBeforeAndAfter()) < 0) { return (ret); } }
+	if (publicParameters->nbTemporalWindows > 1) { if ((ret = linkNeighborsBlinkBeforeAndAfter()) < 0) { return ret; } }
 
 	checkLinksHomogeneity(L"initalisation");
 	srand((unsigned)time(NULL));
-	return (RET_OK);
+	return RET_OK;
 }
 
 
@@ -84,13 +79,13 @@ int TabTimes::printConnectionsASCII()
 	FILE* stream;
 	if ((stream = _wfopen(publicParameters->fileResASCII, L"w")) == NULL) {
 		wprintf(L"The file %ls can not be opened\n", publicParameters->fileResASCII);
-		return (T_ERR_OPENNING_FILE);
+		return T_ERR_OPENNING_FILE;
 	}
 	for (int t = 0; t < nbTimes; t++) {
 		TimeNodes* _localTimeNodes = timeNodes[t];
 		for (int n = 0; n < _localTimeNodes->nbNodes; n++) {
 			Node* node = _localTimeNodes->tabNodes[n];
-			if ((node->connectionPast == NULL) && (node->trackedStructureIndex > 0)) {
+			if (node->connectionPast == NULL && node->trackedStructureIndex > 0) {
 				for (Node* nodeConnection = node; nodeConnection != NULL; nodeConnection = nodeConnection->connectionFuture) {
 					fprintf(stream, "%d\t", node->trackedStructureIndex);
 					fprintf(stream, "%d\t", nodeConnection->time + 1);
@@ -107,7 +102,7 @@ int TabTimes::printConnectionsASCII()
 		}
 	}
 	fclose(stream);
-	return (RET_OK);
+	return RET_OK;
 }
 
 /********************************************************************************************************************
@@ -127,7 +122,7 @@ int TabTimes::printConnectionsASCII_trc()
 		TimeNodes* _localTimeNodes = timeNodes[t];
 		for (int n = 0; n < _localTimeNodes->nbNodes; n++) {
 			Node* node = _localTimeNodes->tabNodes[n];
-			if ((node->connectionPast == NULL) && (node->trackedStructureIndex > 0)) {
+			if (node->connectionPast == NULL && node->trackedStructureIndex > 0) {
 				for (Node* nodeConnection = node; nodeConnection != NULL; nodeConnection = nodeConnection->connectionFuture) {
 					double y0 = 25.188644;
 					double x0 = 146.147507;
@@ -163,7 +158,7 @@ int TabTimes::printConnectionsASCII_trc()
 			}
 		}
 	}
-	return (RET_OK);
+	return RET_OK;
 }
 
 /********************************************************************************************************************
@@ -183,7 +178,7 @@ void TabTimes::printCoveredArea()
 		_localTimeNodes = timeNodes[t];
 		for (int n = 0; n < _localTimeNodes->nbNodes; n++) {
 			node = _localTimeNodes->tabNodes[n];
-			if ((node->connectionPast == NULL) && (node->trackedStructureIndex > 0)) {
+			if (node->connectionPast == NULL && node->trackedStructureIndex > 0) {
 				if (node->connectionFuture != NULL) {
 					x = y = z = 0;
 					nbPoints = 0;
@@ -232,13 +227,13 @@ int TabTimes::readStatFile()
 
 
 	if ((fileHandle = _wopen(publicParameters->statFile, O_RDONLY | O_BINARY, S_IREAD)) != -1) {
-		count = read(fileHandle, &(publicParameters->nbDim), sizeof(long)); //reading the number of dimentions
-		if (count != sizeof(long)) { return (T_ERR_CORRUPT_FILE); }
-		if ((publicParameters->nbDim != 2) && (publicParameters->nbDim != 3)) { return (T_ERR_NBDIM); }
+		count = read(fileHandle, &publicParameters->nbDim, sizeof(long)); //reading the number of dimentions
+		if (count != sizeof(long)) { return T_ERR_CORRUPT_FILE; }
+		if (publicParameters->nbDim != 2 && publicParameters->nbDim != 3) { return T_ERR_NBDIM; }
 
 
 		count = read(fileHandle, &nbTimes, sizeof(long)); //reading the number of times
-		if (count != sizeof(long)) { return (T_ERR_CORRUPT_FILE); }
+		if (count != sizeof(long)) { return T_ERR_CORRUPT_FILE; }
 
 
 		allocTabTimes(); //Allocation of tabTimes
@@ -251,14 +246,14 @@ int TabTimes::readStatFile()
 
 		for (time_ = 0; time_ < (long)nbTimes; time_++) {
 			count = read(fileHandle, &nbNodes, sizeof(long)); //reading the number of nodes
-			if (count != sizeof(long)) { return (T_ERR_CORRUPT_FILE); }
+			if (count != sizeof(long)) { return T_ERR_CORRUPT_FILE; }
 
 
 			timeNodes[time_] = allocTimeNodes(time_, (int)nbNodes); //Allocation of timeNodes
 			//new TimeNodes(time_,(int)nbNodes);
 			localTimeNodes = timeNodes[time_];
 
-			if (localTimeNodes == NULL) { return (T_ERR_ALLOC); }
+			if (localTimeNodes == NULL) { return T_ERR_ALLOC; }
 
 
 			for (node = 0; node < localTimeNodes->nbNodes; node++) {
@@ -266,7 +261,7 @@ int TabTimes::readStatFile()
 
 				if ((*localTimeNodes)(node)->info->getIntensity() < 0) { wprintf(L"%d : <0\n", ++incre); }
 
-				if (count != (long)(*localTimeNodes)(node)->info->sizeofInfoData()) { return (T_ERR_CORRUPT_FILE); }
+				if (count != (long)(*localTimeNodes)(node)->info->sizeofInfoData()) { return T_ERR_CORRUPT_FILE; }
 
 				if (publicParameters->maxX < (*localTimeNodes)(node)->info->getX()) { publicParameters->maxX = (*localTimeNodes)(node)->info->getX(); }
 				if (publicParameters->maxY < (*localTimeNodes)(node)->info->getY()) { publicParameters->maxY = (*localTimeNodes)(node)->info->getY(); }
@@ -292,9 +287,9 @@ int TabTimes::readStatFile()
 		}
 		close(fileHandle);
 	}
-	else { return (T_ERR_OPENNING_FILE); }
+	else { return T_ERR_OPENNING_FILE; }
 
-	return (RET_OK);
+	return RET_OK;
 }
 
 /********************************************************************************************************************
@@ -325,7 +320,7 @@ int TabTimes::readPointsList()
 		// Computing the number of nodes by frame
 		nbNodes = 0;
 		for (i = index; ; /*i+=4*/ i += publicParameters->NbSegParams) {
-			if (((int)publicParameters->pointsList[i + 9] != -1) && ((int)publicParameters->pointsList[i + 9] != 0)) // surface
+			if ((int)publicParameters->pointsList[i + 9] != -1 && (int)publicParameters->pointsList[i + 9] != 0) // surface
 			{
 				nbNodes++;
 			}
@@ -336,7 +331,7 @@ int TabTimes::readPointsList()
 		timeNodes[time_] = allocTimeNodes(time_, (int)nbNodes); //Allocation of timeNodes
 		localTimeNodes = timeNodes[time_];
 
-		if (localTimeNodes == NULL) { return (T_ERR_ALLOC); }
+		if (localTimeNodes == NULL) { return T_ERR_ALLOC; }
 
 
 		for (node = 0; node < localTimeNodes->nbNodes; node++) {
@@ -382,18 +377,18 @@ int TabTimes::readPointsList()
 
 		index += (nbNodes + 1) * publicParameters->NbSegParams; //(A vérifier)
 	}
-	return (RET_OK);
+	return RET_OK;
 }
 
 /********************************************************************************************************************
 operator()(int i) to access to all TimeNodes objets. 
 ********************************************************************************************************************/
-TimeNodes* TabTimes::operator()(int i) { return (timeNodes[i]); }
+TimeNodes* TabTimes::operator()(int i) { return timeNodes[i]; }
 
 /********************************************************************************************************************
 operator[](int i) to access to pointors to all TimeNodes objets. 
 ********************************************************************************************************************/
-TimeNodes** TabTimes::operator[](int i) { return (timeNodes + i); }
+TimeNodes** TabTimes::operator[](int i) { return timeNodes + i; }
 
 /********************************************************************************************************************
 int linkNeighborsPresent() to link of the neighbors in the presents of all nodes of all times
@@ -401,8 +396,8 @@ int linkNeighborsPresent() to link of the neighbors in the presents of all nodes
 int TabTimes::linkNeighborsPresent()
 {
 	int ret;
-	for (long time_ = 0; time_ < nbTimes; time_++) { if ((ret = timeNodes[time_]->linkNeighborsPresent()) < 0) { return (ret); } }
-	return (RET_OK);
+	for (long time_ = 0; time_ < nbTimes; time_++) { if ((ret = timeNodes[time_]->linkNeighborsPresent()) < 0) { return ret; } }
+	return RET_OK;
 }
 
 
@@ -412,8 +407,8 @@ int linkNeighborsBeforeAndAfter() to link of the neighbors in the past and in th
 int TabTimes::linkNeighborsBeforeAndAfter()
 {
 	int ret;
-	for (long time_ = 0; time_ < nbTimes - 1; time_++) { if ((ret = timeNodes[time_]->linkNeighborsBeforeAndAfter(*(timeNodes[time_ + 1]))) < 0) { return (ret); } }
-	return (RET_OK);
+	for (long time_ = 0; time_ < nbTimes - 1; time_++) { if ((ret = timeNodes[time_]->linkNeighborsBeforeAndAfter(*timeNodes[time_ + 1])) < 0) { return ret; } }
+	return RET_OK;
 }
 
 /********************************************************************************************************************
@@ -423,8 +418,8 @@ all times for blinking purpose
 int TabTimes::linkNeighborsBlinkBeforeAndAfter()
 {
 	int ret;
-	for (long time_ = 0; time_ < nbTimes; time_++) { for (long dt = 2; dt <= publicParameters->nbTemporalWindows; dt++) { if (time_ + dt < nbTimes) { if ((ret = timeNodes[time_]->linkNeighborsBlinkBeforeAndAfter(*(timeNodes[time_ + dt]))) < 0) { return (ret); } } } }
-	return (RET_OK);
+	for (long time_ = 0; time_ < nbTimes; time_++) { for (long dt = 2; dt <= publicParameters->nbTemporalWindows; dt++) { if (time_ + dt < nbTimes) { if ((ret = timeNodes[time_]->linkNeighborsBlinkBeforeAndAfter(*timeNodes[time_ + dt])) < 0) { return ret; } } } }
+	return RET_OK;
 }
 
 /********************************************************************************************************************
@@ -433,8 +428,8 @@ int sortByIntensityAllNeighbors() sort by intensity of the node neighbors of eac
 int TabTimes::sortByIntensityAllNeighbors()
 {
 	int ret;
-	for (long time_ = 0; time_ < nbTimes; time_++) { if ((ret = timeNodes[time_]->sortByIntensityAllNeighbors()) < 0) { return (ret); } }
-	return (RET_OK);
+	for (long time_ = 0; time_ < nbTimes; time_++) { if ((ret = timeNodes[time_]->sortByIntensityAllNeighbors()) < 0) { return ret; } }
+	return RET_OK;
 }
 
 
@@ -468,7 +463,7 @@ void TabTimes::setColorToTrackedStructures()
 						}
 						else { //node->connectionFusion1Past==NULL
 							if (node->connectionFissionPast != NULL) {
-								node2 = (node == node->connectionFissionPast->connectionFission1Future) ? node->connectionFissionPast->connectionFission2Future : node->connectionFissionPast->connectionFission1Future;
+								node2 = node == node->connectionFissionPast->connectionFission1Future ? node->connectionFissionPast->connectionFission2Future : node->connectionFissionPast->connectionFission1Future;
 								for (nodePastFission = node->connectionFissionPast; nodePastFission != NULL; nodePastFission = nodePastFission->connectionPast) { nodePastFission2 = nodePastFission; }
 								if (nodePastFission2->connectionFusion1Past != NULL) {
 									nodePastFission3 = nodePastFission2->connectionFusion1Past;
@@ -487,7 +482,7 @@ void TabTimes::setColorToTrackedStructures()
 									}
 								}
 								else {
-									if ((node->connectionFissionPast->likeness(node) > node->connectionFissionPast->likeness(node2))) {
+									if (node->connectionFissionPast->likeness(node) > node->connectionFissionPast->likeness(node2)) {
 										node->colorIndex[0] = node->connectionFissionPast->colorIndex[0];
 										node->colorIndex[1] = node->connectionFissionPast->colorIndex[0];
 									}
@@ -551,7 +546,7 @@ void TabTimes::setIndexToTrackedStructures()
 	for (long time_ = 0; time_ < nbTimes; time_++) {
 		for (long indexNode = 0; indexNode < timeNodes[time_]->nbNodes; indexNode++) {
 			if (timeNodes[time_]->tabNodes[indexNode]->connectionPast == NULL) {
-				for (node = timeNodes[time_]->tabNodes[indexNode], oldNode = NULL, nbSuccessiveNodes = 0; (node != NULL) && (nbSuccessiveNodes < publicParameters->nbMinSuccessiveStructures); node = node->connectionFuture, nbSuccessiveNodes++) {
+				for (node = timeNodes[time_]->tabNodes[indexNode], oldNode = NULL, nbSuccessiveNodes = 0; node != NULL && nbSuccessiveNodes < publicParameters->nbMinSuccessiveStructures; node = node->connectionFuture, nbSuccessiveNodes++) {
 					oldNode = node;
 					node->trackedStructureIndex = 0;
 				}
@@ -608,12 +603,12 @@ int TabTimes::giveResult()
 	setColorToTrackedStructures();
 
 	if (publicParameters->fileResASCII[0] != L'\0') {
-		if ((ret = printConnectionsASCII()) < 0) { return (ret); }
-		if ((ret = printConnectionsASCII_trc()) < 0) { return (ret); } //(A enlever)
+		if ((ret = printConnectionsASCII()) < 0) { return ret; }
+		if ((ret = printConnectionsASCII_trc()) < 0) { return ret; } //(A enlever)
 	}
-	else if ((ret = printConnectionsASCII_trc()) < 0) { return (ret); }
+	else if ((ret = printConnectionsASCII_trc()) < 0) { return ret; }
 
-	return (RET_OK);
+	return RET_OK;
 }
 
 /********************************************************************************************************************

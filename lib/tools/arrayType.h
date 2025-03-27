@@ -63,7 +63,7 @@ public:
 
 	~ArrayType();
 
-	static unsigned long type() { return (NB_TYPE); }
+	static unsigned long type() { return NB_TYPE; }
 	int size(int di);
 	void setSize(int di, int valSize);
 	int dim();

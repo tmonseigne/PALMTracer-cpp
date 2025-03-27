@@ -53,19 +53,19 @@ public:
 	 * Checks whether the heap is empty.
 	 * @return true if the heap empty.
 	 */
-	bool Empty() { return (_nitem == 0); }
+	bool Empty() { return _nitem == 0; }
 
 	/**
 	 * Checks whether the heap is full.
 	 * @return true if the heap full.
 	 */
-	bool Full() { return (_nitem == _size - 1); }
+	bool Full() { return _nitem == _size - 1; }
 
 	/**
 	 * Returns the current number of elements if the heap.
 	 * @return the current size of the heap
 	 */
-	int Nrank() { return (_nitem); }
+	int Nrank() { return _nitem; }
 
 	/**
 	 * Resets the heap (-> Nrank() = 0).
@@ -102,7 +102,7 @@ public:
 	 */
 	T Pop(float* kitem = NULL)
 	{
-		if (Empty()) { return (_data[0].element); }
+		if (Empty()) { return _data[0].element; }
 
 
 		// Get top of the heap.

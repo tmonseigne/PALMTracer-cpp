@@ -23,7 +23,7 @@ double Node::distanceToBorder(void)
 	mini = __min(mini, publicParameters->maxX-info->getX());
 	mini = __min(mini, info->getY());
 	mini = __min(mini, publicParameters->maxY-info->getY());
-	return (mini);
+	return mini;
 }
 
 /*********************************************************************************************
@@ -45,7 +45,7 @@ double Node::stericEffect(void)
 		//surface of a shere is PI * r^2
 		ret = sqrt(val / PI);
 	}
-	return (ret);
+	return ret;
 }
 
 /********************************************************************************************************************
@@ -120,13 +120,13 @@ distance(Node *node) gives the distance between "node" and the current objet.
 ********************************************************************************************************************/
 float Node::distance(Node* node)
 { //Distance 1
-	return (info->distance(node->info));
+	return info->distance(node->info);
 }
 
 /********************************************************************************************************************
 distance(Node *n1, Node *n2) gives the distance between the mass center of ( n1 and n2), to the current objet. 
 ********************************************************************************************************************/
-float Node::distance(Node* n1, Node* n2) { return (info->distance(n1->info, n2->info)); }
+float Node::distance(Node* n1, Node* n2) { return info->distance(n1->info, n2->info); }
 
 
 /********************************************************************************************************************
@@ -165,7 +165,7 @@ int Node::sortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 			while (change);
 		}
 	}
-	return (RET_OK);
+	return RET_OK;
 }
 
 /********************************************************************************************************************
@@ -182,43 +182,43 @@ bool Node::checkLinksHomogeneityInVicinity(wchar_t* st)
 		swprintf(st2, L"%ls connectionFuture ", st);
 		err = connectionFuture->checkLinksHomogeneity(st2);
 	}
-	if ((!err) && (connectionFission1Future != NULL)) {
+	if (!err && connectionFission1Future != NULL) {
 		swprintf(st2, L"%ls connectionFission1Future ", st);
 		err = connectionFission1Future->checkLinksHomogeneity(st2);
 	}
-	if ((!err) && (connectionFission2Future != NULL)) {
+	if (!err && connectionFission2Future != NULL) {
 		swprintf(st2, L"%ls connectionFission2Future ", st);
 		err = connectionFission2Future->checkLinksHomogeneity(st2);
 	}
-	if ((!err) && (connectionFusionFuture != NULL)) {
+	if (!err && connectionFusionFuture != NULL) {
 		swprintf(st2, L"%ls connectionFusionFuture ", st);
 		err = connectionFusionFuture->checkLinksHomogeneity(st2);
 	}
-	if ((!err) && (connectionBlinkFuture != NULL)) {
+	if (!err && connectionBlinkFuture != NULL) {
 		swprintf(st2, L"%ls connectionBlinkFuture ", st);
 		err = connectionBlinkFuture->checkLinksHomogeneity(st2);
 	}
-	if ((!err) && (connectionPast != NULL)) {
+	if (!err && connectionPast != NULL) {
 		swprintf(st2, L"%ls connectionPast ", st);
 		err = connectionPast->checkLinksHomogeneity(st2);
 	}
-	if ((!err) && (connectionFusion1Past != NULL)) {
+	if (!err && connectionFusion1Past != NULL) {
 		swprintf(st2, L"%ls connectionFusion1Past ", st);
 		err = connectionFusion1Past->checkLinksHomogeneity(st2);
 	}
-	if ((!err) && (connectionFusion2Past != NULL)) {
+	if (!err && connectionFusion2Past != NULL) {
 		swprintf(st2, L"%ls connectionFusion2Past ", st);
 		err = connectionFusion2Past->checkLinksHomogeneity(st2);
 	}
-	if ((!err) && (connectionFissionPast != NULL)) {
+	if (!err && connectionFissionPast != NULL) {
 		swprintf(st2, L"%ls connectionFissionPast ", st);
 		err = connectionFissionPast->checkLinksHomogeneity(st2);
 	}
-	if ((!err) && (connectionBlinkPast != NULL)) {
+	if (!err && connectionBlinkPast != NULL) {
 		swprintf(st2, L"%ls connectionBlinkPast ", st);
 		err = connectionBlinkPast->checkLinksHomogeneity(st2);
 	}
-	return (err);
+	return err;
 }
 
 bool Node::checkLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2, Node* p3, Node* p4, Node* p5, Node* p6)
@@ -249,7 +249,7 @@ bool Node::checkLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2, Node
 		swprintf(st2, L"%ls 6 ", st);
 		err = err || p6->checkLinksHomogeneityInVicinity(st2);
 	}
-	return (err);
+	return err;
 }
 
 /********************************************************************************************************************
@@ -282,7 +282,7 @@ bool Node::checkLinksHomogeneity(const wchar_t* st)
 	}
 
 	if (connectionFusionFuture != NULL) {
-		if (((connectionFusionFuture->connectionFusion1Past != this) && (connectionFusionFuture->connectionFusion2Past != this)) || (connectionFusionFuture->connectionFusion1Past == NULL) || (connectionFusionFuture->connectionFusion2Past == NULL) || (connectionFusionFuture->connectionFusion1Past == connectionFusionFuture->connectionFusion2Past)) { err = true; }
+		if ((connectionFusionFuture->connectionFusion1Past != this && connectionFusionFuture->connectionFusion2Past != this) || connectionFusionFuture->connectionFusion1Past == NULL || connectionFusionFuture->connectionFusion2Past == NULL || connectionFusionFuture->connectionFusion1Past == connectionFusionFuture->connectionFusion2Past) { err = true; }
 		if (connectionFusionFuture->connectionPast != NULL) { err = true; }
 		if (connectionFusionFuture->connectionBlinkPast != NULL) { err = true; }
 	}
@@ -297,7 +297,7 @@ bool Node::checkLinksHomogeneity(const wchar_t* st)
 	}
 
 	if (connectionFissionPast != NULL) {
-		if (((connectionFissionPast->connectionFission1Future != this) && (connectionFissionPast->connectionFission2Future != this)) || (connectionFissionPast->connectionFission1Future == NULL) || (connectionFissionPast->connectionFission2Future == NULL) || (connectionFissionPast->connectionFission1Future == connectionFissionPast->connectionFission2Future)) { err = true; }
+		if ((connectionFissionPast->connectionFission1Future != this && connectionFissionPast->connectionFission2Future != this) || connectionFissionPast->connectionFission1Future == NULL || connectionFissionPast->connectionFission2Future == NULL || connectionFissionPast->connectionFission1Future == connectionFissionPast->connectionFission2Future) { err = true; }
 		if (connectionFissionPast->connectionFusionFuture != NULL) { err = true; }
 		if (connectionFissionPast->connectionFuture != NULL) { err = true; }
 
@@ -339,5 +339,5 @@ bool Node::checkLinksHomogeneity(const wchar_t* st)
 		if (connectionBlinkFuture->connectionFissionPast != NULL) { err = true; }
 	}
 
-	return (err);
+	return err;
 }

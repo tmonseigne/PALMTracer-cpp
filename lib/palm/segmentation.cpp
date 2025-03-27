@@ -20,10 +20,10 @@ void Segment::inc(unsigned long& nSeg, unsigned long** ptr, long& sizePtr)
 
 	//reallocation of ptr
 	sizePtr += MAX_TAB;
-	(*ptr) = (unsigned long*)realloc((*ptr), sizeof(long) * sizePtr);
+	*ptr = (unsigned long*)realloc(*ptr, sizeof(long) * sizePtr);
 
 	//copy back the data
-	for (i = 0; i < ((long)sizePtr - MAX_TAB); i++) { (*ptr)[i] = newPtr[i]; }
+	for (i = 0; i < (long)sizePtr - MAX_TAB; i++) { (*ptr)[i] = newPtr[i]; }
 	for (i = sizePtr - MAX_TAB; i < (long)sizePtr; i++) { (*ptr)[i] = i; }
 	free(newPtr);
 }
@@ -47,4 +47,4 @@ locateStringInFile try to find the string st in the stream "file". This file hav
 	return(S_READ_ERR);
 }*/
 
-unsigned long Segment::getNbStructs() { return (nbInfoStruct); }
+unsigned long Segment::getNbStructs() { return nbInfoStruct; }

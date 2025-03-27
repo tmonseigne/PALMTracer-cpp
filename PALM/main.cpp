@@ -62,7 +62,7 @@ vector<string>& splitstring::split(char delim, int rep)
 double evalFunction(double x, int nbPoints, vec x_sp, double* a, double* b, double* c, double* d)
 {
 	double y = -1.0;
-	for (int i = 0; i < nbPoints - 1; i++) { if ((x < x_sp(i + 1)) && (x >= x_sp(i))) { y = a[i] * pow(x - x_sp(i), 3) + b[i] * pow(x - x_sp(i), 2) + c[i] * (x - x_sp(i)) + d[i]; } }
+	for (int i = 0; i < nbPoints - 1; i++) { if (x < x_sp(i + 1) && x >= x_sp(i)) { y = a[i] * pow(x - x_sp(i), 3) + b[i] * pow(x - x_sp(i), 2) + c[i] * (x - x_sp(i)) + d[i]; } }
 
 	return y;
 }
@@ -215,7 +215,7 @@ int main(void)
 	for (int i = 0; i < nbPoints - 1; i++) {
 		a[i] = (m[i + 1] - m[i]) / (6 * h);
 		b[i] = m[i] / 2;
-		c[i] = (y_sp(i + 1) - y_sp(i)) / h - ((m[i + 1] + 2 * m[i]) / 6) * h;
+		c[i] = (y_sp(i + 1) - y_sp(i)) / h - (m[i + 1] + 2 * m[i]) / 6 * h;
 		d[i] = y_sp(i);
 	}
 

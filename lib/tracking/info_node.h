@@ -18,19 +18,19 @@ public:
 	~InfoNode() { };
 
 	PublicParameters* publicParameters;
-	virtual float distance(InfoNode* infoData) { return (T_ERR_OOP); };
-	virtual float distance(InfoNode* i1, InfoNode* i2) { return (T_ERR_OOP); };
-	virtual double getMean() { return (T_ERR_OOP); };
-	virtual long getVolume() { return (T_ERR_OOP); };
-	virtual long getSurface() { return (T_ERR_OOP); };
-	virtual double getX() { return (T_ERR_OOP); };
-	virtual double getY() { return (T_ERR_OOP); };
-	virtual double getZ() { return (T_ERR_OOP); }
-	virtual double getIntensity() { return (T_ERR_OOP); };
-	virtual unsigned long getIndex() { return (T_ERR_OOP); };
-	virtual unsigned long getTime() { return (T_ERR_OOP); };
-	virtual unsigned long sizeofInfoData() { return (T_ERR_OOP); };
-	virtual void* getPtrInfoData() { return (NULL); };
+	virtual float distance(InfoNode* infoData) { return T_ERR_OOP; };
+	virtual float distance(InfoNode* i1, InfoNode* i2) { return T_ERR_OOP; };
+	virtual double getMean() { return T_ERR_OOP; };
+	virtual long getVolume() { return T_ERR_OOP; };
+	virtual long getSurface() { return T_ERR_OOP; };
+	virtual double getX() { return T_ERR_OOP; };
+	virtual double getY() { return T_ERR_OOP; };
+	virtual double getZ() { return T_ERR_OOP; }
+	virtual double getIntensity() { return T_ERR_OOP; };
+	virtual unsigned long getIndex() { return T_ERR_OOP; };
+	virtual unsigned long getTime() { return T_ERR_OOP; };
+	virtual unsigned long sizeofInfoData() { return T_ERR_OOP; };
+	virtual void* getPtrInfoData() { return NULL; };
 
 	virtual void setSurface(long s) { };
 	virtual void setX(double x) { };

@@ -24,7 +24,7 @@ TabTimesDistanceIntensity::~TabTimesDistanceIntensity() { }
 /********************************************************************************************************************
 allocTabTimes(int _nbTimes) alloc an array of _nbTimes long 
 ********************************************************************************************************************/
-TimeNodes* TabTimesDistanceIntensity::allocTimeNodes(long _time, long _nbNodes) { return (new TimeNodesDistanceIntensity(_time, _nbNodes, publicParameters)); }
+TimeNodes* TabTimesDistanceIntensity::allocTimeNodes(long _time, long _nbNodes) { return new TimeNodesDistanceIntensity(_time, _nbNodes, publicParameters); }
 
 
 /********************************************************************************************************************
@@ -33,9 +33,9 @@ getLikenessGlobal() compute the totalLikeness of hte system
 double TabTimesDistanceIntensity::getLikenessGlobal()
 {
 	double _likeness = 0.;
-	for (int _time = 0; _time < nbTimes; _time++) { _likeness += ((TimeNodesDistanceIntensity*)(timeNodes[_time]))->getLikenessTime(nbTimes); }
+	for (int _time = 0; _time < nbTimes; _time++) { _likeness += ((TimeNodesDistanceIntensity*)timeNodes[_time])->getLikenessTime(nbTimes); }
 
-	return (_likeness);
+	return _likeness;
 }
 
 /********************************************************************************************************************
@@ -67,16 +67,16 @@ void TabTimesDistanceIntensity::computeConstantes(void)
 
 
 		for (_time = 0; _time < nbTimes - 1; _time++) {
-			((TimeNodesDistanceIntensity*)(timeNodes[_time]))->computeConstantSigmas(stdIntensityComputing, countStdInt, stdMeanComputing, countStdMean, stdDistanceComputing, coutStdDist, false); //, true);
+			((TimeNodesDistanceIntensity*)timeNodes[_time])->computeConstantSigmas(stdIntensityComputing, countStdInt, stdMeanComputing, countStdMean, stdDistanceComputing, coutStdDist, false); //, true);
 		}
 
-		if ((stdIntensityComputing > 1e-8) && (countStdInt > 0)) { publicParameters->stdIntensity = stdIntensityComputing / countStdInt; } //*1.0275;//3.4352;
+		if (stdIntensityComputing > 1e-8 && countStdInt > 0) { publicParameters->stdIntensity = stdIntensityComputing / countStdInt; } //*1.0275;//3.4352;
 		publicParameters->stdIntensity = sqrt(publicParameters->stdIntensity);
 
-		if ((stdMeanComputing > 1e-8) && (countStdMean > 0)) { publicParameters->stdMean = stdMeanComputing / countStdMean; } //*1.0275;//3.4352;
+		if (stdMeanComputing > 1e-8 && countStdMean > 0) { publicParameters->stdMean = stdMeanComputing / countStdMean; } //*1.0275;//3.4352;
 		publicParameters->stdMean = sqrt(publicParameters->stdMean);
 
-		if ((stdDistanceComputing > 1e-8) && (coutStdDist > 0)) { publicParameters->stdDistance = stdDistanceComputing / coutStdDist; } //*1.0275;//3.4352;
+		if (stdDistanceComputing > 1e-8 && coutStdDist > 0) { publicParameters->stdDistance = stdDistanceComputing / coutStdDist; } //*1.0275;//3.4352;
 		publicParameters->stdDistance = sqrt(publicParameters->stdDistance);
 	}
 	publicParameters->stdDistance /= 3; //attention au /3 c'est just pour augmenter l'influence de la distance
@@ -145,7 +145,7 @@ int TabTimesDistanceIntensity::runModel()
 
 		if (iLearning == 0) {
 			computeConstantes();
-			for (_time = 0; _time < nbTimes - 1; _time++) { ((TimeNodesDistanceIntensity*)(timeNodes[_time]))->makeAllInitializationConnections(); }
+			for (_time = 0; _time < nbTimes - 1; _time++) { ((TimeNodesDistanceIntensity*)timeNodes[_time])->makeAllInitializationConnections(); }
 		}
 		else { updateConstantes(); }
 
@@ -158,12 +158,12 @@ int TabTimesDistanceIntensity::runModel()
 		wprintf(L"**********Global Likeness: %f ***********\n", totalLikeness);
 		int bcl = 0;
 		do {
-			if (iLearning == countLearning - 1) { error *= (1. - (float)publicParameters->temperatureDecrease / 100.); }
+			if (iLearning == countLearning - 1) { error *= 1. - (float)publicParameters->temperatureDecrease / 100.; }
 
 			nbInt++;
 
 			deltaLikeness = 0;
-			for (int i = 0; i < publicParameters->NbIterations; i++) { for (int _time = 0; _time < nbTimes - 1; _time++) { deltaLikeness += ((TimeNodesDistanceIntensity*)(timeNodes[_time]))->tryRandomChange(error); } }
+			for (int i = 0; i < publicParameters->NbIterations; i++) { for (int _time = 0; _time < nbTimes - 1; _time++) { deltaLikeness += ((TimeNodesDistanceIntensity*)timeNodes[_time])->tryRandomChange(error); } }
 			totalLikeness += deltaLikeness;
 
 			if (fabs(deltaLikeness) < 1e-8) { cpt++; }
@@ -176,5 +176,5 @@ int TabTimesDistanceIntensity::runModel()
 		printf("bcl : %d\n", bcl);
 	}
 
-	return (RET_OK);
+	return RET_OK;
 }

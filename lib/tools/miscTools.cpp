@@ -28,7 +28,7 @@ double getAutoThreshold(FltArray& im)
 	}
 	threshold /= count;
 
-	while ((fabs(oldThreshold - threshold) > 1e-12) && (cpt > 0)) {
+	while (fabs(oldThreshold - threshold) > 1e-12 && cpt > 0) {
 		count0 = count1 = 0.;
 		m0 = m1 = 0.;
 		for (long i = 0; i < (long)im.nbPoints; i++) {
@@ -68,7 +68,7 @@ double getAutoThreshold(FltArray& im)
 	}
 
 
-	return (threshold);
+	return threshold;
 }
 
 void printErrno(FILE* file, int errno)
@@ -112,7 +112,7 @@ void printErrno(FILE* file, int errno)
 	}
 }
 
-double tenTo(double a) { return (exp(a * log(10.))); }
+double tenTo(double a) { return exp(a * log(10.)); }
 
 wchar_t* stringReplace(wchar_t s, wchar_t d, wchar_t* st)
 {
@@ -121,48 +121,48 @@ wchar_t* stringReplace(wchar_t s, wchar_t d, wchar_t* st)
 		if (*ptrSt == s) { *ptrSt = d; }
 		ptrSt++;
 	}
-	return (st);
+	return st;
 }
 
 
 unsigned long twoToThe(unsigned long val)
 {
-	if (val == 0) { return (1); }
-	return (((unsigned long)1) << val);
+	if (val == 0) { return 1; }
+	return (unsigned long)1 << val;
 }
 
 
-double distance(double X1, double Y1, double X2, double Y2) { return (sqrt(distance2(X1, Y1, X2, Y2))); }
-double distance(double X1, double Y1, double Z1, double X2, double Y2, double Z2) { return (sqrt(distance2(X1, Y1, Z1, X2, Y2, Z2))); }
+double distance(double X1, double Y1, double X2, double Y2) { return sqrt(distance2(X1, Y1, X2, Y2)); }
+double distance(double X1, double Y1, double Z1, double X2, double Y2, double Z2) { return sqrt(distance2(X1, Y1, Z1, X2, Y2, Z2)); }
 
 double distance2(double X1, double Y1, double X2, double Y2)
 {
 	double res;
 	res = (X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2);
-	if (res < 0) { return (0.); }
-	return (res);
+	if (res < 0) { return 0.; }
+	return res;
 }
 
 double distance2(double X1, double Y1, double Z1, double X2, double Y2, double Z2)
 {
 	double res;
 	res = (X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2) + (Z1 - Z2) * (Z1 - Z2);
-	if (res < 0) { return (0.); }
-	return (res);
+	if (res < 0) { return 0.; }
+	return res;
 }
 
 inline long turnClockwiseX(const long x, const long y)
 {
-	if (x != 0) { return (0); }
-	else if (y == 1) { return (-1); }
-	else { return (1); }
+	if (x != 0) { return 0; }
+	else if (y == 1) { return -1; }
+	else { return 1; }
 }
 
 inline long turnClockwiseY(const long x, const long y)
 {
-	if (y != 0) { return (0); }
-	else if (x == 1) { return (1); }
-	else { return (-1); }
+	if (y != 0) { return 0; }
+	else if (x == 1) { return 1; }
+	else { return -1; }
 }
 
 inline void turnClockwise(long& x, long& y)
@@ -214,11 +214,11 @@ inline void turnAntiClockwise(long& x, long& y)
 
 bool isOutside(USrtArray& mainSegmentation, const long structure, const long x, const long y, const long xSize, const long ySize)
 {
-	if (x < 0) { return (true); }
-	if (y < 0) { return (true); }
-	if (x >= xSize) { return (true); }
-	if (y >= ySize) { return (true); }
-	return (mainSegmentation.data[x * ySize + y] != structure);
+	if (x < 0) { return true; }
+	if (y < 0) { return true; }
+	if (x >= xSize) { return true; }
+	if (y >= ySize) { return true; }
+	return mainSegmentation.data[x * ySize + y] != structure;
 }
 
 #undef ISOUT

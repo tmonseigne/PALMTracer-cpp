@@ -9,7 +9,7 @@ void autoCompleteFilename(wchar_t* filename, wchar_t* filenameFolder)
 	if (*filename == L'\0') { return; }
 	//test if the folder in embedded in the filename
 	long j, i, k;
-	for (i = 0; (filename[i] != L'\0') && (filename[i] != L':') && (filename[i] != L'\\'); i++) { ; }
+	for (i = 0; filename[i] != L'\0' && filename[i] != L':' && filename[i] != L'\\'; i++) { ; }
 	if (filename[i] == L'\0') { // no folder in embedded in the filename
 
 		// test if filenameFolder contain a file
@@ -81,22 +81,22 @@ _declspec(dllexport) long _stdcall Tracking(/*wchar_t* statFile, wchar_t* folder
 			break;
 		case 2: tabTimes = new TabTimesDistanceIntensity(publicParameters);
 			break;
-		default: return (T_ERR_BAD_MODEL);
+		default: return T_ERR_BAD_MODEL;
 	}
 
 	float begin = clock();
 
-	if ((ret = tabTimes->initialisation()) < 0) { return (ret); }
+	if ((ret = tabTimes->initialisation()) < 0) { return ret; }
 
 	float end = clock();
 	begin = clock();
 
-	if ((ret = tabTimes->runModel()) < 0) { return (ret); }
+	if ((ret = tabTimes->runModel()) < 0) { return ret; }
 
 	end = clock();
 	begin = clock();
 
-	if ((ret = tabTimes->giveResult()) < 0) { return (ret); }
+	if ((ret = tabTimes->giveResult()) < 0) { return ret; }
 
 	end = clock();
 
@@ -152,23 +152,23 @@ _declspec(dllexport) long _stdcall tracking_30(/*wchar_t* statFile, wchar_t* fol
 			break;
 		case 2: tabTimes = new TabTimesDistanceIntensity(publicParameters);
 			break;
-		default: return (T_ERR_BAD_MODEL);
+		default: return T_ERR_BAD_MODEL;
 	}
 
 	float begin = clock();
 
-	if ((ret = tabTimes->initialisation()) < 0) { return (ret); }
+	if ((ret = tabTimes->initialisation()) < 0) { return ret; }
 
 	float end = clock();
 
 	begin = clock();
 
-	if ((ret = tabTimes->runModel()) < 0) { return (ret); }
+	if ((ret = tabTimes->runModel()) < 0) { return ret; }
 
 	end = clock();
 	begin = clock();
 
-	if ((ret = tabTimes->giveResult()) < 0) { return (ret); }
+	if ((ret = tabTimes->giveResult()) < 0) { return ret; }
 
 	end = clock();
 

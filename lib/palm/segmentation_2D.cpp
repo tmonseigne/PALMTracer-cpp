@@ -6,17 +6,17 @@
 #define DATA(i,j)	data.data[(i)*sizeDataY+(j)]
 #define TEST_ALLOC(ptr) if((ptr)==NULL){printf("Error of allocation at line %d, file %s\n", __LINE__, __FILE__);return(ALLOC_ERR);}
 
-inline long min(long a, long b) { return (a <= b ? a : b); }
-inline long min(long a, long b, long c, long d) { return (min(min(a, b), min(c, d))); }
+inline long min(long a, long b) { return a <= b ? a : b; }
+inline long min(long a, long b, long c, long d) { return min(min(a, b), min(c, d)); }
 
 
-inline long max(long a, long b) { return (a >= b ? a : b); }
+inline long max(long a, long b) { return a >= b ? a : b; }
 
-inline double min(double a, double b) { return (a <= b ? a : b); }
+inline double min(double a, double b) { return a <= b ? a : b; }
 
-inline double max(double a, double b) { return (a >= b ? a : b); }
+inline double max(double a, double b) { return a >= b ? a : b; }
 
-void** Segment2D::getTabInfo() { return ((void**)tabInfo); }
+void** Segment2D::getTabInfo() { return (void**)tabInfo; }
 
 void Segment2D::desalloc()
 {
@@ -58,7 +58,7 @@ int Segment2D::alloc(unsigned long nbStruct)
 	desalloc();
 
 	tabInfo = new InfoStruct2D*[nbStruct + 1];
-	if (tabInfo == NULL) { return (S_ALLOC_ERR); }
+	if (tabInfo == NULL) { return S_ALLOC_ERR; }
 
 
 	if (nbStruct > 0) {
@@ -70,13 +70,13 @@ int Segment2D::alloc(unsigned long nbStruct)
 		for (ind = 2; ind <= nbStruct; ind++) {
 			ptr->next = new InfoStruct2D(ind);
 			tabInfo[ind] = ptr->next;
-			if (ptr->next == NULL) { return (S_ALLOC_ERR); }
+			if (ptr->next == NULL) { return S_ALLOC_ERR; }
 			ptr = ptr->next;
 		}
 	}
 
 	nbInfoStruct = nbStruct;
-	return (RET_OK);
+	return RET_OK;
 }
 
 
@@ -111,12 +111,12 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 	while (ptr != NULL) {
 		ind++;
 		unselected = false;
-		if ((useParam[0] == 1) && (ptr->data.surf <= param[0])) { unselected = true; }                                                                               //minSurf
-		else if ((useParam[1] == 1) && (ptr->data.surf >= param[1])) { unselected = true; }                                                                          //maxSurf
-		else if ((useParam[2] == 1) && (ptr->data.mean * ptr->data.surf <= param[2])) { unselected = true; }                                                         //minInten
-		else if ((useParam[3] == 1) && (ptr->data.mean * ptr->data.surf >= param[3])) { unselected = true; }                                                         //maxInten
-		else if ((useParam[4] == 1) && (ptr->data.max.val <= param[4])) { unselected = true; }                                                                       //minMaxi
-		else if ((useParam[5] == 1) && (ptr->data.max.val >= param[5])) { unselected = true; }                                                                       //maxMaxi
+		if (useParam[0] == 1 && ptr->data.surf <= param[0]) { unselected = true; }                                                                                   //minSurf
+		else if (useParam[1] == 1 && ptr->data.surf >= param[1]) { unselected = true; }                                                                              //maxSurf
+		else if (useParam[2] == 1 && ptr->data.mean * ptr->data.surf <= param[2]) { unselected = true; }                                                             //minInten
+		else if (useParam[3] == 1 && ptr->data.mean * ptr->data.surf >= param[3]) { unselected = true; }                                                             //maxInten
+		else if (useParam[4] == 1 && ptr->data.max.val <= param[4]) { unselected = true; }                                                                           //minMaxi
+		else if (useParam[5] == 1 && ptr->data.max.val >= param[5]) { unselected = true; }                                                                           //maxMaxi
 		else if (useParam[7] == 1) { if (min(ptr->data.sigma.x, ptr->data.sigma.y) / max(ptr->data.sigma.x, ptr->data.sigma.y) >= param[7]) { unselected = true; } } //minMorphParam
 		else if (useParam[8] == 1) { if (min(ptr->data.sigma.x, ptr->data.sigma.y) / max(ptr->data.sigma.x, ptr->data.sigma.y) <= param[8]) { unselected = true; } } //maxMorphParam
 		else if (useParam[12] == 1) { if (tabBound[ind] == 1) { unselected = true; } }                                                                               //no struct on boundaries
@@ -149,10 +149,10 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 		while (ptr != NULL) {
 			ind++;
 			unselected = false;
-			for (i = 1; (i <= nbInfoStructOld) && !unselected; i++) {
+			for (i = 1; i <= nbInfoStructOld && !unselected; i++) {
 				if (tabInfo[i] != NULL) {
 					double d = sqrt((double)((ptr->data.max.x - tabInfo[i]->data.max.x) * (ptr->data.max.x - tabInfo[i]->data.max.x) + (ptr->data.max.y - tabInfo[i]->data.max.y) * (ptr->data.max.y - tabInfo[i]->data.max.y)));
-					if ((d > 1) && (d < param[6]) && (tabInfo[i]->data.max.val > ptr->data.max.val)) { unselected = true; }
+					if (d > 1 && d < param[6] && tabInfo[i]->data.max.val > ptr->data.max.val) { unselected = true; }
 				}
 			}
 
@@ -181,7 +181,7 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 
 
 	for (indexFilter = 9; indexFilter <= 11; indexFilter++) {
-		if ((useParam[indexFilter] == 1) && (nbInfoStruct > param[indexFilter]) && ((long)param[indexFilter] > 0)) {
+		if (useParam[indexFilter] == 1 && nbInfoStruct > param[indexFilter] && (long)param[indexFilter] > 0) {
 			//N first structure with the biggest surface (indexFilter=9), the biggest surface (indexFilter=10) or 
 			//the biggest total intensity (indexFilter=11)
 
@@ -195,7 +195,7 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 						break;
 					case 10: valMax = (float)(ptr->data.surf * ptr->data.mean);
 						break;
-					case 11: valMax = (float)(ptr->data.max.val);
+					case 11: valMax = (float)ptr->data.max.val;
 						break;
 				}
 
@@ -214,7 +214,7 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 							}
 							break;
 						case 11: if (valMax <= (float)ptr->next->data.max.val) {
-								valMax = (float)(ptr->next->data.max.val);
+								valMax = (float)ptr->next->data.max.val;
 								ptrMax = ptr;
 							}
 							break;
@@ -280,7 +280,7 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 		ptr = ptr->next;
 	}
 
-	return (nbInfoStruct);
+	return nbInfoStruct;
 }
 
 
@@ -288,7 +288,7 @@ float Segment2D::tic(void)
 {
 	SYSTEMTIME st_time;
 	GetSystemTime(&st_time);
-	return ((float)(st_time.wMilliseconds + 1000 * (st_time.wSecond + 60 * (st_time.wMinute + 60 * st_time.wHour))));
+	return (float)(st_time.wMilliseconds + 1000 * (st_time.wSecond + 60 * (st_time.wMinute + 60 * st_time.wHour)));
 }
 
 int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData, unsigned short gaussFit, bool doRealoc)
@@ -303,7 +303,7 @@ int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData
 	unsigned short sizeDataY = data.size(1);
 
 
-	if (doRealoc) { if ((ret = alloc(nbInfoStruct)) < 0) { return (ret); } }
+	if (doRealoc) { if ((ret = alloc(nbInfoStruct)) < 0) { return ret; } }
 
 
 	//initalisation of array
@@ -363,13 +363,13 @@ int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData
 				if (tabInfo[ind]->data.boundingBox.yMin > j) { tabInfo[ind]->data.boundingBox.yMin = j; }
 
 
-				if ((val > tabInfo[ind]->data.max.val) || (tabInfo[ind]->data.surf == 1)) {
+				if (val > tabInfo[ind]->data.max.val || tabInfo[ind]->data.surf == 1) {
 					tabInfo[ind]->data.max.val = val;
 					tabInfo[ind]->data.max.x = i;
 					tabInfo[ind]->data.max.y = j;
 				}
 
-				if ((val < tabInfo[ind]->data.min.val) || (tabInfo[ind]->data.surf == 1)) {
+				if (val < tabInfo[ind]->data.min.val || tabInfo[ind]->data.surf == 1) {
 					tabInfo[ind]->data.min.val = val;
 					tabInfo[ind]->data.min.x = i;
 					tabInfo[ind]->data.min.y = j;
@@ -379,7 +379,7 @@ int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData
 				if (i == sizeDataX - 1) { tabInfo[ind]->data.peri++; }
 				if (j == 0) { tabInfo[ind]->data.peri++; }
 				if (j == sizeDataY - 1) { tabInfo[ind]->data.peri++; }
-				if ((i != 0) && (i != sizeDataX - 1) && (j != 0) && (j != sizeDataY - 1)) {
+				if (i != 0 && i != sizeDataX - 1 && j != 0 && j != sizeDataY - 1) {
 					if (seg.data[(i - 1) * sizeDataY + j] != seg.data[i * sizeDataY + j]) { tabInfo[ind]->data.peri++; }
 					if (seg.data[(i + 1) * sizeDataY + j] != seg.data[i * sizeDataY + j]) { tabInfo[ind]->data.peri++; }
 					if (seg.data[i * sizeDataY + j - 1] != seg.data[i * sizeDataY + j]) { tabInfo[ind]->data.peri++; }
@@ -405,7 +405,7 @@ int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData
 						int refx = (int)tabInfo[ind]->data.max.x;
 						int refy = (int)tabInfo[ind]->data.max.y;
 
-						if (((ii + refx) >= 0) && ((ii + refx) < sizeDataX) && ((jj + refy) < sizeDataY) && ((jj + refy) >= 0)) {
+						if (ii + refx >= 0 && ii + refx < sizeDataX && jj + refy < sizeDataY && jj + refy >= 0) {
 							val = (double)waveData[(ii + refx) * sizeDataY + (jj + refy)];
 							tabInfo[ind]->data.moment.x += val * (double)(ii + refx);
 							tabInfo[ind]->data.moment.y += val * (double)(jj + refy);
@@ -443,20 +443,20 @@ int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData
 	}
 
 
-	return (cptPoints);
+	return cptPoints;
 }
 
 
 unsigned short Segment2D::segmentation(FltArray& data, USrtArray& seg, double val, bool diagonal, bool fillHoles)
 {
-	if (!fillHoles) { return (segmentationPositiveValues(data, seg, val, diagonal)); }
+	if (!fillHoles) { return segmentationPositiveValues(data, seg, val, diagonal); }
 	int ret;
 	long i;
 	long sizeDataX = data.size(0);
 	long sizeDataY = data.size(1);
 
 	USrtArray* segHoles = new USrtArray;
-	if ((ret = segHoles->alloc(sizeDataX, sizeDataY)) < 0) { return (ret); }
+	if ((ret = segHoles->alloc(sizeDataX, sizeDataY)) < 0) { return ret; }
 
 	ret = segmentationNegativeValues(data, *segHoles, val, !diagonal);
 
@@ -478,7 +478,7 @@ unsigned short Segment2D::segmentation(FltArray& data, USrtArray& seg, double va
 	// test to remove the memory leak detected by ccpcheck
 	//20090206
 	free(ptr);
-	return (ret);
+	return ret;
 }
 
 
@@ -630,7 +630,7 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 	nbInfoStruct = structFinded - 1;
 	mixIndex(seg);
 
-	return (structFinded - 1);
+	return structFinded - 1;
 }
 
 
@@ -782,7 +782,7 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	nbInfoStruct = structFinded - 1;
 	mixIndex(seg);
 
-	return (structFinded - 1);
+	return structFinded - 1;
 }
 
 unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& seg, double val, bool diagonal, USrtArray& segHoles)
@@ -818,14 +818,14 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	seg = (unsigned short)0;
 
 	//first pixel
-	if ((fabs(data.data[0]) > val) || (segHoles.data[0] != 0)) {
+	if (fabs(data.data[0]) > val || segHoles.data[0] != 0) {
 		seg.data[0] = (unsigned short)nSeg;
 		inc(nSeg, &ptr, sizePtr);
 	}
 
 	//first line
 	for (j = 1; j < sizeDataY; j++) {
-		if ((fabs(data.data[j]) > val) || (segHoles.data[j] != 0)) {
+		if (fabs(data.data[j]) > val || segHoles.data[j] != 0) {
 			if (seg.data[j - 1] == 0) {
 				seg.data[j] = (unsigned short)nSeg;
 				inc(nSeg, &ptr, sizePtr);
@@ -836,7 +836,7 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 
 	//the rest
 	for (i = 1; i < sizeDataX; i++) {
-		if ((DATA(i, 0) > val) || (SEGHoles(i, 0) != 0)) {
+		if (DATA(i, 0) > val || SEGHoles(i, 0) != 0) {
 			if (SEG(i-1, 0) != 0) { SEG(i, 0) = SEG(i-1, 0); }
 			else if (SEG(i-1, 1) != 0) { SEG(i, 0) = SEG(i-1, 1); }
 			else {
@@ -846,7 +846,7 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 		}
 		for (j = 1; j < sizeDataY; j++) {
 			structFinded = 0;
-			if ((DATA(i, j) > val) || (SEGHoles(i, j) != 0)) {
+			if (DATA(i, j) > val || SEGHoles(i, j) != 0) {
 				if (SEG(i, j-1) != 0) {
 					structFinded = SEG(i, j-1);
 					SEG(i, j) = SEG(i, j-1);
@@ -933,7 +933,7 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	nbInfoStruct = structFinded - 1;
 	mixIndex(seg);
 
-	return (structFinded - 1);
+	return structFinded - 1;
 }
 
 void Segment2D::mixIndex(USrtArray& seg)

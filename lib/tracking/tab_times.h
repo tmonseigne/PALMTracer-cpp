@@ -31,7 +31,7 @@ protected:
 	void setColorToTrackedStructures();
 	void setIndexToTrackedStructures();
 	void drawSegment(USrtArray& image, long time, Node* node1, Node* node2);
-	virtual TimeNodes* allocTimeNodes(long time, long nbNodes) { return (NULL); };
+	virtual TimeNodes* allocTimeNodes(long time, long nbNodes) { return NULL; };
 	void allocTabTimes();
 
 public:
@@ -44,7 +44,7 @@ public:
 	PublicParameters* publicParameters;
 
 	int initialisation();
-	virtual int runModel() { return (T_ERR_OOP); };
+	virtual int runModel() { return T_ERR_OOP; };
 	void checkLinksHomogeneity(const wchar_t* st);
 };
 
