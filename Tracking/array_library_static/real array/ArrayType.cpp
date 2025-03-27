@@ -30,9 +30,6 @@ ArrayType::ArrayType(const long i, const long j, const long k, const long l)
 	sizeAllocated = 0;
 	ret = alloc(i, j, k, l);
 	if (ret < 0) {
-		openDebugStreamALS();
-		fprintf(debugStreamALS, "          ERROR this:0x%p constructor: %d          \n", this, ret);
-		closeDebugStreamALS();
 		exit(ret);
 	}
 }
@@ -45,9 +42,6 @@ ArrayType::ArrayType(DataType* _data, const long i, const long j, const long k, 
 	sizeAllocated = 0;
 	ret = alloc(_data, i, j, k, l);
 	if (ret < 0) {
-		openDebugStreamALS();
-		fprintf(debugStreamALS, "          ERROR this:0x%p constructor: %d          \n", this, ret);
-		closeDebugStreamALS();
 		exit(ret);
 	}
 }
@@ -153,11 +147,6 @@ int ArrayType::alloc(DataType* _data, const long i, const long j, const long k, 
 			nbDim = 0;
 			nbPoints = 0;
 			sizeAllocated = 0;
-
-			openDebugStreamALS();
-			fprintf(debugStreamALS, "          ALLOC_ERR in ArrayType::realloc, this:0x%p          \n", this);
-			fprintf(debugStreamALS, "          ArrayType::alloc(data, i,j,... ) can not be used where data have already been allocated by constructor          \n", this);
-			closeDebugStreamALS();
 			return (ALLOC_ERR);
 		}
 		else {
@@ -197,10 +186,6 @@ int ArrayType::realloc(const long i, const long j, const long k, const long l)
 #endif
 	if ((ret = testDim(i, j, k, l)) < 0) return (ret);
 	if (isThereData() && !dataAllocatedByConstructor) {
-		openDebugStreamALS();
-		fprintf(debugStreamALS, "          ALLOC_ERR in ArrayType::realloc, this:0x%p          \n", this);
-		fprintf(debugStreamALS, "          ArrayType::realloc can be used if a ArrayType::alloc(data, i,j,... ) have been executed          \n", this);
-		closeDebugStreamALS();
 		return (ALLOC_ERR);
 	}
 	if (isThereData()) {
@@ -243,18 +228,6 @@ DataType&ArrayType::operator()(long i, long j, long k, long l) { return (data[((
 
 
 //**************		OPERATORS	********************
-
-#define DataType2 unsigned char
-#define ArrayType2 UChrArray
-#include "operators.cpp"
-#undef ArrayType2
-#undef DataType2
-
-#define DataType2 short
-#define ArrayType2 SrtArray
-#include "operators.cpp"
-#undef ArrayType2
-#undef DataType2
 
 #define DataType2 unsigned short
 #define ArrayType2 USrtArray
@@ -318,9 +291,6 @@ void ArrayType::setSize(int di, int valSize)
 	nbDim = getDim(sizeData[0], sizeData[1], sizeData[2], sizeData[3]);
 	nbPoints = (unsigned long)(sizeData[0] * sizeData[1] * sizeData[2] * sizeData[3]);
 	if (nbPoints > sizeAllocated) {
-		openDebugStreamALS();
-		fprintf(debugStreamALS, "          SIZE_ERR in setSize(int %d di, int %d valSize), this:0x%p          \n", di, valSize, this);
-		closeDebugStreamALS();
 		exit(SIZE_ERR);
 	}
 }
@@ -332,9 +302,6 @@ int ArrayType::dim() { return (nbDim); }
 DataType ArrayType::min(void)
 {
 	if (!isThereData()) {
-		openDebugStreamALS();
-		fprintf(debugStreamALS, "          ALLOC_ERR in min(void), this:0x%p          \n", this);
-		closeDebugStreamALS();
 		exit(ALLOC_ERR);
 	}
 	DataType _min = data[0];
@@ -347,9 +314,6 @@ DataType ArrayType::min(void)
 DataType ArrayType::max(void)
 {
 	if (!isThereData()) {
-		openDebugStreamALS();
-		fprintf(debugStreamALS, "          ALLOC_ERR in max(void), this:0x%p          \n", this);
-		closeDebugStreamALS();
 		exit(ALLOC_ERR);
 	}
 	DataType _max = data[0];
@@ -592,9 +556,6 @@ void ArrayType::writeArray(wchar_t* fileName)
 
 	if ((fileHandle = _wopen(fileName, O_RDWR | O_CREAT | O_BINARY, S_IWRITE)) != -1) {
 		if ((nbCharWrite = write(fileHandle, (void*)&header, sizeof(HeaderFile))) == -1) {
-			openDebugStreamALS();
-			fprintf(debugStreamALS, "          WRITING_FILE_ERR writeArray()          \n");
-			closeDebugStreamALS();
 			exit(WRITING_FILE_ERR);
 		}
 
@@ -602,17 +563,11 @@ void ArrayType::writeArray(wchar_t* fileName)
 
 
 		if ((nbCharWrite = write(fileHandle, data, sizeof(DataType) * nbPoints)) == -1) {
-			openDebugStreamALS();
-			fprintf(debugStreamALS, "          WRITING_FILE_ERR writeArray()          \n");
-			closeDebugStreamALS();
 			exit(WRITING_FILE_ERR);
 		}
 		close(fileHandle);
 	}
 	else {
-		openDebugStreamALS();
-		fprintf(debugStreamALS, "          OPENING_FILE_ERR writeArray()          \n");
-		closeDebugStreamALS();
 		exit(OPENING_FILE_ERR);
 	}
 }
@@ -630,9 +585,6 @@ void ArrayType::readArray(wchar_t* fileName)
 		int nb;
 
 		if ((nb = read(fileHandle, &header, sizeof(HeaderFile))) == -1) {
-			openDebugStreamALS();
-			fprintf(debugStreamALS, "          READING_FILE_ERR readArray()          \n");
-			closeDebugStreamALS();
 			exit(READING_FILE_ERR);
 		}
 
@@ -645,17 +597,11 @@ void ArrayType::readArray(wchar_t* fileName)
 		}
 
 		if (read(fileHandle, data, sizeof(DataType) * nbPoints) == -1) {
-			openDebugStreamALS();
-			fprintf(debugStreamALS, "          READING_FILE_ERR readArray()          \n");
-			closeDebugStreamALS();
 			exit(READING_FILE_ERR);
 		}
 		close(fileHandle);
 	}
 	else {
-		openDebugStreamALS();
-		fprintf(debugStreamALS, "          OPENING_FILE_ERR readArray()          \n");
-		closeDebugStreamALS();
 		exit(OPENING_FILE_ERR);
 	}
 }

@@ -211,49 +211,17 @@ DataType&ArrayType::operator()(long i, long j, long k, long l) { return (data[((
 
 //**************		OPERATORS	********************
 
-/*
-#define DataType2 unsigned char
-#define ArrayType2 UChrArray
-#include "operators.cpp"
-#undef ArrayType2
-#undef DataType2
-
-#define DataType2 short
-#define ArrayType2 SrtArray
-#include "operators.cpp"
-#undef ArrayType2
-#undef DataType2
-*/
 #define DataType2 unsigned short
 #define ArrayType2 USrtArray
 #include "operators.cpp"
 #undef ArrayType2
 #undef DataType2
-/*
-#define DataType2 long
-#define ArrayType2 LngArray
-#include "operators.cpp"
-#undef ArrayType2
-#undef DataType2
 
-#define DataType2 unsigned long
-#define ArrayType2 ULngArray
-#include "operators.cpp"
-#undef ArrayType2
-#undef DataType2
-*/
 #define DataType2 float
 #define ArrayType2 FltArray
 #include "operators.cpp"
 #undef ArrayType2
 #undef DataType2
-/*
-#define DataType2 double
-#define ArrayType2 DblArray
-#include "operators.cpp"
-#undef ArrayType2
-#undef DataType2
-*/
 
 #define DataType2 bool
 #define BOOL_TYPE1

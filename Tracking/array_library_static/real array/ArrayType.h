@@ -89,8 +89,6 @@ public:
 	ArrayType& operator+=(const float val);
 	ArrayType& operator+=(const double val);
 
-	ArrayType& operator+=(const UChrArray& arrayType);
-	ArrayType& operator+=(const SrtArray& arrayType);
 	ArrayType& operator+=(const USrtArray& arrayType);
 	ArrayType& operator+=(const LngArray& arrayType);
 	ArrayType& operator+=(const FltArray& arrayType);
@@ -110,8 +108,6 @@ public:
 	ArrayType& operator-=(const float val);
 	ArrayType& operator-=(const double val);
 
-	ArrayType& operator-=(const UChrArray& arrayType);
-	ArrayType& operator-=(const SrtArray& arrayType);
 	ArrayType& operator-=(const USrtArray& arrayType);
 	ArrayType& operator-=(const LngArray& arrayType);
 	ArrayType& operator-=(const FltArray& arrayType);
@@ -130,8 +126,6 @@ public:
 	ArrayType& operator*=(const float val);
 	ArrayType& operator*=(const double val);
 
-	ArrayType& operator*=(const UChrArray& arrayType);
-	ArrayType& operator*=(const SrtArray& arrayType);
 	ArrayType& operator*=(const USrtArray& arrayType);
 	ArrayType& operator*=(const LngArray& arrayType);
 	ArrayType& operator*=(const FltArray& arrayType);
@@ -151,8 +145,6 @@ public:
 	ArrayType& operator/=(const float val);
 	ArrayType& operator/=(const double val);
 
-	ArrayType& operator/=(const UChrArray& arrayType);
-	ArrayType& operator/=(const SrtArray& arrayType);
 	ArrayType& operator/=(const USrtArray& arrayType);
 	ArrayType& operator/=(const LngArray& arrayType);
 	ArrayType& operator/=(const FltArray& arrayType);
@@ -172,8 +164,6 @@ public:
 	ArrayType& operator=(const double val);
 	ArrayType& operator=(const bool val);
 
-	ArrayType& operator=(const UChrArray& arrayType);
-	ArrayType& operator=(const SrtArray& arrayType);
 	ArrayType& operator=(const USrtArray& arrayType);
 	ArrayType& operator=(const LngArray& arrayType);
 	ArrayType& operator=(const FltArray& arrayType);

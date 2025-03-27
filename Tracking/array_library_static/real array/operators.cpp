@@ -10,10 +10,6 @@
 ArrayType& ArrayType::operator=(const ArrayType2& arrayType)
 {
 	if (nbPoints != arrayType.nbPoints) {
-		openDebugStreamALS();
-		fprintf(debugStreamALS, "££ £ SIZE_ERR in operator=(const ArrayType2 0x%p &arrayType), this:0x%p £ ££\n", &arrayType, this);
-		fprintf(debugStreamALS, "££ £ nbPoints: %d <> %d\n", nbPoints, arrayType.nbPoints);
-		closeDebugStreamALS();
 		exit(SIZE_ERR);
 	}
 	if (type() == arrayType.type()) memcpy(data, arrayType.data, sizeof(DataType) * nbPoints);
@@ -54,9 +50,6 @@ ArrayType& ArrayType::operator=(const DataType2 val)
 ArrayType& ArrayType::operator+=(const ArrayType2& arrayType)
 {
 	if (nbPoints != arrayType.nbPoints) {
-		openDebugStreamALS();
-		fprintf(debugStreamALS, "££ £ SIZE_ERR in operator+=(const ArrayType2 0x%p &arrayType), this:0x%p £ ££\n", &arrayType, this);
-		closeDebugStreamALS();
 		exit(SIZE_ERR);
 	}
 	for (unsigned long i = 0; i < nbPoints; i++) {
@@ -91,9 +84,6 @@ ArrayType& ArrayType::operator+=(const DataType2 val)
 ArrayType& ArrayType::operator-=(const ArrayType2& arrayType)
 {
 	if (nbPoints != arrayType.nbPoints) {
-		openDebugStreamALS();
-		fprintf(debugStreamALS, "££ £ SIZE_ERR in operator-=(const ArrayType2 0x%p &arrayType), this:0x%p £ ££\n", &arrayType, this);
-		closeDebugStreamALS();
 		exit(SIZE_ERR);
 	}
 	for (unsigned long i = 0; i < nbPoints; i++) {
@@ -119,9 +109,6 @@ ArrayType& ArrayType::operator-=(const DataType2 val)
 ArrayType& ArrayType::operator*=(const ArrayType2& arrayType)
 {
 	if (nbPoints != arrayType.nbPoints) {
-		openDebugStreamALS();
-		fprintf(debugStreamALS, "££ £ SIZE_ERR in operator*=(const ArrayType2 0x%p &arrayType), this:0x%p £ ££\n", &arrayType, this);
-		closeDebugStreamALS();
 		exit(SIZE_ERR);
 	}
 	for (unsigned long i = 0; i < nbPoints; i++) {
@@ -159,9 +146,6 @@ ArrayType& ArrayType::operator*=(const DataType2 val)
 ArrayType& ArrayType::operator/=(const ArrayType2& arrayType)
 {
 	if (nbPoints != arrayType.nbPoints) {
-		openDebugStreamALS();
-		fprintf(debugStreamALS, "££ £ SIZE_ERR in operator/=(const ArrayType2 0x%p &arrayType), this:0x%p £ ££\n", &arrayType, this);
-		closeDebugStreamALS();
 		exit(SIZE_ERR);
 	}
 	for (unsigned long i = 0; i < nbPoints; i++) {

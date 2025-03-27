@@ -19,9 +19,6 @@ Segment::Segment(){
 
 Segment::~Segment(){
 	if(__nbInfoStrucAlloc!=__nbInfoStrucDealloc){
-		openDebugStreamALS();
-		fprintf(debugStreamALS, "!!! Error in allocation of InfoStruct2D/3D: nbInfoStrucAlloc=%d, nbInfoStrucDealloc=%d !!!\n");
-		closeDebugStreamALS();
 	}
 }
 

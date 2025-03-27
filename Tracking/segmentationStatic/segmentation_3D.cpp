@@ -507,16 +507,10 @@ int Segment3D::printStatistics(wchar_t *fileName, unsigned short resultType, uns
 				return(S_OPEN_FILE_ERR);
 			}
 			if((ret=locateStringInFile(L"</table>", stream))<0){ 
-				openDebugStreamALS();
-				fprintf(debugStreamALS, "Error to find the string in the file in locateStringInFile\n");
-				closeDebugStreamALS();
 				return(ret);
 
 			}else{
 				if(fseek(stream,ret,SEEK_SET)!=0){
-					openDebugStreamALS();
-					fprintf(debugStreamALS, "Error to move in the file: offset=%d\n", -ret);
-					closeDebugStreamALS();
 					return(S_READ_ERR);
 				}
 				

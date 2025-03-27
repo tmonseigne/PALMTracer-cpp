@@ -358,10 +358,6 @@ int Segment2D::filterStructureWS(USrtArray &potential, USrtArray &seg, float thr
 							ptrStr[ptrStr[i].structureInContact].locked=true;
 							ptrStr[i].locked=true;
 							change=true;
-							openDebugStreamALS();
-							fprintf(debugStreamALS, "deleted <-<-\n");
-							closeDebugStreamALS();
-
 						}
 					}
 			}

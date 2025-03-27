@@ -1,9 +1,7 @@
 #ifndef __ALL_REAL_DATA_LIB__
 #define __ALL_REAL_DATA_LIB__
 
-//class UChrArray;
-//class SrtArray;
-//class USrtArray;
+class USrtArray;
 //class LngArray;
 //class ULngArray;
 class FltArray;
@@ -11,9 +9,6 @@ class FltArray;
 class BlArray;
 
 
-/*
-#include "UChrArray.h"
-#include "SrtArray.h"*/
 #include "USrtArray.h"
 /*#include "LngArray.h"
 #include "ULngArray.h"*/

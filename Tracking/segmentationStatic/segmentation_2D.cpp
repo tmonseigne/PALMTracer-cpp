@@ -387,11 +387,6 @@ void Segment2D::drawSymbolOnStructures(USrtArray &seg, unsigned short typeOfSign
 					//seg.data[(unsigned short)tabInfo[ind]->data.moment.x*sizeDataY+(unsigned short)tabInfo[ind]->data.moment.y]
 					seg(x,y)=(unsigned short)ind;
 			}
-
-			openDebugStreamALS();
-			fprintf(debugStreamALS, "%f\t%f\n", tabInfo[ind]->data.angle*180./PI,tabInfo[ind]->data.morpho);
-			closeDebugStreamALS();
-
 		}
 	break;
 	}
@@ -509,16 +504,10 @@ int Segment2D::printStatistics(wchar_t* fileName, unsigned short resultType, uns
 				return(S_OPEN_FILE_ERR);
 			}
 			if((ret=locateStringInFile(L"</table>", stream))<0){ 
-				openDebugStreamALS();
-				fprintf(debugStreamALS, "Error to find the string in the file in locateStringInFile\n");
-				closeDebugStreamALS();
 				return(ret);
 
 			}else{
 				if(fseek(stream,ret,SEEK_SET)!=0){
-					openDebugStreamALS();
-					fprintf(debugStreamALS, "Error to move in the file: offset=%d\n", -ret);
-					closeDebugStreamALS();
 					return(S_READ_ERR);
 				}
 				
