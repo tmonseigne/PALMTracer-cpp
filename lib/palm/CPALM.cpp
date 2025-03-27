@@ -9,7 +9,6 @@
 
 CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsListSize, unsigned long sizeX, unsigned long sizeY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short size)
 {
-	long ret;
 	nbCalls = 0;
 	currentPoint = 0;
 	_image = image;
@@ -54,10 +53,10 @@ CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsList
 	}
 
 	_input = new USrtArray();
-	if ((ret = _input->alloc(_image, _sizeX, _sizeY)) < 0) { return; }
-	if ((ret = _aTrousPub->wDecomp->alloc(_sizeX, _sizeY, waveletNo + 2)) < 0) { return; }
-	if ((ret = _segPub->realloc(_sizeX, _sizeY)) < 0) { return; }
-	if ((ret = _outputPub->alloc(_sizeX, _sizeY)) < 0) { return; }
+	if (_input->alloc(_image, _sizeX, _sizeY) < 0) { return; }
+	if (_aTrousPub->wDecomp->alloc(_sizeX, _sizeY, waveletNo + 2) < 0) { return; }
+	if (_segPub->realloc(_sizeX, _sizeY) < 0) { return; }
+	if (_outputPub->alloc(_sizeX, _sizeY) < 0) { return; }
 
 
 	_planesToUseB = new BlArray(9);
@@ -77,8 +76,6 @@ long CPALM::CPALMProcessing()
 	long nbStruct;
 	int nbPointsSign;
 
-	float begin = clock();
-
 	if ((ret = _aTrousPub->aTrousDecomposition2D(*_input, *_aTrousPub->wDecomp, *_planesToUseB, _nbPlane, false)) < 0) { return ret; }
 
 	for (long j = 0; j < long(_sizeX * _sizeY); j++) {
@@ -92,7 +89,6 @@ long CPALM::CPALMProcessing()
 			_outputPub->data[j] = 0;
 		}
 	}
-	begin = clock();
 
 	if (_watershedRatio == 1.) { if ((nbStruct = _segmentPub->segmentation(*_outputPub, *_segPub, 1e-8f, true, false)) < 0) { return nbStruct; } }
 	else { if ((nbStruct = _segmentPub->watershedIntelligent(*_outputPub, *_segPub, 1e-8f, (float)_watershedRatio)) < 0) { return nbStruct; } }
@@ -100,12 +96,10 @@ long CPALM::CPALMProcessing()
 
 	if ((nbPointsSign = _segmentPub->computeStatistics(*_outputPub, *_segPub, _aTrousPub->wDecomp->data + _waveletNo * _sizeX * _sizeY, _gaussFit)) < 0) { return nbPointsSign; }
 
-	begin = clock();
 
 	if (_volMin > 0. || _intMin > 0.) { if ((nbStruct = _segmentPub->filterData(*_segPub, _structFiltParam, _structFiltParamUse)) < 0) { return ret; } }
 
-	InfoStruct2D** p;
-	p = (InfoStruct2D**)_segmentPub->getTabInfo();
+	InfoStruct2D** p = (InfoStruct2D**)_segmentPub->getTabInfo();
 
 	for (int i = 1; i <= min(nbStruct, _nbPointsMaxPerPlane - 2); i++) {
 		switch (_gaussFit) {

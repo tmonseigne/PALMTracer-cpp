@@ -8,18 +8,15 @@ extern FILE* debugStreamALS;
 
 double getAutoThreshold(FltArray& im)
 {
-	double threshold;
-	double oldThreshold;
-	double m0, m1; //the average of the 2 parts of the histogram
-	double count0, count1, count;
-	double s0, s1;
-	double sigma;
+	double m1; //the average of the 2 parts of the histogram
+	double count1;
+	double s1;
 
 
 	long cpt = 30;
-	threshold = 0.;
-	oldThreshold = 1e10;
-	count = 0;
+	double threshold = 0.;
+	double oldThreshold = 1e10;
+	double count = 0;
 	for (long i = 0; i < (long)im.nbPoints; i++) {
 		if (im.data[i] > 0.) {
 			count++;
@@ -29,8 +26,8 @@ double getAutoThreshold(FltArray& im)
 	threshold /= count;
 
 	while (fabs(oldThreshold - threshold) > 1e-12 && cpt > 0) {
-		count0 = count1 = 0.;
-		m0 = m1 = 0.;
+		double count0 = count1 = 0.;
+		double m0 = m1 = 0.;
 		for (long i = 0; i < (long)im.nbPoints; i++) {
 			if (im.data[i] > 0.) {
 				if (im.data[i] < threshold) {
@@ -46,10 +43,9 @@ double getAutoThreshold(FltArray& im)
 
 		m0 /= count0;
 		m1 /= count1;
-		s0 = s1 = 0.;
+		double s0 = s1 = 0.;
 
-		long i;
-		for (i = 0; i < (long)im.nbPoints; i++) {
+		for (long i = 0; i < (long)im.nbPoints; i++) {
 			if (im.data[i] > 0.) {
 				if (im.data[i] < threshold) { s0 += (im.data[i] - m0) * (im.data[i] - m0); }
 				else { s1 += (im.data[i] - m1) * (im.data[i] - m1); }
@@ -59,7 +55,7 @@ double getAutoThreshold(FltArray& im)
 		s0 = sqrt(s0);
 		s1 = sqrt(s1);
 
-		sigma = (s0 + s1) / count;
+		double sigma = (s0 + s1) / count;
 
 		oldThreshold = threshold;
 		threshold = (m0 + m1) / 2. + sigma * sigma * log(count0 / count1) / (m1 - m0);
@@ -137,16 +133,14 @@ double distance(double X1, double Y1, double Z1, double X2, double Y2, double Z2
 
 double distance2(double X1, double Y1, double X2, double Y2)
 {
-	double res;
-	res = (X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2);
+	double res = (X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2);
 	if (res < 0) { return 0.; }
 	return res;
 }
 
 double distance2(double X1, double Y1, double Z1, double X2, double Y2, double Z2)
 {
-	double res;
-	res = (X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2) + (Z1 - Z2) * (Z1 - Z2);
+	double res = (X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2) + (Z1 - Z2) * (Z1 - Z2);
 	if (res < 0) { return 0.; }
 	return res;
 }

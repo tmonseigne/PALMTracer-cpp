@@ -136,9 +136,6 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 	sigma = sigmaX;
 
 	float X2;
-	float time_initial;
-	float time_final;
-	float time = 0;
 
 	if (x0 >= (int)ref && x0 <= sizeX - (int)ref - 1 && y0 >= (int)ref && y0 <= sizeY - (int)ref - 1) {
 		// for real data
@@ -201,7 +198,6 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		lambda = lambda_0;
 		X2_old = X2;
 
-		float p_old[Npar] = {2 * p[0], 2 * p[1], 2 * p[2], 2 * p[3]};
 		unsigned short iteration = 0;
 
 		float inter[Npar * Npar];
@@ -257,10 +253,7 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 			if (rho > epsilon_4) // it IS significantly better
 			{
 				X2_old = X2;
-				for (int ii = 0; ii < Npar; ii++) {
-					p_old[ii] = p[ii];
-					p[ii] = p_try[ii]; // accept p_try
-				}
+				for (int ii = 0; ii < Npar; ii++) { p[ii] = p_try[ii]; } // accept p_try
 
 				X2 = lm_matx(t/*IN*/, p/*IN*/, y_dat/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
 

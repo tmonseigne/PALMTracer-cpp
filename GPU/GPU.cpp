@@ -58,7 +58,7 @@ GPU::~GPU() { }
 
 int GPU::runGPU()
 {
-	int nb_points = 0, ret_val;
+	int nb_points = 0;
 	unsigned short* image = (unsigned short*)malloc(sizeDataX * sizeDataY * sizeof(unsigned short));
 	double* points = (double*)malloc(nbPointsMaxPerPlane * NbSegParams * sizeof(double));
 
@@ -68,7 +68,7 @@ int GPU::runGPU()
 		memcpy(image, images + plane * sizeDataX * sizeDataY, sizeDataX * sizeDataY * sizeof(unsigned short));
 
 		__OpenPALMProcessing(image, points, nbPointsMaxPerPlane * NbSegParams, sizeDataY, sizeDataX, waveletNo, thresholdVal, watershedRatio, volMin, intMin, (unsigned short)0, sigmaX, sigmaY, angle, sizeFit);
-		ret_val = __PALMProcessing();
+		int ret_val = __PALMProcessing();
 		__closePALMProcessing();
 
 		nb_points += ret_val / NbSegParams - 1;

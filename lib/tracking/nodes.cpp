@@ -18,8 +18,7 @@ double distanceToBorder()
 *********************************************************************************************/
 double Node::distanceToBorder()
 {
-	double mini;
-	mini = info->getX();
+	double mini = info->getX();
 	mini = __min(mini, publicParameters->maxX-info->getX());
 	mini = __min(mini, info->getY());
 	mini = __min(mini, publicParameters->maxY-info->getY());
@@ -135,19 +134,16 @@ intensity.
 ********************************************************************************************************************/
 int Node::sortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 {
-	ChainNeighbor* l;
-	ChainNeighbor* l2;
-	ChainNeighbor* lOld;
 	bool change;
 	if (*neighborsHead != NULL) {
 		if ((*neighborsHead)->next != NULL) {
 			do {
 				change = false;
-				l = *neighborsHead;
-				lOld = NULL;
+				ChainNeighbor* l = *neighborsHead;
+				ChainNeighbor* lOld = NULL;
 				while (l->next != NULL) {
 					if (l->next->neighbor->info->getIntensity() > l->neighbor->info->getIntensity()) {
-						l2 = l->next;
+						ChainNeighbor* l2 = l->next;
 						if (lOld == NULL) { *neighborsHead = l2; }
 						else { lOld->next = l2; }
 						l->next = l2->next;
@@ -158,7 +154,6 @@ int Node::sortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 					else {
 						l = l->next;
 						if (lOld == NULL) { lOld = *neighborsHead; }
-						else { lOld = lOld; }
 					}
 				}
 			}

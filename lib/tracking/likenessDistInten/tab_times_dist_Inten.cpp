@@ -52,21 +52,18 @@ void TabTimesDistanceIntensity::computeConstantes()
 	double stdMeanComputing = 0;
 	double stdDistanceComputing = 0;
 	double stdIntensityComputing = 0;
-	long countStdInt, countStdMean, coutStdDist;
-
-	int _time;
 
 
 	for (int k = 0; k < 20; k++) {
-		countStdInt = 0;
-		countStdMean = 0;
-		coutStdDist = 0;
+		long countStdInt = 0;
+		long countStdMean = 0;
+		long coutStdDist = 0;
 		stdMeanComputing = 0;
 		stdDistanceComputing = 0;
 		stdIntensityComputing = 0;
 
 
-		for (_time = 0; _time < nbTimes - 1; _time++) {
+		for (int _time = 0; _time < nbTimes - 1; _time++) {
 			((TimeNodesDistanceIntensity*)timeNodes[_time])->computeConstantSigmas(stdIntensityComputing, countStdInt, stdMeanComputing, countStdMean, stdDistanceComputing, coutStdDist, false); //, true);
 		}
 
@@ -87,7 +84,6 @@ updateConstantes() ones the Tracking in compute, compute the constant
 ********************************************************************************************************************/
 void TabTimesDistanceIntensity::updateConstantes()
 {
-	long t;
 	long cpt = 0;
 	double covID = 0;
 	double covDM = 0;
@@ -97,7 +93,7 @@ void TabTimesDistanceIntensity::updateConstantes()
 	publicParameters->stdIntensity = 0;
 	publicParameters->stdMean = 0;
 	publicParameters->covMeanIntensity = 0;
-	for (t = 0; t < nbTimes; t++) {
+	for (long t = 0; t < nbTimes; t++) {
 		TimeNodes* _localTimeNodes = timeNodes[t];
 		for (int n = 0; n < _localTimeNodes->nbNodes; n++) {
 			Node* node = _localTimeNodes->tabNodes[n];
@@ -115,9 +111,7 @@ void TabTimesDistanceIntensity::updateConstantes()
 	publicParameters->stdDistance /= cpt;
 	publicParameters->stdIntensity /= cpt;
 	publicParameters->stdMean /= cpt;
-	covID /= cpt;
 	publicParameters->covMeanIntensity /= cpt;
-	covDM /= cpt;
 	publicParameters->stdIntensity = sqrt(publicParameters->stdIntensity);
 	publicParameters->stdDistance = sqrt(publicParameters->stdDistance);
 	publicParameters->stdMean = sqrt(publicParameters->stdMean);
@@ -129,29 +123,24 @@ runModel() is the core of the application, it links the structures according the
 ********************************************************************************************************************/
 int TabTimesDistanceIntensity::runModel()
 {
-	double totalLikeness;
-	double deltaLikeness;
-
 	double error;
-	int _time;
-	long cpt;
 
 	long countLearning = 5;
 
 	for (long iLearning = 0; iLearning < countLearning; iLearning++) {
 		if (iLearning == countLearning - 1) { error = 20; }
 		else { error = 0; }
-		cpt = 0;
+		long cpt = 0;
 
 		if (iLearning == 0) {
 			computeConstantes();
-			for (_time = 0; _time < nbTimes - 1; _time++) { ((TimeNodesDistanceIntensity*)timeNodes[_time])->makeAllInitializationConnections(); }
+			for (int _time = 0; _time < nbTimes - 1; _time++) { ((TimeNodesDistanceIntensity*)timeNodes[_time])->makeAllInitializationConnections(); }
 		}
 		else { updateConstantes(); }
 
 		wprintf(L"iLearning:\t%d/%d\nkInt %f  kMean %f kDistance %f\n", iLearning, countLearning, publicParameters->stdIntensity, publicParameters->stdMean, publicParameters->stdDistance);
 
-		totalLikeness = getLikenessGlobal();
+		double totalLikeness = getLikenessGlobal();
 
 		int nbInt = 0;
 
@@ -162,7 +151,7 @@ int TabTimesDistanceIntensity::runModel()
 
 			nbInt++;
 
-			deltaLikeness = 0;
+			double deltaLikeness = 0;
 			for (int i = 0; i < publicParameters->NbIterations; i++) { for (int _time = 0; _time < nbTimes - 1; _time++) { deltaLikeness += ((TimeNodesDistanceIntensity*)timeNodes[_time])->tryRandomChange(error); } }
 			totalLikeness += deltaLikeness;
 

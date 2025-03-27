@@ -175,10 +175,6 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 	ref = dimFit / 2;
 
 	float X2;
-	float time_initial;
-	float time_final;
-	float time = 0;
-
 	if (x0 >= (int)ref && x0 <= sizeX - (int)ref - 1 && y0 >= (int)ref && y0 <= sizeY - (int)ref - 1) {
 		// for real data
 		float p_min[Npar] = {0., x0 - 1, y0 - 1, 0.1, 0.1, -150, 0.};
@@ -241,7 +237,6 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 		lambda = lambda_0;
 		X2_old = X2;
 
-		float p_old[Npar] = {2 * p[0], 2 * p[1], 2 * p[2], 2 * p[3], 2 * p[4], 2 * p[5], 2 * p[6]};
 		unsigned short iteration = 0;
 
 		float inter[Npar * Npar];
@@ -301,7 +296,6 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 			{
 				X2_old = X2;
 				for (int ii = 0; ii < Npar; ii++) {
-					p_old[ii] = p[ii];
 					p[ii] = p_try[ii]; // accept p_try
 				}
 

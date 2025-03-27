@@ -8,14 +8,14 @@ void autoCompleteFilename(wchar_t* filename, wchar_t* filenameFolder)
 
 	if (*filename == L'\0') { return; }
 	//test if the folder in embedded in the filename
-	long j, i, k;
+	long i;
 	for (i = 0; filename[i] != L'\0' && filename[i] != L':' && filename[i] != L'\\'; i++) { ; }
 	if (filename[i] == L'\0') { // no folder in embedded in the filename
 
 		// test if filenameFolder contain a file
 		long lastSlash = -1;
 		long lastPoint = -1;
-		for (j = 0; filenameFolder[j] != L'\0'; j++) {
+		for (long j = 0; filenameFolder[j] != L'\0'; j++) {
 			if (filenameFolder[j] == L'\\') {
 				lastSlash = j;
 				lastPoint = -1;
@@ -28,7 +28,7 @@ void autoCompleteFilename(wchar_t* filename, wchar_t* filenameFolder)
 		else {
 			if (lastPoint == -1) { swprintf(buf, L"%s\\%s", filenameFolder, filename); }
 			else {
-				for (k = 0; k <= lastSlash; k++) { buf[k] = filenameFolder[k]; }
+				for (long k = 0; k <= lastSlash; k++) { buf[k] = filenameFolder[k]; }
 				swprintf(buf + lastSlash + 1, L"%s", filename);
 			}
 			swprintf(filename, L"%s", buf);
@@ -84,21 +84,9 @@ _declspec(dllexport) long _stdcall Tracking(/*wchar_t* statFile, wchar_t* folder
 		default: return T_ERR_BAD_MODEL;
 	}
 
-	float begin = clock();
-
 	if ((ret = tabTimes->initialisation()) < 0) { return ret; }
-
-	float end = clock();
-	begin = clock();
-
 	if ((ret = tabTimes->runModel()) < 0) { return ret; }
-
-	end = clock();
-	begin = clock();
-
 	if ((ret = tabTimes->giveResult()) < 0) { return ret; }
-
-	end = clock();
 
 	delete tabTimes;
 
@@ -155,22 +143,9 @@ _declspec(dllexport) long _stdcall tracking_30(/*wchar_t* statFile, wchar_t* fol
 		default: return T_ERR_BAD_MODEL;
 	}
 
-	float begin = clock();
-
 	if ((ret = tabTimes->initialisation()) < 0) { return ret; }
-
-	float end = clock();
-
-	begin = clock();
-
 	if ((ret = tabTimes->runModel()) < 0) { return ret; }
-
-	end = clock();
-	begin = clock();
-
 	if ((ret = tabTimes->giveResult()) < 0) { return ret; }
-
-	end = clock();
 
 	delete tabTimes;
 

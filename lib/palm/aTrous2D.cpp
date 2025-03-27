@@ -26,7 +26,6 @@ int ATrous::offset(int i, int j, int maxSizeJ)
 int ATrous::testSizes2D(FltArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long& nbPlane)
 {
 	//Test inputData, outputData, planesToUse, nbPlane
-	unsigned long i;
 
 	if (!inputData.isThereData()) { return W_INIT_ERR; }
 	if (!outputData.isThereData()) { return W_INIT_ERR; }
@@ -34,15 +33,12 @@ int ATrous::testSizes2D(FltArray& inputData, FltArray& outputData, BlArray& plan
 	if (inputData.dim() + 1 != outputData.dim()) { return W_DIM_ERR; }
 	if (inputData.size(0) != outputData.size(0) || inputData.size(1) != outputData.size(1)) { return W_SIZE_ERR; }
 	if (planesToUse.dim() != 1) { return W_DIM_ERR; }
-	for (i = outputData.size(2); i < (unsigned long)planesToUse.size(0); i++) { planesToUse(i - 1) = false; }
-
-
-	long sizeWavelet;
+	for (unsigned long i = outputData.size(2); i < (unsigned long)planesToUse.size(0); i++) { planesToUse(i - 1) = false; }
 
 
 	if (inputData.size(0) < 9 || inputData.size(1) < 9) { return W_SIZE_ERR; }
 	if (nbPlane < 2) { return W_SIZE_ERR; }
-	sizeWavelet = twoToThe(nbPlane + 1);
+	long sizeWavelet = twoToThe(nbPlane + 1);
 	while (inputData.size(0) <= sizeWavelet || inputData.size(1) <= sizeWavelet) {
 		nbPlane--;
 		sizeWavelet = twoToThe(nbPlane + 1);
@@ -56,21 +52,18 @@ int ATrous::testSizes2D(FltArray& inputData, FltArray& outputData, BlArray& plan
 int ATrous::testSizes2D(USrtArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long& nbPlane)
 {
 	//Test inputData, outputData, planesToUse, nbPlane
-	unsigned long i;
 
 	if (!inputData.isThereData()) { return W_INIT_ERR; }
 	if (!outputData.isThereData()) { return W_INIT_ERR; }
 	if (inputData.dim() + 1 != outputData.dim()) { return W_DIM_ERR; }
 	if (inputData.size(0) != outputData.size(0) || inputData.size(1) != outputData.size(1)) { return W_SIZE_ERR; }
 	if (planesToUse.dim() != 1) { return W_DIM_ERR; }
-	for (i = outputData.size(2); i < (unsigned long)planesToUse.size(0); i++) { planesToUse(i - 1) = false; }
+	for (unsigned long i = outputData.size(2); i < (unsigned long)planesToUse.size(0); i++) { planesToUse(i - 1) = false; }
 
-
-	long sizeWavelet;
 
 	if (inputData.size(0) < 9 || inputData.size(1) < 9) { return W_SIZE_ERR; }
 	if (nbPlane < 2) { return W_SIZE_ERR; }
-	sizeWavelet = twoToThe(nbPlane + 1);
+	long sizeWavelet = twoToThe(nbPlane + 1);
 	while (inputData.size(0) <= sizeWavelet || inputData.size(1) <= sizeWavelet) {
 		nbPlane--;
 		sizeWavelet = twoToThe(nbPlane + 1);
@@ -175,21 +168,20 @@ void ATrous::projectionV02D(float* srcData, float* destData, unsigned long realP
 int ATrous::b3SplineFiltering2D(float* srcData, float* destData, unsigned long sizeDataX, unsigned long sizeDataY, unsigned long currentPlane)
 {
 	//Makes the projection in V(x) with hte knowlage of V(x-1)
-	int i, j, step, offsetij;
+	int i, j, offsetij;
 	float coeffH0 = 3. / 8.;
 	float coeffH1 = 1. / 4.;
 	float coeffH2 = 1. / 16.;
 
-	float* buff;
 	int ret;
 
 	if ((ret = temp2->realloc(sizeDataX, sizeDataY)) < 0) { return ret; }
-	buff = temp2->data;
+	float* buff = temp2->data;
 
 
 	//type_border Type = Bord;
 
-	step = twoToThe(currentPlane);
+	int step = twoToThe(currentPlane);
 
 
 	//convolution in Y axe
@@ -259,16 +251,13 @@ int ATrous::aTrousDecomposition2D(FltArray& inputData, FltArray& outputData, BlA
 	**/
 
 	//float **waveletPlanes;
-	unsigned long i;
 	int ret;
 	unsigned long currentPlane;
 	float** waveletPlanes;
-	unsigned long sizeDataX;
-	unsigned long sizeDataY;
 
 
-	sizeDataX = inputData.size(0);
-	sizeDataY = inputData.size(1);
+	unsigned long sizeDataX = inputData.size(0);
+	unsigned long sizeDataY = inputData.size(1);
 
 
 	//test if nbPlane is not too big !!!
@@ -294,7 +283,7 @@ int ATrous::aTrousDecomposition2D(FltArray& inputData, FltArray& outputData, BlA
 		//As proj( W(x+1) ) = proj( V(x) ) - proj( V(x+1) ) ;	proj(Vx) is in waveletPlanes[x+1] 
 		//and proj(Vx+1) is in waveletPlanes[x+2]
 		//	waveletPlanes[x+1][*]=waveletPlanes[x+1][*]-waveletPlanes[x+2][*]
-		for (i = 0; i < (unsigned long)(sizeDataX * sizeDataY); i++) { waveletPlanes[currentPlane][i] -= waveletPlanes[currentPlane + 1][i]; }
+		for (unsigned long i = 0; i < (unsigned long)(sizeDataX * sizeDataY); i++) { waveletPlanes[currentPlane][i] -= waveletPlanes[currentPlane + 1][i]; }
 	}
 	free(waveletPlanes);
 	return nbPlane;
@@ -323,15 +312,12 @@ int ATrous::aTrousDecomposition2D(USrtArray& inputData, FltArray& outputData, Bl
 	**/
 
 
-	unsigned long i;
 	int ret;
 	unsigned long currentPlane;
 	float** waveletPlanes;
-	unsigned long sizeDataX;
-	unsigned long sizeDataY;
 
-	sizeDataX = inputData.size(0);
-	sizeDataY = inputData.size(1);
+	unsigned long sizeDataX = inputData.size(0);
+	unsigned long sizeDataY = inputData.size(1);
 
 	//test if nbPlane is not too big !!!
 	if ((ret = testSizes2D(inputData, outputData, planesToUse, nbPlane)) < 0) { return ret; }
@@ -356,7 +342,7 @@ int ATrous::aTrousDecomposition2D(USrtArray& inputData, FltArray& outputData, Bl
 		//and proj(Vx+1) is in waveletPlanes[x+2]
 		//	waveletPlanes[x+1][*]=waveletPlanes[x+1][*]-waveletPlanes[x+2][*]
 
-		for (i = 0; i < (unsigned long)(sizeDataX * sizeDataY); i++) { waveletPlanes[currentPlane][i] -= waveletPlanes[currentPlane + 1][i]; }
+		for (unsigned long i = 0; i < (unsigned long)(sizeDataX * sizeDataY); i++) { waveletPlanes[currentPlane][i] -= waveletPlanes[currentPlane + 1][i]; }
 	}
 
 	free(waveletPlanes);

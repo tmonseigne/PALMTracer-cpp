@@ -27,7 +27,6 @@ protected:
 	int readPointsList();
 	int printConnectionsASCII();
 	int printConnectionsASCII_trc();
-	void printCoveredArea();
 	void setColorToTrackedStructures();
 	void setIndexToTrackedStructures();
 	void drawSegment(USrtArray& image, long time, Node* node1, Node* node2);

@@ -162,9 +162,6 @@ double NodeDistanceIntensity::likeness(Node* n)
 double NodeDistanceIntensity::likenessBlink(Node* n)
 {
 	double alpha = 0.7;
-	long dt;
-	dt = abs(time - n->time);
-	//return(likeness(n)* getLikeness(dt-1, 1)-_minEnergyBlink_);
 	return likeness(n) * alpha + (likeness(NULL) + n->likeness(NULL)) * (1. - alpha / 2.);
 }
 
@@ -201,13 +198,11 @@ void NodeDistanceIntensity::computeConstantSigmas(double &stdIntensityComputing,
 *********************************************************************************************/
 void NodeDistanceIntensity::computeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean, double& stdDistanceComputing, long& countStdDist, bool sigmaClipping, long* hist)
 {
-	ChainNeighbor* c;
 	Node* nMax = NULL;
 	double likenessMax = -1e10;
-	double likenessVal;
 
-	for (c = neighborsFuture; c != NULL; c = c->next) {
-		likenessVal = likeness(c->neighbor);
+	for (ChainNeighbor* c = neighborsFuture; c != NULL; c = c->next) {
+		double likenessVal = likeness(c->neighbor);
 		if (likenessVal > likenessMax) {
 			likenessMax = likenessVal;
 			nMax = c->neighbor;
@@ -256,14 +251,12 @@ double NodeDistanceIntensity::makeInitializationConnection()
 *********************************************************************************************/
 double NodeDistanceIntensity::makeInitializationConnection()
 {
-	ChainNeighbor* c;
 	Node* nMax = NULL;
 	double likenessMax = -1e10;
-	double likenessVal;
 
-	for (c = neighborsFuture; c != NULL; c = c->next) {
+	for (ChainNeighbor* c = neighborsFuture; c != NULL; c = c->next) {
 		if (c->neighbor->connectionPast == NULL) {
-			likenessVal = likeness(c->neighbor);
+			double likenessVal = likeness(c->neighbor);
 
 			if (likenessVal > likenessMax) {
 				likenessMax = likenessVal;
@@ -353,8 +346,6 @@ double NodeDistanceIntensity::makeChangeFission0(double limitLoss)
 	//4-------------NULL
 
 
-	double deltaLikeness;
-	long idRandNeighbor;
 	ChainNeighbor* cRand;
 	long i;
 
@@ -362,7 +353,7 @@ double NodeDistanceIntensity::makeChangeFission0(double limitLoss)
 
 
 	if (neighborsFutureCount < 2) { return 0.; } //no neighbors like 3
-	idRandNeighbor = rand() % neighborsFutureCount;
+	long idRandNeighbor = rand() % neighborsFutureCount;
 	//set the node cRand
 	for (i = 0, cRand = neighborsFuture; i < idRandNeighbor && cRand != NULL; cRand = cRand->next, i++) { ; }
 	//test if the node is good
@@ -374,7 +365,7 @@ double NodeDistanceIntensity::makeChangeFission0(double limitLoss)
 
 	if (distance(cRand->neighbor) >= publicParameters->distMaxPastAndFuture) { return 0.; } //distance is not respected
 
-	deltaLikeness = +likenessFission(cRand->neighbor, connectionFuture) + (cRand->neighbor->connectionPast == NULL ? 0. : cRand->neighbor->connectionPast->likeness(NULL)) - likeness(connectionFuture) - cRand->neighbor->likeness(cRand->neighbor->connectionPast);
+	double deltaLikeness = +likenessFission(cRand->neighbor, connectionFuture) + (cRand->neighbor->connectionPast == NULL ? 0. : cRand->neighbor->connectionPast->likeness(NULL)) - likeness(connectionFuture) - cRand->neighbor->likeness(cRand->neighbor->connectionPast);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                      // change the configuration
 		connectionFission1Future = connectionFuture;
@@ -773,7 +764,6 @@ double NodeDistanceIntensity::makeChangeFission(double limitLoss)
 			case 1: return makeChangeFission4(limitLoss);
 		}
 
-		long idRandNeighbor;
 		ChainNeighbor* cRand;
 		long i;
 
@@ -786,7 +776,7 @@ double NodeDistanceIntensity::makeChangeFission(double limitLoss)
 		}
 
 		//try to find a neighbor "4" in the neighborhood of "3"
-		idRandNeighbor = rand() % connectionFission2Future->neighborsPastCount;
+		long idRandNeighbor = rand() % connectionFission2Future->neighborsPastCount;
 		//set the node cRand
 		for (i = 0, cRand = connectionFission2Future->neighborsPast; i < idRandNeighbor && cRand != NULL; cRand = cRand->next, i++) { ; }
 		//test if the node is good
@@ -813,8 +803,6 @@ double NodeDistanceIntensity::makeChangeFission(double limitLoss)
 
 double NodeDistanceIntensity::makeChangeFusion0(double limitLoss)
 {
-	double deltaLikeness;
-	long idRandNeighbor;
 	ChainNeighbor* cRand;
 	long i;
 
@@ -830,7 +818,7 @@ double NodeDistanceIntensity::makeChangeFusion0(double limitLoss)
 	//NULL----------4
 
 	if (connectionFuture->neighborsPastCount < 2) { return 0.; } //no neighbors like 3
-	idRandNeighbor = rand() % connectionFuture->neighborsPastCount;
+	long idRandNeighbor = rand() % connectionFuture->neighborsPastCount;
 	//set the node cRand
 	for (i = 0, cRand = connectionFuture->neighborsPast; i < idRandNeighbor && cRand != NULL; cRand = cRand->next, i++) { ; }
 	//test if the node is good
@@ -842,7 +830,7 @@ double NodeDistanceIntensity::makeChangeFusion0(double limitLoss)
 
 	if (connectionFuture->distance(cRand->neighbor) >= publicParameters->distMaxPastAndFuture) { return 0.; } //distance is not respected
 
-	deltaLikeness = +connectionFuture->likenessFusion(cRand->neighbor, this) + (cRand->neighbor->connectionFuture != NULL ? cRand->neighbor->connectionFuture->likeness(NULL) : 0.) - likeness(connectionFuture) - cRand->neighbor->likeness(cRand->neighbor->connectionFuture);
+	double deltaLikeness = +connectionFuture->likenessFusion(cRand->neighbor, this) + (cRand->neighbor->connectionFuture != NULL ? cRand->neighbor->connectionFuture->likeness(NULL) : 0.) - likeness(connectionFuture) - cRand->neighbor->likeness(cRand->neighbor->connectionFuture);
 
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
@@ -958,7 +946,6 @@ double NodeDistanceIntensity::makeChangeFusion2(double limitLoss, ChainNeighbor*
 
 double NodeDistanceIntensity::makeChangeFusion3(double limitLoss)
 {
-	double deltaLikeness;
 	Node* node;
 
 	//find "node"
@@ -973,7 +960,7 @@ double NodeDistanceIntensity::makeChangeFusion3(double limitLoss)
 	//1(this)---------2(connectionFusionFuture)
 	//3(node)---------NULL
 
-	deltaLikeness = +likeness(connectionFusionFuture) + node->likeness(NULL) - connectionFusionFuture->likenessFusion(node, this);
+	double deltaLikeness = +likeness(connectionFusionFuture) + node->likeness(NULL) - connectionFusionFuture->likenessFusion(node, this);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 
@@ -991,7 +978,6 @@ double NodeDistanceIntensity::makeChangeFusion3(double limitLoss)
 
 double NodeDistanceIntensity::makeChangeFusion4(double limitLoss)
 {
-	double deltaLikeness;
 	Node* node;
 
 	//find "node"
@@ -1004,7 +990,7 @@ double NodeDistanceIntensity::makeChangeFusion4(double limitLoss)
 	//possiblilty 4
 	//1(this)---------NULL
 	//3(node)---------2(connectionFusionFuture)
-	deltaLikeness = +node->likeness(connectionFusionFuture) + likeness(NULL) - connectionFusionFuture->likenessFusion(node, this);
+	double deltaLikeness = +node->likeness(connectionFusionFuture) + likeness(NULL) - connectionFusionFuture->likenessFusion(node, this);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 		connectionFusionFuture->connectionPast = node;
@@ -1355,7 +1341,6 @@ double NodeDistanceIntensity::makeChangeFusion(double limitLoss)
 		}
 
 
-		long idRandNeighbor;
 		ChainNeighbor* cRand;
 		long i;
 
@@ -1367,7 +1352,7 @@ double NodeDistanceIntensity::makeChangeFusion(double limitLoss)
 			}
 		}
 
-		idRandNeighbor = rand() % neighborsFutureCount;
+		long idRandNeighbor = rand() % neighborsFutureCount;
 		//set the node cRand
 		for (i = 0, cRand = neighborsFuture; i < idRandNeighbor && cRand != NULL; cRand = cRand->next, i++) { ; }
 		//test if the node is good
@@ -1479,13 +1464,11 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage3(double limitLoss, ChainNe
 	//	4-----------3(cRand)
 	//	NULL--------5(c)
 
-	long idRandNeighbor;
-	ChainNeighbor* c;
 	//find a random one
-	idRandNeighbor = rand() % count;
+	long idRandNeighbor = rand() % count;
 	int iCount = 0;
 
-	c = cRand->neighbor->connectionPast->neighborsFuture;
+	ChainNeighbor* c = cRand->neighbor->connectionPast->neighborsFuture;
 	do {
 		if (c->neighbor->connectionFusion1Past == NULL && c->neighbor->connectionFissionPast == NULL) {
 			if (c->neighbor->connectionPast == NULL) { iCount++; }
@@ -1576,21 +1559,17 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage0(double limitLoss)
 	//	To
 	//	t			t+1		t+2
 	//	1(this)-------------2(connectionBlinkFuture)
-	long dt, i;
-	ChainNeighbor* cRand;
 
-	dt = rand() % (publicParameters->nbTemporalWindows - 1) + 2;
+	long dt = rand() % (publicParameters->nbTemporalWindows - 1) + 2;
 	long nbNodeAtGoodTime = 0;
-	cRand = NULL; //inutile
-	bool exitFor = false;
-	long idRandNeighbor;
+	ChainNeighbor* cRand = NULL; //inutile
 
-	for (i = 0, cRand = neighborsBlinkFuture; cRand != NULL; cRand = cRand->next) { if (cRand->neighbor->time - time == dt && cRand->neighbor->connectionPast == NULL && cRand->neighbor->connectionBlinkPast == NULL && cRand->neighbor->connectionFissionPast == NULL && cRand->neighbor->connectionFusion1Past == NULL) { nbNodeAtGoodTime++; } }
+	for (cRand = neighborsBlinkFuture; cRand != NULL; cRand = cRand->next) { if (cRand->neighbor->time - time == dt && cRand->neighbor->connectionPast == NULL && cRand->neighbor->connectionBlinkPast == NULL && cRand->neighbor->connectionFissionPast == NULL && cRand->neighbor->connectionFusion1Past == NULL) { nbNodeAtGoodTime++; } }
 	if (nbNodeAtGoodTime == 0) { return 0; }
 
-	idRandNeighbor = rand() % nbNodeAtGoodTime;
-	i = 0;
-	exitFor = false;
+	long idRandNeighbor = rand() % nbNodeAtGoodTime;
+	long i = 0;
+	bool exitFor = false;
 	for (cRand = neighborsBlinkFuture; !exitFor && cRand != NULL;) {
 		if (cRand->neighbor->time - time == dt && cRand->neighbor->connectionPast == NULL && cRand->neighbor->connectionBlinkPast == NULL && cRand->neighbor->connectionFissionPast == NULL && cRand->neighbor->connectionFusion1Past == NULL) {
 			if (i == idRandNeighbor) { exitFor = true; }
@@ -1873,19 +1852,14 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(double limitLoss)
 		//find a potential cRand
 		//cRand has to be either just after this or just before connectionBlinkFuture
 		if (rand() % 2) { //cRand just after this
-			ChainNeighbor* cRand;
-			ChainNeighbor* cRand2;
-			long nbNodeAtGoodTime;
-			long nbNodeAtGoodTime2;
-			nbNodeAtGoodTime = 0;
-			nbNodeAtGoodTime2 = 0;
-			cRand = NULL;
-			cRand2 = NULL;
-			bool exitFor = false;
+			long nbNodeAtGoodTime = 0;
+			long nbNodeAtGoodTime2 = 0;
+			ChainNeighbor* cRand = NULL;
+			ChainNeighbor* cRand2 = NULL;
 
 			long idRandNeighbor;
 
-			for (i = 0, cRand = neighborsFuture; cRand != NULL; cRand = cRand->next) {
+			for (cRand = neighborsFuture; cRand != NULL; cRand = cRand->next) {
 				if (cRand->neighbor->time - time == 1) {
 					if (cRand->neighbor->connectionPast != NULL) { nbNodeAtGoodTime++; }
 					else { if (cRand->neighbor->connectionFusion1Past == NULL && cRand->neighbor->connectionFissionPast == NULL && cRand->neighbor->connectionBlinkPast == NULL) { nbNodeAtGoodTime2++; } }
@@ -1896,7 +1870,7 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(double limitLoss)
 			if ((rand() % 2 && nbNodeAtGoodTime != 0) || nbNodeAtGoodTime2 == 0) {
 				idRandNeighbor = rand() % nbNodeAtGoodTime;
 				i = 0;
-				exitFor = false;
+				bool exitFor = false;
 				for (cRand = neighborsFuture; !exitFor && cRand != NULL;) {
 					if (cRand->neighbor->time - time == 1 && cRand->neighbor->connectionPast != NULL) {
 						if (i == idRandNeighbor) { exitFor = true; }
@@ -1913,7 +1887,7 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(double limitLoss)
 			else {
 				idRandNeighbor = rand() % nbNodeAtGoodTime2;
 				i = 0;
-				exitFor = false;
+				bool exitFor = false;
 				for (cRand2 = neighborsFuture; !exitFor && cRand2 != NULL;) {
 					if (cRand2->neighbor->time - time == 1 && cRand2->neighbor->connectionPast == NULL && cRand2->neighbor->connectionFusion1Past == NULL && cRand2->neighbor->connectionFissionPast == NULL && cRand2->neighbor->connectionBlinkPast == NULL) {
 						if (i == idRandNeighbor) { exitFor = true; }
@@ -1929,19 +1903,14 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(double limitLoss)
 			}
 		}
 		else { // cRand is just before connectionBlinkFuture
-			ChainNeighbor* cRand;
-			ChainNeighbor* cRand2;
-			long nbNodeAtGoodTime;
-			nbNodeAtGoodTime = 0;
-			long nbNodeAtGoodTime2;
-			nbNodeAtGoodTime2 = 0;
-			cRand = NULL;
-			cRand2 = NULL;
-			bool exitFor = false;
+			long nbNodeAtGoodTime = 0;
+			long nbNodeAtGoodTime2 = 0;
+			ChainNeighbor* cRand = NULL;
+			ChainNeighbor* cRand2 = NULL;
 
 			long idRandNeighbor;
 
-			for (i = 0, cRand = connectionBlinkFuture->neighborsPast; cRand != NULL; cRand = cRand->next) {
+			for (cRand = connectionBlinkFuture->neighborsPast; cRand != NULL; cRand = cRand->next) {
 				if (connectionBlinkFuture->time - cRand->neighbor->time == 1) {
 					if (cRand->neighbor->connectionFuture != NULL) { nbNodeAtGoodTime++; }
 					else { if (cRand->neighbor->connectionFission1Future == NULL && cRand->neighbor->connectionFusionFuture == NULL && cRand->neighbor->connectionBlinkFuture == NULL) { nbNodeAtGoodTime2++; } }
@@ -1952,7 +1921,7 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(double limitLoss)
 			if ((rand() % 2 && nbNodeAtGoodTime != 0) || nbNodeAtGoodTime2 == 0) {
 				idRandNeighbor = rand() % nbNodeAtGoodTime;
 				i = 0;
-				exitFor = false;
+				bool exitFor = false;
 				for (cRand = connectionBlinkFuture->neighborsPast; !exitFor && cRand != NULL;) {
 					if (connectionBlinkFuture->time - cRand->neighbor->time == 1 && cRand->neighbor->connectionFuture != NULL) {
 						if (i == idRandNeighbor) { exitFor = true; }
@@ -1970,7 +1939,7 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(double limitLoss)
 			else {
 				idRandNeighbor = rand() % nbNodeAtGoodTime2;
 				i = 0;
-				exitFor = false;
+				bool exitFor = false;
 				for (cRand2 = connectionBlinkFuture->neighborsPast; !exitFor && cRand2 != NULL;) {
 					if (connectionBlinkFuture->time - cRand2->neighbor->time == 1 && cRand2->neighbor->connectionFuture == NULL && cRand2->neighbor->connectionFission1Future == NULL && cRand2->neighbor->connectionFusionFuture == NULL && cRand2->neighbor->connectionBlinkFuture == NULL) {
 						if (i == idRandNeighbor) { exitFor = true; }
@@ -1989,19 +1958,16 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(double limitLoss)
 double NodeDistanceIntensity::makeChangeSimpleLinkage(double limitLoss)
 {
 	int i;
-	ChainNeighbor* cRand;
-	ChainNeighbor* c;
 
 	if (connectionFuture == NULL || rand() % 2 == 0) {
 		//cRand is a random node in the vicinity of "this" in the future.
 
 		//compute index of cRand
-		long idRandNeighbor;
 		if (neighborsFutureCount == 0) { return 0.; } //no neighbors
-		idRandNeighbor = rand() % neighborsFutureCount;
+		long idRandNeighbor = rand() % neighborsFutureCount;
 
 		//set the node cRand
-		cRand = NULL; //inutile
+		ChainNeighbor* cRand = NULL; //inutile
 		for (i = 0, cRand = neighborsFuture; i < idRandNeighbor && cRand != NULL; cRand = cRand->next, i++) { ; }
 		//test if the node is good
 		if (cRand == NULL) { return -1.; } //ERROR 
@@ -2047,9 +2013,8 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage(double limitLoss)
 				//	Present		Future
 				//	1(this)-----2
 				//	4-----------3(cRand)
-				int count;
-				count = 0;
-				for (c = cRand->neighbor->connectionPast->neighborsFuture; c != NULL; c = c->next) {
+				int count = 0;
+				for (ChainNeighbor* c = cRand->neighbor->connectionPast->neighborsFuture; c != NULL; c = c->next) {
 					if (c->neighbor->connectionFusion1Past == NULL && c->neighbor->connectionFissionPast == NULL) {
 						if (c->neighbor->connectionPast == NULL) { count++; }
 						else { if (c->neighbor == connectionFuture) { count++; } }

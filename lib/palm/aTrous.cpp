@@ -48,6 +48,6 @@ double ATrous::stdRef(long dim, unsigned long realProj, unsigned long plan)
 			if (realProj) { return _3DRealProj[plan]; }
 			return _3D[plan];
 		}
+		default: return 0.;
 	}
-	return 0.;
 }

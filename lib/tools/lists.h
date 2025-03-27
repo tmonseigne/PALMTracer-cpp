@@ -136,7 +136,6 @@ public:
 	 */
 	Errc Remove(float kitem)
 	{
-		bool result = false;
 		int i = 0;
 
 		for (; i < _nitem && _data[i].key != kitem; i++) { ; }

@@ -46,10 +46,8 @@ linkNeighbors() build the chained list of all the neighbours of each nodes prese
 ********************************************************************************************************************/
 int TimeNodes::linkNeighborsPresent()
 {
-	long i, j;
-
-	for (i = 0; i < nbNodes; i++) {
-		for (j = 0; j < nbNodes; j++) {
+	for (long i = 0; i < nbNodes; i++) {
+		for (long j = 0; j < nbNodes; j++) {
 			if (i != j) {
 				if (tabNodes[i]->distance(tabNodes[j]) < publicParameters->distMaxNeighbour) {
 					tabNodes[i]->neighborsPresent = new ChainNeighbor(tabNodes[j], tabNodes[i]->neighborsPresent, publicParameters);
@@ -69,10 +67,8 @@ time (t+1) close to it.
 ********************************************************************************************************************/
 int TimeNodes::linkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes)
 {
-	long presentNode, futureNode;
-
-	for (presentNode = 0; presentNode < nbNodes; presentNode++) {
-		for (futureNode = 0; futureNode < futureTimeNodes.nbNodes; futureNode++) {
+	for (long presentNode = 0; presentNode < nbNodes; presentNode++) {
+		for (long futureNode = 0; futureNode < futureTimeNodes.nbNodes; futureNode++) {
 			if (tabNodes[presentNode]->distance(futureTimeNodes.tabNodes[futureNode]) < publicParameters->distMaxPastAndFuture) {
 				tabNodes[presentNode]->neighborsFuture = new ChainNeighbor(futureTimeNodes.tabNodes[futureNode], tabNodes[presentNode]->neighborsFuture, publicParameters);
 				tabNodes[presentNode]->neighborsFutureCount++;
@@ -91,10 +87,8 @@ time (t+dt) close to it.
 ********************************************************************************************************************/
 int TimeNodes::linkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes)
 {
-	long presentNode, futureNode;
-
-	for (presentNode = 0; presentNode < nbNodes; presentNode++) {
-		for (futureNode = 0; futureNode < futureTimeNodes.nbNodes; futureNode++) {
+	for (long presentNode = 0; presentNode < nbNodes; presentNode++) {
+		for (long futureNode = 0; futureNode < futureTimeNodes.nbNodes; futureNode++) {
 			if (tabNodes[presentNode]->distance(futureTimeNodes.tabNodes[futureNode]) < publicParameters->distMaxPastAndFuture) {
 				tabNodes[presentNode]->neighborsBlinkFuture = new ChainNeighbor(futureTimeNodes.tabNodes[futureNode], tabNodes[presentNode]->neighborsBlinkFuture, publicParameters);
 				tabNodes[presentNode]->neighborsBlinkFutureCount++;

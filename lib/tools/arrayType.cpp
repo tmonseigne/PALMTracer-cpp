@@ -23,20 +23,18 @@ ArrayType::ArrayType()
 
 ArrayType::ArrayType(const long i, const long j, const long k, const long l)
 {
-	int ret;
 	data = NULL;
 	sizeAllocated = 0;
-	ret = alloc(i, j, k, l);
+	int ret = alloc(i, j, k, l);
 	if (ret < 0) { exit(ret); }
 }
 
 
 ArrayType::ArrayType(DataType* _data, const long i, const long j, const long k, const long l)
 {
-	int ret;
 	data = NULL;
 	sizeAllocated = 0;
-	ret = alloc(_data, i, j, k, l);
+	int ret = alloc(_data, i, j, k, l);
 	if (ret < 0) { exit(ret); }
 }
 
@@ -287,14 +285,12 @@ DataType ArrayType::max()
 #ifndef BOOL_TYPE
 void ArrayType::renormalize(double _min, double _max)
 {
-	DataType oldMin, oldMax;
-	double val2;
-	oldMin = min();
-	oldMax = max();
+	DataType oldMin = min();
+	DataType oldMax = max();
 	double val = (_max - _min) / (oldMax - oldMin);
 
 	for (unsigned long i = 0; i < nbPoints; i++) {
-		val2 = (data[i] - oldMin) * val + _min;
+		double val2 = (data[i] - oldMin) * val + _min;
 		data[i] = (DataType)val2;
 	}
 }
@@ -303,9 +299,8 @@ void ArrayType::renormalize(double _min, double _max)
 #ifndef BOOL_TYPE
 void ArrayType::renormalizeZD(double zero, double dilation)
 {
-	double val;
 	for (unsigned long i = 0; i < nbPoints; i++) {
-		val = zero + data[i] * dilation;
+		double val = zero + data[i] * dilation;
 		data[i] = (DataType)val;
 	}
 }
@@ -314,9 +309,8 @@ void ArrayType::renormalizeZD(double zero, double dilation)
 #ifndef BOOL_TYPE
 void ArrayType::renormalizeZD(double zero, double dilation, long _min, long _max)
 {
-	double val;
 	for (unsigned long i = 0; i < nbPoints; i++) {
-		val = zero + data[i] * dilation;
+		double val = zero + data[i] * dilation;
 		if (val < _min) { val = (DataType)_min; }
 		else if (val > _max) { val = (DataType)_max; }
 		data[i] = (DataType)val;
@@ -342,9 +336,8 @@ double ArrayType::sigma()
 #ifndef BOOL_TYPE
 double ArrayType::power()
 {
-	unsigned long i;
 	double pow = 0.;
-	for (i = 0; i < nbPoints; i++) { pow += data[i] * data[i]; }
+	for (unsigned long i = 0; i < nbPoints; i++) { pow += data[i] * data[i]; }
 	pow /= (double)nbPoints;
 	return pow;
 }
@@ -354,9 +347,8 @@ double ArrayType::power()
 #ifndef BOOL_TYPE
 double ArrayType::mean()
 {
-	unsigned long i;
 	double m = 0.;
-	for (i = 0; i < nbPoints; i++) { m += data[i]; }
+	for (unsigned long i = 0; i < nbPoints; i++) { m += data[i]; }
 	m /= (double)nbPoints;
 	return m;
 }
@@ -365,9 +357,8 @@ double ArrayType::mean()
 #ifndef BOOL_TYPE
 double ArrayType::sum()
 {
-	unsigned long i;
 	double m = 0.;
-	for (i = 0; i < nbPoints; i++) { m += data[i]; }
+	for (unsigned long i = 0; i < nbPoints; i++) { m += data[i]; }
 	return m;
 }
 #endif
@@ -377,8 +368,7 @@ double ArrayType::sum()
 #ifndef BOOL_TYPE
 void ArrayType::hardThresholdPositive(DataType val)
 {
-	unsigned long i;
-	for (i = 0; i < nbPoints; i++) { if (data[i] < val) { data[i] = (DataType)0; } }
+	for (unsigned long i = 0; i < nbPoints; i++) { if (data[i] < val) { data[i] = (DataType)0; } }
 }
 #endif
 
@@ -386,8 +376,7 @@ void ArrayType::hardThresholdPositive(DataType val)
 #ifndef BOOL_TYPE
 void ArrayType::hardThresholdPositive(ArrayType& arrayType, DataType val)
 {
-	unsigned long i;
-	for (i = 0; i < nbPoints; i++) {
+	for (unsigned long i = 0; i < nbPoints; i++) {
 		if (arrayType.data[i] < val) { data[i] = (DataType)0; }
 		else { data[i] = arrayType.data[i]; }
 	}
@@ -397,16 +386,14 @@ void ArrayType::hardThresholdPositive(ArrayType& arrayType, DataType val)
 #ifndef BOOL_TYPE
 void ArrayType::hardThresholdNegative(DataType val)
 {
-	unsigned long i;
-	for (i = 0; i < nbPoints; i++) { if (data[i] > val) { data[i] = (DataType)0; } }
+	for (unsigned long i = 0; i < nbPoints; i++) { if (data[i] > val) { data[i] = (DataType)0; } }
 }
 #endif
 
 #ifndef BOOL_TYPE
 void ArrayType::hardThresholdNegative(ArrayType& arrayType, DataType val)
 {
-	unsigned long i;
-	for (i = 0; i < nbPoints; i++) {
+	for (unsigned long i = 0; i < nbPoints; i++) {
 		if (arrayType.data[i] > val) { data[i] = (DataType)0; }
 		else { data[i] = arrayType.data[i]; }
 	}
@@ -417,8 +404,7 @@ void ArrayType::hardThresholdNegative(ArrayType& arrayType, DataType val)
 #ifndef BOOL_TYPE
 void ArrayType::softThresholdPositive(DataType val)
 {
-	unsigned long i;
-	for (i = 0; i < nbPoints; i++) {
+	for (unsigned long i = 0; i < nbPoints; i++) {
 		if (data[i] < val) { data[i] = (DataType)0; }
 		else { data[i] -= val; }
 	}

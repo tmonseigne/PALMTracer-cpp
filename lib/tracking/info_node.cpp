@@ -12,22 +12,20 @@ InfoNode::InfoNode(PublicParameters* _publicParameters) { publicParameters = _pu
 
 float InfoNode2D::distance(InfoNode* infoNode)
 {
-	float res;
 	double dX = getX() - infoNode->getX();
 	double dY = getY() - infoNode->getY();
-	res = (float)sqrt(dX * dX + dY * dY);
+	float res = (float)sqrt(dX * dX + dY * dY);
 	if (res < 0.) { return 0.; }
 	return res;
 }
 
 float InfoNode2D::distance(InfoNode* i1, InfoNode* i2)
 {
-	float res;
 	double n1n2X = (i1->getX() * i1->getIntensity() + i2->getX() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
 	double n1n2Y = (i1->getY() * i1->getIntensity() + i2->getY() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
 	double dX = getX() - n1n2X;
 	double dY = getY() - n1n2Y;
-	res = (float)sqrt(dX * dX + dY * dY);
+	float res = (float)sqrt(dX * dX + dY * dY);
 	if (res < 0.) { return 0.; }
 	if (res < 1e-9) { res += 0; }
 	return res;
@@ -84,25 +82,23 @@ void InfoNode2D::setMean(double m) { info.mean = m; }
 //!!!!! invertion of coordinates !!! to restect Amira and UIC convenitons
 float InfoNode3D::distance(InfoNode* infoNode)
 {
-	float res;
 	double dX = getX() - infoNode->getX();
 	double dY = getY() - infoNode->getY();
 	double dZ = getZ() - infoNode->getZ();
-	res = (float)sqrt(dX * dX + dY * dY + dZ * dZ);
+	float res = (float)sqrt(dX * dX + dY * dY + dZ * dZ);
 	if (res < 0.) { return 0.; }
 	return res;
 }
 
 float InfoNode3D::distance(InfoNode* i1, InfoNode* i2)
 {
-	float res;
 	double n1n2X = (i1->getX() * i1->getIntensity() + i2->getX() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
 	double n1n2Y = (i1->getY() * i1->getIntensity() + i2->getY() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
 	double n1n2Z = (i1->getZ() * i1->getIntensity() + i2->getZ() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
 	double dX = getX() - n1n2X;
 	double dY = getY() - n1n2Y;
 	double dZ = getZ() - n1n2Z;
-	res = (float)sqrt(dX * dX + dY * dY + dZ * dZ);
+	float res = (float)sqrt(dX * dX + dY * dY + dZ * dZ);
 	if (res < 0.) { return 0.; }
 	return res;
 }

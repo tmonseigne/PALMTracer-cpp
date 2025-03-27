@@ -198,7 +198,6 @@ float CalibrationFit::Run(float* sigma, float* Z, unsigned short pointsNbr, unsi
 	lambda = lambda_0;
 	X2_old = X2;
 
-	float p_old[Npar] = {2 * p[0], 2 * p[1], 2 * p[2], 2 * p[3], 2 * p[4]};
 	unsigned short iteration = 0;
 
 	float inter[Npar * Npar];
@@ -255,10 +254,7 @@ float CalibrationFit::Run(float* sigma, float* Z, unsigned short pointsNbr, unsi
 		if (rho > epsilon_4) // it IS significantly better
 		{
 			X2_old = X2;
-			for (int ii = 0; ii < Npar; ii++) {
-				p_old[ii] = p[ii];
-				p[ii] = p_try[ii]; // accept p_try
-			}
+			for (int ii = 0; ii < Npar; ii++) { p[ii] = p_try[ii]; } // accept p_try
 
 			X2 = lm_matx(Z/*IN*/, p/*IN*/, sigma/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
 

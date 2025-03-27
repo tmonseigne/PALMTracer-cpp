@@ -25,9 +25,8 @@ void computeConstantSigmas(double &stdIntensityComputing, double &stdMeanComputi
 ********************************************************************************************************************/
 void TimeNodesDistanceIntensity::computeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean, double& stdDistanceComputing, long& countStdDist, bool sigmaClipping, long* hist)
 {
-	NodeDistanceIntensity* node;
 	for (int i = 0; i < nbNodes; i++) {
-		node = (NodeDistanceIntensity*)tabNodes[i];
+		NodeDistanceIntensity* node = (NodeDistanceIntensity*)tabNodes[i];
 		node->computeConstantSigmas(stdIntensityComputing, countStdInt, stdMeanComputing, countStdMean, stdDistanceComputing, countStdDist, sigmaClipping, hist);
 	}
 }
@@ -41,9 +40,8 @@ It returns the likeness computed for this time
 double TimeNodesDistanceIntensity::makeAllInitializationConnections()
 {
 	double globalLikeness = 0.;
-	NodeDistanceIntensity* node;
 	for (int i = 0; i < nbNodes; i++) {
-		node = (NodeDistanceIntensity*)tabNodes[i];
+		NodeDistanceIntensity* node = (NodeDistanceIntensity*)tabNodes[i];
 		globalLikeness += node->makeInitializationConnection();
 	}
 	return globalLikeness;
@@ -66,9 +64,8 @@ double giveLikeness(long lastTime) compute the total likeness for all nodes
 double TimeNodesDistanceIntensity::getLikenessTime(long lastTime)
 {
 	double globalLikeness = 0.;
-	NodeDistanceIntensity* node;
 	for (int i = 0; i < nbNodes; i++) {
-		node = (NodeDistanceIntensity*)tabNodes[i];
+		NodeDistanceIntensity* node = (NodeDistanceIntensity*)tabNodes[i];
 		globalLikeness += node->getLikenessOfLocalNode(lastTime);
 	}
 	return globalLikeness;

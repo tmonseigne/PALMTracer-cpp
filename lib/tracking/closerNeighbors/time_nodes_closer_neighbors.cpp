@@ -23,9 +23,8 @@ selected model
 ********************************************************************************************************************/
 int TimeNodesCloserNeighbors::makeAllConnections()
 {
-	NodeCloserNeighbors* node;
 	for (int i = 0; i < nbNodes; i++) {
-		node = (NodeCloserNeighbors*)tabNodes[i];
+		NodeCloserNeighbors* node = (NodeCloserNeighbors*)tabNodes[i];
 		node->makeConnection();
 	}
 	return RET_OK;

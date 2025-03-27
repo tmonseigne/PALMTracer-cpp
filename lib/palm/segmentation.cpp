@@ -7,14 +7,13 @@ Segment::~Segment() { }
 
 void Segment::inc(unsigned long& nSeg, unsigned long** ptr, long& sizePtr)
 {
-	unsigned long* newPtr;
 	int i;
 	if (nSeg == 65535) { return; }
 	nSeg++;
 	if ((long)nSeg < sizePtr) { return; }
 
 
-	newPtr = (unsigned long*)malloc(sizeof(long) * sizePtr);
+	unsigned long* newPtr = (unsigned long*)malloc(sizeof(long) * sizePtr);
 	//backup of data
 	for (i = 0; i < (long)sizePtr; i++) { newPtr[i] = (*ptr)[i]; }
 

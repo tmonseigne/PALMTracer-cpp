@@ -74,13 +74,12 @@ void computeBsplines(int n, gsl_vector* x, gsl_vector* y, int* nbPoints, vec* x_
 	size_t i, j;
 	gsl_bspline_workspace* bw;
 	gsl_vector* B;
-	double dy;
 	gsl_rng* r;
 	gsl_vector *c, *w;
 
 	gsl_matrix *X, *cov;
 	gsl_multifit_linear_workspace* mw;
-	double chisq, Rsq, dof, tss;
+	double chisq, tss;
 
 	gsl_rng_env_setup();
 	r = gsl_rng_alloc(gsl_rng_default);
@@ -140,9 +139,7 @@ void computeBsplines(int n, gsl_vector* x, gsl_vector* y, int* nbPoints, vec* x_
 	/* do the fit */
 	gsl_multifit_wlinear(X, w, y, c, cov, &chisq, mw);
 
-	dof = n - ncoeffs;
 	tss = gsl_stats_wtss(w->data, 1, y->data, 1, y->size);
-	Rsq = 1.0 - chisq / tss;
 
 	*nbPoints = (int)floor((xMax - xMin) / 0.1) + 1;
 	*x_sp = vec(*nbPoints);
@@ -177,9 +174,8 @@ void computeBsplines(int n, gsl_vector* x, gsl_vector* y, int* nbPoints, vec* x_
 int main()
 {
 	const size_t n = N;
-	gsl_vector *x, *y;
-	x = gsl_vector_alloc(n);
-	y = gsl_vector_alloc(n);
+	gsl_vector* x = gsl_vector_alloc(n);
+	gsl_vector* y = gsl_vector_alloc(n);
 	vec x_sp, y_sp;
 	int nbPoints;
 
