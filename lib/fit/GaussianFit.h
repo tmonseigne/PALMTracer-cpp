@@ -3,6 +3,11 @@
 class GaussianFit
 {
 public:
+	unsigned short dimFit_;
+	unsigned short n_;
+	float ref_;
+
+	GaussianFit() : dimFit_(0), n_(0), ref_(0) {}
 	virtual ~GaussianFit() = default;
 
 protected:

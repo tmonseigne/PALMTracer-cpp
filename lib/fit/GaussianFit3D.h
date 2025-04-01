@@ -14,12 +14,9 @@ protected:
 	void inverse(float* MM, float* Minv) override;
 
 public:
-	unsigned short dimFit;
-	unsigned short Npnt;
-	float ref;
-	float ANGLE;
+	float theta_;
 
-	GaussianFit3D() : dimFit(0), Npnt(0), ref(0), ANGLE(0) {}
+	GaussianFit3D() : theta_(0) {}
 
 	void Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& sigmaY, float& angle, float& offset, float& RSS, int iterNum, unsigned short size);
 };

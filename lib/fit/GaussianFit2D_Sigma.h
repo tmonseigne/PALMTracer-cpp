@@ -13,11 +13,5 @@ protected:
 	void inverse(float* MM, float* Minv) override;
 
 public :
-	unsigned short dimFit;
-	unsigned short Npnt;
-	float ref;
-
-	GaussianFit2D_Sigma() : dimFit(0), Npnt(0), ref(0) {}
-
 	void Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& offset, float& RSS, int iterNum, unsigned short size);
 };

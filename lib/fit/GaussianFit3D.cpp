@@ -5,100 +5,100 @@
 #include <cstdlib>
 #include <ctime>
 // CPU version of gaussian fit 3D
-#define Npar 6 // I0, x0, y0, sigmaX, sigmaY, offset
+#define N_PARAM 6 // I0, x0, y0, sigmaX, sigmaY, offset
 
 
 float GaussianFit3D::deriv1I0(const float x, const float y, const float x0, const float y0, const float sigmaX, const float sigmaY, float offset) const
 {
-	return exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2));
+	return exp(-pow(((x - x0) * cos(theta_) - (y - y0) * sin(theta_)) / sigmaX, 2) - pow(((x - x0) * sin(theta_) + (y - y0) * cos(theta_)) / sigmaY, 2));
 }
 
 float GaussianFit3D::deriv1x0(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY,
                               float offset) const
 {
-	const float p = i0 * exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(
-		                         ((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2));
-	const float alpha = -((-2 * pow(cos(ANGLE), 2) * (x - x0) + 2 * (y - y0) * cos(ANGLE) * sin(ANGLE)) / pow(sigmaX, 2));
-	const float beta = -((-2 * pow(sin(ANGLE), 2) * (x - x0) - 2 * (y - y0) * cos(ANGLE) * sin(ANGLE)) / pow(sigmaY, 2));
+	const float p = i0 * exp(-pow(((x - x0) * cos(theta_) - (y - y0) * sin(theta_)) / sigmaX, 2) - pow(
+		                         ((x - x0) * sin(theta_) + (y - y0) * cos(theta_)) / sigmaY, 2));
+	const float alpha = -((-2 * pow(cos(theta_), 2) * (x - x0) + 2 * (y - y0) * cos(theta_) * sin(theta_)) / pow(sigmaX, 2));
+	const float beta = -((-2 * pow(sin(theta_), 2) * (x - x0) - 2 * (y - y0) * cos(theta_) * sin(theta_)) / pow(sigmaY, 2));
 	return p * (alpha + beta);
 }
 
 float GaussianFit3D::deriv1y0(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY,
                               float offset) const
 {
-	const float p = i0 * exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(
-		                         ((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2));
-	const float alpha = -((2 * pow(sin(ANGLE), 2) * (y - y0) - 2 * (x - x0) * cos(ANGLE) * sin(ANGLE)) / pow(sigmaX, 2));
-	const float beta = -((-2 * pow(cos(ANGLE), 2) * (y - y0) - 2 * (x - x0) * cos(ANGLE) * sin(ANGLE)) / pow(sigmaY, 2));
+	const float p = i0 * exp(-pow(((x - x0) * cos(theta_) - (y - y0) * sin(theta_)) / sigmaX, 2) - pow(
+		                         ((x - x0) * sin(theta_) + (y - y0) * cos(theta_)) / sigmaY, 2));
+	const float alpha = -((2 * pow(sin(theta_), 2) * (y - y0) - 2 * (x - x0) * cos(theta_) * sin(theta_)) / pow(sigmaX, 2));
+	const float beta = -((-2 * pow(cos(theta_), 2) * (y - y0) - 2 * (x - x0) * cos(theta_) * sin(theta_)) / pow(sigmaY, 2));
 	return p * (alpha + beta);
 }
 
 float GaussianFit3D::deriv1sigmaX(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY,
                                   float offset) const
 {
-	const float p = i0 * exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(
-		                         ((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2));
-	const float alpha = pow((x - x0) * cos(ANGLE), 2) - 2 * (x - x0) * (y - y0) * cos(ANGLE) * sin(ANGLE) + pow((y - y0) * sin(ANGLE), 2);
+	const float p = i0 * exp(-pow(((x - x0) * cos(theta_) - (y - y0) * sin(theta_)) / sigmaX, 2) - pow(
+		                         ((x - x0) * sin(theta_) + (y - y0) * cos(theta_)) / sigmaY, 2));
+	const float alpha = pow((x - x0) * cos(theta_), 2) - 2 * (x - x0) * (y - y0) * cos(theta_) * sin(theta_) + pow((y - y0) * sin(theta_), 2);
 	return p * (2 * alpha / pow(sigmaX, 3));
 }
 
 float GaussianFit3D::deriv1sigmaY(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY,
                                   float offset) const
 {
-	const float p = i0 * exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(
-		                         ((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2));
-	const float alpha = pow((x - x0) * sin(ANGLE), 2) + 2 * (x - x0) * (y - y0) * cos(ANGLE) * sin(ANGLE) + pow((y - y0) * cos(ANGLE), 2);
+	const float p = i0 * exp(-pow(((x - x0) * cos(theta_) - (y - y0) * sin(theta_)) / sigmaX, 2) - pow(
+		                         ((x - x0) * sin(theta_) + (y - y0) * cos(theta_)) / sigmaY, 2));
+	const float alpha = pow((x - x0) * sin(theta_), 2) + 2 * (x - x0) * (y - y0) * cos(theta_) * sin(theta_) + pow((y - y0) * cos(theta_), 2);
 	return p * (2 * alpha / pow(sigmaY, 3));
 }
 
 float GaussianFit3D::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat/*IN*/, float* weight_sq/*IN*/, float* alpha/*OUT*/, float* beta/*OUT*/,
                              float* y_hat/*OUT*/)
 {
-	//float delta_y[Npnt];	
-	float* delta_y = (float*)malloc(Npnt * sizeof(float));
-	for (int elt = 0; elt < Npnt; elt++) {
-		y_hat[elt] = psf((float)t[elt * 2] - p[1], (float)t[elt * 2 + 1] - p[2], p[0], p[3], p[4], ANGLE, p[5]);
+	//float delta_y[n_];	
+	float* delta_y = (float*)malloc(n_ * sizeof(float));
+	for (int elt = 0; elt < n_; elt++) {
+		y_hat[elt] = psf((float)t[elt * 2] - p[1], (float)t[elt * 2 + 1] - p[2], p[0], p[3], p[4], theta_, p[5]);
 		delta_y[elt] = y_dat[elt] - y_hat[elt];
 	}
 
 	// Computing Jacobian matrix (dydp)
-	//float dydp[Npnt * Npar];
-	float* dydp = (float*)malloc(Npnt * Npar * sizeof(float));
-	for (int elt = 0; elt < Npnt; elt++) {
-		dydp[0 + elt * Npar] = deriv1I0((float)t[elt * 2], (float)t[elt * 2 + 1], p[1], p[2], p[3], p[4], p[5]);           // I0
-		dydp[1 + elt * Npar] = deriv1x0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5]);     // x0
-		dydp[2 + elt * Npar] = deriv1y0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5]);     // y0
-		dydp[3 + elt * Npar] = deriv1sigmaX((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5]); // sigmaX
-		dydp[4 + elt * Npar] = deriv1sigmaY((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5]); // sigmaY
-		dydp[5 + elt * Npar] = 1;                                                                                          // offset
+	//float dydp[n_ * N_PARAM];
+	float* dydp = (float*)malloc(n_ * N_PARAM * sizeof(float));
+	for (int elt = 0; elt < n_; elt++) {
+		dydp[0 + elt * N_PARAM] = deriv1I0((float)t[elt * 2], (float)t[elt * 2 + 1], p[1], p[2], p[3], p[4], p[5]);           // I0
+		dydp[1 + elt * N_PARAM] = deriv1x0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5]);     // x0
+		dydp[2 + elt * N_PARAM] = deriv1y0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5]);     // y0
+		dydp[3 + elt * N_PARAM] = deriv1sigmaX((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5]); // sigmaX
+		dydp[4 + elt * N_PARAM] = deriv1sigmaY((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5]); // sigmaY
+		dydp[5 + elt * N_PARAM] = 1;                                                                                          // offset
 	}
 
-	//float inter[Npar * Npnt];
-	float* inter = (float*)malloc(Npar * Npnt * sizeof(float));
-	for (int elt = 0; elt < Npnt; elt++) { for (int i = 0; i < Npar; i++) { inter[elt * Npar + i] = weight_sq[elt] * dydp[elt * Npar + i]; } }
+	//float inter[N_PARAM * n_];
+	float* inter = (float*)malloc(N_PARAM * n_ * sizeof(float));
+	for (int elt = 0; elt < n_; elt++) { for (int i = 0; i < N_PARAM; i++) { inter[elt * N_PARAM + i] = weight_sq[elt] * dydp[elt * N_PARAM + i]; } }
 
 	// Computing alpha (A vérifier)
-	for (int j = 0; j < Npar; j++) {
-		for (int i = 0; i < Npar; i++) {
-			alpha[Npar * j + i] = 0;
-			for (int cursor = 0; cursor < Npnt; cursor++) { alpha[Npar * j + i] += dydp[cursor * Npar + j] * inter[cursor * Npar + i]; }
-			// dydp' * inter : dydp'[i*Npnt + cursor]
+	for (int j = 0; j < N_PARAM; j++) {
+		for (int i = 0; i < N_PARAM; i++) {
+			alpha[N_PARAM * j + i] = 0;
+			for (int cursor = 0; cursor < n_; cursor++) { alpha[N_PARAM * j + i] += dydp[cursor * N_PARAM + j] * inter[cursor * N_PARAM + i]; }
+			// dydp' * inter : dydp'[i*n_ + cursor]
 		}
 	}
 
 	// Computing beta
-	//float inter1[Npnt];
-	float* inter1 = (float*)malloc(Npnt * sizeof(float));
-	for (int elt = 0; elt < Npnt; elt++) { inter1[elt] = weight_sq[elt] * delta_y[elt]; }
+	//float inter1[n_];
+	float* inter1 = (float*)malloc(n_ * sizeof(float));
+	for (int elt = 0; elt < n_; elt++) { inter1[elt] = weight_sq[elt] * delta_y[elt]; }
 
-	for (int j = 0; j < Npar; j++) {
+	for (int j = 0; j < N_PARAM; j++) {
 		beta[j] = 0;
-		for (int cursor = 0; cursor < Npnt; cursor++) { beta[j] += dydp[cursor * Npar + j] * inter1[cursor]; } // dydp' * inter : dydp'[j*Npnt + cursor]
+		for (int cursor = 0; cursor < n_; cursor++) { beta[j] += dydp[cursor * N_PARAM + j] * inter1[cursor]; } // dydp' * inter : dydp'[j*n_ + cursor]
 	}
 
 	// Computing Chi_sq
 	float Chi_sq = 0.;
-	for (int elt = 0; elt < Npnt; elt++) { Chi_sq += delta_y[elt] * inter1[elt]; }
+	for (int elt = 0; elt < n_; elt++) { Chi_sq += delta_y[elt] * inter1[elt]; }
 
 	// cleanup memory
 	free(delta_y);
@@ -111,50 +111,50 @@ float GaussianFit3D::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat
 
 void GaussianFit3D::inverse(float* MM, float* Minv)
 {
-	float M1[Npar * Npar];
+	float M1[N_PARAM * N_PARAM];
 
 	// Copy MM to M1
-	for (int i = 0; i < Npar * Npar; i++) { M1[i] = MM[i]; }
+	for (int i = 0; i < N_PARAM * N_PARAM; i++) { M1[i] = MM[i]; }
 
 	// Initializatiion of identity matrix
-	float Mi1[Npar * Npar];
-	for (int i = 0; i < Npar * Npar; i++) { Mi1[i] = 0.; }
-	Mi1[0 * Npar + 0] = 1;
-	Mi1[1 * Npar + 1] = 1;
-	Mi1[2 * Npar + 2] = 1;
-	Mi1[3 * Npar + 3] = 1;
-	Mi1[4 * Npar + 4] = 1;
-	Mi1[5 * Npar + 5] = 1;
+	float Mi1[N_PARAM * N_PARAM];
+	for (int i = 0; i < N_PARAM * N_PARAM; i++) { Mi1[i] = 0.; }
+	Mi1[0 * N_PARAM + 0] = 1;
+	Mi1[1 * N_PARAM + 1] = 1;
+	Mi1[2 * N_PARAM + 2] = 1;
+	Mi1[3 * N_PARAM + 3] = 1;
+	Mi1[4 * N_PARAM + 4] = 1;
+	Mi1[5 * N_PARAM + 5] = 1;
 
 	// Copy Mi1 to Minv
-	for (int i = 0; i < Npar * Npar; i++) { Minv[i] = Mi1[i]; }
+	for (int i = 0; i < N_PARAM * N_PARAM; i++) { Minv[i] = Mi1[i]; }
 
-	for (int i = 0; i < Npar; i++) {
-		for (int j = 0; j < Npar; j++) {
-			M1[i * Npar + j] = MM[i * Npar + j] / MM[i * Npar + i];
-			Mi1[i * Npar + j] = Minv[i * Npar + j] / MM[i * Npar + i];
+	for (int i = 0; i < N_PARAM; i++) {
+		for (int j = 0; j < N_PARAM; j++) {
+			M1[i * N_PARAM + j] = MM[i * N_PARAM + j] / MM[i * N_PARAM + i];
+			Mi1[i * N_PARAM + j] = Minv[i * N_PARAM + j] / MM[i * N_PARAM + i];
 		}
 
 		// Copy M1 to MM
-		for (int index = 0; index < Npar * Npar; index++) { MM[index] = M1[index]; }
+		for (int index = 0; index < N_PARAM * N_PARAM; index++) { MM[index] = M1[index]; }
 
 		// Copy Mi1 to Minv
-		for (int index = 0; index < Npar * Npar; index++) { Minv[index] = Mi1[index]; }
+		for (int index = 0; index < N_PARAM * N_PARAM; index++) { Minv[index] = Mi1[index]; }
 
-		for (int k = 0; k < Npar; k++) { // mise zéros de la colonne
+		for (int k = 0; k < N_PARAM; k++) { // mise zéros de la colonne
 			if (k != i) {
-				for (int j = 0; j < Npar; j++) {
-					M1[k * Npar + j] = MM[k * Npar + j] - MM[i * Npar + j] * MM[k * Npar + i];
-					Mi1[k * Npar + j] = Minv[k * Npar + j] - Minv[i * Npar + j] * MM[k * Npar + i];
+				for (int j = 0; j < N_PARAM; j++) {
+					M1[k * N_PARAM + j] = MM[k * N_PARAM + j] - MM[i * N_PARAM + j] * MM[k * N_PARAM + i];
+					Mi1[k * N_PARAM + j] = Minv[k * N_PARAM + j] - Minv[i * N_PARAM + j] * MM[k * N_PARAM + i];
 				}
 			}
 		}
 
 		// Copy M1 to MM
-		for (int index = 0; index < Npar * Npar; index++) { MM[index] = M1[index]; }
+		for (int index = 0; index < N_PARAM * N_PARAM; index++) { MM[index] = M1[index]; }
 
 		// Copy Mi1 to Minv
-		for (int index = 0; index < Npar * Npar; index++) { Minv[index] = Mi1[index]; }
+		for (int index = 0; index < N_PARAM * N_PARAM; index++) { Minv[index] = Mi1[index]; }
 	}
 }
 
@@ -166,41 +166,41 @@ void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		size--; // Not present in GPU original file why ?
 	}
 
-	dimFit = size;
-	Npnt = dimFit * dimFit;
-	ref = dimFit / 2;
-	ANGLE = angle;
+	dimFit_ = size;
+	n_ = dimFit_ * dimFit_;
+	ref_ = dimFit_ / 2;
+	theta_ = angle;
 
 	float X2;
-	if (x0 >= (int)ref && x0 <= sizeX - (int)ref - 1 && y0 >= (int)ref && y0 <= sizeY - (int)ref - 1) {
+	if (x0 >= (int)ref_ && x0 <= sizeX - (int)ref_ - 1 && y0 >= (int)ref_ && y0 <= sizeY - (int)ref_ - 1) {
 		// for real data
-		float p_min[Npar] = {0., x0 - 1, y0 - 1, 0.1, 0.1, 0.};
-		float p[Npar] = {2000., x0, y0, static_cast<float>(sqrt(2.)) * sigmaX, static_cast<float>(sqrt(2.)) * sigmaY, 700.};
-		float p_max[Npar] = {65535., x0 + 1, y0 + 1, 20., 20., 65535.};
+		float p_min[N_PARAM] = {0., x0 - 1, y0 - 1, 0.1, 0.1, 0.};
+		float p[N_PARAM] = {2000., x0, y0, static_cast<float>(sqrt(2.)) * sigmaX, static_cast<float>(sqrt(2.)) * sigmaY, 700.};
+		float p_max[N_PARAM] = {65535., x0 + 1, y0 + 1, 20., 20., 65535.};
 
-		float* y_dat = (float*)malloc(Npnt * sizeof(float));
-		float* weight = (float*)malloc(Npnt * sizeof(float));
-		float* weight_sq = (float*)malloc(Npnt * sizeof(float));
-		unsigned int* t = (unsigned int*)malloc(2 * Npnt * sizeof(unsigned int));
+		float* y_dat = (float*)malloc(n_ * sizeof(float));
+		float* weight = (float*)malloc(n_ * sizeof(float));
+		float* weight_sq = (float*)malloc(n_ * sizeof(float));
+		unsigned int* t = (unsigned int*)malloc(2 * n_ * sizeof(unsigned int));
 
 		// Initialization of y_dat & t (A vérifier)
 		float max_intensity = -70000;
 		float min_intensity = +70000;
-		for (int jj = -dimFit / 2; jj <= dimFit / 2; jj++) {
-			for (int ii = -dimFit / 2; ii <= dimFit / 2; ii++) {
-				y_dat[ii + dimFit / 2 + (jj + dimFit / 2) * dimFit] = (float)image[(int)x0 + ii + ((int)y0 + jj) * sizeX];
-				t[(ii + dimFit / 2 + (jj + dimFit / 2) * dimFit) * 2] = (int)x0 + ii;
-				t[(ii + dimFit / 2 + (jj + dimFit / 2) * dimFit) * 2 + 1] = (int)y0 + jj;
+		for (int jj = -dimFit_ / 2; jj <= dimFit_ / 2; jj++) {
+			for (int ii = -dimFit_ / 2; ii <= dimFit_ / 2; ii++) {
+				y_dat[ii + dimFit_ / 2 + (jj + dimFit_ / 2) * dimFit_] = (float)image[(int)x0 + ii + ((int)y0 + jj) * sizeX];
+				t[(ii + dimFit_ / 2 + (jj + dimFit_ / 2) * dimFit_) * 2] = (int)x0 + ii;
+				t[(ii + dimFit_ / 2 + (jj + dimFit_ / 2) * dimFit_) * 2 + 1] = (int)y0 + jj;
 
-				max_intensity = std::max(max_intensity, y_dat[ii + dimFit / 2 + (jj + dimFit / 2) * dimFit]); // Not present in GPU original file why ?
-				min_intensity = std::min(min_intensity, y_dat[ii + dimFit / 2 + (jj + dimFit / 2) * dimFit]); // Not present in GPU original file why ?
+				max_intensity = std::max(max_intensity, y_dat[ii + dimFit_ / 2 + (jj + dimFit_ / 2) * dimFit_]); // Not present in GPU original file why ?
+				min_intensity = std::min(min_intensity, y_dat[ii + dimFit_ / 2 + (jj + dimFit_ / 2) * dimFit_]); // Not present in GPU original file why ?
 			}
 		}
 
 		p[0] = max_intensity - min_intensity; // Not present in GPU original file why ?
 		p[5] = min_intensity;                 // Not present in GPU original file why ?
-		for (int ii = 0; ii < Npnt; ii++) {
-			weight[ii] = 1/*sqrt((Npnt-Npar+1) / (y_dat[ii]*y_dat[ii]))*/;
+		for (int ii = 0; ii < n_; ii++) {
+			weight[ii] = 1/*sqrt((n_-N_PARAM+1) / (y_dat[ii]*y_dat[ii]))*/;
 			weight_sq[ii] = pow(weight[ii], 2);
 		}
 
@@ -214,15 +214,15 @@ void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 
 		float lambda;
 
-		float alpha[Npar * Npar];
-		float beta[Npar];
-		float* y_hat = (float*)malloc(Npnt * sizeof(float));
+		float alpha[N_PARAM * N_PARAM];
+		float beta[N_PARAM];
+		float* y_hat = (float*)malloc(n_ * sizeof(float));
 
 		float X2_old;
 		X2 = lm_matx(t/*IN*/, p/*IN*/, y_dat/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
 
 		float max_ = 0;
-		for (int ii = 0; ii < Npar; ii++) { max_ = std::max(max_, abs(beta[ii])); }
+		for (int ii = 0; ii < N_PARAM; ii++) { max_ = std::max(max_, abs(beta[ii])); }
 
 		unsigned int stop = 0;
 		if (max_ < epsilon_1) { stop = 1; }
@@ -232,13 +232,13 @@ void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 
 		unsigned short iteration = 0;
 
-		float inter[Npar * Npar];
-		float inter1[Npar * Npar];
-		float* inter2 = (float*)malloc(Npnt * sizeof(float));
-		float inter3[Npar];
+		float inter[N_PARAM * N_PARAM];
+		float inter1[N_PARAM * N_PARAM];
+		float* inter2 = (float*)malloc(n_ * sizeof(float));
+		float inter3[N_PARAM];
 
-		float p_try[Npar];
-		float* delta_y = (float*)malloc(Npnt * sizeof(float));
+		float p_try[N_PARAM];
+		float* delta_y = (float*)malloc(n_ * sizeof(float));
 		float X2_try;
 		float m;
 		float rho;
@@ -246,40 +246,40 @@ void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		while (stop == 0 && iteration <= iterNum) // Main Loop
 		{
 			iteration++;
-			float delta_p[Npar] = {0, 0, 0, 0, 0, 0};
+			float delta_p[N_PARAM] = {0, 0, 0, 0, 0, 0};
 
 			// Copy alpha to inter
-			for (int ii = 0; ii < Npar * Npar; ii++) { inter[ii] = alpha[ii]; }
+			for (int ii = 0; ii < N_PARAM * N_PARAM; ii++) { inter[ii] = alpha[ii]; }
 
-			inter[0 * Npar + 0] += lambda * alpha[0 * Npar + 0];
-			inter[1 * Npar + 1] += lambda * alpha[1 * Npar + 1];
-			inter[2 * Npar + 2] += lambda * alpha[2 * Npar + 2];
-			inter[3 * Npar + 3] += lambda * alpha[3 * Npar + 3];
-			inter[4 * Npar + 4] += lambda * alpha[4 * Npar + 4];
-			inter[5 * Npar + 5] += lambda * alpha[5 * Npar + 5];
+			inter[0 * N_PARAM + 0] += lambda * alpha[0 * N_PARAM + 0];
+			inter[1 * N_PARAM + 1] += lambda * alpha[1 * N_PARAM + 1];
+			inter[2 * N_PARAM + 2] += lambda * alpha[2 * N_PARAM + 2];
+			inter[3 * N_PARAM + 3] += lambda * alpha[3 * N_PARAM + 3];
+			inter[4 * N_PARAM + 4] += lambda * alpha[4 * N_PARAM + 4];
+			inter[5 * N_PARAM + 5] += lambda * alpha[5 * N_PARAM + 5];
 
 			inverse(inter, inter1);
 
-			for (int ii = 0; ii < Npar; ii++) { for (int cursor = 0; cursor < Npar; cursor++) { delta_p[ii] += inter1[ii * Npar + cursor] * beta[cursor]; } }
+			for (int ii = 0; ii < N_PARAM; ii++) { for (int cursor = 0; cursor < N_PARAM; cursor++) { delta_p[ii] += inter1[ii * N_PARAM + cursor] * beta[cursor]; } }
 
-			for (int ii = 0; ii < Npar; ii++) {
+			for (int ii = 0; ii < N_PARAM; ii++) {
 				p_try[ii] = p[ii] + delta_p[ii];
 				p_try[ii] = std::min(std::max(p_min[ii], p_try[ii]), p_max[ii]);
 			}
 
-			for (int ii = 0; ii < Npnt; ii++) {
-				delta_y[ii] = y_dat[ii] - psf((float)t[ii * 2] - p_try[1], (float)t[ii * 2 + 1] - p_try[2], p_try[0], p_try[3], p_try[4], ANGLE, p_try[5]);
+			for (int ii = 0; ii < n_; ii++) {
+				delta_y[ii] = y_dat[ii] - psf((float)t[ii * 2] - p_try[1], (float)t[ii * 2 + 1] - p_try[2], p_try[0], p_try[3], p_try[4], theta_, p_try[5]);
 			}
 
-			for (int ii = 0; ii < Npnt; ii++) { inter2[ii] = delta_y[ii] * weight_sq[ii]; } // delta_y .* weight_sq
+			for (int ii = 0; ii < n_; ii++) { inter2[ii] = delta_y[ii] * weight_sq[ii]; } // delta_y .* weight_sq
 
 			X2_try = 0;
-			for (int ii = 0; ii < Npnt; ii++) { X2_try += delta_y[ii] * inter2[ii]; }
+			for (int ii = 0; ii < n_; ii++) { X2_try += delta_y[ii] * inter2[ii]; }
 
-			for (int ii = 0; ii < Npar; ii++) { inter3[ii] = lambda * delta_p[ii] + beta[ii]; } // lambda * delta_p + beta
+			for (int ii = 0; ii < N_PARAM; ii++) { inter3[ii] = lambda * delta_p[ii] + beta[ii]; } // lambda * delta_p + beta
 
 			m = 0;
-			for (int ii = 0; ii < Npar; ii++) { m += delta_p[ii] * inter3[ii]; }
+			for (int ii = 0; ii < N_PARAM; ii++) { m += delta_p[ii] * inter3[ii]; }
 			m *= 2;
 
 			rho = (X2 - X2_try) / m;
@@ -287,7 +287,7 @@ void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 			if (rho > epsilon_4) // it IS significantly better
 			{
 				X2_old = X2;
-				for (int ii = 0; ii < Npar; ii++) { p[ii] = p_try[ii]; } // accept p_try
+				for (int ii = 0; ii < N_PARAM; ii++) { p[ii] = p_try[ii]; } // accept p_try
 
 				X2 = lm_matx(t/*IN*/, p/*IN*/, y_dat/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
 
@@ -300,14 +300,14 @@ void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 			}
 
 			max_ = 0;
-			for (int ii = 0; ii < Npar; ii++) { max_ = std::max(max_, abs(delta_p[ii] / p[ii])); }
+			for (int ii = 0; ii < N_PARAM; ii++) { max_ = std::max(max_, abs(delta_p[ii] / p[ii])); }
 
 			if (max_ < epsilon_2 && iteration > 2) { stop = 1; }
 
-			if (X2 / Npnt < epsilon_3 && iteration > 2) { stop = 1; }
+			if (X2 / n_ < epsilon_3 && iteration > 2) { stop = 1; }
 
 			max_ = 0;
-			for (int ii = 0; ii < Npar; ii++) { max_ = std::max(max_, abs(beta[ii])); }
+			for (int ii = 0; ii < N_PARAM; ii++) { max_ = std::max(max_, abs(beta[ii])); }
 
 			if (max_ < epsilon_1 && iteration > 2) { stop = 1; }
 
@@ -317,12 +317,12 @@ void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		// computing "y_dat" mean & "y_hat" mean
 		float y_dat_mean = 0.;
 		float y_hat_mean = 0.;
-		for (int ii = 0; ii < Npnt; ii++) {
+		for (int ii = 0; ii < n_; ii++) {
 			y_dat_mean += y_dat[ii];
 			y_hat_mean += y_hat[ii];
 		}
-		y_dat_mean /= Npnt;
-		y_hat_mean /= Npnt;
+		y_dat_mean /= n_;
+		y_hat_mean /= n_;
 
 		// computing 't1' & 't2' & 't3'
 		float t1 = 0.;
@@ -330,7 +330,7 @@ void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		float t3 = 0.;
 		float diff_hat, diff_dat;
 
-		for (int ii = 0; ii < Npnt; ii++) {
+		for (int ii = 0; ii < n_; ii++) {
 			diff_dat = y_dat[ii] - y_dat_mean;
 			diff_hat = y_hat[ii] - y_hat_mean;
 			t1 += diff_dat * diff_hat;

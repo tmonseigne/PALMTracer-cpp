@@ -9,7 +9,7 @@
 #ifndef dimFit
 #define dimFit 11
 #endif
-#define Npar 6 // I0, x0, y0, sigmaX, sigmaY, angle, backGround
+#define N_PARAM 6 // I0, x0, y0, sigmaX, sigmaY, angle, backGround
 #define Npnt dimFit*dimFit
 #define ref (dimFit/2)
 #define NbSegParams 13
@@ -56,7 +56,7 @@ __device__ float lm_matx_11x11(/*unsigned int* tIN,*/ float* p/*IN*/, float* y_d
 {
 	// Computing Jacobian matrix (dydp) & y_hat, delta_y
 	float delta_y[Npnt];
-	float dydp[Npnt * Npar];
+	float dydp[Npnt * N_PARAM];
 	float cons;
 	unsigned int x, y;
 	float Chi_sq = 0.;
@@ -68,12 +68,12 @@ __device__ float lm_matx_11x11(/*unsigned int* tIN,*/ float* p/*IN*/, float* y_d
 		x = (elt % dimFit);
 		y = (elt / dimFit);
 		cons = p[0] * expf(-powf((((float)x - p[1]) * COS - ((float)y - p[2]) * SIN) / p[3], 2) - powf((((float)x - p[1]) * SIN + ((float)y - p[2]) * COS) / p[4], 2));
-		dydp[(0) + elt * Npar] = deriv1I0_11x11((float)x, (float)y, p[0], p[1], p[2], p[3], p[4], p[5], cons, COS, SIN);     // I0
-		dydp[(1) + elt * Npar] = deriv1x0_11x11((float)x, (float)y, p[0], p[1], p[2], p[3], p[4], p[5], cons, COS, SIN);     // x0
-		dydp[(2) + elt * Npar] = deriv1y0_11x11((float)x, (float)y, p[0], p[1], p[2], p[3], p[4], p[5], cons, COS, SIN);     // y0
-		dydp[(3) + elt * Npar] = deriv1sigmaX_11x11((float)x, (float)y, p[0], p[1], p[2], p[3], p[4], p[5], cons, COS, SIN); // sigmaX
-		dydp[(4) + elt * Npar] = deriv1sigmaY_11x11((float)x, (float)y, p[0], p[1], p[2], p[3], p[4], p[5], cons, COS, SIN); // sigmaY
-		dydp[(5) + elt * Npar] = 1;                                                                                          // backGround
+		dydp[(0) + elt * N_PARAM] = deriv1I0_11x11((float)x, (float)y, p[0], p[1], p[2], p[3], p[4], p[5], cons, COS, SIN);     // I0
+		dydp[(1) + elt * N_PARAM] = deriv1x0_11x11((float)x, (float)y, p[0], p[1], p[2], p[3], p[4], p[5], cons, COS, SIN);     // x0
+		dydp[(2) + elt * N_PARAM] = deriv1y0_11x11((float)x, (float)y, p[0], p[1], p[2], p[3], p[4], p[5], cons, COS, SIN);     // y0
+		dydp[(3) + elt * N_PARAM] = deriv1sigmaX_11x11((float)x, (float)y, p[0], p[1], p[2], p[3], p[4], p[5], cons, COS, SIN); // sigmaX
+		dydp[(4) + elt * N_PARAM] = deriv1sigmaY_11x11((float)x, (float)y, p[0], p[1], p[2], p[3], p[4], p[5], cons, COS, SIN); // sigmaY
+		dydp[(5) + elt * N_PARAM] = 1;                                                                                          // backGround
 
 		y_hat[elt] = cons + p[5]; // PSF
 		delta_y[elt] = y_dat[elt] - y_hat[elt];
@@ -83,15 +83,15 @@ __device__ float lm_matx_11x11(/*unsigned int* tIN,*/ float* p/*IN*/, float* y_d
 	}
 
 	// Computing alpha
-	for (int j = 0; j < Npar; j++) {
-		for (int i = 0; i < Npar; i++) {
-			alpha[Npar * j + i] = 0;
-			for (int cursor = 0; cursor < Npnt; cursor++) { alpha[Npar * j + i] += dydp[cursor * Npar + j] * dydp[cursor * Npar + i]; } // dydp' * inter : dydp'[i*Npnt + cursor]
+	for (int j = 0; j < N_PARAM; j++) {
+		for (int i = 0; i < N_PARAM; i++) {
+			alpha[N_PARAM * j + i] = 0;
+			for (int cursor = 0; cursor < Npnt; cursor++) { alpha[N_PARAM * j + i] += dydp[cursor * N_PARAM + j] * dydp[cursor * N_PARAM + i]; } // dydp' * inter : dydp'[i*Npnt + cursor]
 		}
 
 		// Computing beta
 		beta[j] = 0;
-		for (int cursor = 0; cursor < Npnt; cursor++) { beta[j] += dydp[cursor * Npar + j] * delta_y[cursor]; } // dydp' * inter : dydp'[j*Npnt + cursor]
+		for (int cursor = 0; cursor < Npnt; cursor++) { beta[j] += dydp[cursor * N_PARAM + j] * delta_y[cursor]; } // dydp' * inter : dydp'[j*Npnt + cursor]
 	}
 
 	return Chi_sq;
@@ -99,56 +99,56 @@ __device__ float lm_matx_11x11(/*unsigned int* tIN,*/ float* p/*IN*/, float* y_d
 
 __device__ void inverse_11x11(float* MM, float* Minv)
 {
-	//int shift_ = (int)(threadIdx.x/16/*32*/) * (Npar * Npar * 16);
+	//int shift_ = (int)(threadIdx.x/16/*32*/) * (N_PARAM * N_PARAM * 16);
 	//int id = threadIdx.x % 16/*32*/;
 
-	float M1[Npar * Npar];
+	float M1[N_PARAM * N_PARAM];
 
 	// Copy MM to M1
-	for (int i = 0; i < Npar * Npar; i++) { M1[i] = MM[i]; }
+	for (int i = 0; i < N_PARAM * N_PARAM; i++) { M1[i] = MM[i]; }
 	//M1[i] = MM[shift_ + (id + i * 16)];
 
 	// Initializatiion of identity matrix
-	float Mi1[Npar * Npar];
-	for (int i = 0; i < Npar * Npar; i++) { Mi1[i] = 0.; }
-	Mi1[0 * Npar + 0] = 1;
-	Mi1[1 * Npar + 1] = 1;
-	Mi1[2 * Npar + 2] = 1;
-	Mi1[3 * Npar + 3] = 1;
-	Mi1[4 * Npar + 4] = 1;
-	Mi1[5 * Npar + 5] = 1;
+	float Mi1[N_PARAM * N_PARAM];
+	for (int i = 0; i < N_PARAM * N_PARAM; i++) { Mi1[i] = 0.; }
+	Mi1[0 * N_PARAM + 0] = 1;
+	Mi1[1 * N_PARAM + 1] = 1;
+	Mi1[2 * N_PARAM + 2] = 1;
+	Mi1[3 * N_PARAM + 3] = 1;
+	Mi1[4 * N_PARAM + 4] = 1;
+	Mi1[5 * N_PARAM + 5] = 1;
 
 	// Copy Mi1 to Minv
-	for (int i = 0; i < Npar * Npar; i++) { Minv[i] = Mi1[i]; }
+	for (int i = 0; i < N_PARAM * N_PARAM; i++) { Minv[i] = Mi1[i]; }
 
-	for (int i = 0; i < Npar; i++) {
-		for (int j = 0; j < Npar; j++) {
-			M1[i * Npar + j] = MM[i * Npar + j] / MM[i * Npar + i];
-			Mi1[i * Npar + j] = Minv[i * Npar + j] / MM[i * Npar + i];
-			//M1[i*Npar + j] = MM[shift_ + (id + (i*Npar + j) * 16)] / MM[shift_ + (id + (i*Npar + i) * 16)];
-			//Mi1[i*Npar + j] = Minv[i*Npar + j] / MM[shift_ + (id + (i*Npar + i) * 16)];
+	for (int i = 0; i < N_PARAM; i++) {
+		for (int j = 0; j < N_PARAM; j++) {
+			M1[i * N_PARAM + j] = MM[i * N_PARAM + j] / MM[i * N_PARAM + i];
+			Mi1[i * N_PARAM + j] = Minv[i * N_PARAM + j] / MM[i * N_PARAM + i];
+			//M1[i*N_PARAM + j] = MM[shift_ + (id + (i*N_PARAM + j) * 16)] / MM[shift_ + (id + (i*N_PARAM + i) * 16)];
+			//Mi1[i*N_PARAM + j] = Minv[i*N_PARAM + j] / MM[shift_ + (id + (i*N_PARAM + i) * 16)];
 		}
 
 		// Copy M1 to MM & Copy Mi1 to Minv
-		for (int index = 0; index < Npar * Npar; index++) {
+		for (int index = 0; index < N_PARAM * N_PARAM; index++) {
 			MM[index] = M1[index];
 			//MM[shift_ + (id + index * 16)] = M1[index];
 			Minv[index] = Mi1[index];
 		}
 
-		for (int k = 0; k < Npar; k++) { // mise zéros de la colonne
+		for (int k = 0; k < N_PARAM; k++) { // mise zéros de la colonne
 			if (k != i) {
-				for (int j = 0; j < Npar; j++) {
-					M1[k * Npar + j] = MM[k * Npar + j] - MM[i * Npar + j] * MM[k * Npar + i];
-					Mi1[k * Npar + j] = Minv[k * Npar + j] - Minv[i * Npar + j] * MM[k * Npar + i];
-					//M1[k*Npar+j] = MM[shift_ + (id + (k*Npar+j) * 16)] - MM[shift_ + (id + (i*Npar+j) * 16)] * MM[shift_ + (id + (k*Npar+i) * 16)];
-					//Mi1[k*Npar+j] = Minv[k*Npar+j] - Minv[i*Npar+j] * MM[shift_ + (id + (k*Npar+i) * 16)];
+				for (int j = 0; j < N_PARAM; j++) {
+					M1[k * N_PARAM + j] = MM[k * N_PARAM + j] - MM[i * N_PARAM + j] * MM[k * N_PARAM + i];
+					Mi1[k * N_PARAM + j] = Minv[k * N_PARAM + j] - Minv[i * N_PARAM + j] * MM[k * N_PARAM + i];
+					//M1[k*N_PARAM+j] = MM[shift_ + (id + (k*N_PARAM+j) * 16)] - MM[shift_ + (id + (i*N_PARAM+j) * 16)] * MM[shift_ + (id + (k*N_PARAM+i) * 16)];
+					//Mi1[k*N_PARAM+j] = Minv[k*N_PARAM+j] - Minv[i*N_PARAM+j] * MM[shift_ + (id + (k*N_PARAM+i) * 16)];
 				}
 			}
 		}
 
 		// Copy M1 to MM & Copy Mi1 to Minv
-		for (int index = 0; index < Npar * Npar; index++) {
+		for (int index = 0; index < N_PARAM * N_PARAM; index++) {
 			MM[index] = M1[index];
 			//MM[shift_ + (id + index * 16)] = M1[index];
 			Minv[index] = Mi1[index];
@@ -174,9 +174,9 @@ __global__ void GPU3DFitting_11x11(unsigned int nbPoints, float* pointsList, uns
 				float _y = (pointsList[NbSegParams * index + 1] - y) + ref;
 
 				// for real data
-				float p_min[Npar] = {0., _x - 1, _y - 1, 0.1, 0.1, 0.};
-				float p[Npar] = {2000., _x, _y, sqrtf(2.) * sigmaX, sqrtf(2.) * sigmaY, 700.};
-				float p_max[Npar] = {65535., _x + 1, _y + 1, 20., 20., 65535.};
+				float p_min[N_PARAM] = {0., _x - 1, _y - 1, 0.1, 0.1, 0.};
+				float p[N_PARAM] = {2000., _x, _y, sqrtf(2.) * sigmaX, sqrtf(2.) * sigmaY, 700.};
+				float p_max[N_PARAM] = {65535., _x + 1, _y + 1, 20., 20., 65535.};
 
 				float y_dat[Npnt];
 				//float* y_dat = (float*)malloc(Npnt * sizeof(float));
@@ -198,8 +198,8 @@ __global__ void GPU3DFitting_11x11(unsigned int nbPoints, float* pointsList, uns
 
 				float lambda;
 
-				float alpha[Npar * Npar];
-				float beta[Npar];
+				float alpha[N_PARAM * N_PARAM];
+				float beta[N_PARAM];
 				float y_hat[Npnt];
 
 				float X2_old;
@@ -207,7 +207,7 @@ __global__ void GPU3DFitting_11x11(unsigned int nbPoints, float* pointsList, uns
 
 				float max__;
 				float max_ = 0;
-				for (int ii = 0; ii < Npar; ii++) { max_ = fmaxf(max_, fabsf(beta[ii])); }
+				for (int ii = 0; ii < N_PARAM; ii++) { max_ = fmaxf(max_, fabsf(beta[ii])); }
 
 				unsigned int stop = 0;
 				if (max_ < epsilon_1) { stop = 1; }
@@ -217,11 +217,11 @@ __global__ void GPU3DFitting_11x11(unsigned int nbPoints, float* pointsList, uns
 
 				unsigned short iteration = 0;
 
-				float inter1[Npar * Npar];
-				float inter[Npar * Npar];
+				float inter1[N_PARAM * N_PARAM];
+				float inter[N_PARAM * N_PARAM];
 				float inter3;
 
-				float p_try[Npar];
+				float p_try[N_PARAM];
 				float delta_y;
 				float X2_try;
 				float m;
@@ -234,24 +234,24 @@ __global__ void GPU3DFitting_11x11(unsigned int nbPoints, float* pointsList, uns
 				while ((stop == 0) && (iteration <= iterNum)) // Main Loop
 				{
 					iteration++;
-					float delta_p[Npar] = {0., 0., 0., 0., 0., 0.};
+					float delta_p[N_PARAM] = {0., 0., 0., 0., 0., 0.};
 
 					// Copy alpha to inter
-					for (int ii = 0; ii < Npar * Npar; ii++) { inter[ii] = alpha[ii]; }
+					for (int ii = 0; ii < N_PARAM * N_PARAM; ii++) { inter[ii] = alpha[ii]; }
 
-					inter[0 * Npar + 0] += lambda * alpha[0 * Npar + 0];
-					inter[1 * Npar + 1] += lambda * alpha[1 * Npar + 1];
-					inter[2 * Npar + 2] += lambda * alpha[2 * Npar + 2];
-					inter[3 * Npar + 3] += lambda * alpha[3 * Npar + 3];
-					inter[4 * Npar + 4] += lambda * alpha[4 * Npar + 4];
-					inter[5 * Npar + 5] += lambda * alpha[5 * Npar + 5];
+					inter[0 * N_PARAM + 0] += lambda * alpha[0 * N_PARAM + 0];
+					inter[1 * N_PARAM + 1] += lambda * alpha[1 * N_PARAM + 1];
+					inter[2 * N_PARAM + 2] += lambda * alpha[2 * N_PARAM + 2];
+					inter[3 * N_PARAM + 3] += lambda * alpha[3 * N_PARAM + 3];
+					inter[4 * N_PARAM + 4] += lambda * alpha[4 * N_PARAM + 4];
+					inter[5 * N_PARAM + 5] += lambda * alpha[5 * N_PARAM + 5];
 
 
 					inverse_11x11(inter, inter1);
 
 					m = 0;
-					for (int ii = 0; ii < Npar; ii++) {
-						for (int cursor = 0; cursor < Npar; cursor++) { delta_p[ii] += inter1[ii * Npar + cursor] * beta[cursor]; }
+					for (int ii = 0; ii < N_PARAM; ii++) {
+						for (int cursor = 0; cursor < N_PARAM; cursor++) { delta_p[ii] += inter1[ii * N_PARAM + cursor] * beta[cursor]; }
 
 						// Computing p_try
 						p_try[ii] = fminf(fmaxf(p_min[ii], p[ii] + delta_p[ii]), p_max[ii]);
@@ -273,7 +273,7 @@ __global__ void GPU3DFitting_11x11(unsigned int nbPoints, float* pointsList, uns
 					if (rho > epsilon_4) // it IS significantly better
 					{
 						X2_old = X2;
-						for (int ii = 0; ii < Npar; ii++) {
+						for (int ii = 0; ii < N_PARAM; ii++) {
 							p[ii] = p_try[ii]; // accept p_try
 						}
 
@@ -289,7 +289,7 @@ __global__ void GPU3DFitting_11x11(unsigned int nbPoints, float* pointsList, uns
 
 					max_ = 0;
 					max__ = 0;
-					for (int ii = 0; ii < Npar; ii++) {
+					for (int ii = 0; ii < N_PARAM; ii++) {
 						max_ = fmaxf(max_, fabsf(delta_p[ii] / p[ii]));
 						max__ = fmaxf(max__, fabsf(beta[ii]));
 					}
