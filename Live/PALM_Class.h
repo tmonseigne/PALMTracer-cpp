@@ -72,6 +72,4 @@ private:
 	BlArray* _planesToUseB;
 	BlArray* _planesToUseB2;
 	int _nbPlane;
-	int waveletSegmentation2D(unsigned short* outputData);
-	int waveletSegmentation2D2(unsigned short* outputData);
 };

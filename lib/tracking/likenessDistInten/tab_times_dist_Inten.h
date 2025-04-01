@@ -14,13 +14,11 @@ class TabTimesDistanceIntensity : public TabTimes
 {
 protected:
 	TimeNodes* allocTimeNodes(long time, long nbNodes) override;
-	void allocNode();
 	void updateConstantes();
 	void computeConstantes();
 
 public:
 	TabTimesDistanceIntensity(PublicParameters* publicParameters);
-	~TabTimesDistanceIntensity();
 	double getLikenessGlobal();
 	int runModel() override;
 };

@@ -8,8 +8,6 @@
 class CPALM
 {
 public:
-	// TODO : ajoutez ici vos méthodes.
-
 	long CPALMProcessing();
 	CPALM(unsigned short* image, double* pointsList, unsigned long pointsListSize, unsigned long sizeX, unsigned long sizeY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short size);
 	~CPALM();
@@ -50,6 +48,4 @@ private:
 	BlArray* _planesToUseB;
 	BlArray* _planesToUseB2;
 	int _nbPlane;
-	int waveletSegmentation2D(unsigned short* outputData);
-	int waveletSegmentation2D2(unsigned short* outputData);
 };

@@ -12,11 +12,6 @@ Constructuor() of TabTimesCloserNeighbors class.
 ********************************************************************************************************************/
 TabTimesCloserNeighbors::TabTimesCloserNeighbors(PublicParameters* _publicParameters): TabTimes(_publicParameters) { publicParameters = _publicParameters; }
 
-/********************************************************************************************************************
-Destructor() of TabTimesCloserNeighbors class.
-********************************************************************************************************************/
-TabTimesCloserNeighbors::~TabTimesCloserNeighbors() { }
-
 
 /********************************************************************************************************************
 allocTabTimes(int _nbTimes) alloc an array of _nbTimes long 

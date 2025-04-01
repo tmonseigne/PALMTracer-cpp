@@ -26,7 +26,6 @@ protected:
 	unsigned long nbInfoStruct;
 
 	void inc(unsigned long& nSeg, unsigned long** ptr, long& sizePtr);
-	int locateStringInFile(wchar_t* st, FILE* file);
 
 public:
 	Segment();

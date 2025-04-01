@@ -36,7 +36,7 @@ protected:
 public:
 	int giveResult();
 	TabTimes(PublicParameters* publicParameters);
-	~TabTimes();
+	virtual ~TabTimes();
 	TimeNodes* operator()(int i);
 	TimeNodes** operator[](int i);
 	int nbTimes;

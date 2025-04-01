@@ -16,12 +16,6 @@ Constructuor() of TabTimesDistanceIntensity class.
 TabTimesDistanceIntensity::TabTimesDistanceIntensity(PublicParameters* _publicParameters): TabTimes(_publicParameters) { publicParameters = _publicParameters; }
 
 /********************************************************************************************************************
-Destructor() of TabTimesDistanceIntensity class.
-********************************************************************************************************************/
-TabTimesDistanceIntensity::~TabTimesDistanceIntensity() { }
-
-
-/********************************************************************************************************************
 allocTabTimes(int _nbTimes) alloc an array of _nbTimes long 
 ********************************************************************************************************************/
 TimeNodes* TabTimesDistanceIntensity::allocTimeNodes(long _time, long _nbNodes) { return new TimeNodesDistanceIntensity(_time, _nbNodes, publicParameters); }

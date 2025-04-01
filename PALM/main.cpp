@@ -143,21 +143,19 @@ void computeBsplines(int n, gsl_vector* x, gsl_vector* y, int* nbPoints, vec* x_
 	*x_sp = vec(*nbPoints);
 	*y_sp = vec(*nbPoints);
 	/* output the smoothed curve */
-	{
-		double xi, yi, yerr;
+	double xi, yi, yerr;
 
-		FILE* f = fopen("Calibration_Smoothed.txt", "w");
-		int ind = 0;
-		for (xi = xMin; xi < xMax; xi += 0.1) {
-			gsl_bspline_eval(xi, B, bw);
-			gsl_multifit_linear_est(B, c, cov, &yi, &yerr);
-			(*x_sp)(ind) = xi;
-			(*y_sp)(ind) = yi;
-			fprintf(f, "%f\t%f\n", (*x_sp)(ind), (*y_sp)(ind));
-			ind += 1;
-		}
-		fclose(f);
+	FILE* file = fopen("Calibration_Smoothed.txt", "w");
+	int ind = 0;
+	for (xi = xMin; xi < xMax; xi += 0.1) {
+		gsl_bspline_eval(xi, B, bw);
+		gsl_multifit_linear_est(B, c, cov, &yi, &yerr);
+		(*x_sp)(ind) = xi;
+		(*y_sp)(ind) = yi;
+		fprintf(file, "%f\t%f\n", (*x_sp)(ind), (*y_sp)(ind));
+		ind += 1;
 	}
+	fclose(file);
 
 	gsl_rng_free(r);
 	gsl_bspline_free(bw);

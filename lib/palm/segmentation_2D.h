@@ -16,8 +16,6 @@ private:
 	int alloc(unsigned long nbStruct);
 	void desalloc();
 
-	int makeLinks(unsigned long nbStruct);
-
 	int filterStructureWS(FltArray& potential, USrtArray& seg, float thresholdRatio);
 	int getLocalMax(FltArray& image, USrtArray& seg, float threshold);
 	int watershed(FltArray& potential, USrtArray& seg, float threshold);
@@ -25,7 +23,6 @@ private:
 	int filterStructureWS(USrtArray& potential, USrtArray& seg, float thresholdRatio);
 	int getLocalMax(USrtArray& image, USrtArray& seg, float threshold);
 	int watershed(USrtArray& potential, USrtArray& seg, float threshold);
-	int computeMaxLength(USrtArray& seg, long maxThreshold);
 
 	unsigned short segmentationPositiveValues(FltArray& data, USrtArray& seg, double val, bool diagonal);
 	unsigned short segmentationPositiveValues(FltArray& data, USrtArray& seg, double val, bool diagonal, USrtArray& segHoles);
