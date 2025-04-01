@@ -122,7 +122,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\lib\fit\CalibrationFit.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit2D.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit2D_Sigma.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit3D.cpp" />
@@ -146,7 +145,6 @@
     <None Include="PALM.def" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\lib\fit\CalibrationFit.h" />
     <ClInclude Include="..\lib\fit\GaussianFit.h" />
     <ClInclude Include="..\lib\fit\GaussianFit2D.h" />
     <ClInclude Include="..\lib\fit\GaussianFit2D_Sigma.h" />

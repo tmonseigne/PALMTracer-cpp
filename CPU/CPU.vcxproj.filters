@@ -20,9 +20,6 @@
     <ClCompile Include="..\lib\tools\operators.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\fit\CalibrationFit.cpp">
-      <Filter>Fit</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\fit\GaussianFit2D.cpp">
       <Filter>Fit</Filter>
     </ClCompile>
@@ -94,9 +91,6 @@
     </ClInclude>
     <ClInclude Include="..\lib\tools\arrayType.h">
       <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\fit\CalibrationFit.h">
-      <Filter>Fit</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\fit\GaussianFit.h">
       <Filter>Fit</Filter>
