@@ -4,11 +4,8 @@
 								This class find the neighbor with the best likeness.
 								Likeness depend on the distance and the intensity.
 *******************************************************************************************************************/
+#pragma once
 
-#ifndef __time_nodes_dist_inten__
-#define __time_nodes_dist_inten__
-
-#include "nodes_dist_inten.h"
 #include "tracking/time_nodes.h"
 
 
@@ -25,5 +22,3 @@ public:
 
 	double getLikenessTime(long lastTime);
 };
-
-#endif //__time_nodes_dist_inten__

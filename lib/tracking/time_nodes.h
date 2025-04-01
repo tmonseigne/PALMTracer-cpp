@@ -2,11 +2,7 @@
 									TimeNodes Class
 							Array containing all the Node s of a particular instant
 *******************************************************************************************************************/
-
-
-#ifndef __time_nodes__
-#define __time_nodes__
-
+#pragma once
 
 #include "general.h"
 #include "nodes.h"
@@ -33,6 +29,3 @@ public:
 
 	void checkLinksHomogeneity(const wchar_t* st);
 };
-
-
-#endif //__time_nodes__

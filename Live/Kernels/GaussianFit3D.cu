@@ -1,5 +1,4 @@
-#ifndef _FITTING_KERNEL_H_
-#define _FITTING_KERNEL_H_
+#pragma once
 
 #include <math_constants.h>
 #include <cutil_inline.h>
@@ -404,7 +403,6 @@ void cuda3DFittingGPU(float* data, unsigned int numImages, unsigned short width,
 	GPU3DFitting<<< grid, threads/*, FIT_BLOCK_SIZE * Npar * Npar * sizeof(float) * FIT_BLOCK_SIZE*/>>>(numImages * MaxNbStruct, MaxNbStruct, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX, sigmaY, angle);
 }
 
-#endif // #ifndef _FITTING_KERNEL_H_
 
 
 

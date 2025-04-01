@@ -2,7 +2,7 @@
 								Pactage for general unsigned interger 16bit array
 *******************************************************************************************************************/
 
-#include "allRealDataLib.h"
+#include "allDataLib.h"
 
 
 #define	_ARRAY_TYPE_

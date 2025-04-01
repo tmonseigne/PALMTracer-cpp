@@ -1,5 +1,4 @@
-#ifndef _FITTING_KERNEL_H_
-#define _FITTING_KERNEL_H_
+#pragma once
 
 #include <helper_cuda.h>
 #include <helper_timer.h>
@@ -435,4 +434,3 @@ extern "C"void cuda3DFittingGPU_11x11(unsigned short* data, unsigned int numImag
 	GPU3DFitting_11x11<<< grid, threads >>>(nbPoints, pointsList, data, nbStruct, width, height, iterNum, sizeFit, sigmaX, sigmaY, angle, computeZ, SigmaXCoefs, SigmaYCoefs, ThreeDThickness/*um*/, ThreeDSampling/*um*/, pixelSize/*um*/);
 }
 
-#endif // #ifndef _FITTING_KERNEL_H_

@@ -1,9 +1,7 @@
 /*******************************************************************************************************************
 								Pactage for general boolean array									
 *******************************************************************************************************************/
-
-#ifndef		_BL_ARRAY_
-#define		_BL_ARRAY_
+#pragma once
 
 #define	_ARRAY_TYPE_
 #define BOOL_TYPE
@@ -19,5 +17,3 @@
 #undef DataType
 #undef BOOL_TYPE
 #undef _ARRAY_TYPE_
-
-#endif

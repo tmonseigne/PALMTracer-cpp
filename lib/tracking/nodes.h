@@ -2,9 +2,7 @@
 									Node Class
 								  Node representing one structure
 *******************************************************************************************************************/
-
-#ifndef __nodes__
-#define __nodes__
+#pragma once
 
 #include <cstdlib>
 #include <string.h>
@@ -81,6 +79,3 @@ public:
 	double distanceToBorder();
 	double stericEffect();
 };
-
-
-#endif//	__nodes__ 

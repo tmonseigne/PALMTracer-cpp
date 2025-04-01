@@ -1,5 +1,4 @@
-#ifndef _FITTING_KERNEL_H_
-#define _FITTING_KERNEL_H_
+#pragma once
 
 #include <math_constants.h>
 #include <cutil_inline.h>
@@ -413,7 +412,6 @@ void cuda3DFittingGPU_Theta(float* data, unsigned int numImages, unsigned short 
 }
 
 
-#endif // #ifndef _FITTING_KERNEL_H_
 
 
 

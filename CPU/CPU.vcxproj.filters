@@ -71,9 +71,6 @@
     <ClInclude Include="..\lib\tools\allDataLib.h">
       <Filter>Tools</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tools\allRealDataLib.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\tools\generalParam.h">
       <Filter>Tools</Filter>
     </ClInclude>

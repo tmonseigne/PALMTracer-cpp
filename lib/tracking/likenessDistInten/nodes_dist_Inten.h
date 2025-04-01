@@ -4,9 +4,7 @@
 								This class find the neighbor with the best likeness.
 								Likeness depend on the distance and the intensity.
 *******************************************************************************************************************/
-
-#ifndef __node_distance_intensity__
-#define __node_distance_intensity__
+#pragma once
 
 #include "tracking/general.h"
 #include "tracking/nodes.h"
@@ -74,6 +72,3 @@ public:
 	NodeDistanceIntensity(int _time, PublicParameters* _publicParameters);
 	double makeInitializationConnection();
 };
-
-
-#endif //__node_distance_intensity__

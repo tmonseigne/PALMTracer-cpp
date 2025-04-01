@@ -1,6 +1,4 @@
-#ifndef __segmentation__
-#define __segmentation__
-
+#pragma once
 
 #include <io.h>
 #include <fcntl.h>
@@ -32,5 +30,3 @@ public:
 	virtual ~Segment();
 	unsigned long getNbStructs();
 };
-
-#endif

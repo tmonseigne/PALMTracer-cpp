@@ -157,7 +157,6 @@
     <ClInclude Include="..\lib\palm\segmentation.h" />
     <ClInclude Include="..\lib\palm\segmentation_2D.h" />
     <ClInclude Include="..\lib\tools\allDataLib.h" />
-    <ClInclude Include="..\lib\tools\allRealDataLib.h" />
     <ClInclude Include="..\lib\tools\arrayType.h" />
     <ClInclude Include="..\lib\tools\BlArray.h" />
     <ClInclude Include="..\lib\tools\errc.h" />

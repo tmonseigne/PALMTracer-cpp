@@ -21,8 +21,7 @@
  * (R)R�gis Clouard - 2001-04-03 (version 3.00)
  */
 
-#ifndef	__PPANDOREH__
-#define	__PPANDOREH__
+#pragma once
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -165,5 +164,3 @@ typedef double Double;         // BASE
 typedef PColorSpace EspaceCoul;
 #define RVB RGB
 typedef class GEdge Lnode;*/
-
-#endif // __PPANDOREH__

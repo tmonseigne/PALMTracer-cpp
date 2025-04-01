@@ -3,11 +3,8 @@
 									It is derived from the class TimeNodes
 								This class find the closer neighbors for each structure.
 *******************************************************************************************************************/
+#pragma once
 
-#ifndef __time_nodes_closer_neighbors__
-#define __time_nodes_closer_neighbors__
-
-#include "nodes_closer_neighbors.h"
 #include "tracking/time_nodes.h"
 
 
@@ -20,5 +17,3 @@ public:
 	TimeNodesCloserNeighbors(int _time, int _nbNodes, PublicParameters* _publicParameters);
 	int makeAllConnections();
 };
-
-#endif //__time_nodes_closer_neighbors__

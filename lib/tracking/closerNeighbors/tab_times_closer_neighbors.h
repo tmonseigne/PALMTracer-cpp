@@ -3,10 +3,7 @@
 									It is derived from the class TabTimes
 								This class find the closer neighbors for each structure.
 *******************************************************************************************************************/
-#ifndef __tab_times_closer_neighbors__
-#define __tab_times_closer_neighbors__
-#
-#include "time_nodes_closer_neighbors.h"
+#pragma once
 #include "tracking/tab_times.h"
 
 class TabTimesCloserNeighbors : public TabTimes
@@ -19,6 +16,3 @@ public:
 
 	int runModel() override;
 };
-
-
-#endif	//__tab_times_closer_neighbors__

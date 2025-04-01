@@ -2,10 +2,7 @@
 									InfoNode InfoNode2D InfoNode3D Classes
 								  InfoDataXX contains the information for a given Node in 2D or in 3D
 *******************************************************************************************************************/
-
-
-#ifndef __info_node__
-#define __info_node__
+#pragma once
 
 #include "general.h"
 #include "palm/info_2D.h"
@@ -113,5 +110,3 @@ public:
 	void setTime(unsigned long t) override;
 	void setMean(double m) override;
 };
-
-#endif //__info_node__

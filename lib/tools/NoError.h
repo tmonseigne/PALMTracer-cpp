@@ -5,13 +5,9 @@
 									by Victor Racine
 									28 october 2003 
 *******************************************************************************************************************/
-
-#ifndef __NO_ERROR__
-#define __NO_ERROR__
-
+#pragma once
 
 #define		RET_OK					0
-
 
 //MIA
 #define		SIZE_ERR				-1
@@ -107,5 +103,3 @@
 #define ERR_MIA_SEG					-1007 //HCS
 #define ERR_PARSE_TXT				-1008 //HCS
 #define ERR_HELP					-1009 //HCS
-
-#endif //__NO_ERROR__

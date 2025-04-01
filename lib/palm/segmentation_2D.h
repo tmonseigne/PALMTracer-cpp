@@ -1,5 +1,4 @@
-#ifndef __segmentation_2D__
-#define __segmentation_2D__
+#pragma once
 
 #include "Windows.h"
 #include "segmentation.h"
@@ -46,6 +45,3 @@ public:
 	int watershedIntelligent(FltArray& potential, USrtArray& seg, float threshold, float thresholdRatio);
 	void mixIndex(USrtArray& seg);
 };
-
-
-#endif //end __segmentation_2D__

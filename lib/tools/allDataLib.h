@@ -1,11 +1,13 @@
 /*******************************************************************************************************************
-								Load all real and complex data types
+								Load all real data types
 *******************************************************************************************************************/
-#ifndef __ALL_DATA_LIB__
-#define __ALL_DATA_LIB__
+#pragma once
+
+class USrtArray;
+class FltArray;
+class BlArray;
 
 
-#include "allRealDataLib.h"
-
-
-#endif //__ALL_DATA_LIB__
+#include "USrtArray.h"
+#include "FltArray.h"
+#include "BlArray.h"

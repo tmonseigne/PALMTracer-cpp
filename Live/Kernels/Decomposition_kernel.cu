@@ -1,5 +1,4 @@
-#ifndef _DECOMPOSITION_KERNEL_H_
-#define _DECOMPOSITION_KERNEL_H_
+#pragma once
 
 #include <helper_cuda.h>
 #include <helper_timer.h>
@@ -227,4 +226,3 @@ extern "C"void cudaTrous2DGPU(float* input, float* output, unsigned int numImage
 	// cleanup memory
 	checkCudaErrors(cudaFree(buff));
 }
-#endif // #ifndef _DECOMPOSITION_KERNEL_H_

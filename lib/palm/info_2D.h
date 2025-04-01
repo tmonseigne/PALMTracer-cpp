@@ -1,9 +1,7 @@
 /*******************************************************************************************************************
 								Link class to treat data from segmentation of images 2D (16bit only)
 *******************************************************************************************************************/
-
-#ifndef __link_2D__
-#define __link_2D__
+#pragma once
 
 #include <math.h>
 #include <stdio.h>
@@ -131,6 +129,3 @@ public:
 
 	InfoDataRich2D data;
 };
-
-
-#endif

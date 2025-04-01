@@ -1,5 +1,4 @@
-#ifndef _FITTING_KERNEL_H_
-#define _FITTING_KERNEL_H_
+#pragma once
 
 #include <helper_cuda.h>
 #include <helper_timer.h>
@@ -376,4 +375,3 @@ extern "C"void cuda2DFittingGPU_Sigma_7x7(unsigned short* data, unsigned int num
 
 #endif
 
-#endif // #ifndef _FITTING_KERNEL_H_

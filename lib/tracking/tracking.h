@@ -5,17 +5,10 @@
 									by Victor Racine
 									12 july 2002 
 *******************************************************************************************************************/
+#pragma once
 
-#ifndef __tracking__
-#define __tracking__
-#include <stdio.h>
-
+#include <cstdio>
 #include "kernel/general.h"
 #include "kernel/tab_times.h"
 #include "closerNeighbors/tab_times_closer_neighbors.h"
 #include "likenessdistInten/tab_times_dist_inten.h"
-
-//int tracking_(int argc, wchar_t *argv[]);
-
-
-#endif	//__tracking__

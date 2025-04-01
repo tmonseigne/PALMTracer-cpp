@@ -1,5 +1,4 @@
-#ifndef _DECOMPOSITION_KERNEL_H_
-#define _DECOMPOSITION_KERNEL_H_
+#pragma once
 
 //#include <math_constants.h>
 #include <helper_cuda.h>

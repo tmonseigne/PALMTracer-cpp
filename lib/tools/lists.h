@@ -1,8 +1,7 @@
+#pragma once
+
 #include "errc.h"
 #include "generalParam.h"
-
-#ifndef __PPLISTH__
-#define __PPLISTH__
 
 /*
  * Base class of Heap.
@@ -161,5 +160,3 @@ public:
 		return true;
 	}
 };
-
-#endif // __PPLISTH__

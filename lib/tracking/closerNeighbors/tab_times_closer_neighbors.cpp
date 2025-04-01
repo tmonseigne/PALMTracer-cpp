@@ -6,6 +6,7 @@
 
 
 #include "tab_times_closer_neighbors.h"
+#include "time_nodes_closer_neighbors.h"
 
 /********************************************************************************************************************
 Constructuor() of TabTimesCloserNeighbors class.

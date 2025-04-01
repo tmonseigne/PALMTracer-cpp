@@ -1,10 +1,8 @@
 /*******************************************************************************************************************
 								Pactage for general unsigned interger 16bit array
 *******************************************************************************************************************/
+#pragma once
 
-
-#ifndef		_USRT_ARRAY_
-#define		USRT_ARRAY_
 #define INTEGER
 #define	_ARRAY_TYPE_
 #define NB_TYPE	4
@@ -20,5 +18,3 @@
 #undef INTEGER
 #undef _ARRAY_TYPE_
 #undef NB_TYPE
-
-#endif

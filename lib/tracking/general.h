@@ -1,9 +1,8 @@
 /*******************************************************************************************************************
 								General Structures used for the Tracking
 *******************************************************************************************************************/
+#pragma once
 
-#ifndef __general__
-#define __general__
 #include <fcntl.h>
 #include <io.h>
 #include <math.h>
@@ -66,6 +65,3 @@ public:
 
 	int NbIterations;
 };
-
-
-#endif	//__general__

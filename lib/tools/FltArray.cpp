@@ -2,7 +2,7 @@
 								Pactage for general floating point array use
 *******************************************************************************************************************/
 
-#include "allRealDataLib.h"
+#include "allDataLib.h"
 
 
 #define	_ARRAY_TYPE_

@@ -1,5 +1,4 @@
-#ifndef _GAUSSIAN_VISU_H_
-#define _GAUSSIAN_VISU_H_
+#pragma once
 
 #include <helper_cuda.h>
 #include <helper_timer.h>
@@ -65,4 +64,3 @@ extern "C"void GaussianVisu(double* gaussianPointsList /*(sizeReg*sizeReg*nbPoin
 	cudaError err = cudaThreadSynchronize();
 }
 
-#endif // #ifndef _GAUSSIAN_VISU_H_

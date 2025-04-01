@@ -1,5 +1,4 @@
-#ifndef _FITTING_KERNEL_H_
-#define _FITTING_KERNEL_H_
+#pragma once
 
 #include <helper_cuda.h>
 #include <helper_timer.h>
@@ -402,4 +401,3 @@ extern "C"void cuda3DFittingGPU_Theta_9x9(unsigned short* data, unsigned int num
 }
 
 
-#endif // #ifndef _FITTING_KERNEL_H_

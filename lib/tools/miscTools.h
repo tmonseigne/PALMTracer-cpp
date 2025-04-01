@@ -2,13 +2,11 @@
 								Miscellaneous tools 
 *******************************************************************************************************************/
 
+#pragma once
 
-#ifndef __MISC_TOOLD__
-#define __MISC_TOOLD__
-
-#include <errno.h>
-#include <math.h>
-#include <stdio.h>
+#include <cerrno>
+#include <cmath>
+#include <cstdio>
 #include "allDataLib.h"
 
 void printErrno(FILE* file, int errno);
@@ -20,4 +18,3 @@ double distance(double X1, double Y1, double X2, double Y2);
 double distance(double X1, double Y1, double Z1, double X2, double Y2, double Z2);
 double distance2(double X1, double Y1, double X2, double Y2);
 double distance2(double X1, double Y1, double Z1, double X2, double Y2, double Z2);
-#endif //__MISC_TOOLD__ 

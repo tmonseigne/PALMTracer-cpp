@@ -21,8 +21,7 @@
  * (R)Régis Clouard - 2001-04-03 (version 3.00)
  */
 
-#ifndef __PERRCH__
-#define __PERRCH__
+#pragma once
 
 #include <memory.h>
 #include "pandore.h"
@@ -218,5 +217,3 @@ private:
 		Double v_Double;
 	} val;
 };
-
-#endif // __PERRCH__

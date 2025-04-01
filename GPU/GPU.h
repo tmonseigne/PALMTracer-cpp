@@ -1,4 +1,5 @@
 // includes, project
+#pragma once
 
 #include <windows.h>
 

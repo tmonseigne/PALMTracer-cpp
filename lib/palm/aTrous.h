@@ -1,7 +1,4 @@
-#ifndef __class_a_trous__
-#define __class_a_trous__
-
-//#include <iostream.h>
+#pragma once
 #include <memory.h>
 #include "tools/allDataLib.h"
 #include "tools/miscTools.h"
@@ -41,5 +38,3 @@ public:
 	int aTrousDecomposition2D(USrtArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long nbPlane, bool realProj);
 };
 
-
-#endif //__class_a_trous__

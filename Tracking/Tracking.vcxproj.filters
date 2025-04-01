@@ -65,9 +65,6 @@
     <ClInclude Include="..\lib\tools\allDataLib.h">
       <Filter>Tools</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tools\allRealDataLib.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\tools\arrayType.h">
       <Filter>Tools</Filter>
     </ClInclude>

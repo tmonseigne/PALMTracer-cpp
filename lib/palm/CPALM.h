@@ -1,3 +1,4 @@
+#pragma once
 #include "aTrous.h"
 #include "segmentation_2D.h"
 #include "tools/allDataLib.h"

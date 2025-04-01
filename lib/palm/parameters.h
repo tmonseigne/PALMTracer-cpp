@@ -1,5 +1,5 @@
-#ifndef _PARAMETERS_H_
-#define _PARAMETERS_H_
+#pragma once
+
 
 #define WIDTH_PORTION 16 // 32
 #define HEIGHT_PORTION 16 // 32
@@ -26,4 +26,3 @@
 
 //__device__ unsigned short WIDTH/* = 128*/;
 //__device__ unsigned short HEIGHT/* = 128*/;
-#endif // #ifndef _PARAMETERS_H_

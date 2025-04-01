@@ -7,6 +7,7 @@
 
 
 #include "tab_times_dist_inten.h"
+#include "time_nodes_dist_Inten.h"
 
 //extern PublicParameters *publicParameters;
 

@@ -2,10 +2,8 @@
 									TabTimes Class
 							Array containing all the TimeNodes for all instants
 *******************************************************************************************************************/
+#pragma once
 
-
-#ifndef __tab_times__
-#define __tab_times__
 #include <stdlib.h>
 #include <time.h>  //for rand()
 #include <vector>
@@ -46,6 +44,3 @@ public:
 	virtual int runModel() { return T_ERR_OOP; };
 	void checkLinksHomogeneity(const wchar_t* st);
 };
-
-
-#endif	//__tab_times__

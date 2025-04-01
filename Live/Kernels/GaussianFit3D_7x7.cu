@@ -1,5 +1,4 @@
-#ifndef _FITTING_KERNEL_H_
-#define _FITTING_KERNEL_H_
+#pragma once
 
 #include <helper_cuda.h>
 #include <helper_timer.h>
@@ -435,4 +434,3 @@ extern "C"void cuda3DFittingGPU_7x7(unsigned short* data, unsigned int numImages
 }
 
 //#endif // dimFit
-#endif // #ifndef _FITTING_KERNEL_H_
