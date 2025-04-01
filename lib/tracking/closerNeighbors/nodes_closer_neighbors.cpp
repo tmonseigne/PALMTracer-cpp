@@ -17,7 +17,7 @@ void NodeCloserNeighbors::makeConnection()
 {
 	Node* nMin = NULL;
 	double distMin = -1.;
-	for (ChainNeighbor* c = neighborsFuture; c != NULL; c = c->next) {
+	for (const ChainNeighbor* c = neighborsFuture; c != NULL; c = c->next) {
 		if (c->neighbor->connectionPast == NULL) {
 			if (distMin < 0.) {
 				distMin = distance(c->neighbor);

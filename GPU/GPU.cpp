@@ -132,7 +132,7 @@ _declspec(dllexport) void _stdcall OpenPALMProcessing(unsigned short* images, do
 
 _declspec(dllexport) long _stdcall PALMProcessing()
 {
-	long ret_val = (long)g->runGPU(); // nombre de points détectés  
+	const long ret_val = (long)g->runGPU(); // nombre de points détectés  
 	return ret_val;
 }
 

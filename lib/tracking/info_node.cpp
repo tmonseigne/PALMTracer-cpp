@@ -14,19 +14,19 @@ InfoNode::InfoNode(PublicParameters* _publicParameters) { publicParameters = _pu
 
 float InfoNode2D::distance(InfoNode* infoNode)
 {
-	double dX = getX() - infoNode->getX();
-	double dY = getY() - infoNode->getY();
-	float res = (float)sqrt(dX * dX + dY * dY);
+	const double dX = getX() - infoNode->getX();
+	const double dY = getY() - infoNode->getY();
+	const float res = (float)sqrt(dX * dX + dY * dY);
 	if (res < 0.) { return 0.; }
 	return res;
 }
 
 float InfoNode2D::distance(InfoNode* i1, InfoNode* i2)
 {
-	double n1n2X = (i1->getX() * i1->getIntensity() + i2->getX() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
-	double n1n2Y = (i1->getY() * i1->getIntensity() + i2->getY() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
-	double dX = getX() - n1n2X;
-	double dY = getY() - n1n2Y;
+	const double n1n2X = (i1->getX() * i1->getIntensity() + i2->getX() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
+	const double n1n2Y = (i1->getY() * i1->getIntensity() + i2->getY() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
+	const double dX = getX() - n1n2X;
+	const double dY = getY() - n1n2Y;
 	float res = (float)sqrt(dX * dX + dY * dY);
 	if (res < 0.) { return 0.; }
 	if (res < 1e-9) { res += 0; }
@@ -84,23 +84,23 @@ void InfoNode2D::setMean(double m) { info.mean = m; }
 //!!!!! invertion of coordinates !!! to restect Amira and UIC convenitons
 float InfoNode3D::distance(InfoNode* infoNode)
 {
-	double dX = getX() - infoNode->getX();
-	double dY = getY() - infoNode->getY();
-	double dZ = getZ() - infoNode->getZ();
-	float res = (float)sqrt(dX * dX + dY * dY + dZ * dZ);
+	const double dX = getX() - infoNode->getX();
+	const double dY = getY() - infoNode->getY();
+	const double dZ = getZ() - infoNode->getZ();
+	const float res = (float)sqrt(dX * dX + dY * dY + dZ * dZ);
 	if (res < 0.) { return 0.; }
 	return res;
 }
 
 float InfoNode3D::distance(InfoNode* i1, InfoNode* i2)
 {
-	double n1n2X = (i1->getX() * i1->getIntensity() + i2->getX() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
-	double n1n2Y = (i1->getY() * i1->getIntensity() + i2->getY() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
-	double n1n2Z = (i1->getZ() * i1->getIntensity() + i2->getZ() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
-	double dX = getX() - n1n2X;
-	double dY = getY() - n1n2Y;
-	double dZ = getZ() - n1n2Z;
-	float res = (float)sqrt(dX * dX + dY * dY + dZ * dZ);
+	const double n1n2X = (i1->getX() * i1->getIntensity() + i2->getX() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
+	const double n1n2Y = (i1->getY() * i1->getIntensity() + i2->getY() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
+	const double n1n2Z = (i1->getZ() * i1->getIntensity() + i2->getZ() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
+	const double dX = getX() - n1n2X;
+	const double dY = getY() - n1n2Y;
+	const double dZ = getZ() - n1n2Z;
+	const float res = (float)sqrt(dX * dX + dY * dY + dZ * dZ);
 	if (res < 0.) { return 0.; }
 	return res;
 }

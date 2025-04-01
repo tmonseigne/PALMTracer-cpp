@@ -78,7 +78,7 @@ int Segment2D::alloc(unsigned long nbStruct)
 
 unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned short* useParam)
 {
-	unsigned short sizeDataY = seg.size(1);
+	const unsigned short sizeDataY = seg.size(1);
 
 	InfoStruct2D* ptr = headInfo;
 	InfoStruct2D* ptrMax;
@@ -87,7 +87,7 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 	long i;
 	bool unselected;
 	float valMax;
-	long nbInfoStructOld = nbInfoStruct;
+	const long nbInfoStructOld = nbInfoStruct;
 	long oldIndex;
 
 	char* tabBound = NULL;
@@ -146,8 +146,7 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 			ind++;
 			unselected = false;
 			for (i = 1; i <= nbInfoStructOld && !unselected; i++) {
-				if (tabInfo[i] != NULL) {
-					double d = sqrt((double)((ptr->data.max.x - tabInfo[i]->data.max.x) * (ptr->data.max.x - tabInfo[i]->data.max.x) + (ptr->data.max.y - tabInfo[i]->data.max.y) * (ptr->data.max.y - tabInfo[i]->data.max.y)));
+				if (tabInfo[i] != NULL) { const double d = sqrt((double)((ptr->data.max.x - tabInfo[i]->data.max.x) * (ptr->data.max.x - tabInfo[i]->data.max.x) + (ptr->data.max.y - tabInfo[i]->data.max.y) * (ptr->data.max.y - tabInfo[i]->data.max.y)));
 					if (d > 1 && d < param[6] && tabInfo[i]->data.max.val > ptr->data.max.val) { unselected = true; }
 				}
 			}
@@ -191,9 +190,10 @@ unsigned long Segment2D::filterData(USrtArray& seg, double* param, unsigned shor
 						break;
 					case 10: valMax = (float)(ptr->data.surf * ptr->data.mean);
 						break;
-					case 11: valMax = (float)ptr->data.max.val;
+					case 11:
+					default:
+						valMax = (float)ptr->data.max.val;
 						break;
-					default: ;
 				}
 
 				ptrMax = NULL;
@@ -296,8 +296,8 @@ int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData
 	unsigned long cptPoints = 0;
 	int ret;
 
-	unsigned short sizeDataX = data.size(0);
-	unsigned short sizeDataY = data.size(1);
+	const unsigned short sizeDataX = data.size(0);
+	const unsigned short sizeDataY = data.size(1);
 
 
 	if (doRealoc) { if ((ret = alloc(nbInfoStruct)) < 0) { return ret; } }
@@ -398,9 +398,8 @@ int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData
 				for (int ii = -2; ii <= 2; ii++) // sizeDataX
 				{
 					for (int jj = -2; jj <= 2; jj++) // sizeDataY
-					{
-						int refx = (int)tabInfo[ind]->data.max.x;
-						int refy = (int)tabInfo[ind]->data.max.y;
+					{ const int refx = (int)tabInfo[ind]->data.max.x;
+						const int refy = (int)tabInfo[ind]->data.max.y;
 
 						if (ii + refx >= 0 && ii + refx < sizeDataX && jj + refy < sizeDataY && jj + refy >= 0) {
 							val = (double)waveData[(ii + refx) * sizeDataY + (jj + refy)];
@@ -449,8 +448,8 @@ unsigned short Segment2D::segmentation(FltArray& data, USrtArray& seg, double va
 	if (!fillHoles) { return segmentationPositiveValues(data, seg, val, diagonal); }
 	int ret;
 	long i;
-	long sizeDataX = data.size(0);
-	long sizeDataY = data.size(1);
+	const long sizeDataX = data.size(0);
+	const long sizeDataY = data.size(1);
 
 	USrtArray* segHoles = new USrtArray;
 	if ((ret = segHoles->alloc(sizeDataX, sizeDataY)) < 0) { return ret; }
@@ -491,8 +490,8 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 	int mini;
 	//int max;
 	long sizePtr = MAX_TAB;
-	long sizeDataX = data.size(0);
-	long sizeDataY = data.size(1);
+	const long sizeDataX = data.size(0);
+	const long sizeDataY = data.size(1);
 
 
 	//allocation of ptr
@@ -641,8 +640,8 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	int mini;
 	//int max;
 	long sizePtr = MAX_TAB;
-	long sizeDataX = data.size(0);
-	long sizeDataY = data.size(1);
+	const long sizeDataX = data.size(0);
+	const long sizeDataY = data.size(1);
 
 
 	//allocation of ptr
@@ -790,8 +789,8 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	int mini;
 	//int max;
 	long sizePtr = MAX_TAB;
-	long sizeDataX = data.size(0);
-	long sizeDataY = data.size(1);
+	const long sizeDataX = data.size(0);
+	const long sizeDataY = data.size(1);
 
 
 	//allocation of ptr
@@ -934,9 +933,8 @@ void Segment2D::mixIndex(USrtArray& seg)
 
 	long i;
 	for (i = 1; i <= (long)nbInfoStruct; i++) { (*mixer)(i) = (unsigned short)i; }
-	for (i = 1; i <= (long)nbInfoStruct; i++) {
-		long ind = rand() % nbInfoStruct + 1;
-		long val = (*mixer)(ind);
+	for (i = 1; i <= (long)nbInfoStruct; i++) { const long ind = rand() % nbInfoStruct + 1;
+		const long val = (*mixer)(ind);
 		(*mixer)(ind) = (*mixer)(i);
 		(*mixer)(i) = (unsigned short)val;
 	}

@@ -55,7 +55,7 @@ double getAutoThreshold(FltArray& im)
 		s0 = sqrt(s0);
 		s1 = sqrt(s1);
 
-		double sigma = (s0 + s1) / count;
+		const double sigma = (s0 + s1) / count;
 
 		oldThreshold = threshold;
 		threshold = (m0 + m1) / 2. + sigma * sigma * log(count0 / count1) / (m1 - m0);
@@ -133,14 +133,14 @@ double distance(double X1, double Y1, double Z1, double X2, double Y2, double Z2
 
 double distance2(double X1, double Y1, double X2, double Y2)
 {
-	double res = (X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2);
+	const double res = (X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2);
 	if (res < 0) { return 0.; }
 	return res;
 }
 
 double distance2(double X1, double Y1, double Z1, double X2, double Y2, double Z2)
 {
-	double res = (X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2) + (Z1 - Z2) * (Z1 - Z2);
+	const double res = (X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2) + (Z1 - Z2) * (Z1 - Z2);
 	if (res < 0) { return 0.; }
 	return res;
 }

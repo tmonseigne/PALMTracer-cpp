@@ -78,8 +78,7 @@ long CPALM::CPALMProcessing()
 
 	if ((ret = _aTrousPub->aTrousDecomposition2D(*_input, *_aTrousPub->wDecomp, *_planesToUseB, _nbPlane, false)) < 0) { return ret; }
 
-	for (long j = 0; j < long(_sizeX * _sizeY); j++) {
-		long offs = _waveletNo * _sizeX * _sizeY;
+	for (long j = 0; j < long(_sizeX * _sizeY); j++) { const long offs = _waveletNo * _sizeX * _sizeY;
 		if (_aTrousPub->wDecomp->data[offs + j] > _thresholdVal) {
 			_outputPub->data[j] = _aTrousPub->wDecomp->data[offs + j];
 			_segPub->data[j] = 1;

@@ -88,8 +88,7 @@ void TabTimesDistanceIntensity::updateConstantes()
 	publicParameters->stdIntensity = 0;
 	publicParameters->stdMean = 0;
 	publicParameters->covMeanIntensity = 0;
-	for (long t = 0; t < nbTimes; t++) {
-		TimeNodes* _localTimeNodes = timeNodes[t];
+	for (long t = 0; t < nbTimes; t++) { const TimeNodes* _localTimeNodes = timeNodes[t];
 		for (int n = 0; n < _localTimeNodes->nbNodes; n++) {
 			Node* node = _localTimeNodes->tabNodes[n];
 			if (node->connectionFuture != NULL) {
@@ -120,7 +119,7 @@ int TabTimesDistanceIntensity::runModel()
 {
 	double error;
 
-	long countLearning = 5;
+	const long countLearning = 5;
 
 	for (long iLearning = 0; iLearning < countLearning; iLearning++) {
 		if (iLearning == countLearning - 1) { error = 20; }

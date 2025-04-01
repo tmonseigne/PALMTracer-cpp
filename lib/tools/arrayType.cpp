@@ -25,7 +25,7 @@ ArrayType::ArrayType(const long i, const long j, const long k, const long l)
 {
 	data = NULL;
 	sizeAllocated = 0;
-	int ret = alloc(i, j, k, l);
+	const int ret = alloc(i, j, k, l);
 	if (ret < 0) { exit(ret); }
 }
 
@@ -34,7 +34,7 @@ ArrayType::ArrayType(DataType* _data, const long i, const long j, const long k, 
 {
 	data = NULL;
 	sizeAllocated = 0;
-	int ret = alloc(_data, i, j, k, l);
+	const int ret = alloc(_data, i, j, k, l);
 	if (ret < 0) { exit(ret); }
 }
 
@@ -283,42 +283,6 @@ DataType ArrayType::max()
 #endif
 
 #ifndef BOOL_TYPE
-void ArrayType::renormalize(double _min, double _max)
-{
-	DataType oldMin = min();
-	DataType oldMax = max();
-	double val = (_max - _min) / (oldMax - oldMin);
-
-	for (unsigned long i = 0; i < nbPoints; i++) {
-		double val2 = (data[i] - oldMin) * val + _min;
-		data[i] = (DataType)val2;
-	}
-}
-#endif
-
-#ifndef BOOL_TYPE
-void ArrayType::renormalizeZD(double zero, double dilation)
-{
-	for (unsigned long i = 0; i < nbPoints; i++) {
-		double val = zero + data[i] * dilation;
-		data[i] = (DataType)val;
-	}
-}
-#endif
-
-#ifndef BOOL_TYPE
-void ArrayType::renormalizeZD(double zero, double dilation, long _min, long _max)
-{
-	for (unsigned long i = 0; i < nbPoints; i++) {
-		double val = zero + data[i] * dilation;
-		if (val < _min) { val = (DataType)_min; }
-		else if (val > _max) { val = (DataType)_max; }
-		data[i] = (DataType)val;
-	}
-}
-#endif
-
-#ifndef BOOL_TYPE
 double ArrayType::sigma()
 {
 	double mean = 0.;
@@ -362,186 +326,4 @@ double ArrayType::sum()
 	return m;
 }
 #endif
-
-
-//****************		Threshold		*********************
-#ifndef BOOL_TYPE
-void ArrayType::hardThresholdPositive(DataType val)
-{
-	for (unsigned long i = 0; i < nbPoints; i++) { if (data[i] < val) { data[i] = (DataType)0; } }
-}
-#endif
-
-
-#ifndef BOOL_TYPE
-void ArrayType::hardThresholdPositive(ArrayType& arrayType, DataType val)
-{
-	for (unsigned long i = 0; i < nbPoints; i++) {
-		if (arrayType.data[i] < val) { data[i] = (DataType)0; }
-		else { data[i] = arrayType.data[i]; }
-	}
-}
-#endif
-
-#ifndef BOOL_TYPE
-void ArrayType::hardThresholdNegative(DataType val)
-{
-	for (unsigned long i = 0; i < nbPoints; i++) { if (data[i] > val) { data[i] = (DataType)0; } }
-}
-#endif
-
-#ifndef BOOL_TYPE
-void ArrayType::hardThresholdNegative(ArrayType& arrayType, DataType val)
-{
-	for (unsigned long i = 0; i < nbPoints; i++) {
-		if (arrayType.data[i] > val) { data[i] = (DataType)0; }
-		else { data[i] = arrayType.data[i]; }
-	}
-}
-#endif
-
-
-#ifndef BOOL_TYPE
-void ArrayType::softThresholdPositive(DataType val)
-{
-	for (unsigned long i = 0; i < nbPoints; i++) {
-		if (data[i] < val) { data[i] = (DataType)0; }
-		else { data[i] -= val; }
-	}
-}
-#endif
-
-
-#ifndef BOOL_TYPE
-void ArrayType::hardThresholdInterval(DataType valMin, DataType valMax, bool between)
-{
-	unsigned long i;
-	if (between) { for (i = 0; i < nbPoints; i++) { if (data[i] < valMin || data[i] > valMax) { data[i] = (DataType)0; } } }
-	else { for (i = 0; i < nbPoints; i++) { if (data[i] > valMin && data[i] < valMax) { data[i] = (DataType)0; } } }
-}
-#endif
-
-#ifndef BOOL_TYPE
-void ArrayType::hardThresholdInterval(ArrayType& arrayType, DataType valMin, DataType valMax, bool between)
-{
-	unsigned long i;
-	if (between) {
-		for (i = 0; i < nbPoints; i++) {
-			if (arrayType.data[i] < valMin || arrayType.data[i] > valMax) { data[i] = (DataType)0; }
-			else { data[i] = arrayType.data[i]; }
-		}
-	}
-	else {
-		for (i = 0; i < nbPoints; i++) {
-			if (arrayType.data[i] > valMin && arrayType.data[i] < valMax) { data[i] = (DataType)0; }
-			else { data[i] = arrayType.data[i]; }
-		}
-	}
-}
-#endif
-
-
-#ifndef UNSIGNED
-#ifndef BOOL_TYPE
-void ArrayType::hardThresholdPosNeg(DataType val)
-{
-	unsigned long i;
-	for (i = 0; i < nbPoints; i++) { if ((data[i] < val) && (data[i] > -val)) { data[i] = (DataType)0; } }
-}
-#endif
-#endif
-
-
-#ifndef UNSIGNED
-#ifndef BOOL_TYPE
-void ArrayType::hardThresholdPosNegContinue(DataType val)
-{
-	unsigned long i;
-	double val_2;
-	val_2 = val * val;
-	for (i = 0; i < nbPoints; i++) { data[i] = (DataType)(data[i] * (1. - (DataType)exp(-data[i] * data[i] * 0.5 / val_2))); }
-}
-#endif
-#endif
-
-#ifndef UNSIGNED
-#ifndef BOOL_TYPE
-void ArrayType::softThresholdPosNeg(DataType val)
-{
-	unsigned long i;
-	for (i = 0; i < nbPoints; i++) {
-		if (data[i] < val) {
-			if (data[i] > -val) { data[i] = (DataType)0; }
-			else { data[i] += (DataType)val; }
-		}
-		else { data[i] -= (DataType)val; }
-	}
-}
-#endif
-#endif
-
-#ifndef UNSIGNED
-#ifndef BOOL_TYPE
-void ArrayType::continuousThreshold(DataType val)
-{
-	unsigned long i;
-	double val_2;
-	val_2 = val * val;
-	for (i = 0; i < nbPoints; i++) { data[i] = (DataType)(data[i] * (1. - exp(-data[i] * data[i] * .5 / val_2))); }
-}
-#endif
-#endif
-
-//*******************		input and output		*********************
-void ArrayType::writeArray(wchar_t* fileName)
-{
-	int fileHandle;
-	HeaderFile header;
-
-
-	header.nbDim = nbDim;
-	header.sizeData[0] = sizeData[0];
-	header.sizeData[1] = sizeData[1];
-	header.sizeData[2] = sizeData[2];
-	header.sizeData[3] = sizeData[3];
-	header.type = type();
-
-
-	if ((fileHandle = _wopen(fileName, O_RDWR | O_CREAT | O_BINARY, S_IWRITE)) != -1) {
-		if ((write(fileHandle, (void*)&header, sizeof(HeaderFile))) == -1) { exit(WRITING_FILE_ERR); }
-		if ((write(fileHandle, data, sizeof(DataType) * nbPoints)) == -1) { exit(WRITING_FILE_ERR); }
-		close(fileHandle);
-	}
-	else { exit(OPENING_FILE_ERR); }
-}
-
-
-void ArrayType::readArray(wchar_t* fileName)
-{
-	int fileHandle;
-
-
-	HeaderFile header;
-
-
-	if ((fileHandle = _wopen(fileName, O_RDONLY | O_BINARY, S_IREAD)) != -1) {
-
-		if ((read(fileHandle, &header, sizeof(HeaderFile))) == -1) { exit(READING_FILE_ERR); }
-
-
-		switch (header.nbDim) {
-			case 1: alloc(header.sizeData[0]);
-			case 2: alloc(header.sizeData[0], header.sizeData[1]);
-			case 3: alloc(header.sizeData[0], header.sizeData[1], header.sizeData[2]);
-			case 4: alloc(header.sizeData[0], header.sizeData[1], header.sizeData[2], header.sizeData[3]);
-			default: ;
-		}
-
-		if (read(fileHandle, data, sizeof(DataType) * nbPoints) == -1) { exit(READING_FILE_ERR); }
-		close(fileHandle);
-	}
-	else { exit(OPENING_FILE_ERR); }
-}
-
-
 #endif

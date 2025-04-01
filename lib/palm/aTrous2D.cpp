@@ -82,7 +82,7 @@ void ATrous::projectionV02D(unsigned short* srcData, float* destData, unsigned l
 	//realProj make be set to 1 if realProj=0 it just copy the data from srcData to destData
 
 	int i, j, cur_i, cur_j, offs;
-	double tab[3] = {0.1666666666, 0.6666666666666, 0.16666666666};
+	const double tab[3] = {0.1666666666, 0.6666666666666, 0.16666666666};
 	if (realProj == 1) {
 		i = 0;
 		for (j = 0; j < (long)sizeDataY; j++) {
@@ -127,7 +127,7 @@ void ATrous::projectionV02D(float* srcData, float* destData, unsigned long realP
 	//realProj make be set to 1 if realProj=0 it just copy the data from srcData to destData
 
 	int i, j, cur_i, cur_j, offs;
-	double tab[3] = {0.1666666666, 0.6666666666666, 0.16666666666};
+	const double tab[3] = {0.1666666666, 0.6666666666666, 0.16666666666};
 	if (realProj == 1) {
 		i = 0;
 		for (j = 0; j < (long)sizeDataY; j++) {
@@ -171,9 +171,9 @@ int ATrous::b3SplineFiltering2D(float* srcData, float* destData, unsigned long s
 {
 	//Makes the projection in V(x) with hte knowlage of V(x-1)
 	int i, j, offsetij;
-	float coeffH0 = 3. / 8.;
-	float coeffH1 = 1. / 4.;
-	float coeffH2 = 1. / 16.;
+	const float coeffH0 = 3. / 8.;
+	const float coeffH1 = 1. / 4.;
+	const float coeffH2 = 1. / 16.;
 
 	int ret;
 
@@ -183,7 +183,7 @@ int ATrous::b3SplineFiltering2D(float* srcData, float* destData, unsigned long s
 
 	//type_border Type = Bord;
 
-	int step = twoToThe(currentPlane);
+	const int step = twoToThe(currentPlane);
 
 
 	//convolution in Y axe
@@ -258,8 +258,8 @@ int ATrous::aTrousDecomposition2D(FltArray& inputData, FltArray& outputData, BlA
 	float** waveletPlanes;
 
 
-	unsigned long sizeDataX = inputData.size(0);
-	unsigned long sizeDataY = inputData.size(1);
+	const unsigned long sizeDataX = inputData.size(0);
+	const unsigned long sizeDataY = inputData.size(1);
 
 
 	//test if nbPlane is not too big !!!
@@ -318,8 +318,8 @@ int ATrous::aTrousDecomposition2D(USrtArray& inputData, FltArray& outputData, Bl
 	unsigned long currentPlane;
 	float** waveletPlanes;
 
-	unsigned long sizeDataX = inputData.size(0);
-	unsigned long sizeDataY = inputData.size(1);
+	const unsigned long sizeDataX = inputData.size(0);
+	const unsigned long sizeDataY = inputData.size(1);
 
 	//test if nbPlane is not too big !!!
 	if ((ret = testSizes2D(inputData, outputData, planesToUse, nbPlane)) < 0) { return ret; }

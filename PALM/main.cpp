@@ -38,7 +38,7 @@ public:
 vector<string>& splitstring::split(char delim, int rep)
 {
 	if (!flds.empty()) { flds.clear(); } // empty vector if necessary
-	string work = data();
+	const string work = data();
 	string buf = "";
 	int i = 0;
 	while (i < work.length()) {
@@ -175,7 +175,7 @@ int main()
 
 	computeBsplines(n, x, y, &nbPoints, &x_sp, &y_sp);
 	fprintf(stderr, "nbPoints: %d\n", nbPoints);
-	double h = 0.1;
+	const double h = 0.1;
 
 	mat A = mat(nbPoints - 2, nbPoints - 2, fill::zeros);
 	vec M = vec(nbPoints - 2, fill::zeros);

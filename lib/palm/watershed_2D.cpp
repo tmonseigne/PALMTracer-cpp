@@ -16,12 +16,11 @@ int Segment2D::filterStructureWS(FltArray& potential, USrtArray& seg, float thre
 	wsFusion2D* ptrStr = (wsFusion2D*)malloc((nbInfoStruct + 1) * sizeof(wsFusion2D));
 	long i, j;
 
-	long sizeDataY = potential.size(1);
-	long sizeDataX = potential.size(0);
+	const long sizeDataY = potential.size(1);
+	const long sizeDataX = potential.size(0);
 	long label;
 	bool change = true;
-	while (change) {
-		long oldNbInfoStruct = nbInfoStruct;
+	while (change) { const long oldNbInfoStruct = nbInfoStruct;
 
 		for (i = 1; i <= (long)nbInfoStruct; i++) {
 			ptrStr[i].maxPotentialWithNeighbor = -1e10;
@@ -66,8 +65,7 @@ int Segment2D::filterStructureWS(FltArray& potential, USrtArray& seg, float thre
 		change = false;
 		for (i = 1; i <= oldNbInfoStruct; i++) {
 			if (ptrStr[i].structureInContact > 0) {
-				if (ptrStr[i].locked == false && ptrStr[ptrStr[i].structureInContact].locked == false) {
-					double ratio = (ptrStr[i].maxPotentialOnTheStructure - ptrStr[i].maxPotentialWithNeighbor) / (ptrStr[i].maxPotentialOnTheStructure - ptrStr[i].minPotentialOnTheStructure);
+				if (ptrStr[i].locked == false && ptrStr[ptrStr[i].structureInContact].locked == false) { const double ratio = (ptrStr[i].maxPotentialOnTheStructure - ptrStr[i].maxPotentialWithNeighbor) / (ptrStr[i].maxPotentialOnTheStructure - ptrStr[i].minPotentialOnTheStructure);
 
 					if (ratio < thresholdRatio) {
 						if (ptrStr[i].maxPotentialOnTheStructure < ptrStr[ptrStr[i].structureInContact].maxPotentialOnTheStructure) {
@@ -123,8 +121,8 @@ int Segment2D::getLocalMax(FltArray& image, USrtArray& seg, float threshold)
 	seg = (unsigned short)0;
 	long ii, jj;
 	long label = 1;
-	long sizeDataY = image.size(1);
-	long sizeDataX = image.size(0);
+	const long sizeDataY = image.size(1);
+	const long sizeDataX = image.size(0);
 
 
 	for (long i = 0; i < sizeDataX; i++) {
@@ -173,8 +171,8 @@ int Segment2D::watershed(FltArray& potential, USrtArray& seg, float threshold)
 	coor2D p1;
 
 
-	long sizeDataY = potential.size(1);
-	long sizeDataX = potential.size(0);
+	const long sizeDataY = potential.size(1);
+	const long sizeDataX = potential.size(0);
 
 	Heap<coor2D> tas(sizeDataY * sizeDataX);
 
@@ -277,12 +275,11 @@ int Segment2D::filterStructureWS(USrtArray& potential, USrtArray& seg, float thr
 	wsFusion2D* ptrStr = (wsFusion2D*)malloc((nbInfoStruct + 1) * sizeof(wsFusion2D));
 	long i, j;
 
-	long sizeDataY = potential.size(1);
-	long sizeDataX = potential.size(0);
+	const long sizeDataY = potential.size(1);
+	const long sizeDataX = potential.size(0);
 	long label;
 	bool change = true;
-	while (change) {
-		long oldNbInfoStruct = nbInfoStruct;
+	while (change) { const long oldNbInfoStruct = nbInfoStruct;
 
 
 		for (i = 1; i <= (long)nbInfoStruct; i++) {
@@ -328,8 +325,7 @@ int Segment2D::filterStructureWS(USrtArray& potential, USrtArray& seg, float thr
 		change = false;
 		for (i = 1; i <= oldNbInfoStruct; i++) {
 			if (ptrStr[i].structureInContact > 0) {
-				if (ptrStr[i].locked == false && ptrStr[ptrStr[i].structureInContact].locked == false) {
-					double ratio = (ptrStr[i].maxPotentialOnTheStructure - ptrStr[i].maxPotentialWithNeighbor) / (ptrStr[i].maxPotentialOnTheStructure - ptrStr[i].minPotentialOnTheStructure);
+				if (ptrStr[i].locked == false && ptrStr[ptrStr[i].structureInContact].locked == false) { const double ratio = (ptrStr[i].maxPotentialOnTheStructure - ptrStr[i].maxPotentialWithNeighbor) / (ptrStr[i].maxPotentialOnTheStructure - ptrStr[i].minPotentialOnTheStructure);
 
 					if (ratio < thresholdRatio) {
 						if (ptrStr[i].maxPotentialOnTheStructure < ptrStr[ptrStr[i].structureInContact].maxPotentialOnTheStructure) {
@@ -384,8 +380,8 @@ int Segment2D::getLocalMax(USrtArray& image, USrtArray& seg, float threshold)
 	seg = (unsigned short)0;
 	long ii, jj;
 	long label = 1;
-	long sizeDataY = image.size(1);
-	long sizeDataX = image.size(0);
+	const long sizeDataY = image.size(1);
+	const long sizeDataX = image.size(0);
 
 
 	for (long i = 0; i < sizeDataX; i++) {
@@ -433,8 +429,8 @@ int Segment2D::watershed(USrtArray& potential, USrtArray& seg, float threshold)
 	coor2D p;
 	coor2D p1;
 
-	long sizeDataY = potential.size(1);
-	long sizeDataX = potential.size(0);
+	const long sizeDataY = potential.size(1);
+	const long sizeDataX = potential.size(0);
 
 	Heap<coor2D> tas(sizeDataY * sizeDataX);
 

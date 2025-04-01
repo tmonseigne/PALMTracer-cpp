@@ -89,7 +89,7 @@ _declspec(dllexport) long _stdcall Tracking(double* pointsList, unsigned long po
 
 	delete tabTimes;
 
-	int nb = publicParameters->nbTraj;
+	const int nb = publicParameters->nbTraj;
 	delete publicParameters;
 
 	return nb;
@@ -148,7 +148,7 @@ _declspec(dllexport) long _stdcall Process(double* pointsList, unsigned long poi
 
 	delete tabTimes;
 
-	int nb = publicParameters->nbTraj;
+	const int nb = publicParameters->nbTraj;
 	delete publicParameters;
 
 	return nb;

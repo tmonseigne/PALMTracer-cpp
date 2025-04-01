@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include "tools/generalParam.h"
-//extern "C"{
 
 
 #ifndef _HEADER_FILE_
@@ -163,9 +162,6 @@ public:
 #endif
 	DataType min();
 	DataType max();
-	void renormalize(double min, double max);
-	void renormalizeZD(double zero, double dilation);
-	void renormalizeZD(double zero, double dilation, long min, long max);
 #endif
 
 
@@ -179,24 +175,6 @@ public:
 	double sum();
 #endif
 
-#ifndef BOOL_TYPE
-	void hardThresholdPositive(DataType val);
-	void hardThresholdPositive(ArrayType& arrayType, DataType val);
-	void softThresholdPositive(DataType val);
-	void hardThresholdNegative(DataType val);
-	void hardThresholdNegative(ArrayType& arrayType, DataType val);
-	void hardThresholdInterval(DataType valMin, DataType valMax, bool between);
-	void hardThresholdInterval(ArrayType& arrayType, DataType valMin, DataType valMax, bool between);
-
-#ifndef UNSIGNED
-	void hardThresholdPosNeg(DataType val);
-	void hardThresholdPosNegContinue(DataType val);
-	void softThresholdPosNeg(DataType val);
-	void continuousThreshold(DataType val);
-#endif
-#endif
-	void writeArray(wchar_t* fileName);
-	void readArray(wchar_t* fileName);
 };
 
 

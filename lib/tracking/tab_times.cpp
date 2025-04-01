@@ -81,12 +81,11 @@ int TabTimes::printConnectionsASCII()
 		wprintf(L"The file %ls can not be opened\n", publicParameters->fileResASCII);
 		return T_ERR_OPENNING_FILE;
 	}
-	for (int t = 0; t < nbTimes; t++) {
-		TimeNodes* _localTimeNodes = timeNodes[t];
+	for (int t = 0; t < nbTimes; t++) { const TimeNodes* _localTimeNodes = timeNodes[t];
 		for (int n = 0; n < _localTimeNodes->nbNodes; n++) {
 			Node* node = _localTimeNodes->tabNodes[n];
 			if (node->connectionPast == NULL && node->trackedStructureIndex > 0) {
-				for (Node* nodeConnection = node; nodeConnection != NULL; nodeConnection = nodeConnection->connectionFuture) {
+				for (const Node* nodeConnection = node; nodeConnection != NULL; nodeConnection = nodeConnection->connectionFuture) {
 					fprintf(stream, "%d\t", node->trackedStructureIndex);
 					fprintf(stream, "%d\t", nodeConnection->time + 1);
 					fprintf(stream, "%f\t", nodeConnection->info->getX());
@@ -118,12 +117,11 @@ Colonne 6 ou 7         intensité intégrée
 int TabTimes::printConnectionsASCII_trc()
 {
 	unsigned long index = 0;
-	for (int t = 0; t < nbTimes; t++) {
-		TimeNodes* _localTimeNodes = timeNodes[t];
+	for (int t = 0; t < nbTimes; t++) { const TimeNodes* _localTimeNodes = timeNodes[t];
 		for (int n = 0; n < _localTimeNodes->nbNodes; n++) {
 			Node* node = _localTimeNodes->tabNodes[n];
 			if (node->connectionPast == NULL && node->trackedStructureIndex > 0) {
-				for (Node* nodeConnection = node; nodeConnection != NULL; nodeConnection = nodeConnection->connectionFuture) {
+				for (const Node* nodeConnection = node; nodeConnection != NULL; nodeConnection = nodeConnection->connectionFuture) {
 					publicParameters->trc[index++] = node->trackedStructureIndex;
 					publicParameters->trc[index++] = nodeConnection->time + 1;
 					publicParameters->trc[index++] = nodeConnection->info->getX();
@@ -496,11 +494,10 @@ draw a segment between the nodes "node1" and "node2"
 ********************************************************************************************************************/
 void TabTimes::drawSegment(USrtArray& image, long time_, Node* node1, Node* node2)
 {
-	double dist = node1->distance(node2);
+	const double dist = node1->distance(node2);
 	if (dist > 1e-8) {
-		for (double t = 0; t < dist; t++) {
-			long x = (long)(node2->info->getX() * (dist - t) / dist + node1->info->getX() * t / dist);
-			long y = (long)(node2->info->getY() * (dist - t) / dist + node1->info->getY() * t / dist);
+		for (double t = 0; t < dist; t++) { const long x = (long)(node2->info->getX() * (dist - t) / dist + node1->info->getX() * t / dist);
+			const long y = (long)(node2->info->getY() * (dist - t) / dist + node1->info->getY() * t / dist);
 			image.data[time_ * image.size(1) * image.size(2) + image.size(1) * y + x] = (unsigned short)node1->colorIndex[0];
 		}
 	}

@@ -14,19 +14,19 @@ float GaussianFit2D_Sigma::deriv1I0(float x, float y, float I0, float x0, float 
 
 float GaussianFit2D_Sigma::deriv1x0(float x, float y, float I0, float x0, float y0, float sigma)
 {
-	float p = I0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
+	const float p = I0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
 	return p * ((x - x0) / pow(sigma, 2));
 }
 
 float GaussianFit2D_Sigma::deriv1y0(float x, float y, float I0, float x0, float y0, float sigma)
 {
-	float p = I0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
+	const float p = I0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
 	return p * ((y - y0) / pow(sigma, 2));
 }
 
 float GaussianFit2D_Sigma::deriv1sigma(float x, float y, float I0, float x0, float y0, float sigma)
 {
-	float p = I0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
+	const float p = I0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
 	return p / pow(sigma, 3) * (pow(x - x0, 2) + pow(y - y0, 2));
 }
 

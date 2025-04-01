@@ -14,13 +14,13 @@ float GaussianFit2D::deriv1I0(float x, float y, float I0, float x0, float y0) { 
 
 float GaussianFit2D::deriv1x0(float x, float y, float I0, float x0, float y0)
 {
-	float p = I0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
+	const float p = I0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
 	return p * ((x - x0) / pow(sigma, 2));
 }
 
 float GaussianFit2D::deriv1y0(float x, float y, float I0, float x0, float y0)
 {
-	float p = I0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
+	const float p = I0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
 	return p * ((y - y0) / pow(sigma, 2));
 }
 

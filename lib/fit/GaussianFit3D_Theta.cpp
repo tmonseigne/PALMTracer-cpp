@@ -15,41 +15,41 @@ float GaussianFit3D_Theta::deriv1I0(float x, float y, float I0, float x0, float 
 
 float GaussianFit3D_Theta::deriv1x0(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float angle, float offset)
 {
-	float p = I0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
-	float alpha = -((-2 * pow(cos(angle), 2) * (x - x0) + 2 * (y - y0) * cos(angle) * sin(angle)) / pow(sigmaX, 2));
-	float beta = -((-2 * pow(sin(angle), 2) * (x - x0) - 2 * (y - y0) * cos(angle) * sin(angle)) / pow(sigmaY, 2));
+	const float p = I0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
+	const float alpha = -((-2 * pow(cos(angle), 2) * (x - x0) + 2 * (y - y0) * cos(angle) * sin(angle)) / pow(sigmaX, 2));
+	const float beta = -((-2 * pow(sin(angle), 2) * (x - x0) - 2 * (y - y0) * cos(angle) * sin(angle)) / pow(sigmaY, 2));
 	return p * (alpha + beta);
 }
 
 float GaussianFit3D_Theta::deriv1y0(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float angle, float offset)
 {
-	float p = I0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
-	float alpha = -((2 * pow(sin(angle), 2) * (y - y0) - 2 * (x - x0) * cos(angle) * sin(angle)) / pow(sigmaX, 2));
-	float beta = -((-2 * pow(cos(angle), 2) * (y - y0) - 2 * (x - x0) * cos(angle) * sin(angle)) / pow(sigmaY, 2));
+	const float p = I0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
+	const float alpha = -((2 * pow(sin(angle), 2) * (y - y0) - 2 * (x - x0) * cos(angle) * sin(angle)) / pow(sigmaX, 2));
+	const float beta = -((-2 * pow(cos(angle), 2) * (y - y0) - 2 * (x - x0) * cos(angle) * sin(angle)) / pow(sigmaY, 2));
 	return p * (alpha + beta);
 }
 
 float GaussianFit3D_Theta::deriv1sigmaX(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float angle, float offset)
 {
-	float p = I0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
-	float alpha = pow((x - x0) * cos(angle), 2) - 2 * (x - x0) * (y - y0) * cos(angle) * sin(angle) + pow((y - y0) * sin(angle), 2);
+	const float p = I0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
+	const float alpha = pow((x - x0) * cos(angle), 2) - 2 * (x - x0) * (y - y0) * cos(angle) * sin(angle) + pow((y - y0) * sin(angle), 2);
 	return p * (2 * alpha / pow(sigmaX, 3));
 }
 
 float GaussianFit3D_Theta::deriv1sigmaY(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float angle, float offset)
 {
-	float p = I0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
-	float alpha = pow((x - x0) * sin(angle), 2) + 2 * (x - x0) * (y - y0) * cos(angle) * sin(angle) + pow((y - y0) * cos(angle), 2);
+	const float p = I0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
+	const float alpha = pow((x - x0) * sin(angle), 2) + 2 * (x - x0) * (y - y0) * cos(angle) * sin(angle) + pow((y - y0) * cos(angle), 2);
 	return p * (2 * alpha / pow(sigmaY, 3));
 }
 
 float GaussianFit3D_Theta::deriv1angle(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float angle, float offset)
 {
-	float p = I0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
-	float a = pow(x - x0, 2);
-	float b = pow(y - y0, 2);
-	float sX2 = pow(sigmaX, 2);
-	float sY2 = pow(sigmaY, 2);
+	const float p = I0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
+	const float a = pow(x - x0, 2);
+	const float b = pow(y - y0, 2);
+	const float sX2 = pow(sigmaX, 2);
+	const float sY2 = pow(sigmaY, 2);
 	return p * (2 * sin(angle) * cos(angle) * ((a - b) / sX2 + (b - a) / sY2) - pow(sin(angle), 2) * (2 * (x - x0) * (y - y0) / sX2 + -2 * (x - x0) * (y - y0) / sY2) + pow(cos(angle), 2) * (2 * (x - x0) * (y - y0) / sX2 + -2 * (x - x0) * (y - y0) / sY2));
 }
 
