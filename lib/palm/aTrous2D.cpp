@@ -6,6 +6,11 @@
 #define	OFFSET(i,j)	offset((i),(j),sizeDataY)
 #define	OFFSETTEST(i,j)	offsetTest((i),(j),sizeDataX,sizeDataY)
 
+unsigned long twoToThe(const unsigned long val)
+{
+	if (val == 0) { return 1; }
+	return (unsigned long)1 << val;
+}
 
 int ATrous::offsetTest(int i, int j, const int maxSizeI, const int maxSizeJ)
 {

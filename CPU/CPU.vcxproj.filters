@@ -2,9 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="PALM.cpp" />
-    <ClCompile Include="..\lib\tools\miscTools.cpp">
-      <Filter>Tools</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\tools\USrtArray.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
@@ -60,9 +57,6 @@
       <Filter>Tools</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tools\lists.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tools\miscTools.h">
       <Filter>Tools</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tools\pandore.h">

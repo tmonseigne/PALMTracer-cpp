@@ -1,7 +1,6 @@
 #pragma once
 #include <memory.h>
 #include "tools/allDataLib.h"
-#include "tools/miscTools.h"
 
 
 class ATrous

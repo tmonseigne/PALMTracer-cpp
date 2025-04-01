@@ -11,9 +11,6 @@
     <ClCompile Include="..\lib\tools\FltArray.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tools\miscTools.cpp">
-      <Filter>Tools</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\tools\operators.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
@@ -81,9 +78,6 @@
       <Filter>Tools</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tools\lists.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tools\miscTools.h">
       <Filter>Tools</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tools\NoError.h">

@@ -112,7 +112,6 @@
     <ClInclude Include="..\lib\tools\FltArray.h" />
     <ClInclude Include="..\lib\tools\generalParam.h" />
     <ClInclude Include="..\lib\tools\lists.h" />
-    <ClInclude Include="..\lib\tools\miscTools.h" />
     <ClInclude Include="..\lib\tools\NoError.h" />
     <ClInclude Include="..\lib\tools\pandore.h" />
     <ClInclude Include="..\lib\tools\USrtArray.h" />
@@ -137,7 +136,6 @@
     <ClCompile Include="..\lib\tools\arrayType.cpp" />
     <ClCompile Include="..\lib\tools\BlArray.cpp" />
     <ClCompile Include="..\lib\tools\FltArray.cpp" />
-    <ClCompile Include="..\lib\tools\miscTools.cpp" />
     <ClCompile Include="..\lib\tools\operators.cpp" />
     <ClCompile Include="..\lib\tools\USrtArray.cpp" />
     <ClCompile Include="..\lib\tracking\chain_neighbor.cpp" />
