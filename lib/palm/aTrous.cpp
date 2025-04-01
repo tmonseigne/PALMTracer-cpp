@@ -1,5 +1,7 @@
 #include "aTrous.h"
 
+#include "tools/allDataLib.h"
+
 
 ATrous::ATrous()
 {

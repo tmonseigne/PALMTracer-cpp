@@ -2,9 +2,7 @@
 #include <algorithm>
 #include <cfloat>
 #include <cmath>
-#include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <ctime>
 // CPU version of gaussian fit 3D
 #define Npar 6 // I0, x0, y0, sigmaX, sigmaY, offset

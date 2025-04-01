@@ -5,9 +5,6 @@
 #ifndef __link_3D__
 #define __link_3D__
 
-#include <stdio.h>
-#include "tools/allDataLib.h"
-
 typedef struct
 {
 	double x;

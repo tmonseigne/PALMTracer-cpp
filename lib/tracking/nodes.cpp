@@ -10,6 +10,10 @@ links to the current objet.
 
 #include "nodes.h"
 
+#include <cwchar>
+
+#include "palm/parameters.h"
+
 float globalDistMax;
 
 /*********************************************************************************************

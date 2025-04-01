@@ -8,6 +8,7 @@ Class TimeNodes contains the Node objets for one time.
 ********************************************************************************************************************/
 
 #include "time_nodes.h"
+#include <cstdio>
 
 extern FILE* outputStream;
 //extern PublicParameters *publicParameters;

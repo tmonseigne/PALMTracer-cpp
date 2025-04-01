@@ -6,6 +6,8 @@
 *******************************************************************************************************************/
 
 
+#include <cstdio>
+
 #include "nodes_dist_inten.h"
 //extern PublicParameters *publicParameters;
 extern FILE* outputStream;

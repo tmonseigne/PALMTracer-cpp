@@ -8,7 +8,7 @@ InfoStruct2D::InfoStruct2D(int index)
 {
 	data.index = index;
 	data.zOrderComputed = 0;
-	next = NULL;
+	next = nullptr;
 }
 
 InfoStruct2D::~InfoStruct2D() { }

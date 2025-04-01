@@ -5,7 +5,6 @@
 #pragma once
 
 #include <stdlib.h>
-#include <time.h>  //for rand()
 #include <vector>
 #include "general.h"
 #include "time_nodes.h"

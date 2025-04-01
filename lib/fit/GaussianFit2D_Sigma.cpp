@@ -2,9 +2,7 @@
 #include <algorithm>
 #include <cfloat>
 #include <cmath>
-#include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <ctime>
 
 // CPU version of gaussian fit 2D

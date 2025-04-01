@@ -7,6 +7,7 @@
 #include "general.h"
 #include "palm/info_2D.h"
 #include "palm/info_3D.h"
+#include "tools/NoError.h"
 
 class InfoNode
 {
@@ -27,7 +28,7 @@ public:
 	virtual unsigned long getIndex() { return T_ERR_OOP; };
 	virtual unsigned long getTime() { return T_ERR_OOP; };
 	virtual unsigned long sizeofInfoData() { return T_ERR_OOP; };
-	virtual void* getPtrInfoData() { return NULL; };
+	virtual void* getPtrInfoData() { return nullptr; };
 
 	virtual void setSurface(long s) { };
 	virtual void setX(double x) { };

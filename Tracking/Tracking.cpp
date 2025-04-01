@@ -36,8 +36,7 @@ void autoCompleteFilename(wchar_t* filename, wchar_t* filenameFolder)
 	}
 }
 
-
-_declspec(dllexport) long _stdcall Tracking(/*wchar_t* statFile, wchar_t* folderOut, wchar_t* fileResASCII, */double* pointsList, unsigned long pointsListSize, double* trc, unsigned long trcSize, double maxSpeed, double dZdX, double minLife, double decrease, unsigned long allowFusiondisso, double costBirth, unsigned long nbDim, unsigned long model, unsigned long nbTimes)
+_declspec(dllexport) long _stdcall Tracking(double* pointsList, unsigned long pointsListSize, double* trc, unsigned long trcSize, double maxSpeed, double dZdX, double minLife, double decrease, unsigned long allowFusiondisso, double costBirth, unsigned long nbDim, unsigned long model, unsigned long nbTimes)
 {
 	TabTimes* tabTimes;
 	int ret;
@@ -77,11 +76,11 @@ _declspec(dllexport) long _stdcall Tracking(/*wchar_t* statFile, wchar_t* folder
 	publicParameters->nbTraj = 0;
 
 	switch (publicParameters->model) {
-		case 1: tabTimes = new TabTimesCloserNeighbors(publicParameters);
-			break;
-		case 2: tabTimes = new TabTimesDistanceIntensity(publicParameters);
-			break;
-		default: return T_ERR_BAD_MODEL;
+	case 1: tabTimes = new TabTimesCloserNeighbors(publicParameters);
+		break;
+	case 2: tabTimes = new TabTimesDistanceIntensity(publicParameters);
+		break;
+	default: return T_ERR_BAD_MODEL;
 	}
 
 	if ((ret = tabTimes->initialisation()) < 0) { return ret; }
@@ -96,14 +95,14 @@ _declspec(dllexport) long _stdcall Tracking(/*wchar_t* statFile, wchar_t* folder
 	return nb;
 }
 
-_declspec(dllexport) long _stdcall tracking_30(/*wchar_t* statFile, wchar_t* folderOut, wchar_t* fileResASCII, */double* pointsList, unsigned long pointsListSize, double* trc, unsigned long trcSize, double maxSpeed, double dZdX, double minLife, double decrease, unsigned long allowFusiondisso, double costBirth, unsigned long nbDim, unsigned long model, unsigned long nbTimes)
+_declspec(dllexport) long _stdcall Process(double* pointsList, unsigned long pointsListSize, double* trc, unsigned long trcSize, double maxSpeed, double dZdX, double minLife, double decrease, unsigned long allowFusiondisso, double costBirth, unsigned long nbDim, unsigned long model, unsigned long nbTimes)
 {
 	TabTimes* tabTimes;
 	int ret;
 
 	PublicParameters* publicParameters = new PublicParameters();
 
-	publicParameters->NbIterations = 30; //The number of ietrations for 'tracking_30' function
+	publicParameters->NbIterations = 300; //By default value of the number of ietrations
 
 	publicParameters->NbSegParams = 13;
 

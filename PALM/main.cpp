@@ -3,9 +3,7 @@
 #include <cstdlib>
 #include <gsl/gsl_bspline.h>
 #include <gsl/gsl_multifit.h>
-#include <gsl\gsl_randist.h>
 #include <gsl\gsl_rng.h>
-#include <gsl\gsl_statistics.h>
 
 using namespace std;
 #include <fstream>

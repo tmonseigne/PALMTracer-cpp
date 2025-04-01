@@ -3,12 +3,6 @@
 *******************************************************************************************************************/
 #pragma once
 
-#include <fcntl.h>
-#include <io.h>
-#include <math.h>
-#include <stdio.h>
-#include <wchar.h>
-#include <sys/stat.h>
 #define	MIN(i,j)	((i)<(j) ? (i) : (j) )
 
 

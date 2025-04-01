@@ -1,4 +1,6 @@
 #include "ATrous.h"
+#include "tools/allDataLib.h"
+#include "tools/NoError.h"
 
 
 #define	OFFSET(i,j)	offset((i),(j),sizeDataY)

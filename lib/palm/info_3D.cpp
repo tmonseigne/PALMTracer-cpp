@@ -6,7 +6,7 @@
 InfoStruct3D::InfoStruct3D(int index)
 {
 	data.index = index;
-	next = NULL;
+	next = nullptr;
 }
 
 InfoStruct3D::~InfoStruct3D() { }

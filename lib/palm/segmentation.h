@@ -2,16 +2,11 @@
 
 #include <io.h>
 #include <fcntl.h>
-#include <sys/stat.h>
-#include <malloc.h>
 #include <string.h>
-#include <time.h>
 
 
-#include "tools/allDataLib.h"
 #include "tools/lists.h"
 //#include "../ReadWriteSTKNew/ReadWriteSTK.h"
-#include "tools/generalParam.h"
 
 #define MAX_TAB	10000
 

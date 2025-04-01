@@ -4,6 +4,8 @@
 *******************************************************************************************************************/
 
 
+#include <cmath>
+
 #include "Info_Node.h"
 
 //extern PublicParameters *publicParameters;

@@ -3,10 +3,6 @@
 *******************************************************************************************************************/
 #pragma once
 
-#include <math.h>
-#include <stdio.h>
-#include "tools/allDataLib.h"
-
 #define MAX_NB_ANGLES_GABOR	8
 #define MAX_NB_FREQ_GABOR	13
 

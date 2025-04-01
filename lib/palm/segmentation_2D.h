@@ -3,6 +3,7 @@
 #include "Windows.h"
 #include "segmentation.h"
 #include "info_2D.h"
+#include "tools/allDataLib.h"
 
 
 class Segment2D : public Segment
