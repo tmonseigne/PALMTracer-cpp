@@ -15,7 +15,7 @@
 class NodeDistanceIntensity : public Node
 {
 private:
-	double getLikeness(double difference, double sigma);
+	static double getLikeness(double difference, double sigma);
 	double likenessDistance(Node* n) override;
 	double likenessDistanceFusion(Node* n1, Node* n2) override;
 	double likenessFusion(Node* n1, Node* n2) override;
@@ -60,8 +60,8 @@ private:
 	double makeChangeBlinkLinkage4(double limitLoss, ChainNeighbor* cRand);
 	double makeChangeBlinkLinkage5(double limitLoss, ChainNeighbor* cRand);
 
-	double stericEffect(Node* n1, Node* n2);
-	bool metropolis(double deltaE, double temperature);
+	static double stericEffect(Node* n1, Node* n2);
+	static bool metropolis(double deltaE, double temperature);
 
 public:
 	void computeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean, double& stdDistanceComputing, long& countStdDist, bool sigmaClipping, long* hist);

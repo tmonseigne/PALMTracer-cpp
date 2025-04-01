@@ -1,4 +1,4 @@
-#include "ATrous.h"
+#include "aTrous.h"
 #include "tools/allDataLib.h"
 #include "tools/NoError.h"
 
@@ -7,7 +7,7 @@
 #define	OFFSETTEST(i,j)	offsetTest((i),(j),sizeDataX,sizeDataY)
 
 
-int ATrous::offsetTest(int i, int j, int maxSizeI, int maxSizeJ)
+int ATrous::offsetTest(int i, int j, const int maxSizeI, const int maxSizeJ)
 {
 	//Same as offset but if i or j are out of bounds, it changes them to be in bounds.
 	if (i < 0) { i = 0; }
@@ -18,7 +18,7 @@ int ATrous::offsetTest(int i, int j, int maxSizeI, int maxSizeJ)
 }
 
 
-int ATrous::offset(int i, int j, int maxSizeJ)
+int ATrous::offset(const int i, const int j, const int maxSizeJ)
 {
 	//Compute the offset translate   tab[i][j] to tab[i*maxSizeJ+j]
 	return i * maxSizeJ + j;
@@ -76,7 +76,7 @@ int ATrous::testSizes2D(USrtArray& inputData, FltArray& outputData, BlArray& pla
 }
 
 
-void ATrous::projectionV02D(unsigned short* srcData, float* destData, unsigned long realProj, unsigned long sizeDataX, unsigned long sizeDataY)
+void ATrous::projectionV02D(unsigned short* srcData, float* destData, const unsigned long realProj, const unsigned long sizeDataX, const unsigned long sizeDataY)
 {
 	//Makes a projection in V0 space to be in the apropriate condition of the multiresolution, 
 	//realProj make be set to 1 if realProj=0 it just copy the data from srcData to destData
@@ -121,7 +121,7 @@ void ATrous::projectionV02D(unsigned short* srcData, float* destData, unsigned l
 	else { for (i = 0; i < (long)(sizeDataX * sizeDataY); i++) { destData[i] = (float)srcData[i]; } }
 }
 
-void ATrous::projectionV02D(float* srcData, float* destData, unsigned long realProj, unsigned long sizeDataX, unsigned long sizeDataY)
+void ATrous::projectionV02D(float* srcData, float* destData, const unsigned long realProj, const unsigned long sizeDataX, const unsigned long sizeDataY)
 {
 	//Makes a projection in V0 space to be in the apropriate condition of the multiresolution,
 	//realProj make be set to 1 if realProj=0 it just copy the data from srcData to destData
@@ -167,7 +167,7 @@ void ATrous::projectionV02D(float* srcData, float* destData, unsigned long realP
 }
 
 
-int ATrous::b3SplineFiltering2D(float* srcData, float* destData, unsigned long sizeDataX, unsigned long sizeDataY, unsigned long currentPlane)
+int ATrous::b3SplineFiltering2D(float* srcData, float* destData, const unsigned long sizeDataX, const unsigned long sizeDataY, const unsigned long currentPlane)
 {
 	//Makes the projection in V(x) with hte knowlage of V(x-1)
 	int i, j, offsetij;
@@ -230,7 +230,7 @@ int ATrous::b3SplineFiltering2D(float* srcData, float* destData, unsigned long s
 }
 
 
-int ATrous::aTrousDecomposition2D(FltArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long nbPlane, bool realProj)
+int ATrous::aTrousDecomposition2D(FltArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long nbPlane, const bool realProj)
 {
 	/**	
 		WAVELET TRANSFORM WITH "A TROUS" ALGORITHM
@@ -291,7 +291,7 @@ int ATrous::aTrousDecomposition2D(FltArray& inputData, FltArray& outputData, BlA
 	return nbPlane;
 }
 
-int ATrous::aTrousDecomposition2D(USrtArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long nbPlane, bool realProj)
+int ATrous::aTrousDecomposition2D(USrtArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long nbPlane, const bool realProj)
 {
 	/**	
 		WAVELET TRANSFORM WITH "A TROUS" ALGORITHM

@@ -8,36 +8,36 @@
 #define Npar 6 // I0, x0, y0, sigmaX, sigmaY, offset
 
 
-float GaussianFit3D::PSF(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float offset) { return I0 * exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2)) + offset; }
+float GaussianFit3D::PSF(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY, const float offset) const { return i0 * exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2)) + offset; }
 
-float GaussianFit3D::deriv1I0(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float offset) { return exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2)); }
+float GaussianFit3D::deriv1I0(const float x, const float y, const float x0, const float y0, const float sigmaX, const float sigmaY, float offset) const { return exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2)); }
 
-float GaussianFit3D::deriv1x0(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float offset)
+float GaussianFit3D::deriv1x0(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY, float offset) const
 {
-	const float p = I0 * exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2));
+	const float p = i0 * exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2));
 	const float alpha = -((-2 * pow(cos(ANGLE), 2) * (x - x0) + 2 * (y - y0) * cos(ANGLE) * sin(ANGLE)) / pow(sigmaX, 2));
 	const float beta = -((-2 * pow(sin(ANGLE), 2) * (x - x0) - 2 * (y - y0) * cos(ANGLE) * sin(ANGLE)) / pow(sigmaY, 2));
 	return p * (alpha + beta);
 }
 
-float GaussianFit3D::deriv1y0(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float offset)
+float GaussianFit3D::deriv1y0(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY, float offset) const
 {
-	const float p = I0 * exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2));
+	const float p = i0 * exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2));
 	const float alpha = -((2 * pow(sin(ANGLE), 2) * (y - y0) - 2 * (x - x0) * cos(ANGLE) * sin(ANGLE)) / pow(sigmaX, 2));
 	const float beta = -((-2 * pow(cos(ANGLE), 2) * (y - y0) - 2 * (x - x0) * cos(ANGLE) * sin(ANGLE)) / pow(sigmaY, 2));
 	return p * (alpha + beta);
 }
 
-float GaussianFit3D::deriv1sigmaX(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float offset)
+float GaussianFit3D::deriv1sigmaX(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY, float offset) const
 {
-	const float p = I0 * exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2));
+	const float p = i0 * exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2));
 	const float alpha = pow((x - x0) * cos(ANGLE), 2) - 2 * (x - x0) * (y - y0) * cos(ANGLE) * sin(ANGLE) + pow((y - y0) * sin(ANGLE), 2);
 	return p * (2 * alpha / pow(sigmaX, 3));
 }
 
-float GaussianFit3D::deriv1sigmaY(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float offset)
+float GaussianFit3D::deriv1sigmaY(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY, float offset) const
 {
-	const float p = I0 * exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2));
+	const float p = i0 * exp(-pow(((x - x0) * cos(ANGLE) - (y - y0) * sin(ANGLE)) / sigmaX, 2) - pow(((x - x0) * sin(ANGLE) + (y - y0) * cos(ANGLE)) / sigmaY, 2));
 	const float alpha = pow((x - x0) * sin(ANGLE), 2) + 2 * (x - x0) * (y - y0) * cos(ANGLE) * sin(ANGLE) + pow((y - y0) * cos(ANGLE), 2);
 	return p * (2 * alpha / pow(sigmaY, 3));
 }
@@ -55,7 +55,7 @@ float GaussianFit3D::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat
 	//float dydp[Npnt * Npar];
 	float* dydp = (float*)malloc(Npnt * Npar * sizeof(float));
 	for (int elt = 0; elt < Npnt; elt++) {
-		dydp[0 + elt * Npar] = deriv1I0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5]);     // I0
+		dydp[0 + elt * Npar] = deriv1I0((float)t[elt * 2], (float)t[elt * 2 + 1], p[1], p[2], p[3], p[4], p[5]);     // I0
 		dydp[1 + elt * Npar] = deriv1x0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5]);     // x0
 		dydp[2 + elt * Npar] = deriv1y0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5]);     // y0
 		dydp[3 + elt * Npar] = deriv1sigmaX((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5]); // sigmaX
@@ -192,13 +192,13 @@ void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 			weight_sq[ii] = pow(weight[ii], 2);
 		}
 
-		float epsilon_1 = 1e-6;
-		float epsilon_2 = 1e-6;
-		float epsilon_3 = 1e-5;
-		float epsilon_4 = 1e-2;
-		float lambda_0 = 1e-2;
-		float lambda_UP_fac = 11;
-		float lambda_DN_fac = 9;
+		constexpr float epsilon_1 = 1e-6;
+		constexpr float epsilon_2 = 1e-6;
+		constexpr float epsilon_3 = 1e-5;
+		constexpr float epsilon_4 = 1e-2;
+		constexpr float lambda_0 = 1e-2;
+		constexpr float lambda_UP_fac = 11;
+		constexpr float lambda_DN_fac = 9;
 
 		float lambda;
 

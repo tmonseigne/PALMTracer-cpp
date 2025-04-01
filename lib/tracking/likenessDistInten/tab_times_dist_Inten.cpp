@@ -19,13 +19,13 @@ TabTimesDistanceIntensity::TabTimesDistanceIntensity(PublicParameters* _publicPa
 /********************************************************************************************************************
 allocTabTimes(int _nbTimes) alloc an array of _nbTimes long 
 ********************************************************************************************************************/
-TimeNodes* TabTimesDistanceIntensity::allocTimeNodes(long _time, long _nbNodes) { return new TimeNodesDistanceIntensity(_time, _nbNodes, publicParameters); }
+TimeNodes* TabTimesDistanceIntensity::allocTimeNodes(const long _time, const long _nbNodes) { return new TimeNodesDistanceIntensity(_time, _nbNodes, publicParameters); }
 
 
 /********************************************************************************************************************
 getLikenessGlobal() compute the totalLikeness of hte system
 ********************************************************************************************************************/
-double TabTimesDistanceIntensity::getLikenessGlobal()
+double TabTimesDistanceIntensity::getLikenessGlobal() const
 {
 	double _likeness = 0.;
 	for (int _time = 0; _time < nbTimes; _time++) { _likeness += ((TimeNodesDistanceIntensity*)timeNodes[_time])->getLikenessTime(nbTimes); }
@@ -39,7 +39,7 @@ publicParameters->stdIntensity
 publicParameters->stdMean
 publicParameters->stdDistance
 ********************************************************************************************************************/
-void TabTimesDistanceIntensity::computeConstantes()
+void TabTimesDistanceIntensity::computeConstantes() const
 {
 	publicParameters->stdIntensity = 1000;
 	publicParameters->stdMean = 1000;
@@ -77,7 +77,7 @@ void TabTimesDistanceIntensity::computeConstantes()
 /********************************************************************************************************************
 updateConstantes() ones the Tracking in compute, compute the constant
 ********************************************************************************************************************/
-void TabTimesDistanceIntensity::updateConstantes()
+void TabTimesDistanceIntensity::updateConstantes() const
 {
 	long cpt = 0;
 	double covID = 0;

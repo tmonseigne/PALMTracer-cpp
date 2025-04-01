@@ -15,5 +15,5 @@ protected:
 
 public:
 	TimeNodesCloserNeighbors(int _time, int _nbNodes, PublicParameters* _publicParameters);
-	int makeAllConnections();
+	int makeAllConnections() const;
 };

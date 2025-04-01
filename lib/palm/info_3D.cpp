@@ -3,7 +3,7 @@
 *******************************************************************************************************************/
 #include "info_3D.h"
 
-InfoStruct3D::InfoStruct3D(int index)
+InfoStruct3D::InfoStruct3D(const int index)
 {
 	data.index = index;
 	next = nullptr;

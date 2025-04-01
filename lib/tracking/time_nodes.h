@@ -20,12 +20,12 @@ public:
 	~TimeNodes();
 
 	PublicParameters* publicParameters;
-	Node* operator()(int i);
+	Node* operator()(int i) const;
 	int nbNodes;
-	int linkNeighborsPresent();
-	int linkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes);
-	int linkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes);
-	int sortByIntensityAllNeighbors();
+	int linkNeighborsPresent() const;
+	int linkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes) const;
+	int linkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes) const;
+	int sortByIntensityAllNeighbors() const;
 
-	void checkLinksHomogeneity(const wchar_t* st);
+	void checkLinksHomogeneity(const wchar_t* st) const;
 };

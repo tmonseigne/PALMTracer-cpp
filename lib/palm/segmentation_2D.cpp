@@ -6,17 +6,17 @@
 #define DATA(i,j)	data.data[(i)*sizeDataY+(j)]
 #define TEST_ALLOC(ptr) if((ptr)==NULL){printf("Error of allocation at line %d, file %s\n", __LINE__, __FILE__);return(ALLOC_ERR);}
 
-inline long min(long a, long b) { return a <= b ? a : b; }
-inline long min(long a, long b, long c, long d) { return min(min(a, b), min(c, d)); }
+inline long min(const long a, const long b) { return a <= b ? a : b; }
+inline long min(const long a, const long b, const long c, const long d) { return min(min(a, b), min(c, d)); }
 
 
-inline long max(long a, long b) { return a >= b ? a : b; }
+inline long max(const long a, const long b) { return a >= b ? a : b; }
 
-inline double min(double a, double b) { return a <= b ? a : b; }
+inline double min(const double a, const double b) { return a <= b ? a : b; }
 
-inline double max(double a, double b) { return a >= b ? a : b; }
+inline double max(const double a, const double b) { return a >= b ? a : b; }
 
-void** Segment2D::getTabInfo() { return (void**)tabInfo; }
+void** Segment2D::getTabInfo() const { return (void**)tabInfo; }
 
 void Segment2D::desalloc()
 {
@@ -32,7 +32,7 @@ void Segment2D::desalloc()
 	headInfo = NULL;
 }
 
-Segment2D::Segment2D(unsigned long _nbInfoStruct)
+Segment2D::Segment2D(const unsigned long _nbInfoStruct)
 {
 	headInfo = NULL;
 	nbInfoStruct = _nbInfoStruct;
@@ -49,7 +49,7 @@ Segment2D::Segment2D()
 Segment2D::~Segment2D() { desalloc(); }
 
 
-int Segment2D::alloc(unsigned long nbStruct)
+int Segment2D::alloc(const unsigned long nbStruct)
 {
 	desalloc();
 
@@ -289,7 +289,7 @@ float Segment2D::tic()
 	return (float)(st_time.wMilliseconds + 1000 * (st_time.wSecond + 60 * (st_time.wMinute + 60 * st_time.wHour)));
 }
 
-int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData, unsigned short gaussFit, bool doRealoc)
+int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData, const unsigned short gaussFit, const bool doRealoc)
 {
 	double val;
 	unsigned long ind;
@@ -443,7 +443,7 @@ int Segment2D::computeStatistics(FltArray& data, USrtArray& seg, float* waveData
 }
 
 
-unsigned short Segment2D::segmentation(FltArray& data, USrtArray& seg, double val, bool diagonal, bool fillHoles)
+unsigned short Segment2D::segmentation(FltArray& data, USrtArray& seg, const double val, const bool diagonal, const bool fillHoles)
 {
 	if (!fillHoles) { return segmentationPositiveValues(data, seg, val, diagonal); }
 	int ret;
@@ -477,7 +477,7 @@ unsigned short Segment2D::segmentation(FltArray& data, USrtArray& seg, double va
 }
 
 
-unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& seg, double val, bool diagonal)
+unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& seg, const double val, const bool diagonal)
 {
 	/**
 		segmentation2D segment the 2D signal "data" which is lower than "val". It gives a map of segmentation "seg". 
@@ -627,7 +627,7 @@ unsigned short Segment2D::segmentationNegativeValues(FltArray& data, USrtArray& 
 }
 
 
-unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& seg, double val, bool diagonal)
+unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& seg, const double val, const bool diagonal)
 {
 	/**
 		segmentation2D segment the 2D signal "data" which is upper than "val". It gives a map of segmentation "seg". 
@@ -776,7 +776,7 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	return structFinded - 1;
 }
 
-unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& seg, double val, bool diagonal, USrtArray& segHoles)
+unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& seg, const double val, const bool diagonal, USrtArray& segHoles)
 {
 	/**
 		segmentation2D segment the 2D signal "data" which is upper than "val". It gives a map of segmentation "seg". 
@@ -925,7 +925,7 @@ unsigned short Segment2D::segmentationPositiveValues(FltArray& data, USrtArray& 
 	return structFinded - 1;
 }
 
-void Segment2D::mixIndex(USrtArray& seg)
+void Segment2D::mixIndex(USrtArray& seg) const
 {
 	USrtArray* mixer = new USrtArray(nbInfoStruct + 1);
 	(*mixer)(0) = 0;

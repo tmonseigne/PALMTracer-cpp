@@ -29,7 +29,7 @@ Gives the noise degeneration for the used wavelet in the a trous algorithm.
 For example 0.3548 is the standard deviation in the first for a input image 
 full filled of gaussian noise with a std=1.
 */
-double ATrous::stdRef(long dim, unsigned long realProj, unsigned long plan)
+double ATrous::stdRef(const long dim, const unsigned long realProj, const unsigned long plan)
 {
 	static double _1DRealProj[11] = {0.368862, 0.243017, 0.172412, 0.121539, 0.085503, 0.060303, 0.043978, 0.030842, 0.020708, 0.015012, 0.011179};
 	static double _1D[11] = {0.723077, 0.285706, 0.179198, 0.122700, 0.085704, 0.060338, 0.043984, 0.030842, 0.020721, 0.015015, 0.011192};

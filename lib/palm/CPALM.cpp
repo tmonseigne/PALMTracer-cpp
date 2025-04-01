@@ -7,7 +7,7 @@
 #include "fit/GaussianFit3D.h"
 #include "fit/GaussianFit3D_Theta.h"
 
-CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsListSize, unsigned long sizeX, unsigned long sizeY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short size)
+CPALM::CPALM(unsigned short* image, double* pointsList, const unsigned long pointsListSize, const unsigned long sizeX, const unsigned long sizeY, const unsigned long waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin, const unsigned short gaussFit, const double sigmaX, const double sigmaY, const double angle, const unsigned short size)
 {
 	nbCalls = 0;
 	currentPoint = 0;

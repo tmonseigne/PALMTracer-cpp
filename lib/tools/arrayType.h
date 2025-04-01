@@ -47,7 +47,7 @@ public:
 #endif
 
 private:
-	int getDim(long i, long j, long k, long l);
+	static int getDim(long i, long j, long k, long l);
 	int testDim(long i, long j, long k, long l);
 
 public:
@@ -65,7 +65,7 @@ public:
 	int size(int di);
 	void setSize(int di, int valSize);
 	int dim();
-	int getDepth();
+	static int getDepth();
 
 	DataType& operator[](long i);
 	DataType& operator()(long i);

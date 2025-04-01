@@ -18,10 +18,10 @@ class Segment
 protected:
 	unsigned long nbInfoStruct;
 
-	void inc(unsigned long& nSeg, unsigned long** ptr, long& sizePtr);
+	static void inc(unsigned long& nSeg, unsigned long** ptr, long& sizePtr);
 
 public:
 	Segment();
 	virtual ~Segment();
-	unsigned long getNbStructs();
+	unsigned long getNbStructs() const;
 };

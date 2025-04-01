@@ -4,7 +4,7 @@
 #include "info_2D.h"
 
 
-InfoStruct2D::InfoStruct2D(int index)
+InfoStruct2D::InfoStruct2D(const int index)
 {
 	data.index = index;
 	data.zOrderComputed = 0;

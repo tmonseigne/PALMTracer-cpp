@@ -24,15 +24,15 @@ public:
 	Node(int _time, PublicParameters* _publicParameters);
 	~Node();
 
-	float distance(Node* node);
-	float distance(Node* n1, Node* n2);
+	float distance(Node* node) const;
+	float distance(Node* n1, Node* n2) const;
 
 	PublicParameters* publicParameters;
 	//InfoData2D	info;
 
-	bool checkLinksHomogeneity(const wchar_t* st);
+	bool checkLinksHomogeneity(const wchar_t* st) const;
 	bool checkLinksHomogeneityInVicinity(wchar_t* st);
-	bool checkLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2 = NULL, Node* p3 = NULL, Node* p4 = NULL, Node* p5 = NULL, Node* p6 = NULL);
+	static bool checkLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2 = NULL, Node* p3 = NULL, Node* p4 = NULL, Node* p5 = NULL, Node* p6 = NULL);
 	int time;
 	Node* connectionFuture;
 	Node* connectionBlinkFuture;
@@ -62,7 +62,7 @@ public:
 	long neighborsBlinkFutureCount;
 
 
-	int sortByIntersityNeighbors(ChainNeighbor** neighborsHead);
+	static int sortByIntersityNeighbors(ChainNeighbor** neighborsHead);
 
 	virtual double likeness(Node* n) { exit(T_ERR_OOP); }
 	virtual double likenessMeanIntensity(Node* n) { exit(T_ERR_OOP); }
@@ -76,6 +76,6 @@ public:
 	virtual double likenessBlink(Node* n) { exit(T_ERR_OOP); }
 
 
-	double distanceToBorder();
-	double stericEffect();
+	double distanceToBorder() const;
+	double stericEffect() const;
 };

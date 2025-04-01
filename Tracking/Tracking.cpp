@@ -36,7 +36,7 @@ void autoCompleteFilename(wchar_t* filename, wchar_t* filenameFolder)
 	}
 }
 
-_declspec(dllexport) long _stdcall Tracking(double* pointsList, unsigned long pointsListSize, double* trc, unsigned long trcSize, double maxSpeed, double dZdX, double minLife, double decrease, unsigned long allowFusiondisso, double costBirth, unsigned long nbDim, unsigned long model, unsigned long nbTimes)
+_declspec(dllexport) long _stdcall Tracking(double* pointsList, const unsigned long pointsListSize, double* trc, const unsigned long trcSize, const double maxSpeed, const double dZdX, const double minLife, const double decrease, const unsigned long allowFusiondisso, const double costBirth, unsigned long nbDim, const unsigned long model, const unsigned long nbTimes)
 {
 	TabTimes* tabTimes;
 	int ret;
@@ -95,7 +95,7 @@ _declspec(dllexport) long _stdcall Tracking(double* pointsList, unsigned long po
 	return nb;
 }
 
-_declspec(dllexport) long _stdcall Process(double* pointsList, unsigned long pointsListSize, double* trc, unsigned long trcSize, double maxSpeed, double dZdX, double minLife, double decrease, unsigned long allowFusiondisso, double costBirth, unsigned long nbDim, unsigned long model, unsigned long nbTimes)
+_declspec(dllexport) long _stdcall Process(double* pointsList, const unsigned long pointsListSize, double* trc, const unsigned long trcSize, const double maxSpeed, const double dZdX, const double minLife, const double decrease, const unsigned long allowFusiondisso, const double costBirth, unsigned long nbDim, const unsigned long model, const unsigned long nbTimes)
 {
 	TabTimes* tabTimes;
 	int ret;

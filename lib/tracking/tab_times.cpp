@@ -74,7 +74,7 @@ Colonne 4         Y
 Colonne 5 ou 6         nombre de pixels de l'objet
 Colonne 6 ou 7         intensité intégrée
 ********************************************************************************************************************/
-int TabTimes::printConnectionsASCII()
+int TabTimes::printConnectionsASCII() const
 {
 	FILE* stream;
 	if ((stream = _wfopen(publicParameters->fileResASCII, L"w")) == NULL) {
@@ -114,7 +114,7 @@ Colonne 4         Y
 Colonne 5 ou 6         nombre de pixels de l'objet
 Colonne 6 ou 7         intensité intégrée
 ********************************************************************************************************************/
-int TabTimes::printConnectionsASCII_trc()
+int TabTimes::printConnectionsASCII_trc() const
 {
 	unsigned long index = 0;
 	for (int t = 0; t < nbTimes; t++) { const TimeNodes* _localTimeNodes = timeNodes[t];
@@ -302,17 +302,17 @@ int TabTimes::readPointsList()
 /********************************************************************************************************************
 operator()(int i) to access to all TimeNodes objets. 
 ********************************************************************************************************************/
-TimeNodes* TabTimes::operator()(int i) { return timeNodes[i]; }
+TimeNodes* TabTimes::operator()(const int i) const { return timeNodes[i]; }
 
 /********************************************************************************************************************
 operator[](int i) to access to pointors to all TimeNodes objets. 
 ********************************************************************************************************************/
-TimeNodes** TabTimes::operator[](int i) { return timeNodes + i; }
+TimeNodes** TabTimes::operator[](const int i) const { return timeNodes + i; }
 
 /********************************************************************************************************************
 int linkNeighborsPresent() to link of the neighbors in the presents of all nodes of all times
 ********************************************************************************************************************/
-int TabTimes::linkNeighborsPresent()
+int TabTimes::linkNeighborsPresent() const
 {
 	int ret;
 	for (long time_ = 0; time_ < nbTimes; time_++) { if ((ret = timeNodes[time_]->linkNeighborsPresent()) < 0) { return ret; } }
@@ -323,7 +323,7 @@ int TabTimes::linkNeighborsPresent()
 /********************************************************************************************************************
 int linkNeighborsBeforeAndAfter() to link of the neighbors in the past and in the future of all nodes of all times
 ********************************************************************************************************************/
-int TabTimes::linkNeighborsBeforeAndAfter()
+int TabTimes::linkNeighborsBeforeAndAfter() const
 {
 	int ret;
 	for (long time_ = 0; time_ < nbTimes - 1; time_++) { if ((ret = timeNodes[time_]->linkNeighborsBeforeAndAfter(*timeNodes[time_ + 1])) < 0) { return ret; } }
@@ -334,7 +334,7 @@ int TabTimes::linkNeighborsBeforeAndAfter()
 int linkNeighborsBlinkBeforeAndAfter() to link of the neighbors in the past and in the future of all nodes of 
 all times for blinking purpose
 ********************************************************************************************************************/
-int TabTimes::linkNeighborsBlinkBeforeAndAfter()
+int TabTimes::linkNeighborsBlinkBeforeAndAfter() const
 {
 	int ret;
 	for (long time_ = 0; time_ < nbTimes; time_++) { for (long dt = 2; dt <= publicParameters->nbTemporalWindows; dt++) { if (time_ + dt < nbTimes) { if ((ret = timeNodes[time_]->linkNeighborsBlinkBeforeAndAfter(*timeNodes[time_ + dt])) < 0) { return ret; } } } }
@@ -344,7 +344,7 @@ int TabTimes::linkNeighborsBlinkBeforeAndAfter()
 /********************************************************************************************************************
 int sortByIntensityAllNeighbors() sort by intensity of the node neighbors of each time 
 ********************************************************************************************************************/
-int TabTimes::sortByIntensityAllNeighbors()
+int TabTimes::sortByIntensityAllNeighbors() const
 {
 	int ret;
 	for (long time_ = 0; time_ < nbTimes; time_++) { if ((ret = timeNodes[time_]->sortByIntensityAllNeighbors()) < 0) { return ret; } }
@@ -355,7 +355,7 @@ int TabTimes::sortByIntensityAllNeighbors()
 /********************************************************************************************************************
 void setColorToTrackedStructures() set a color index to each tracked structures
 ********************************************************************************************************************/
-void TabTimes::setColorToTrackedStructures()
+void TabTimes::setColorToTrackedStructures() const
 {
 	Node* nodePastFission;
 	Node* nodePastFission2;
@@ -451,7 +451,7 @@ void TabTimes::setColorToTrackedStructures()
 	}
 }
 
-void TabTimes::setIndexToTrackedStructures()
+void TabTimes::setIndexToTrackedStructures() const
 {
 	unsigned long newIndex = 1;
 	long nbSuccessiveNodes;
@@ -492,7 +492,7 @@ void TabTimes::setIndexToTrackedStructures()
 void drawSegment(UStrArray &image, long time, Node* node1, Node*node2)  In the 2D image "image" at the time "time", 
 draw a segment between the nodes "node1" and "node2"
 ********************************************************************************************************************/
-void TabTimes::drawSegment(USrtArray& image, long time_, Node* node1, Node* node2)
+void TabTimes::drawSegment(USrtArray& image, const long time_, Node* node1, Node* node2)
 {
 	const double dist = node1->distance(node2);
 	if (dist > 1e-8) {
@@ -526,4 +526,4 @@ int TabTimes::giveResult()
 /********************************************************************************************************************
 void checkLinksHomogeneity() just call the function to display the result
 ********************************************************************************************************************/
-void TabTimes::checkLinksHomogeneity(const wchar_t* st) { for (long time_ = 0; time_ < nbTimes; time_++) { timeNodes[time_]->checkLinksHomogeneity(st); } }
+void TabTimes::checkLinksHomogeneity(const wchar_t* st) const { for (long time_ = 0; time_ < nbTimes; time_++) { timeNodes[time_]->checkLinksHomogeneity(st); } }

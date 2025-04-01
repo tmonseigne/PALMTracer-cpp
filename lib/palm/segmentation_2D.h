@@ -17,18 +17,18 @@ private:
 	void desalloc();
 
 	int filterStructureWS(FltArray& potential, USrtArray& seg, float thresholdRatio);
-	int getLocalMax(FltArray& image, USrtArray& seg, float threshold);
-	int watershed(FltArray& potential, USrtArray& seg, float threshold);
+	static int getLocalMax(FltArray& image, USrtArray& seg, float threshold);
+	int watershed(FltArray& potential, USrtArray& seg, float threshold) const;
 
 	int filterStructureWS(USrtArray& potential, USrtArray& seg, float thresholdRatio);
-	int getLocalMax(USrtArray& image, USrtArray& seg, float threshold);
-	int watershed(USrtArray& potential, USrtArray& seg, float threshold);
+	static int getLocalMax(USrtArray& image, USrtArray& seg, float threshold);
+	int watershed(USrtArray& potential, USrtArray& seg, float threshold) const;
 
 	unsigned short segmentationPositiveValues(FltArray& data, USrtArray& seg, double val, bool diagonal);
 	unsigned short segmentationPositiveValues(FltArray& data, USrtArray& seg, double val, bool diagonal, USrtArray& segHoles);
 	unsigned short segmentationNegativeValues(FltArray& data, USrtArray& seg, double val, bool diagonal);
 
-	float tic();
+	static float tic();
 
 public:
 	Segment2D();
@@ -41,8 +41,8 @@ public:
 	int computeStatistics(FltArray& data, USrtArray& seg, float* waveData, unsigned short gaussFit, bool doRealoc = true);
 
 	unsigned long filterData(USrtArray& seg, double* param, unsigned short* useParam);
-	void** getTabInfo();
+	void** getTabInfo() const;
 
 	int watershedIntelligent(FltArray& potential, USrtArray& seg, float threshold, float thresholdRatio);
-	void mixIndex(USrtArray& seg);
+	void mixIndex(USrtArray& seg) const;
 };

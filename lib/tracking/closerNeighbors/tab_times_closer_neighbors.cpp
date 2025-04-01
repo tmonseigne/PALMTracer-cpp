@@ -17,7 +17,7 @@ TabTimesCloserNeighbors::TabTimesCloserNeighbors(PublicParameters* _publicParame
 /********************************************************************************************************************
 allocTabTimes(int _nbTimes) alloc an array of _nbTimes long 
 ********************************************************************************************************************/
-TimeNodes* TabTimesCloserNeighbors::allocTimeNodes(long _time, long _nbNodes) { return new TimeNodesCloserNeighbors(_time, _nbNodes, publicParameters); }
+TimeNodes* TabTimesCloserNeighbors::allocTimeNodes(const long _time, const long _nbNodes) { return new TimeNodesCloserNeighbors(_time, _nbNodes, publicParameters); }
 
 /********************************************************************************************************************
 runModel() is the core of the application, it links the structures according the selected model

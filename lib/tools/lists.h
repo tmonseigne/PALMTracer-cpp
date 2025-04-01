@@ -40,7 +40,7 @@ public:
 	 * Creates a new <code>Heap</code> with the specified size.
 	 * @param n	the maximum size of the heap.
 	 */
-	Heap(int n): _size(n), _nitem(0)
+	Heap(const int n): _size(n), _nitem(0)
 	{
 		if (n > 0) { _data = new(Theap<T>[n]); }
 		else { }
@@ -52,19 +52,19 @@ public:
 	 * Checks whether the heap is empty.
 	 * @return true if the heap empty.
 	 */
-	bool Empty() { return _nitem == 0; }
+	bool Empty() const { return _nitem == 0; }
 
 	/**
 	 * Checks whether the heap is full.
 	 * @return true if the heap full.
 	 */
-	bool Full() { return _nitem == _size - 1; }
+	bool Full() const { return _nitem == _size - 1; }
 
 	/**
 	 * Returns the current number of elements if the heap.
 	 * @return the current size of the heap
 	 */
-	int Nrank() { return _nitem; }
+	int Nrank() const { return _nitem; }
 
 	/**
 	 * Resets the heap (-> Nrank() = 0).

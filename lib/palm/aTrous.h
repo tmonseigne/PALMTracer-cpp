@@ -21,16 +21,16 @@ public:
 
 	//tools:
 public:
-	double stdRef(long dim, unsigned long realProj, unsigned long plan);
+	static double stdRef(long dim, unsigned long realProj, unsigned long plan);
 
 	//2D transform:
 private:
-	int offsetTest(int i, int j, int maxSizeI, int maxSizeJ);
-	int offset(int i, int j, int maxSizeJ);
-	int testSizes2D(FltArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long& nbPlane);
-	int testSizes2D(USrtArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long& nbPlane);
-	void projectionV02D(unsigned short* srcData, float* destData, unsigned long realProj, unsigned long sizeDataX, unsigned long sizeDataY);
-	void projectionV02D(float* srcData, float* destData, unsigned long realProj, unsigned long sizeDataX, unsigned long sizeDataY);
+	static int offsetTest(int i, int j, int maxSizeI, int maxSizeJ);
+	static int offset(int i, int j, int maxSizeJ);
+	static int testSizes2D(FltArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long& nbPlane);
+	static int testSizes2D(USrtArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long& nbPlane);
+	static void projectionV02D(unsigned short* srcData, float* destData, unsigned long realProj, unsigned long sizeDataX, unsigned long sizeDataY);
+	static void projectionV02D(float* srcData, float* destData, unsigned long realProj, unsigned long sizeDataX, unsigned long sizeDataY);
 	int b3SplineFiltering2D(float* srcData, float* destData, unsigned long sizeDataX, unsigned long sizeDataY, unsigned long currentPlane);
 
 public:

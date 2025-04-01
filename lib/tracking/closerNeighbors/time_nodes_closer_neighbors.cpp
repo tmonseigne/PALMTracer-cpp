@@ -16,13 +16,13 @@ Node* TimeNodesCloserNeighbors::allocNode() { return new NodeCloserNeighbors(tim
 /********************************************************************************************************************
 Constructor(int _time, int _nbNodes) is run after the base constructor TimeNodes::TimeNodes
 ********************************************************************************************************************/
-TimeNodesCloserNeighbors::TimeNodesCloserNeighbors(int _time, int _nbNodes, PublicParameters* _publicParameters): TimeNodes(_time, _nbNodes, _publicParameters) { for (int i = 0; i < nbNodes; i++) { tabNodes[i] = allocNode(); } }
+TimeNodesCloserNeighbors::TimeNodesCloserNeighbors(const int _time, const int _nbNodes, PublicParameters* _publicParameters): TimeNodes(_time, _nbNodes, _publicParameters) { for (int i = 0; i < nbNodes; i++) { tabNodes[i] = allocNode(); } }
 
 /********************************************************************************************************************
 makeAllConnections() finds connections from the nodes of this time to the nodes of the time after according the 
 selected model
 ********************************************************************************************************************/
-int TimeNodesCloserNeighbors::makeAllConnections()
+int TimeNodesCloserNeighbors::makeAllConnections() const
 {
 	for (int i = 0; i < nbNodes; i++) {
 		NodeCloserNeighbors* node = (NodeCloserNeighbors*)tabNodes[i];

@@ -35,7 +35,7 @@ public:
 
 // split: receives a char delimiter; returns a vector of strings
 // By default ignores repeated delimiters, unless argument rep == 1.
-vector<string>& splitstring::split(char delim, int rep)
+vector<string>& splitstring::split(const char delim, const int rep)
 {
 	if (!flds.empty()) { flds.clear(); } // empty vector if necessary
 	const string work = data();
@@ -57,7 +57,7 @@ vector<string>& splitstring::split(char delim, int rep)
 	return flds;
 }
 
-double evalFunction(double x, int nbPoints, vec x_sp, double* a, double* b, double* c, double* d)
+double evalFunction(const double x, const int nbPoints, vec x_sp, double* a, double* b, double* c, double* d)
 {
 	double y = -1.0;
 	for (int i = 0; i < nbPoints - 1; i++) { if (x < x_sp(i + 1) && x >= x_sp(i)) { y = a[i] * pow(x - x_sp(i), 3) + b[i] * pow(x - x_sp(i), 2) + c[i] * (x - x_sp(i)) + d[i]; } }

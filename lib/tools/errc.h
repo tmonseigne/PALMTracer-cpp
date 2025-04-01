@@ -96,7 +96,7 @@ public :
 	 * Creates a return value from the 
 	 * given Char value.
 	 */
-	Errc(Char l)
+	Errc(const Char l)
 	{
 		ret = Char_RET;
 		val.v_Char = l;
@@ -106,7 +106,7 @@ public :
 	 * Creates a return value from the 
 	 * given Uchar value.
 	 */
-	Errc(Uchar l)
+	Errc(const Uchar l)
 	{
 		ret = Uchar_RET;
 		val.v_Uchar = l;
@@ -116,7 +116,7 @@ public :
 	 * Creates a return value from the 
 	 * given Short value.
 	 */
-	Errc(Short l)
+	Errc(const Short l)
 	{
 		ret = Short_RET;
 		val.v_Short = l;
@@ -126,7 +126,7 @@ public :
 	 * Creates a return value from the 
 	 * given Ushort value.
 	 */
-	Errc(Ushort l)
+	Errc(const Ushort l)
 	{
 		ret = Ushort_RET;
 		val.v_Ushort = l;
@@ -136,7 +136,7 @@ public :
 	 * Creates a return value from the 
 	 * given Long value.
 	 */
-	Errc(Long l)
+	Errc(const Long l)
 	{
 		ret = Long_RET;
 		val.v_Long = l;
@@ -146,7 +146,7 @@ public :
 	 * Creates a return value from the 
 	 * given Ulong value.
 	 */
-	Errc(Ulong l)
+	Errc(const Ulong l)
 	{
 		ret = Ulong_RET;
 		val.v_Ulong = l;
@@ -156,7 +156,7 @@ public :
 	 * Creates a return value from the 
 	 * given Float value.
 	 */
-	Errc(Float l)
+	Errc(const Float l)
 	{
 		ret = Float_RET;
 		val.v_Float = l;
@@ -166,7 +166,7 @@ public :
 	 * Creates a return value from the 
 	 * given Double value.
 	 */
-	Errc(Double l)
+	Errc(const Double l)
 	{
 		ret = Double_RET;
 		val.v_Double = l;
@@ -189,7 +189,7 @@ public :
 		return *this;
 	}
 
-	operator bool() { return ret != FS_RET || val.fs == SUCCESS; }
+	operator bool() const { return ret != FS_RET || val.fs == SUCCESS; }
 #ifndef _WIN32
       operator FS_t() { return val.fs ; }
       operator Char() { return val.v_Char; }

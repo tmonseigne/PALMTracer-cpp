@@ -16,9 +16,9 @@ protected:
 
 public:
 	TimeNodesDistanceIntensity(int _time, int _nbNodes, PublicParameters* _publicParameters);
-	void computeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean, double& stdDistanceComputing, long& countStdDist, bool sigmaClipping, long* hist = NULL);
-	double makeAllInitializationConnections();
-	double tryRandomChange(double limit);
+	void computeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean, double& stdDistanceComputing, long& countStdDist, bool sigmaClipping, long* hist = NULL) const;
+	double makeAllInitializationConnections() const;
+	double tryRandomChange(double limit) const;
 
-	double getLikenessTime(long lastTime);
+	double getLikenessTime(long lastTime) const;
 };

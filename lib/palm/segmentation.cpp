@@ -27,4 +27,4 @@ void Segment::inc(unsigned long& nSeg, unsigned long** ptr, long& sizePtr)
 	free(newPtr);
 }
 
-unsigned long Segment::getNbStructs() { return nbInfoStruct; }
+unsigned long Segment::getNbStructs() const { return nbInfoStruct; }

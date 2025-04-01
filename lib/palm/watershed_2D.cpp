@@ -11,7 +11,7 @@ USrtArray &localMax: local maximum
 float thresholdRatio: value to distinguish if 2 strucutres in contact have to be considered as a single structure (
 							oversegmentation)
 ********************************************************************************************************************/
-int Segment2D::filterStructureWS(FltArray& potential, USrtArray& seg, float thresholdRatio)
+int Segment2D::filterStructureWS(FltArray& potential, USrtArray& seg, const float thresholdRatio)
 {
 	wsFusion2D* ptrStr = (wsFusion2D*)malloc((nbInfoStruct + 1) * sizeof(wsFusion2D));
 	long i, j;
@@ -116,7 +116,7 @@ FltArray &image: input image
 USrtArray &localMax: local maximum
 float threshold: a point to be considered as a local maximum have to be > to threshold.
 ********************************************************************************************************************/
-int Segment2D::getLocalMax(FltArray& image, USrtArray& seg, float threshold)
+int Segment2D::getLocalMax(FltArray& image, USrtArray& seg, const float threshold)
 {
 	seg = (unsigned short)0;
 	long ii, jj;
@@ -163,7 +163,7 @@ int Segment2D::watershed(...) compute watershed segmentation insied the reagion 
 FltArray &potential: defines the potential function the makes the watershed segmented area growing
 USrtArray &seg: it contains the result of the watershed segmentation. 
 ********************************************************************************************************************/
-int Segment2D::watershed(FltArray& potential, USrtArray& seg, float threshold)
+int Segment2D::watershed(FltArray& potential, USrtArray& seg, const float threshold) const
 {
 	float cle;
 
@@ -239,7 +239,7 @@ float thresholdRatio: value 0<= X <=1. Makes a fusion to minimize the oversegmen
 						if X=1 no watershed
 return value: number of detected structures
 ********************************************************************************************************************/
-int Segment2D::watershedIntelligent(FltArray& potential, USrtArray& seg, float threshold, float thresholdRatio)
+int Segment2D::watershedIntelligent(FltArray& potential, USrtArray& seg, const float threshold, const float thresholdRatio)
 {
 	int ret;
 
@@ -270,7 +270,7 @@ USrtArray &localMax: local maximum
 float thresholdRatio: value to distinguish if 2 strucutres in contact have to be considered as a single structure (
 							oversegmentation)
 ********************************************************************************************************************/
-int Segment2D::filterStructureWS(USrtArray& potential, USrtArray& seg, float thresholdRatio)
+int Segment2D::filterStructureWS(USrtArray& potential, USrtArray& seg, const float thresholdRatio)
 {
 	wsFusion2D* ptrStr = (wsFusion2D*)malloc((nbInfoStruct + 1) * sizeof(wsFusion2D));
 	long i, j;
@@ -375,7 +375,7 @@ USrtArray &image: input image
 USrtArray &localMax: local maximum
 float threshold: a point to be considered as a local maximum have to be > to threshold.
 ********************************************************************************************************************/
-int Segment2D::getLocalMax(USrtArray& image, USrtArray& seg, float threshold)
+int Segment2D::getLocalMax(USrtArray& image, USrtArray& seg, const float threshold)
 {
 	seg = (unsigned short)0;
 	long ii, jj;
@@ -422,7 +422,7 @@ int Segment2D::watershed(...) compute watershed segmentation insied the reagion 
 USrtArray &potential: defines the potential function the makes the watershed segmented area growing
 USrtArray &seg: it contains the result of the watershed segmentation. 
 ********************************************************************************************************************/
-int Segment2D::watershed(USrtArray& potential, USrtArray& seg, float threshold)
+int Segment2D::watershed(USrtArray& potential, USrtArray& seg, const float threshold) const
 {
 	float cle;
 

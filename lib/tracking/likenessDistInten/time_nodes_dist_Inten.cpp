@@ -17,14 +17,14 @@ Node* TimeNodesDistanceIntensity::allocNode() { return new NodeDistanceIntensity
 /********************************************************************************************************************
 Constructor(int _time, int _nbNodes) is run after the base constructor TimeNodes::TimeNodes
 ********************************************************************************************************************/
-TimeNodesDistanceIntensity::TimeNodesDistanceIntensity(int _time, int _nbNodes, PublicParameters* _publicParameters): TimeNodes(_time, _nbNodes, _publicParameters) { for (int i = 0; i < nbNodes; i++) { tabNodes[i] = allocNode(); } }
+TimeNodesDistanceIntensity::TimeNodesDistanceIntensity(const int _time, const int _nbNodes, PublicParameters* _publicParameters): TimeNodes(_time, _nbNodes, _publicParameters) { for (int i = 0; i < nbNodes; i++) { tabNodes[i] = allocNode(); } }
 
 
 /********************************************************************************************************************
 void computeConstantSigmas(double &stdIntensityComputing, double &stdMeanComputing, 
 	double &stdDistanceComputing, long &countStd) compute the constant kMean and kIntensity
 ********************************************************************************************************************/
-void TimeNodesDistanceIntensity::computeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean, double& stdDistanceComputing, long& countStdDist, bool sigmaClipping, long* hist)
+void TimeNodesDistanceIntensity::computeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean, double& stdDistanceComputing, long& countStdDist, const bool sigmaClipping, long* hist) const
 {
 	for (int i = 0; i < nbNodes; i++) {
 		NodeDistanceIntensity* node = (NodeDistanceIntensity*)tabNodes[i];
@@ -38,7 +38,7 @@ makeAllInitializationConnections() finds connections from the nodes of this time
 according the selected model.
 It returns the likeness computed for this time
 ********************************************************************************************************************/
-double TimeNodesDistanceIntensity::makeAllInitializationConnections()
+double TimeNodesDistanceIntensity::makeAllInitializationConnections() const
 {
 	double globalLikeness = 0.;
 	for (int i = 0; i < nbNodes; i++) {
@@ -52,7 +52,7 @@ double TimeNodesDistanceIntensity::makeAllInitializationConnections()
 tryRandomChange() take a random node at this time and try to apply a change
 It returns the gain in likeness computed with this change
 ********************************************************************************************************************/
-double TimeNodesDistanceIntensity::tryRandomChange(double limit)
+double TimeNodesDistanceIntensity::tryRandomChange(const double limit) const
 {
 	if (nbNodes < 1) { return 0.; } //<=
 	if (nbNodes == 1) { return ((NodeDistanceIntensity*)tabNodes[0])->makeChange(limit); }
@@ -62,7 +62,7 @@ double TimeNodesDistanceIntensity::tryRandomChange(double limit)
 /********************************************************************************************************************
 double giveLikeness(long lastTime) compute the total likeness for all nodes
 ********************************************************************************************************************/
-double TimeNodesDistanceIntensity::getLikenessTime(long lastTime)
+double TimeNodesDistanceIntensity::getLikenessTime(const long lastTime) const
 {
 	double globalLikeness = 0.;
 	for (int i = 0; i < nbNodes; i++) {

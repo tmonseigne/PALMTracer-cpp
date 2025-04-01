@@ -8,17 +8,17 @@
 // CPU version of gaussian fit 2D
 #define Npar 4 // I0, x0, y0, offset
 
-float GaussianFit2D::PSF(float x, float y, float I0, float x0, float y0, float offset) { return I0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2))) + offset; }
+float GaussianFit2D::PSF(const float x, const float y, const float i0, const float x0, const float y0, const float offset) const { return i0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2))) + offset; }
 
-float GaussianFit2D::deriv1I0(float x, float y, float I0, float x0, float y0) { return exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2))); }
+float GaussianFit2D::deriv1I0(const float x, const float y, const float x0, const float y0) const { return exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2))); }
 
-float GaussianFit2D::deriv1x0(float x, float y, float I0, float x0, float y0)
+float GaussianFit2D::deriv1x0(const float x, const float y, const float i0, const float x0, const float y0) const
 {
-	const float p = I0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
+	const float p = i0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
 	return p * ((x - x0) / pow(sigma, 2));
 }
 
-float GaussianFit2D::deriv1y0(float x, float y, float I0, float x0, float y0)
+float GaussianFit2D::deriv1y0(const float x, const float y, const float I0, const float x0, const float y0) const
 {
 	const float p = I0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
 	return p * ((y - y0) / pow(sigma, 2));
@@ -35,7 +35,7 @@ float GaussianFit2D::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat
 	// Computing Jacobian matrix (dydp)
 	float* dydp = (float*)malloc(Npnt * Npar * sizeof(float));
 	for (int elt = 0; elt < Npnt; elt++) {
-		dydp[0 + elt * Npar] = deriv1I0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2]); // I0
+		dydp[0 + elt * Npar] = deriv1I0((float)t[elt * 2], (float)t[elt * 2 + 1], p[1], p[2]); // I0
 		dydp[1 + elt * Npar] = deriv1x0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2]); // x0
 		dydp[2 + elt * Npar] = deriv1y0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2]); // y0
 		dydp[3 + elt * Npar] = 1;                                                                    // offset
@@ -168,13 +168,13 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 			weight_sq[ii] = pow(weight[ii], 2);
 		}
 
-		float epsilon_1 = 1e-6;
-		float epsilon_2 = 1e-6;
-		float epsilon_3 = 1e-5;
-		float epsilon_4 = 1e-2;
-		float lambda_0 = 1e-2;
-		float lambda_UP_fac = 11;
-		float lambda_DN_fac = 9;
+		constexpr float epsilon_1 = 1e-6;
+		constexpr float epsilon_2 = 1e-6;
+		constexpr float epsilon_3 = 1e-5;
+		constexpr float epsilon_4 = 1e-2;
+		constexpr float lambda_0 = 1e-2;
+		constexpr float lambda_UP_fac = 11;
+		constexpr float lambda_DN_fac = 9;
 
 		float lambda;
 

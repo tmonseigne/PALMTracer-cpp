@@ -17,7 +17,7 @@ Constructuor(int _time, int _nbNodes) of TimeNodes class.
 The current objets is at the time "time".
 Create nbNodes objets Node.
 ********************************************************************************************************************/
-TimeNodes::TimeNodes(int _time, int _nbNodes, PublicParameters* _publicParameters)
+TimeNodes::TimeNodes(const int _time, const int _nbNodes, PublicParameters* _publicParameters)
 {
 	publicParameters = _publicParameters;
 
@@ -40,12 +40,12 @@ TimeNodes::~TimeNodes()
 /********************************************************************************************************************
 operator()(int i) to access to all Node objets. 
 ********************************************************************************************************************/
-Node* TimeNodes::operator()(int i) { return tabNodes[i]; }
+Node* TimeNodes::operator()(const int i) const { return tabNodes[i]; }
 
 /********************************************************************************************************************
 linkNeighbors() build the chained list of all the neighbours of each nodes presents at this time. 
 ********************************************************************************************************************/
-int TimeNodes::linkNeighborsPresent()
+int TimeNodes::linkNeighborsPresent() const
 {
 	for (long i = 0; i < nbNodes; i++) {
 		for (long j = 0; j < nbNodes; j++) {
@@ -66,7 +66,7 @@ int TimeNodes::linkNeighborsPresent()
 linkBeforeAndAfter() for each structure at the time t, it builds the chained list of all the structures of the next 
 time (t+1) close to it. 
 ********************************************************************************************************************/
-int TimeNodes::linkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes)
+int TimeNodes::linkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes) const
 {
 	for (long presentNode = 0; presentNode < nbNodes; presentNode++) {
 		for (long futureNode = 0; futureNode < futureTimeNodes.nbNodes; futureNode++) {
@@ -86,7 +86,7 @@ int TimeNodes::linkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes)
 linkBlinkBeforeAndAfter() for each structure at the time t, it builds the chained list of all the structures of the next 
 time (t+dt) close to it. 
 ********************************************************************************************************************/
-int TimeNodes::linkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes)
+int TimeNodes::linkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes) const
 {
 	for (long presentNode = 0; presentNode < nbNodes; presentNode++) {
 		for (long futureNode = 0; futureNode < futureTimeNodes.nbNodes; futureNode++) {
@@ -105,7 +105,7 @@ int TimeNodes::linkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes)
 /********************************************************************************************************************
 sortByIntensityAllNeighbors() Sort by intersity all the neighbors of each nodes.
 ********************************************************************************************************************/
-int TimeNodes::sortByIntensityAllNeighbors()
+int TimeNodes::sortByIntensityAllNeighbors() const
 {
 	int ret;
 	for (int i = 0; i < nbNodes; i++) {
@@ -120,4 +120,4 @@ int TimeNodes::sortByIntensityAllNeighbors()
 /********************************************************************************************************************
 checkLinksHomogeneity() check all the connection to see the system homogeneity
 ********************************************************************************************************************/
-void TimeNodes::checkLinksHomogeneity(const wchar_t* st) { for (int i = 0; i < nbNodes; i++) { tabNodes[i]->checkLinksHomogeneity(st); } }
+void TimeNodes::checkLinksHomogeneity(const wchar_t* st) const { for (int i = 0; i < nbNodes; i++) { tabNodes[i]->checkLinksHomogeneity(st); } }

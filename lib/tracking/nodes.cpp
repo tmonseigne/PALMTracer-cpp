@@ -20,7 +20,7 @@ float globalDistMax;
 double distanceToBorder()
   get the distance from this to the closer border
 *********************************************************************************************/
-double Node::distanceToBorder()
+double Node::distanceToBorder() const
 {
 	double mini = info->getX();
 	mini = __min(mini, publicParameters->maxX-info->getX());
@@ -33,7 +33,7 @@ double Node::distanceToBorder()
 double stericEffect()
   Compute the mean of radius of the node this
 *********************************************************************************************/
-double Node::stericEffect()
+double Node::stericEffect() const
 {
 	double ret;
 	double val;
@@ -55,7 +55,7 @@ double Node::stericEffect()
 Constructuor(int _time) of Node class.
 The current objets is at the time "time".
 ********************************************************************************************************************/
-Node::Node(int _time, PublicParameters* _publicParameters)
+Node::Node(const int _time, PublicParameters* _publicParameters)
 {
 	publicParameters = _publicParameters;
 
@@ -121,7 +121,7 @@ Node::~Node()
 /********************************************************************************************************************
 distance(Node *node) gives the distance between "node" and the current objet. 
 ********************************************************************************************************************/
-float Node::distance(Node* node)
+float Node::distance(Node* node) const
 { //Distance 1
 	return info->distance(node->info);
 }
@@ -129,7 +129,7 @@ float Node::distance(Node* node)
 /********************************************************************************************************************
 distance(Node *n1, Node *n2) gives the distance between the mass center of ( n1 and n2), to the current objet. 
 ********************************************************************************************************************/
-float Node::distance(Node* n1, Node* n2) { return info->distance(n1->info, n2->info); }
+float Node::distance(Node* n1, Node* n2) const { return info->distance(n1->info, n2->info); }
 
 
 /********************************************************************************************************************
@@ -254,7 +254,7 @@ bool Node::checkLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2, Node
 /********************************************************************************************************************
 checkLinksHomogeneity(const wchar_t* st) check all the connection to see the system homogeneity
 ********************************************************************************************************************/
-bool Node::checkLinksHomogeneity(const wchar_t* st)
+bool Node::checkLinksHomogeneity(const wchar_t* st) const
 {
 	bool err = false;
 	if (connectionFuture != NULL) {

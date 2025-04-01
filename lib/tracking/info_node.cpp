@@ -53,9 +53,9 @@ double InfoNode2D::getZ()
 }
 
 // Added by Adel
-void InfoNode2D::setColor(double color) { Color = color; }
+void InfoNode2D::setColor(const double color) { Color = color; }
 
-void InfoNode2D::setMolId(double molId) { MolId = molId; }
+void InfoNode2D::setMolId(const double molId) { MolId = molId; }
 
 double InfoNode2D::getColor() { return Color; }
 double InfoNode2D::getMolId() { return MolId; }
@@ -65,21 +65,21 @@ unsigned long InfoNode2D::sizeofInfoData() { return sizeof(InfoData2D); }
 
 void* InfoNode2D::getPtrInfoData() { return &info; }
 
-void InfoNode2D::setSurface(long s) { info.surf = s; }
+void InfoNode2D::setSurface(const long s) { info.surf = s; }
 
-void InfoNode2D::setX(double x) { info.moment.y = x; }
+void InfoNode2D::setX(const double x) { info.moment.y = x; }
 
-void InfoNode2D::setY(double y) { info.moment.x = y; }
+void InfoNode2D::setY(const double y) { info.moment.x = y; }
 
-void InfoNode2D::setZ(double z) { Z = z; }
+void InfoNode2D::setZ(const double z) { Z = z; }
 
-void InfoNode2D::setIntensity(double I) { info.intensity = I; }
+void InfoNode2D::setIntensity(const double I) { info.intensity = I; }
 
-void InfoNode2D::setIndex(unsigned long i) { info.index = i; }
+void InfoNode2D::setIndex(const unsigned long i) { info.index = i; }
 
-void InfoNode2D::setTime(unsigned long t) { info.time = t; }
+void InfoNode2D::setTime(const unsigned long t) { info.time = t; }
 
-void InfoNode2D::setMean(double m) { info.mean = m; }
+void InfoNode2D::setMean(const double m) { info.mean = m; }
 
 //!!!!! invertion of coordinates !!! to restect Amira and UIC convenitons
 float InfoNode3D::distance(InfoNode* infoNode)
