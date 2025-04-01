@@ -8,29 +8,6 @@
 // CPU version of gaussian fit 2D
 #define N_PARAM 5 // I0, x0, y0, sigma, offset
 
-float GaussianFit2D_Sigma::deriv1I0(const float x, const float y, const float x0, const float y0, const float sigma)
-{
-	return exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
-}
-
-float GaussianFit2D_Sigma::deriv1x0(const float x, const float y, const float i0, const float x0, const float y0, const float sigma)
-{
-	const float p = i0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
-	return p * ((x - x0) / pow(sigma, 2));
-}
-
-float GaussianFit2D_Sigma::deriv1y0(const float x, const float y, const float i0, const float x0, const float y0, const float sigma)
-{
-	const float p = i0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
-	return p * ((y - y0) / pow(sigma, 2));
-}
-
-float GaussianFit2D_Sigma::deriv1sigma(const float x, const float y, const float i0, const float x0, const float y0, const float sigma)
-{
-	const float p = i0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
-	return p / pow(sigma, 3) * (pow(x - x0, 2) + pow(y - y0, 2));
-}
-
 float GaussianFit2D_Sigma::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat/*IN*/, float* weight_sq/*IN*/, float* alpha/*OUT*/, float* beta/*OUT*/,
                                    float* y_hat/*OUT*/)
 {
@@ -42,13 +19,7 @@ float GaussianFit2D_Sigma::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float*
 
 	// Computing Jacobian matrix (dydp)
 	float* dydp = (float*)malloc(n_ * N_PARAM * sizeof(float));
-	for (int elt = 0; elt < n_; elt++) {
-		dydp[0 + elt * N_PARAM] = deriv1I0((float)t[elt * 2], (float)t[elt * 2 + 1], p[1], p[2], p[3]);          // I0
-		dydp[1 + elt * N_PARAM] = deriv1x0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3]);    // x0
-		dydp[2 + elt * N_PARAM] = deriv1y0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3]);    // y0
-		dydp[3 + elt * N_PARAM] = deriv1sigma((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3]); // sigma
-		dydp[4 + elt * N_PARAM] = 1;                                                                             // offset
-	}
+	for (size_t elt = 0; elt < n_; elt++) { deriv(&dydp[elt * N_PARAM], (float)t[elt * 2] - p[1], (float)t[elt * 2 + 1] - p[2], p[0], p[3], true); }
 
 	float* inter = (float*)malloc(N_PARAM * n_ * sizeof(float));
 	for (int elt = 0; elt < n_; elt++) { for (int i = 0; i < N_PARAM; i++) { inter[elt * N_PARAM + i] = weight_sq[elt] * dydp[elt * N_PARAM + i]; } }
@@ -237,7 +208,9 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 
 			inverse(inter, inter1);
 
-			for (int ii = 0; ii < N_PARAM; ii++) { for (int cursor = 0; cursor < N_PARAM; cursor++) { delta_p[ii] += inter1[ii * N_PARAM + cursor] * beta[cursor]; } }
+			for (int ii = 0; ii < N_PARAM; ii++) {
+				for (int cursor = 0; cursor < N_PARAM; cursor++) { delta_p[ii] += inter1[ii * N_PARAM + cursor] * beta[cursor]; }
+			}
 
 			for (int ii = 0; ii < N_PARAM; ii++) {
 				p_try[ii] = p[ii] + delta_p[ii];

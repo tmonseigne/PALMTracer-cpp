@@ -7,50 +7,6 @@
 // CPU version of gaussian fit 3D
 #define N_PARAM 6 // I0, x0, y0, sigmaX, sigmaY, offset
 
-
-float GaussianFit3D::deriv1I0(const float x, const float y, const float x0, const float y0, const float sigmaX, const float sigmaY, float offset) const
-{
-	return exp(-pow(((x - x0) * cos(theta_) - (y - y0) * sin(theta_)) / sigmaX, 2) - pow(((x - x0) * sin(theta_) + (y - y0) * cos(theta_)) / sigmaY, 2));
-}
-
-float GaussianFit3D::deriv1x0(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY,
-                              float offset) const
-{
-	const float p = i0 * exp(-pow(((x - x0) * cos(theta_) - (y - y0) * sin(theta_)) / sigmaX, 2) - pow(
-		                         ((x - x0) * sin(theta_) + (y - y0) * cos(theta_)) / sigmaY, 2));
-	const float alpha = -((-2 * pow(cos(theta_), 2) * (x - x0) + 2 * (y - y0) * cos(theta_) * sin(theta_)) / pow(sigmaX, 2));
-	const float beta = -((-2 * pow(sin(theta_), 2) * (x - x0) - 2 * (y - y0) * cos(theta_) * sin(theta_)) / pow(sigmaY, 2));
-	return p * (alpha + beta);
-}
-
-float GaussianFit3D::deriv1y0(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY,
-                              float offset) const
-{
-	const float p = i0 * exp(-pow(((x - x0) * cos(theta_) - (y - y0) * sin(theta_)) / sigmaX, 2) - pow(
-		                         ((x - x0) * sin(theta_) + (y - y0) * cos(theta_)) / sigmaY, 2));
-	const float alpha = -((2 * pow(sin(theta_), 2) * (y - y0) - 2 * (x - x0) * cos(theta_) * sin(theta_)) / pow(sigmaX, 2));
-	const float beta = -((-2 * pow(cos(theta_), 2) * (y - y0) - 2 * (x - x0) * cos(theta_) * sin(theta_)) / pow(sigmaY, 2));
-	return p * (alpha + beta);
-}
-
-float GaussianFit3D::deriv1sigmaX(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY,
-                                  float offset) const
-{
-	const float p = i0 * exp(-pow(((x - x0) * cos(theta_) - (y - y0) * sin(theta_)) / sigmaX, 2) - pow(
-		                         ((x - x0) * sin(theta_) + (y - y0) * cos(theta_)) / sigmaY, 2));
-	const float alpha = pow((x - x0) * cos(theta_), 2) - 2 * (x - x0) * (y - y0) * cos(theta_) * sin(theta_) + pow((y - y0) * sin(theta_), 2);
-	return p * (2 * alpha / pow(sigmaX, 3));
-}
-
-float GaussianFit3D::deriv1sigmaY(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY,
-                                  float offset) const
-{
-	const float p = i0 * exp(-pow(((x - x0) * cos(theta_) - (y - y0) * sin(theta_)) / sigmaX, 2) - pow(
-		                         ((x - x0) * sin(theta_) + (y - y0) * cos(theta_)) / sigmaY, 2));
-	const float alpha = pow((x - x0) * sin(theta_), 2) + 2 * (x - x0) * (y - y0) * cos(theta_) * sin(theta_) + pow((y - y0) * cos(theta_), 2);
-	return p * (2 * alpha / pow(sigmaY, 3));
-}
-
 float GaussianFit3D::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat/*IN*/, float* weight_sq/*IN*/, float* alpha/*OUT*/, float* beta/*OUT*/,
                              float* y_hat/*OUT*/)
 {
@@ -64,13 +20,8 @@ float GaussianFit3D::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat
 	// Computing Jacobian matrix (dydp)
 	//float dydp[n_ * N_PARAM];
 	float* dydp = (float*)malloc(n_ * N_PARAM * sizeof(float));
-	for (int elt = 0; elt < n_; elt++) {
-		dydp[0 + elt * N_PARAM] = deriv1I0((float)t[elt * 2], (float)t[elt * 2 + 1], p[1], p[2], p[3], p[4], p[5]);           // I0
-		dydp[1 + elt * N_PARAM] = deriv1x0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5]);     // x0
-		dydp[2 + elt * N_PARAM] = deriv1y0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5]);     // y0
-		dydp[3 + elt * N_PARAM] = deriv1sigmaX((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5]); // sigmaX
-		dydp[4 + elt * N_PARAM] = deriv1sigmaY((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5]); // sigmaY
-		dydp[5 + elt * N_PARAM] = 1;                                                                                          // offset
+	for (size_t elt = 0; elt < n_; elt++) {
+		deriv(&dydp[elt * N_PARAM], (float)t[elt * 2] - p[1], (float)t[elt * 2 + 1] - p[2], p[0], p[3], p[4], theta_, false);
 	}
 
 	//float inter[N_PARAM * n_];
