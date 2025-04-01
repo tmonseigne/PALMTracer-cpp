@@ -4,8 +4,7 @@
 
 class GaussianFit3D_Theta : GaussianFit
 {
-private:
-	static float PSF(float x, float y, float i0, float x0, float y0, float sigmaX, float sigmaY, float angle, float offset);
+protected:
 	static float deriv1I0(float x, float y, float x0, float y0, float sigmaX, float sigmaY, float angle, float offset);
 	static float deriv1x0(float x, float y, float i0, float x0, float y0, float sigmaX, float sigmaY, float angle, float offset);
 	static float deriv1y0(float x, float y, float i0, float x0, float y0, float sigmaX, float sigmaY, float angle, float offset);

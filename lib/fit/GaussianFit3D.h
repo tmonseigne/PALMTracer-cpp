@@ -4,8 +4,7 @@
 
 class GaussianFit3D : GaussianFit
 {
-private:
-	float PSF(float x, float y, float I0, float x0, float y0, float sigmaX, float sigmaY, float offset) const;
+protected:
 	float deriv1I0(float x, float y, float x0, float y0, float sigmaX, float sigmaY, float offset) const;
 	float deriv1x0(float x, float y, float i0, float x0, float y0, float sigmaX, float sigmaY, float offset) const;
 	float deriv1y0(float x, float y, float i0, float x0, float y0, float sigmaX, float sigmaY, float offset) const;

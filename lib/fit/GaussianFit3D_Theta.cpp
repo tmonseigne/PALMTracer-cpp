@@ -9,56 +9,71 @@
 #define Npar 7 // I0, x0, y0, sigmaX, sigmaY, angle, offset
 
 
-float GaussianFit3D_Theta::PSF(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY, const float angle, const float offset) { return i0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2)) + offset; }
-
-float GaussianFit3D_Theta::deriv1I0(const float x, const float y, const float x0, const float y0, const float sigmaX, const float sigmaY, const float angle, float offset) { return exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2)); }
-
-float GaussianFit3D_Theta::deriv1x0(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY, const float angle, float offset)
+float GaussianFit3D_Theta::deriv1I0(const float x, const float y, const float x0, const float y0, const float sigmaX, const float sigmaY, const float angle,
+                                    float offset)
 {
-	const float p = i0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
+	return exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
+}
+
+float GaussianFit3D_Theta::deriv1x0(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY,
+                                    const float angle, float offset)
+{
+	const float p = i0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(
+		                         ((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
 	const float alpha = -((-2 * pow(cos(angle), 2) * (x - x0) + 2 * (y - y0) * cos(angle) * sin(angle)) / pow(sigmaX, 2));
 	const float beta = -((-2 * pow(sin(angle), 2) * (x - x0) - 2 * (y - y0) * cos(angle) * sin(angle)) / pow(sigmaY, 2));
 	return p * (alpha + beta);
 }
 
-float GaussianFit3D_Theta::deriv1y0(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY, const float angle, float offset)
+float GaussianFit3D_Theta::deriv1y0(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY,
+                                    const float angle, float offset)
 {
-	const float p = i0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
+	const float p = i0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(
+		                         ((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
 	const float alpha = -((2 * pow(sin(angle), 2) * (y - y0) - 2 * (x - x0) * cos(angle) * sin(angle)) / pow(sigmaX, 2));
 	const float beta = -((-2 * pow(cos(angle), 2) * (y - y0) - 2 * (x - x0) * cos(angle) * sin(angle)) / pow(sigmaY, 2));
 	return p * (alpha + beta);
 }
 
-float GaussianFit3D_Theta::deriv1sigmaX(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY, const float angle, float offset)
+float GaussianFit3D_Theta::deriv1sigmaX(const float x, const float y, const float i0, const float x0, const float y0, const float sigmaX, const float sigmaY,
+                                        const float angle, float offset)
 {
-	const float p = i0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
+	const float p = i0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(
+		                         ((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
 	const float alpha = pow((x - x0) * cos(angle), 2) - 2 * (x - x0) * (y - y0) * cos(angle) * sin(angle) + pow((y - y0) * sin(angle), 2);
 	return p * (2 * alpha / pow(sigmaX, 3));
 }
 
-float GaussianFit3D_Theta::deriv1sigmaY(const float x, const float y, const float I0, const float x0, const float y0, const float sigmaX, const float sigmaY, const float angle, float offset)
+float GaussianFit3D_Theta::deriv1sigmaY(const float x, const float y, const float I0, const float x0, const float y0, const float sigmaX, const float sigmaY,
+                                        const float angle, float offset)
 {
-	const float p = I0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
+	const float p = I0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(
+		                         ((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
 	const float alpha = pow((x - x0) * sin(angle), 2) + 2 * (x - x0) * (y - y0) * cos(angle) * sin(angle) + pow((y - y0) * cos(angle), 2);
 	return p * (2 * alpha / pow(sigmaY, 3));
 }
 
-float GaussianFit3D_Theta::deriv1angle(const float x, const float y, const float I0, const float x0, const float y0, const float sigmaX, const float sigmaY, const float angle, float offset)
+float GaussianFit3D_Theta::deriv1angle(const float x, const float y, const float I0, const float x0, const float y0, const float sigmaX, const float sigmaY,
+                                       const float angle, float offset)
 {
-	const float p = I0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
+	const float p = I0 * exp(-pow(((x - x0) * cos(angle) - (y - y0) * sin(angle)) / sigmaX, 2) - pow(
+		                         ((x - x0) * sin(angle) + (y - y0) * cos(angle)) / sigmaY, 2));
 	const float a = pow(x - x0, 2);
 	const float b = pow(y - y0, 2);
 	const float sX2 = pow(sigmaX, 2);
 	const float sY2 = pow(sigmaY, 2);
-	return p * (2 * sin(angle) * cos(angle) * ((a - b) / sX2 + (b - a) / sY2) - pow(sin(angle), 2) * (2 * (x - x0) * (y - y0) / sX2 + -2 * (x - x0) * (y - y0) / sY2) + pow(cos(angle), 2) * (2 * (x - x0) * (y - y0) / sX2 + -2 * (x - x0) * (y - y0) / sY2));
+	return p * (2 * sin(angle) * cos(angle) * ((a - b) / sX2 + (b - a) / sY2) - pow(sin(angle), 2) * (
+		            2 * (x - x0) * (y - y0) / sX2 + -2 * (x - x0) * (y - y0) / sY2) + pow(cos(angle), 2) * (
+		            2 * (x - x0) * (y - y0) / sX2 + -2 * (x - x0) * (y - y0) / sY2));
 }
 
-float GaussianFit3D_Theta::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat/*IN*/, float* weight_sq/*IN*/, float* alpha/*OUT*/, float* beta/*OUT*/, float* y_hat/*OUT*/)
+float GaussianFit3D_Theta::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat/*IN*/, float* weight_sq/*IN*/, float* alpha/*OUT*/, float* beta/*OUT*/,
+                                   float* y_hat/*OUT*/)
 {
 	//float delta_y[Npnt];	
 	float* delta_y = (float*)malloc(Npnt * sizeof(float));
 	for (int elt = 0; elt < Npnt; elt++) {
-		y_hat[elt] = PSF((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5], p[6]);
+		y_hat[elt] = psf((float)t[elt * 2] - p[1], (float)t[elt * 2 + 1] - p[2], p[0], p[3], p[4], p[5], p[6]);
 		delta_y[elt] = y_dat[elt] - y_hat[elt];
 	}
 
@@ -66,7 +81,7 @@ float GaussianFit3D_Theta::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float*
 	//float dydp[Npnt * Npar];
 	float* dydp = (float*)malloc(Npnt * Npar * sizeof(float));
 	for (int elt = 0; elt < Npnt; elt++) {
-		dydp[0 + elt * Npar] = deriv1I0((float)t[elt * 2], (float)t[elt * 2 + 1], p[1], p[2], p[3], p[4], p[5], p[6]);     // I0
+		dydp[0 + elt * Npar] = deriv1I0((float)t[elt * 2], (float)t[elt * 2 + 1], p[1], p[2], p[3], p[4], p[5], p[6]);           // I0
 		dydp[1 + elt * Npar] = deriv1x0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5], p[6]);     // x0
 		dydp[2 + elt * Npar] = deriv1y0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5], p[6]);     // y0
 		dydp[3 + elt * Npar] = deriv1sigmaX((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4], p[5], p[6]); // sigmaX
@@ -83,7 +98,8 @@ float GaussianFit3D_Theta::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float*
 	for (int j = 0; j < Npar; j++) {
 		for (int i = 0; i < Npar; i++) {
 			alpha[Npar * j + i] = 0;
-			for (int cursor = 0; cursor < Npnt; cursor++) { alpha[Npar * j + i] += dydp[cursor * Npar + j] * inter[cursor * Npar + i]; } // dydp' * inter : dydp'[i*Npnt + cursor]
+			for (int cursor = 0; cursor < Npnt; cursor++) { alpha[Npar * j + i] += dydp[cursor * Npar + j] * inter[cursor * Npar + i]; }
+			// dydp' * inter : dydp'[i*Npnt + cursor]
 		}
 	}
 
@@ -162,7 +178,8 @@ void GaussianFit3D_Theta::inverse(float* MM, float* Minv)
 }
 
 
-void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& sigmaY, float& angle, float& offset, float& RSS, int iterNum, unsigned short size)
+void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& sigmaY,
+                              float& angle, float& offset, float& RSS, int iterNum, unsigned short size)
 {
 	if (size % 2 == 0) {
 		size--; // Not present in GPU original file why ?
@@ -275,7 +292,9 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 				p_try[ii] = std::min(std::max(p_min[ii], p_try[ii]), p_max[ii]);
 			}
 
-			for (int ii = 0; ii < Npnt; ii++) { delta_y[ii] = y_dat[ii] - PSF((float)t[ii * 2], (float)t[ii * 2 + 1], p_try[0], p_try[1], p_try[2], p_try[3], p_try[4], p_try[5], p_try[6]); }
+			for (int ii = 0; ii < Npnt; ii++) {
+				delta_y[ii] = y_dat[ii] - psf((float)t[ii * 2] - p_try[1], (float)t[ii * 2 + 1] - p_try[2], p_try[0], p_try[3], p_try[4], p_try[5], p_try[6]);
+			}
 
 			for (int ii = 0; ii < Npnt; ii++) { inter2[ii] = delta_y[ii] * weight_sq[ii]; } // delta_y .* weight_sq
 

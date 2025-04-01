@@ -50,6 +50,9 @@
     <ClCompile Include="..\lib\palm\CPALM.cpp">
       <Filter>Palm</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\fit\GaussianFit.cpp">
+      <Filter>Fit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PALM.h" />

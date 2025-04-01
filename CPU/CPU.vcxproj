@@ -124,6 +124,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\lib\fit\GaussianFit.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit2D.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit2D_Sigma.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit3D.cpp" />

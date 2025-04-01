@@ -8,9 +8,10 @@
 // CPU version of gaussian fit 2D
 #define Npar 5 // I0, x0, y0, sigma, offset
 
-float GaussianFit2D_Sigma::PSF(const float x, const float y, const float i0, const float x0, const float y0, const float sigma, const float offset) { return i0 * exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2))) + offset; }
-
-float GaussianFit2D_Sigma::deriv1I0(const float x, const float y, const float x0, const float y0, const float sigma) { return exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2))); }
+float GaussianFit2D_Sigma::deriv1I0(const float x, const float y, const float x0, const float y0, const float sigma)
+{
+	return exp((-pow(x - x0, 2) - pow(y - y0, 2)) / (2 * pow(sigma, 2)));
+}
 
 float GaussianFit2D_Sigma::deriv1x0(const float x, const float y, const float i0, const float x0, const float y0, const float sigma)
 {
@@ -30,18 +31,19 @@ float GaussianFit2D_Sigma::deriv1sigma(const float x, const float y, const float
 	return p / pow(sigma, 3) * (pow(x - x0, 2) + pow(y - y0, 2));
 }
 
-float GaussianFit2D_Sigma::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat/*IN*/, float* weight_sq/*IN*/, float* alpha/*OUT*/, float* beta/*OUT*/, float* y_hat/*OUT*/)
+float GaussianFit2D_Sigma::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat/*IN*/, float* weight_sq/*IN*/, float* alpha/*OUT*/, float* beta/*OUT*/,
+                                   float* y_hat/*OUT*/)
 {
 	float* delta_y = (float*)malloc(Npnt * sizeof(float));
 	for (int elt = 0; elt < Npnt; elt++) {
-		y_hat[elt] = PSF((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3], p[4]);
+		y_hat[elt] = psf((float)t[elt * 2] - p[1], (float)t[elt * 2 + 1] - p[2], p[0], p[3], p[4]);
 		delta_y[elt] = y_dat[elt] - y_hat[elt];
 	}
 
 	// Computing Jacobian matrix (dydp)
 	float* dydp = (float*)malloc(Npnt * Npar * sizeof(float));
 	for (int elt = 0; elt < Npnt; elt++) {
-		dydp[0 + elt * Npar] = deriv1I0((float)t[elt * 2], (float)t[elt * 2 + 1], p[1], p[2], p[3]);    // I0
+		dydp[0 + elt * Npar] = deriv1I0((float)t[elt * 2], (float)t[elt * 2 + 1], p[1], p[2], p[3]);          // I0
 		dydp[1 + elt * Npar] = deriv1x0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3]);    // x0
 		dydp[2 + elt * Npar] = deriv1y0((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3]);    // y0
 		dydp[3 + elt * Npar] = deriv1sigma((float)t[elt * 2], (float)t[elt * 2 + 1], p[0], p[1], p[2], p[3]); // sigma
@@ -55,7 +57,8 @@ float GaussianFit2D_Sigma::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float*
 	for (int j = 0; j < Npar; j++) {
 		for (int i = 0; i < Npar; i++) {
 			alpha[Npar * j + i] = 0;
-			for (int cursor = 0; cursor < Npnt; cursor++) { alpha[Npar * j + i] += dydp[cursor * Npar + j] * inter[cursor * Npar + i]; } // dydp' * inter : dydp'[i*Npnt + cursor]
+			for (int cursor = 0; cursor < Npnt; cursor++) { alpha[Npar * j + i] += dydp[cursor * Npar + j] * inter[cursor * Npar + i]; }
+			// dydp' * inter : dydp'[i*Npnt + cursor]
 		}
 	}
 
@@ -130,7 +133,8 @@ void GaussianFit2D_Sigma::inverse(float* MM, float* Minv)
 }
 
 
-void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& offset, float& RSS, int iterNum, unsigned short size)
+void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& offset,
+                              float& RSS, int iterNum, unsigned short size)
 {
 	if (size % 2 == 0) {
 		size--; // Not present in GPU original file why ?
@@ -240,7 +244,9 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 				p_try[ii] = std::min(std::max(p_min[ii], p_try[ii]), p_max[ii]);
 			}
 
-			for (int ii = 0; ii < Npnt; ii++) { delta_y[ii] = y_dat[ii] - PSF((float)t[ii * 2], (float)t[ii * 2 + 1], p_try[0], p_try[1], p_try[2], p_try[3], p_try[4]); }
+			for (int ii = 0; ii < Npnt; ii++) {
+				delta_y[ii] = y_dat[ii] - psf((float)t[ii * 2] - p_try[1], (float)t[ii * 2 + 1] - p_try[2], p_try[0], p_try[3], p_try[4]);
+			}
 
 			for (int ii = 0; ii < Npnt; ii++) { inter2[ii] = delta_y[ii] * weight_sq[ii]; } // delta_y .* weight_sq
 
