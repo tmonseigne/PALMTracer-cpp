@@ -1,5 +1,13 @@
 #pragma once
 
+constexpr float EPSILON_1 = 1e-6f;
+constexpr float EPSILON_2 = 1e-6f;
+constexpr float EPSILON_3 = 1e-5f;
+constexpr float EPSILON_4 = 1e-2f;
+constexpr float LAMBDA_0 = 1e-2f;
+constexpr float LAMBDA_UP_FAC = 11;
+constexpr float LAMBDA_DN_FAC = 9;
+
 class GaussianFit
 {
 public:
@@ -22,5 +30,5 @@ protected:
 
 	void inverse(float* in, float* out) const;
 
-	virtual float lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat/*IN*/, float* weight_sq/*IN*/, float* alpha/*OUT*/, float* beta/*OUT*/, float* y_hat/*OUT*/) = 0;
+	virtual float lm_matx(unsigned int* t, float* p, float* y_dat, float* weight, float* alpha, float* beta, float* y_hat) = 0;
 };

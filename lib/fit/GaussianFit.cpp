@@ -70,7 +70,6 @@ float GaussianFit::chi2(float* alpha, float* beta, const float* dydp, const floa
 		for (int i = 0; i < nParam_; i++) {
 			alpha[nParam_ * j + i] = 0;
 			for (int cursor = 0; cursor < n_; cursor++) { alpha[nParam_ * j + i] += dydp[cursor * nParam_ + j] * inter[cursor * nParam_ + i]; }
-			// dydp' * inter : dydp'[i*n_ + cursor]
 		}
 	}
 
@@ -81,7 +80,7 @@ float GaussianFit::chi2(float* alpha, float* beta, const float* dydp, const floa
 
 	for (int j = 0; j < nParam_; j++) {
 		beta[j] = 0;
-		for (int cursor = 0; cursor < n_; cursor++) { beta[j] += dydp[cursor * nParam_ + j] * inter1[cursor]; } // dydp' * inter : dydp'[j*n_ + cursor]
+		for (int cursor = 0; cursor < n_; cursor++) { beta[j] += dydp[cursor * nParam_ + j] * inter1[cursor]; }
 	}
 
 	// Computing Chi_sq

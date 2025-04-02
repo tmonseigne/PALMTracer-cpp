@@ -5,19 +5,19 @@
 #include <cstdlib>
 #include <ctime>
 
-float GaussianFit2D::lm_matx(unsigned int* t, float* p, float* y_dat, float* weight_sq, float* alpha, float* beta, float* y_hat)
+float GaussianFit2D::lm_matx(unsigned int* t, float* p, float* y_dat, float* weight, float* alpha, float* beta, float* y_hat)
 {
 	float* delta_y = (float*)malloc(n_ * sizeof(float));
-	for (int elt = 0; elt < n_; elt++) {
-		y_hat[elt] = psf((float)t[elt * 2] - p[1], (float)t[elt * 2 + 1] - p[2], p[0], sigma_, p[3]);
-		delta_y[elt] = y_dat[elt] - y_hat[elt];
+	for (size_t i = 0; i < n_; i++) {
+		y_hat[i] = psf(static_cast<float>(t[i * 2]) - p[1], static_cast<float>(t[i * 2 + 1]) - p[2], p[0], sigma_, p[3]);
+		delta_y[i] = y_dat[i] - y_hat[i];
 	}
 
 	// Computing Jacobian matrix (dydp)
 	float* dydp = (float*)malloc(n_ * nParam_ * sizeof(float));
-	for (size_t elt = 0; elt < n_; elt++) { deriv(&dydp[elt * nParam_], (float)t[elt * 2] - p[1], (float)t[elt * 2 + 1] - p[2], p[0], sigma_, false); }
+	for (size_t i = 0; i < n_; i++) { deriv(&dydp[i * nParam_], (float)t[i * 2] - p[1], (float)t[i * 2 + 1] - p[2], p[0], sigma_, false); }
 
-	const float Res = chi2(alpha, beta, dydp, weight_sq, delta_y);
+	const float Res = chi2(alpha, beta, dydp, weight, delta_y);
 
 	// cleanup memory
 	free(delta_y);
@@ -29,9 +29,7 @@ float GaussianFit2D::lm_matx(unsigned int* t, float* p, float* y_dat, float* wei
 void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& offset,
                         float& RSS, int iterNum, unsigned short size)
 {
-	if (size % 2 == 0) {
-		size--; // Not present in GPU original file why ?
-	}
+	if (size % 2 == 0) { size--; } // Not present in GPU original file why ?
 
 	dimFit_ = size;
 	n_ = dimFit_ * dimFit_;
@@ -39,7 +37,6 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 	sigma_ = sigmaX;
 
 	float X2;
-
 	if (x0 >= (int)ref_ && x0 <= sizeX - (int)ref_ - 1 && y0 >= (int)ref_ && y0 <= sizeY - (int)ref_ - 1) {
 		// for real data
 		float p_min[4] = {0., x0 - 1, y0 - 1, 0.};
@@ -73,16 +70,7 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 			weight_sq[ii] = pow(weight[ii], 2);
 		}
 
-		constexpr float epsilon_1 = 1e-6;
-		constexpr float epsilon_2 = 1e-6;
-		constexpr float epsilon_3 = 1e-5;
-		constexpr float epsilon_4 = 1e-2;
-		constexpr float lambda_0 = 1e-2;
-		constexpr float lambda_UP_fac = 11;
-		constexpr float lambda_DN_fac = 9;
-
 		float lambda;
-
 		float alpha[16];
 		float beta[4];
 		//float y_hat[n_];
@@ -96,9 +84,9 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		for (int ii = 0; ii < nParam_; ii++) { max_ = std::max(max_, abs(beta[ii])); }
 
 		unsigned int stop = 0;
-		if (max_ < epsilon_1) { stop = 1; }
+		if (max_ < EPSILON_1) { stop = 1; }
 
-		lambda = lambda_0;
+		lambda = LAMBDA_0;
 		X2_old = X2;
 
 		unsigned short iteration = 0;
@@ -121,11 +109,7 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 
 			// Copy alpha to inter
 			for (int ii = 0; ii < nParam_ * nParam_; ii++) { inter[ii] = alpha[ii]; }
-
-			inter[0 * nParam_ + 0] += lambda * alpha[0 * nParam_ + 0];
-			inter[1 * nParam_ + 1] += lambda * alpha[1 * nParam_ + 1];
-			inter[2 * nParam_ + 2] += lambda * alpha[2 * nParam_ + 2];
-			inter[3 * nParam_ + 3] += lambda * alpha[3 * nParam_ + 3];
+			for (int ii = 0; ii < nParam_; ii++) { inter[ii * nParam_ + ii] += lambda * alpha[ii * nParam_ + ii]; }
 
 			inverse(inter, inter1);
 
@@ -155,32 +139,32 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 
 			rho = (X2 - X2_try) / m;
 
-			if (rho > epsilon_4) // it IS significantly better
+			if (rho > EPSILON_4) // it IS significantly better
 			{
 				X2_old = X2;
 				for (int ii = 0; ii < nParam_; ii++) { p[ii] = p_try[ii]; } // accept p_try
 
 				X2 = lm_matx(t, p, y_dat, weight_sq, alpha, beta, y_hat);
 
-				lambda = std::max(lambda / lambda_DN_fac, 1.e-7f);
+				lambda = std::max(lambda / LAMBDA_DN_FAC, 1.e-7f);
 			}
 			else // it IS NOT better
 			{
 				X2 = X2_old; // do not accept a_try
-				lambda = std::min(lambda * lambda_UP_fac, 1.e7f);
+				lambda = std::min(lambda * LAMBDA_UP_FAC, 1.e7f);
 			}
 
 			max_ = 0;
 			for (int ii = 0; ii < nParam_; ii++) { max_ = std::max(max_, abs(delta_p[ii] / p[ii])); }
 
-			if (max_ < epsilon_2 && iteration > 2) { stop = 1; }
+			if (max_ < EPSILON_2 && iteration > 2) { stop = 1; }
 
-			if (X2 / n_ < epsilon_3 && iteration > 2) { stop = 1; }
+			if (X2 / n_ < EPSILON_3 && iteration > 2) { stop = 1; }
 
 			max_ = 0;
 			for (int ii = 0; ii < nParam_; ii++) { max_ = std::max(max_, abs(beta[ii])); }
 
-			if (max_ < epsilon_1 && iteration > 2) { stop = 1; }
+			if (max_ < EPSILON_1 && iteration > 2) { stop = 1; }
 
 			if (iteration == iterNum) { stop = 1; }
 		}
