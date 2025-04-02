@@ -6,7 +6,8 @@ constexpr float EPSILON_2 = 1e-6f;
 constexpr float EPSILON_3 = 1e-5f;
 constexpr float EPSILON_4 = 1e-2f;
 constexpr float LAMBDA_0 = 1e-2f;
-constexpr float LAMBDA_EPSILON = 1e7f;
+constexpr float LAMBDA_EPSILON_MAX = 1e7f;
+constexpr float LAMBDA_EPSILON_MIN = 1e-7f;
 constexpr float LAMBDA_UP_FAC = 11;
 constexpr float LAMBDA_DN_FAC = 9;
 

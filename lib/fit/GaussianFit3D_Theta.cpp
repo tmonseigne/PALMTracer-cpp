@@ -19,7 +19,7 @@ float GaussianFit3D_Theta::lm_matx(const std::vector<unsigned int>& t, const flo
 	}
 
 	// Computing Jacobian matrix (dydp)
-	std::vector<float> dydp(n_ * nParam_);
+	std::vector<float> dydp(static_cast<size_t>(n_ * nParam_));
 	for (size_t i = 0; i < n_; ++i) {
 		deriv(&dydp[i * nParam_], static_cast<float>(t[i * 2]) - p[1], static_cast<float>(t[i * 2 + 1]) - p[2], p[0], p[3], p[4], p[5], true);
 	}
@@ -46,7 +46,7 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 		initP(x0, y0, sigmaX, sigmaY, angle);
 
 		// Création des variables
-		float x2, x2_old, x2_try, m, rho, lambda = LAMBDA_0;
+		float lambda = LAMBDA_0;
 
 		std::array<float, N_PARAM2> alpha, alphaR, alphaRi;
 		std::array<float, N_PARAM> beta, beta_l_deltaP, p_try, deltaP;
@@ -59,11 +59,11 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 		p_[0] = maxI - minI; // Not present in GPU original file why ?
 		p_[6] = minI;        // Not present in GPU original file why ?
 
-		x2 = lm_matx(t, p_.data(), dat, weight, alpha.data(), beta.data(), hat);
-		x2_old = x2;
+		float x2 = lm_matx(t, p_.data(), dat, weight, alpha.data(), beta.data(), hat);
+		float x2_old = x2;
 
 		// Trouver la valeur absolue maximale
-		m = std::ranges::max(std::views::transform(beta, [](const float x) { return std::abs(x); }));
+		float m = std::ranges::max(std::views::transform(beta, [](const float x) { return std::abs(x); }));
 
 		unsigned int stop = 0;
 		if (m < EPSILON_1) { stop = 1; }
@@ -75,53 +75,51 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 			iteration++;
 			deltaP.fill(0.0f);
 
-			// Copy alpha to inter
-			for (int i = 0; i < nParam2_; ++i) { alphaR[i] = alpha[i]; }
-			for (int i = 0; i < nParam_; ++i) { alphaR[i * nParam_ + i] += lambda * alpha[i * nParam_ + i]; }
+			std::copy_n(alpha.begin(), nParam2_, alphaR.begin()); // Copy du alpha
+			for (unsigned short i = 0; i < nParam_; ++i) { alphaR[i * nParam_ + i] += lambda * alpha[i * nParam_ + i]; }
 
 			inverse(alphaR.data(), alphaRi.data());
 
-			for (int i = 0; i < nParam_; ++i) {
-				for (int cursor = 0; cursor < nParam_; cursor++) { deltaP[i] += alphaRi[i * nParam_ + cursor] * beta[cursor]; }
+			for (unsigned short i = 0; i < nParam_; ++i) {
+				for (int j = 0; j < nParam_; ++j) { deltaP[i] += alphaRi[i * nParam_ + j] * beta[j]; }
 			}
 
-			for (int i = 0; i < nParam_; ++i) {
+			for (unsigned short i = 0; i < nParam_; ++i) {
 				p_try[i] = p_[i] + deltaP[i];
 				p_try[i] = std::min(std::max(pMin_[i], p_try[i]), pMax_[i]);
 			}
 
-			for (int i = 0; i < n_; ++i) {
-				deltaY[i] = dat[i] - psf((float)t[i * 2] - p_try[1], (float)t[i * 2 + 1] - p_try[2], p_try[0], p_try[3], p_try[4], p_try[5], p_try[6]);
+			for (unsigned short i = 0; i < n_; ++i) {
+				deltaY[i] = dat[i] - psf(static_cast<float>(t[i * 2]) - p_try[1], static_cast<float>(t[i * 2 + 1]) - p_try[2],
+				                         p_try[0], p_try[3], p_try[4], p_try[5], p_try[6]);
 			}
 
-			for (int i = 0; i < n_; ++i) { deltaY_w[i] = deltaY[i] * weight[i]; } // deltaY .* weight
+			// deltaY .* weight
+			std::transform(deltaY.begin(), deltaY.end(), weight.begin(), deltaY_w.begin(), std::multiplies<float>());
+			const float X2_Try = std::transform_reduce(deltaY.begin(), deltaY.end(), deltaY_w.begin(), 0.0f, std::plus<float>(), std::multiplies<float>());
 
-			x2_try = 0;
-			for (int i = 0; i < n_; ++i) { x2_try += deltaY[i] * deltaY_w[i]; }
+			// lambda * deltaP + beta
+			std::transform(deltaP.begin(), deltaP.end(), beta.begin(), beta_l_deltaP.begin(), [lambda](float delta, float b) { return lambda * delta + b; });
 
-			for (int i = 0; i < nParam_; ++i) { beta_l_deltaP[i] = lambda * deltaP[i] + beta[i]; } // lambda * deltaP + beta
+			m = std::inner_product(deltaP.begin(), deltaP.end(), beta_l_deltaP.begin(), 0.0f);
 
-			m = 0;
-			for (int i = 0; i < nParam_; ++i) { m += deltaP[i] * beta_l_deltaP[i]; }
-			rho = (x2 - x2_try) / (2 * m);
-
-			if (rho > EPSILON_4) { // it IS significantly better
+			if ((x2 - X2_Try) / (2 * m) > EPSILON_4) { // it IS significantly better
 				x2_old = x2;
-				for (int i = 0; i < nParam_; ++i) {p_[i] = p_try[i]; } // accept p_try
+				std::copy_n(p_try.begin(), nParam_, p_.begin()); // accept p_try
 
 				x2 = lm_matx(t, p_.data(), dat, weight, alpha.data(), beta.data(), hat);
-				lambda = std::max(lambda / LAMBDA_DN_FAC, 1.e-7f);
+				lambda = std::max(lambda / LAMBDA_DN_FAC, LAMBDA_EPSILON_MIN);
 			}
-			else { // it IS NOT better
+			else {           // it IS NOT better
 				x2 = x2_old; // do not accept a_try
-				lambda = std::min(lambda * LAMBDA_UP_FAC, LAMBDA_EPSILON);
+				lambda = std::min(lambda * LAMBDA_UP_FAC, LAMBDA_EPSILON_MAX);
 			}
 
 			m = 0;
-			for (int i = 0; i < nParam_; ++i) { m = std::max(m, abs(deltaP[i] / p_[i])); }
+			for (unsigned short i = 0; i < nParam_; ++i) { m = std::max(m, abs(deltaP[i] / p_[i])); }
 
 			if (m < EPSILON_2 && iteration > 2) { stop = 1; }
-			if (x2 / n_ < EPSILON_3 && iteration > 2) { stop = 1; }
+			if (x2 / static_cast<float>(n_) < EPSILON_3 && iteration > 2) { stop = 1; }
 
 			m = std::ranges::max(std::views::transform(beta, [](const float x) { return std::abs(x); }));
 
