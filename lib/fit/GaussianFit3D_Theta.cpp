@@ -35,12 +35,11 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 {
 	if (size % 2 == 0) { size--; } // Not present in GPU original file why ?
 
-	dimFit_ = size;
-	n_ = dimFit_ * dimFit_;
-	ref_ = dimFit_ / 2;
+	n_ = size * size;
+	const unsigned short Half = size / 2;
 
 	float X2;
-	if (x0 >= (int)ref_ && x0 <= sizeX - (int)ref_ - 1 && y0 >= (int)ref_ && y0 <= sizeY - (int)ref_ - 1) {
+	if (x0 >= (int)Half && x0 <= sizeX - (int)Half - 1 && y0 >= (int)Half && y0 <= sizeY - (int)Half - 1) {
 		// for real data
 		float p_min[7] = {0., x0 - 1, y0 - 1, 0.1, 0.1, -150, 0.};
 		float p[7] = {2000., x0, y0, static_cast<float>(sqrt(2.)) * sigmaX, static_cast<float>(sqrt(2.)) * sigmaY, angle, 700.};
@@ -54,14 +53,15 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 		// Initialization of y_dat & t (A vérifier)
 		float max_intensity = -70000; // Not present in GPU original file why ?
 		float min_intensity = +70000; // Not present in GPU original file why ?
-		for (int jj = -dimFit_ / 2; jj <= dimFit_ / 2; jj++) {
-			for (int ii = -dimFit_ / 2; ii <= dimFit_ / 2; ii++) {
-				y_dat[ii + dimFit_ / 2 + (jj + dimFit_ / 2) * dimFit_] = (float)image[(int)x0 + ii + ((int)y0 + jj) * sizeX];
-				t[(ii + dimFit_ / 2 + (jj + dimFit_ / 2) * dimFit_) * 2] = (int)x0 + ii;
-				t[(ii + dimFit_ / 2 + (jj + dimFit_ / 2) * dimFit_) * 2 + 1] = (int)y0 + jj;
+		for (int jj = -Half; jj <= Half; jj++) {
+			const int Idx = Half + (jj + Half) * size;
+			for (int ii = -Half; ii <= Half; ii++) {
+				y_dat[ii + Idx] = (float)image[(int)x0 + ii + ((int)y0 + jj) * sizeX];
+				t[(ii + Idx) * 2] = (int)x0 + ii;
+				t[(ii + Idx) * 2 + 1] = (int)y0 + jj;
 
-				max_intensity = std::max(max_intensity, y_dat[ii + dimFit_ / 2 + (jj + dimFit_ / 2) * dimFit_]); // Not present in GPU original file why ?
-				min_intensity = std::min(min_intensity, y_dat[ii + dimFit_ / 2 + (jj + dimFit_ / 2) * dimFit_]); // Not present in GPU original file why ?
+				max_intensity = std::max(max_intensity, y_dat[ii + Idx]); // Not present in GPU original file why ?
+				min_intensity = std::min(min_intensity, y_dat[ii + Idx]); // Not present in GPU original file why ?
 			}
 		}
 
