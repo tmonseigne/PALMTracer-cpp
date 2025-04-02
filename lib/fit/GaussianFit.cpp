@@ -1,6 +1,7 @@
 #include "GaussianFit.h"
 
 #include <cmath>
+#include <vector>
 
 float GaussianFit::psf(const float x, const float y, const float i0, const float sigma, const float offset)
 {
@@ -59,30 +60,28 @@ void GaussianFit::deriv(float* out, float x, float y, float i0, float sigmaX, fl
 	else { out[5] = 1; } // offset (quand theta est fixe)	
 }
 
-float GaussianFit::chi2(float* alpha, float* beta, const float* dydp, const float* weight, const float* deltaY, const size_t nParam)
+float GaussianFit::chi2(float* alpha, float* beta, const float* dydp, const float* weight, const float* deltaY) const
 {
-	//float inter[nParam * n_];
-	float* inter = (float*)malloc(nParam * n_ * sizeof(float));
-	for (int elt = 0; elt < n_; elt++) { for (int i = 0; i < nParam; i++) { inter[elt * nParam + i] = weight[elt] * dydp[elt * nParam + i]; } }
+	float* inter = (float*)malloc(nParam_ * n_ * sizeof(float));
+	for (int elt = 0; elt < n_; elt++) { for (int i = 0; i < nParam_; i++) { inter[elt * nParam_ + i] = weight[elt] * dydp[elt * nParam_ + i]; } }
 
 	// Computing alpha (A vérifier)
-	for (int j = 0; j < nParam; j++) {
-		for (int i = 0; i < nParam; i++) {
-			alpha[nParam * j + i] = 0;
-			for (int cursor = 0; cursor < n_; cursor++) { alpha[nParam * j + i] += dydp[cursor * nParam + j] * inter[cursor * nParam + i]; }
+	for (int j = 0; j < nParam_; j++) {
+		for (int i = 0; i < nParam_; i++) {
+			alpha[nParam_ * j + i] = 0;
+			for (int cursor = 0; cursor < n_; cursor++) { alpha[nParam_ * j + i] += dydp[cursor * nParam_ + j] * inter[cursor * nParam_ + i]; }
 			// dydp' * inter : dydp'[i*n_ + cursor]
 		}
 	}
 
 	// Computing beta
-	//float inter1[n_];
 	float* inter1 = (float*)malloc(n_ * sizeof(float));
 
 	for (int elt = 0; elt < n_; elt++) { inter1[elt] = weight[elt] * deltaY[elt]; }
 
-	for (int j = 0; j < nParam; j++) {
+	for (int j = 0; j < nParam_; j++) {
 		beta[j] = 0;
-		for (int cursor = 0; cursor < n_; cursor++) { beta[j] += dydp[cursor * nParam + j] * inter1[cursor]; } // dydp' * inter : dydp'[j*n_ + cursor]
+		for (int cursor = 0; cursor < n_; cursor++) { beta[j] += dydp[cursor * nParam_ + j] * inter1[cursor]; } // dydp' * inter : dydp'[j*n_ + cursor]
 	}
 
 	// Computing Chi_sq
@@ -94,4 +93,39 @@ float GaussianFit::chi2(float* alpha, float* beta, const float* dydp, const floa
 	free(inter1);
 
 	return res;
+}
+
+void GaussianFit::inverse(float* in, float* out) const
+{
+	const unsigned short N = nParam_ * nParam_;
+	std::vector<float> m1(in, in + N); // Copie de in dans M1
+	std::vector<float> mi1(N, 0.0f);
+	for (int i = 0; i < nParam_; i++) { mi1[i * nParam_ + i] = 1.0f; } // Initialisation de la matrice identité
+
+	// Élimination de Gauss-Jordan
+	for (int i = 0; i < nParam_; i++) {
+		const float Pivot = m1[i * nParam_ + i];
+		const float Pivot_Inv = 1.0f / Pivot;
+
+		// Normalisation de la ligne i
+		for (int j = 0; j < nParam_; j++) {
+			m1[i * nParam_ + j] *= Pivot_Inv;
+			mi1[i * nParam_ + j] *= Pivot_Inv;
+		}
+
+		// Mise à zéro des autres lignes
+		for (int k = 0; k < nParam_; k++) {
+			if (k != i) {
+				const float factor = m1[k * nParam_ + i];
+
+				for (int j = 0; j < nParam_; j++) {
+					m1[k * nParam_ + j] -= factor * m1[i * nParam_ + j];
+					mi1[k * nParam_ + j] -= factor * mi1[i * nParam_ + j];
+				}
+			}
+		}
+	}
+
+	// Copie finale de Mi1 vers out
+	std::ranges::copy(mi1, out);
 }

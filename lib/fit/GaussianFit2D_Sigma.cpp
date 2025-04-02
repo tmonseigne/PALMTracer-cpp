@@ -5,11 +5,7 @@
 #include <cstdlib>
 #include <ctime>
 
-// CPU version of gaussian fit 2D
-#define N_PARAM 5 // I0, x0, y0, sigma, offset
-
-float GaussianFit2D_Sigma::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float* y_dat/*IN*/, float* weight_sq/*IN*/, float* alpha/*OUT*/, float* beta/*OUT*/,
-                                   float* y_hat/*OUT*/)
+float GaussianFit2D_Sigma::lm_matx(unsigned int* t, float* p, float* y_dat, float* weight_sq, float* alpha, float* beta, float* y_hat)
 {
 	float* delta_y = (float*)malloc(n_ * sizeof(float));
 	for (int elt = 0; elt < n_; elt++) {
@@ -18,10 +14,10 @@ float GaussianFit2D_Sigma::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float*
 	}
 
 	// Computing Jacobian matrix (dydp)
-	float* dydp = (float*)malloc(n_ * N_PARAM * sizeof(float));
-	for (size_t elt = 0; elt < n_; elt++) { deriv(&dydp[elt * N_PARAM], (float)t[elt * 2] - p[1], (float)t[elt * 2 + 1] - p[2], p[0], p[3], true); }
+	float* dydp = (float*)malloc(n_ * nParam_ * sizeof(float));
+	for (size_t elt = 0; elt < n_; elt++) { deriv(&dydp[elt * nParam_], (float)t[elt * 2] - p[1], (float)t[elt * 2 + 1] - p[2], p[0], p[3], true); }
 
-	const float Res = chi2(alpha, beta, dydp, weight_sq, delta_y, N_PARAM);
+	const float Res = chi2(alpha, beta, dydp, weight_sq, delta_y);
 
 	// cleanup memory
 	free(delta_y);
@@ -29,55 +25,6 @@ float GaussianFit2D_Sigma::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float*
 
 	return Res;
 }
-
-void GaussianFit2D_Sigma::inverse(float* MM, float* Minv)
-{
-	float M1[N_PARAM * N_PARAM];
-
-	// Copy MM to M1
-	for (int i = 0; i < N_PARAM * N_PARAM; i++) { M1[i] = MM[i]; }
-
-	// Initializatiion of identity matrix
-	float Mi1[N_PARAM * N_PARAM];
-	for (int i = 0; i < N_PARAM * N_PARAM; i++) { Mi1[i] = 0.; }
-	Mi1[0 * N_PARAM + 0] = 1;
-	Mi1[1 * N_PARAM + 1] = 1;
-	Mi1[2 * N_PARAM + 2] = 1;
-	Mi1[3 * N_PARAM + 3] = 1;
-	Mi1[4 * N_PARAM + 4] = 1;
-
-	// Copy Mi1 to Minv
-	for (int i = 0; i < N_PARAM * N_PARAM; i++) { Minv[i] = Mi1[i]; }
-
-	for (int i = 0; i < N_PARAM; i++) {
-		for (int j = 0; j < N_PARAM; j++) {
-			M1[i * N_PARAM + j] = MM[i * N_PARAM + j] / MM[i * N_PARAM + i];
-			Mi1[i * N_PARAM + j] = Minv[i * N_PARAM + j] / MM[i * N_PARAM + i];
-		}
-
-		// Copy M1 to MM
-		for (int index = 0; index < N_PARAM * N_PARAM; index++) { MM[index] = M1[index]; }
-
-		// Copy Mi1 to Minv
-		for (int index = 0; index < N_PARAM * N_PARAM; index++) { Minv[index] = Mi1[index]; }
-
-		for (int k = 0; k < N_PARAM; k++) { // mise zéros de la colonne
-			if (k != i) {
-				for (int j = 0; j < N_PARAM; j++) {
-					M1[k * N_PARAM + j] = MM[k * N_PARAM + j] - MM[i * N_PARAM + j] * MM[k * N_PARAM + i];
-					Mi1[k * N_PARAM + j] = Minv[k * N_PARAM + j] - Minv[i * N_PARAM + j] * MM[k * N_PARAM + i];
-				}
-			}
-		}
-
-		// Copy M1 to MM
-		for (int index = 0; index < N_PARAM * N_PARAM; index++) { MM[index] = M1[index]; }
-
-		// Copy Mi1 to Minv
-		for (int index = 0; index < N_PARAM * N_PARAM; index++) { Minv[index] = Mi1[index]; }
-	}
-}
-
 
 void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& offset,
                               float& RSS, int iterNum, unsigned short size)
@@ -93,9 +40,9 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 	float X2;
 	if (x0 >= (int)ref_ && x0 <= sizeX - (int)ref_ - 1 && y0 >= (int)ref_ && y0 <= sizeY - (int)ref_ - 1) {
 		// for real data
-		float p_min[N_PARAM] = {0., x0 - 1, y0 - 1, 0.1, 0.};
-		float p[N_PARAM] = {1000., x0, y0, sigmaX, 1000.};
-		float p_max[N_PARAM] = {65535., x0 + 1, y0 + 1, 20., 65535.};
+		float p_min[5] = {0., x0 - 1, y0 - 1, 0.1, 0.};
+		float p[5] = {1000., x0, y0, sigmaX, 1000.};
+		float p_max[5] = {65535., x0 + 1, y0 + 1, 20., 65535.};
 
 		float* y_dat = (float*)malloc(n_ * sizeof(float));
 		float* weight = (float*)malloc(n_ * sizeof(float));
@@ -120,7 +67,7 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 		p[4] = min_intensity;                 // Not present in GPU original file why ?
 
 		for (int ii = 0; ii < n_; ii++) {
-			weight[ii] = 1/*sqrt((n_-N_PARAM+1) / (y_dat[ii]*y_dat[ii]))*/;
+			weight[ii] = 1/*sqrt((n_-nParam_+1) / (y_dat[ii]*y_dat[ii]))*/;
 			weight_sq[ii] = pow(weight[ii], 2);
 		}
 
@@ -134,17 +81,17 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 
 		float lambda;
 
-		float alpha[N_PARAM * N_PARAM];
-		float beta[N_PARAM];
+		float alpha[25];
+		float beta[5];
 		//float y_hat[n_];
 		float* y_hat = (float*)malloc(n_ * sizeof(float));
 
 		//float X2;
 		float X2_old;
-		X2 = lm_matx(t/*IN*/, p/*IN*/, y_dat/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
+		X2 = lm_matx(t, p, y_dat, weight_sq, alpha, beta, y_hat);
 
 		float max_ = 0;
-		for (int ii = 0; ii < N_PARAM; ii++) { max_ = std::max(max_, abs(beta[ii])); }
+		for (int ii = 0; ii < nParam_; ii++) { max_ = std::max(max_, abs(beta[ii])); }
 
 		unsigned int stop = 0;
 		if (max_ < epsilon_1) { stop = 1; }
@@ -154,14 +101,12 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 
 		unsigned short iteration = 0;
 
-		float inter[N_PARAM * N_PARAM];
-		float inter1[N_PARAM * N_PARAM];
-		//float inter2[n_];
+		float inter[25];
+		float inter1[25];
 		float* inter2 = (float*)malloc(n_ * sizeof(float));
-		float inter3[N_PARAM];
+		float inter3[5];
 
-		float p_try[N_PARAM];
-		//float delta_y[n_];
+		float p_try[5];
 		float* delta_y = (float*)malloc(n_ * sizeof(float));
 		float X2_try;
 		float m;
@@ -170,24 +115,24 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 		while (stop == 0 && iteration < iterNum) // Main Loop
 		{
 			iteration++;
-			float delta_p[N_PARAM] = {0, 0, 0, 0, 0};
+			float delta_p[5] = {0, 0, 0, 0, 0};
 
 			// Copy alpha to inter
-			for (int ii = 0; ii < N_PARAM * N_PARAM; ii++) { inter[ii] = alpha[ii]; }
+			for (int ii = 0; ii < nParam_ * nParam_; ii++) { inter[ii] = alpha[ii]; }
 
-			inter[0 * N_PARAM + 0] += lambda * alpha[0 * N_PARAM + 0];
-			inter[1 * N_PARAM + 1] += lambda * alpha[1 * N_PARAM + 1];
-			inter[2 * N_PARAM + 2] += lambda * alpha[2 * N_PARAM + 2];
-			inter[3 * N_PARAM + 3] += lambda * alpha[3 * N_PARAM + 3];
-			inter[4 * N_PARAM + 4] += lambda * alpha[4 * N_PARAM + 4];
+			inter[0 * nParam_ + 0] += lambda * alpha[0 * nParam_ + 0];
+			inter[1 * nParam_ + 1] += lambda * alpha[1 * nParam_ + 1];
+			inter[2 * nParam_ + 2] += lambda * alpha[2 * nParam_ + 2];
+			inter[3 * nParam_ + 3] += lambda * alpha[3 * nParam_ + 3];
+			inter[4 * nParam_ + 4] += lambda * alpha[4 * nParam_ + 4];
 
 			inverse(inter, inter1);
 
-			for (int ii = 0; ii < N_PARAM; ii++) {
-				for (int cursor = 0; cursor < N_PARAM; cursor++) { delta_p[ii] += inter1[ii * N_PARAM + cursor] * beta[cursor]; }
+			for (int ii = 0; ii < nParam_; ii++) {
+				for (int cursor = 0; cursor < nParam_; cursor++) { delta_p[ii] += inter1[ii * nParam_ + cursor] * beta[cursor]; }
 			}
 
-			for (int ii = 0; ii < N_PARAM; ii++) {
+			for (int ii = 0; ii < nParam_; ii++) {
 				p_try[ii] = p[ii] + delta_p[ii];
 				p_try[ii] = std::min(std::max(p_min[ii], p_try[ii]), p_max[ii]);
 			}
@@ -201,10 +146,10 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 			X2_try = 0;
 			for (int ii = 0; ii < n_; ii++) { X2_try += delta_y[ii] * inter2[ii]; }
 
-			for (int ii = 0; ii < N_PARAM; ii++) { inter3[ii] = lambda * delta_p[ii] + beta[ii]; } // lambda * delta_p + beta
+			for (int ii = 0; ii < nParam_; ii++) { inter3[ii] = lambda * delta_p[ii] + beta[ii]; } // lambda * delta_p + beta
 
 			m = 0;
-			for (int ii = 0; ii < N_PARAM; ii++) { m += delta_p[ii] * inter3[ii]; }
+			for (int ii = 0; ii < nParam_; ii++) { m += delta_p[ii] * inter3[ii]; }
 			m *= 2;
 
 			rho = (X2 - X2_try) / m;
@@ -212,9 +157,9 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 			if (rho > epsilon_4) // it IS significantly better
 			{
 				X2_old = X2;
-				for (int ii = 0; ii < N_PARAM; ii++) { p[ii] = p_try[ii]; } // accept p_try
+				for (int ii = 0; ii < nParam_; ii++) { p[ii] = p_try[ii]; } // accept p_try
 
-				X2 = lm_matx(t/*IN*/, p/*IN*/, y_dat/*IN*/, weight_sq/*IN*/, alpha/*OUT*/, beta/*OUT*/, y_hat/*OUT*/);
+				X2 = lm_matx(t, p, y_dat, weight_sq, alpha, beta, y_hat);
 
 				lambda = std::max(lambda / lambda_DN_fac, 1.e-7f);
 			}
@@ -225,14 +170,14 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 			}
 
 			max_ = 0;
-			for (int ii = 0; ii < N_PARAM; ii++) { max_ = std::max(max_, abs(delta_p[ii] / p[ii])); }
+			for (int ii = 0; ii < nParam_; ii++) { max_ = std::max(max_, abs(delta_p[ii] / p[ii])); }
 
 			if (max_ < epsilon_2 && iteration > 2) { stop = 1; }
 
 			if (X2 / n_ < epsilon_3 && iteration > 2) { stop = 1; }
 
 			max_ = 0;
-			for (int ii = 0; ii < N_PARAM; ii++) { max_ = std::max(max_, abs(beta[ii])); }
+			for (int ii = 0; ii < nParam_; ii++) { max_ = std::max(max_, abs(beta[ii])); }
 
 			if (max_ < epsilon_1 && iteration > 2) { stop = 1; }
 
