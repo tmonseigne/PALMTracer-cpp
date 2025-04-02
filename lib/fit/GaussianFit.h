@@ -26,11 +26,11 @@ protected:
 	static void deriv(float* out, float x, float y, float i0, float sigmaX, float sigmaY, float theta, bool has_theta);
 
 	float chi2(float* alpha, float* beta, const std::vector<float>& dydp, const  std::vector<float>& weight, const std::vector<float>& deltaY) const;
-	float rss(std::vector<float>& dat, std::vector<float>& hat) const;
+	float computeRSS(std::vector<float>& dat, std::vector<float>& hat) const;
 
-	virtual float lm_matx(std::vector<unsigned int>& t, float* p, std::vector<float>& y_dat, std::vector<float>& weight, float* alpha, float* beta, std::vector<float>& y_hat) = 0;
+	virtual float lm_matx(const std::vector<unsigned int>& t, const  float* p, const std::vector<float>& dat, const std::vector<float>& weight, float* alpha, float* beta, std::vector<float>& hat) = 0;
 	void inverse(float* in, float* out) const;
 
 	void preComputeFit(float& min, float& max, const unsigned short* image, unsigned long width, unsigned int x, unsigned int y,
-	                   std::vector<float>& y_dat, std::vector<float>& weight, std::vector<unsigned int>& t, unsigned short roi) const;
+	                   std::vector<float>& dat, std::vector<float>& weight, std::vector<unsigned int>& t, unsigned short roi) const;
 };

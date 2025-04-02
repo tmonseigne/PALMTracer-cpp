@@ -89,7 +89,7 @@ float GaussianFit::chi2(float* alpha, float* beta, const std::vector<float>& dyd
 	return std::transform_reduce(std::execution::seq, deltaY.begin(), deltaY.end(), tmp.begin(), 0.0f);
 }
 
-float GaussianFit::rss(std::vector<float>& dat, std::vector<float>& hat) const
+float GaussianFit::computeRSS(std::vector<float>& dat, std::vector<float>& hat) const
 {
 	// computing "dat" mean & "hat" mean
 	const float Dat_Mean = std::accumulate(dat.begin(), dat.end(), 0.0f) / static_cast<float>(n_),

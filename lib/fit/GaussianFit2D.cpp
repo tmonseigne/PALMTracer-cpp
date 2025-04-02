@@ -5,12 +5,12 @@
 #include <cstdlib>
 #include <ctime>
 
-float GaussianFit2D::lm_matx(std::vector<unsigned int>& t, float* p, std::vector<float>& y_dat, std::vector<float>& weight, float* alpha, float* beta, std::vector<float>& y_hat)
+float GaussianFit2D::lm_matx(const std::vector<unsigned int>& t, const float* p, const std::vector<float>& dat, const std::vector<float>& weight, float* alpha, float* beta, std::vector<float>& hat)
 {
 	std::vector<float> delta_y(n_);
 	for (size_t i = 0; i < n_; ++i) {
-		y_hat[i] = psf(static_cast<float>(t[i * 2]) - p[1], static_cast<float>(t[i * 2 + 1]) - p[2], p[0], sigma_, p[3]);
-		delta_y[i] = y_dat[i] - y_hat[i];
+		hat[i] = psf(static_cast<float>(t[i * 2]) - p[1], static_cast<float>(t[i * 2 + 1]) - p[2], p[0], sigma_, p[3]);
+		delta_y[i] = dat[i] - hat[i];
 	}
 
 	// Computing Jacobian matrix (dydp)
@@ -43,12 +43,12 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 	if (x0 >= Half && x0 <= sizeX - Half - 1 && y0 >= Half && y0 <= sizeY - Half - 1) {
 		initP(x0, y0);
 
-		std::vector<float> y_dat(n_), y_hat(n_), weight(n_);
+		std::vector<float> dat(n_), hat(n_), weight(n_);
 		std::vector<unsigned int> t(2 * n_);
 
-		// Initialization of y_dat & t (A vérifier)
+		// Initialization of dat & t (A vérifier)
 		float minI, maxI; // Not present in GPU original file why ?
-		preComputeFit(minI, maxI, image, sizeX, static_cast<int>(x0), static_cast<int>(y0), y_dat, weight, t, size);
+		preComputeFit(minI, maxI, image, sizeX, static_cast<int>(x0), static_cast<int>(y0), dat, weight, t, size);
 		p_[0] = maxI - minI; // Not present in GPU original file why ?
 		p_[3] = minI;        // Not present in GPU original file why ?
 
@@ -57,7 +57,7 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		std::array<float, N_PARAM> beta;
 
 		float X2_old;
-		X2 = lm_matx(t, p_.data(), y_dat, weight, alpha.data(), beta.data(), y_hat);
+		X2 = lm_matx(t, p_.data(), dat, weight, alpha.data(), beta.data(), hat);
 
 		float max_ = 0;
 		for (int i = 0; i < nParam_; ++i) { max_ = std::max(max_, abs(beta[i])); }
@@ -103,7 +103,7 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 			}
 
 			for (int i = 0; i < n_; ++i) {
-				delta_y[i] = y_dat[i] - psf((float)t[i * 2] - p_try[1], (float)t[i * 2 + 1] - p_try[2], p_try[0], sigma_, p_try[3]);
+				delta_y[i] = dat[i] - psf((float)t[i * 2] - p_try[1], (float)t[i * 2 + 1] - p_try[2], p_try[0], sigma_, p_try[3]);
 			}
 
 			for (int i = 0; i < n_; ++i) { inter2[i] = delta_y[i] * weight[i]; } // delta_y .* weight
@@ -122,7 +122,7 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 			{
 				X2_old = X2;
 				for (int i = 0; i < nParam_; ++i) { p_[i] = p_try[i]; } // accept p_try
-				X2 = lm_matx(t, p_.data(), y_dat, weight, alpha.data(), beta.data(), y_hat);
+				X2 = lm_matx(t, p_.data(), dat, weight, alpha.data(), beta.data(), hat);
 				lambda = std::max(lambda / LAMBDA_DN_FAC, 1.e-7f);
 			}
 			else // it IS NOT better
@@ -146,6 +146,6 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		y0 = p_[2];
 		I0 = p_[0];
 		offset = p_[3];
-		RSS = rss(y_dat, y_hat);
+		RSS = computeRSS(dat, hat);
 	}
 }
