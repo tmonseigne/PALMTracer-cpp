@@ -63,29 +63,29 @@ void GaussianFit::deriv(float* out, float x, float y, float i0, float sigmaX, fl
 float GaussianFit::chi2(float* alpha, float* beta, const float* dydp, const float* weight, const float* deltaY) const
 {
 	float* inter = (float*)malloc(nParam_ * n_ * sizeof(float));
-	for (int elt = 0; elt < n_; elt++) { for (int i = 0; i < nParam_; i++) { inter[elt * nParam_ + i] = weight[elt] * dydp[elt * nParam_ + i]; } }
+	for (int i = 0; i < n_; ++i) { for (int j = 0; j < nParam_; ++j) { inter[i * nParam_ + j] = weight[i] * dydp[i * nParam_ + j]; } }
 
-	// Computing alpha (A vérifier)
-	for (int j = 0; j < nParam_; j++) {
-		for (int i = 0; i < nParam_; i++) {
-			alpha[nParam_ * j + i] = 0;
-			for (int cursor = 0; cursor < n_; cursor++) { alpha[nParam_ * j + i] += dydp[cursor * nParam_ + j] * inter[cursor * nParam_ + i]; }
+	// Computing alpha (A vï¿½rifier)
+	for (int i = 0; i < nParam_; ++i) {
+		for (int j = 0; j < nParam_; ++j) {
+			alpha[nParam_ * i + j] = 0;
+			for (int k = 0; k < n_; k++) { alpha[nParam_ * i + j] += dydp[k * nParam_ + i] * inter[k * nParam_ + j]; }
 		}
 	}
 
 	// Computing beta
 	float* inter1 = (float*)malloc(n_ * sizeof(float));
 
-	for (int elt = 0; elt < n_; elt++) { inter1[elt] = weight[elt] * deltaY[elt]; }
+	for (int i = 0; i < n_; ++i) { inter1[i] = weight[i] * deltaY[i]; }
 
-	for (int j = 0; j < nParam_; j++) {
-		beta[j] = 0;
-		for (int cursor = 0; cursor < n_; cursor++) { beta[j] += dydp[cursor * nParam_ + j] * inter1[cursor]; }
+	for (int i = 0; i < nParam_; ++i) {
+		beta[i] = 0;
+		for (int j = 0; j < n_; ++j) { beta[i] += dydp[j * nParam_ + i] * inter1[j]; }
 	}
 
 	// Computing Chi_sq
 	float res = 0.;
-	for (int elt = 0; elt < n_; elt++) { res += deltaY[elt] * inter1[elt]; }
+	for (int i = 0; i < n_; ++i) { res += deltaY[i] * inter1[i]; }
 
 	// cleanup memory
 	free(inter);
@@ -99,27 +99,27 @@ void GaussianFit::inverse(float* in, float* out) const
 	const unsigned short N = nParam_ * nParam_;
 	std::vector<float> m1(in, in + N); // Copie de in dans M1
 	std::vector<float> mi1(N, 0.0f);
-	for (int i = 0; i < nParam_; i++) { mi1[i * nParam_ + i] = 1.0f; } // Initialisation de la matrice identité
+	for (int i = 0; i < nParam_; ++i) { mi1[i * nParam_ + i] = 1.0f; } // Initialisation de la matrice identitï¿½
 
-	// Élimination de Gauss-Jordan
-	for (int i = 0; i < nParam_; i++) {
+	// ï¿½limination de Gauss-Jordan
+	for (int i = 0; i < nParam_; ++i) {
 		const float Pivot = m1[i * nParam_ + i];
 		const float Pivot_Inv = 1.0f / Pivot;
 
 		// Normalisation de la ligne i
-		for (int j = 0; j < nParam_; j++) {
+		for (int j = 0; j < nParam_; ++j) {
 			m1[i * nParam_ + j] *= Pivot_Inv;
 			mi1[i * nParam_ + j] *= Pivot_Inv;
 		}
 
-		// Mise à zéro des autres lignes
-		for (int k = 0; k < nParam_; k++) {
-			if (k != i) {
-				const float factor = m1[k * nParam_ + i];
+		// Mise ï¿½ zï¿½ro des autres lignes
+		for (int j = 0; j < nParam_; ++j) {
+			if (j != i) {
+				const float Factor = m1[j * nParam_ + i];
 
-				for (int j = 0; j < nParam_; j++) {
-					m1[k * nParam_ + j] -= factor * m1[i * nParam_ + j];
-					mi1[k * nParam_ + j] -= factor * mi1[i * nParam_ + j];
+				for (int k = 0; k < nParam_; ++k) {
+					m1[j * nParam_ + k] -= Factor * m1[i * nParam_ + k];
+					mi1[j * nParam_ + k] -= Factor * mi1[i * nParam_ + k];
 				}
 			}
 		}
@@ -136,9 +136,9 @@ void GaussianFit::preComputeFit(float& min, float& max, const unsigned short* im
 	max = std::numeric_limits<float>::lowest(); // Plus petit float possible (-FLT_MAX) // Not present in GPU original file why ?
 
 	const unsigned short Half = roi / 2;
-	for (int i = -Half; i <= Half; i++) {
+	for (int i = -Half; i <= Half; ++i) {
 		const int Idx = Half + (i + Half) * roi;
-		for (int j = -Half; j <= Half; j++) {
+		for (int j = -Half; j <= Half; ++j) {
 			y_dat[j + Idx] = static_cast<float>(image[x + j + (y + i) * width]);
 			t[(j + Idx) * 2] = x + j;
 			t[(j + Idx) * 2 + 1] = y + i;
@@ -148,7 +148,7 @@ void GaussianFit::preComputeFit(float& min, float& max, const unsigned short* im
 		}
 	}
 
-	for (int i = 0; i < n_; i++) {
+	for (int i = 0; i < n_; ++i) {
 		weight[i] = 1; //sqrt((n_-nParam_+1) / (y_dat[ii]*y_dat[ii]))
 		//weight[i] *= weight[i];
 	}
