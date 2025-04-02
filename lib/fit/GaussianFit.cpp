@@ -58,3 +58,40 @@ void GaussianFit::deriv(float* out, float x, float y, float i0, float sigmaX, fl
 	}
 	else { out[5] = 1; } // offset (quand theta est fixe)	
 }
+
+float GaussianFit::chi2(float* alpha, float* beta, const float* dydp, const float* weight, const float* deltaY, const size_t nParam)
+{
+	//float inter[nParam * n_];
+	float* inter = (float*)malloc(nParam * n_ * sizeof(float));
+	for (int elt = 0; elt < n_; elt++) { for (int i = 0; i < nParam; i++) { inter[elt * nParam + i] = weight[elt] * dydp[elt * nParam + i]; } }
+
+	// Computing alpha (A vérifier)
+	for (int j = 0; j < nParam; j++) {
+		for (int i = 0; i < nParam; i++) {
+			alpha[nParam * j + i] = 0;
+			for (int cursor = 0; cursor < n_; cursor++) { alpha[nParam * j + i] += dydp[cursor * nParam + j] * inter[cursor * nParam + i]; }
+			// dydp' * inter : dydp'[i*n_ + cursor]
+		}
+	}
+
+	// Computing beta
+	//float inter1[n_];
+	float* inter1 = (float*)malloc(n_ * sizeof(float));
+
+	for (int elt = 0; elt < n_; elt++) { inter1[elt] = weight[elt] * deltaY[elt]; }
+
+	for (int j = 0; j < nParam; j++) {
+		beta[j] = 0;
+		for (int cursor = 0; cursor < n_; cursor++) { beta[j] += dydp[cursor * nParam + j] * inter1[cursor]; } // dydp' * inter : dydp'[j*n_ + cursor]
+	}
+
+	// Computing Chi_sq
+	float res = 0.;
+	for (int elt = 0; elt < n_; elt++) { res += deltaY[elt] * inter1[elt]; }
+
+	// cleanup memory
+	free(inter);
+	free(inter1);
+
+	return res;
+}

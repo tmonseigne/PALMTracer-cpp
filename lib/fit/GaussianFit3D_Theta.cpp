@@ -25,42 +25,13 @@ float GaussianFit3D_Theta::lm_matx(unsigned int* t/*IN*/, float* p/*IN*/, float*
 		deriv(&dydp[elt * N_PARAM], (float)t[elt * 2] - p[1], (float)t[elt * 2 + 1] - p[2], p[0], p[3], p[4], p[5], true);
 	}
 
-
-	//float inter[N_PARAM * n_];
-	float* inter = (float*)malloc(N_PARAM * n_ * sizeof(float));
-	for (int elt = 0; elt < n_; elt++) { for (int i = 0; i < N_PARAM; i++) { inter[elt * N_PARAM + i] = weight_sq[elt] * dydp[elt * N_PARAM + i]; } }
-
-	// Computing alpha (A vérifier)
-	for (int j = 0; j < N_PARAM; j++) {
-		for (int i = 0; i < N_PARAM; i++) {
-			alpha[N_PARAM * j + i] = 0;
-			for (int cursor = 0; cursor < n_; cursor++) { alpha[N_PARAM * j + i] += dydp[cursor * N_PARAM + j] * inter[cursor * N_PARAM + i]; }
-			// dydp' * inter : dydp'[i*n_ + cursor]
-		}
-	}
-
-	// Computing beta
-	//float inter1[n_];
-	float* inter1 = (float*)malloc(n_ * sizeof(float));
-
-	for (int elt = 0; elt < n_; elt++) { inter1[elt] = weight_sq[elt] * delta_y[elt]; }
-
-	for (int j = 0; j < N_PARAM; j++) {
-		beta[j] = 0;
-		for (int cursor = 0; cursor < n_; cursor++) { beta[j] += dydp[cursor * N_PARAM + j] * inter1[cursor]; } // dydp' * inter : dydp'[j*n_ + cursor]
-	}
-
-	// Computing Chi_sq
-	float Chi_sq = 0.;
-	for (int elt = 0; elt < n_; elt++) { Chi_sq += delta_y[elt] * inter1[elt]; }
-
+	const float Res = chi2(alpha, beta, dydp, weight_sq, delta_y, N_PARAM);
+	
 	// cleanup memory
 	free(delta_y);
 	free(dydp);
-	free(inter);
-	free(inter1);
 
-	return Chi_sq;
+	return Res;
 }
 
 void GaussianFit3D_Theta::inverse(float* MM, float* Minv)
