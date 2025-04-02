@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 
 constexpr float EPSILON_1 = 1e-6f;
 constexpr float EPSILON_2 = 1e-6f;
@@ -13,6 +14,7 @@ class GaussianFit
 public:
 	unsigned short n_;
 	unsigned short nParam_;
+	std::vector<float> pMin_, p_, pMax_;
 
 	GaussianFit() : n_(0), nParam_(0) { }
 	virtual ~GaussianFit() = default;
@@ -26,7 +28,10 @@ protected:
 
 	float chi2(float* alpha, float* beta, const float* dydp, const float* weight, const float* deltaY) const;
 
+	virtual float lm_matx(unsigned int* t, float* p, float* y_dat, float* weight, float* alpha, float* beta, float* y_hat) = 0;
 	void inverse(float* in, float* out) const;
 
-	virtual float lm_matx(unsigned int* t, float* p, float* y_dat, float* weight, float* alpha, float* beta, float* y_hat) = 0;
+	static void computeIntensityLimits(float& min, float& max, const unsigned short* image, unsigned long width, unsigned int x, unsigned int y,
+	                                   float* y_dat, unsigned int* t, unsigned short roi);
+	void preRun(float x, float y);
 };

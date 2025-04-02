@@ -128,3 +128,23 @@ void GaussianFit::inverse(float* in, float* out) const
 	// Copie finale de Mi1 vers out
 	std::ranges::copy(mi1, out);
 }
+
+void GaussianFit::computeIntensityLimits(float& min, float& max, const unsigned short* image, const unsigned long width,
+                                         const unsigned int x, const unsigned int y, float* y_dat, unsigned int* t, const unsigned short roi)
+{
+	min = std::numeric_limits<float>::max();    // Plus grand float possible (FLT_MAX) // Not present in GPU original file why ?
+	max = std::numeric_limits<float>::lowest(); // Plus petit float possible (-FLT_MAX) // Not present in GPU original file why ?
+
+	const unsigned short Half = roi / 2;
+	for (int i = -Half; i <= Half; i++) {
+		const int Idx = Half + (i + Half) * roi;
+		for (int j = -Half; j <= Half; j++) {
+			y_dat[j + Idx] = static_cast<float>(image[x + j + (y + i) * width]);
+			t[(j + Idx) * 2] = x + j;
+			t[(j + Idx) * 2 + 1] = y + i;
+
+			max = std::max(max, y_dat[j + Idx]); // Not present in GPU original file why ?
+			min = std::min(min, y_dat[j + Idx]); // Not present in GPU original file why ?
+		}
+	}
+}

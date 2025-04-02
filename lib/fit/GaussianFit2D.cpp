@@ -26,6 +26,14 @@ float GaussianFit2D::lm_matx(unsigned int* t, float* p, float* y_dat, float* wei
 	return Res;
 }
 
+void GaussianFit2D::initP(const float x, const float y)
+{
+	pMin_ = {0, x - 1, y - 1, 0};
+	p_ = {1000, x, y, 1000};
+	pMax_ = {65535, x + 1, y + 1, 65535};
+}
+
+
 void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& offset,
                         float& RSS, int iterNum, unsigned short size)
 {
@@ -37,10 +45,7 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 
 	float X2;
 	if (x0 >= Half && x0 <= sizeX - Half - 1 && y0 >= Half && y0 <= sizeY - Half - 1) {
-		// for real data
-		float p_min[4] = {0., x0 - 1, y0 - 1, 0.};
-		float p[4] = {1000., x0, y0, 1000.};
-		float p_max[4] = {65535., x0 + 1, y0 + 1, 65535.};
+		initP(x0, y0);
 
 		float* y_dat = (float*)malloc(n_ * sizeof(float));
 		float* weight = (float*)malloc(n_ * sizeof(float));
@@ -48,26 +53,14 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		unsigned int* t = (unsigned int*)malloc(2 * n_ * sizeof(unsigned int));
 
 		// Initialization of y_dat & t (A vérifier)
-		float max_intensity = -70000; // Not present in GPU original file why ?
-		float min_intensity = +70000; // Not present in GPU original file why ?
-		for (int jj = -Half; jj <= Half; jj++) {
-			const int Idx = Half + (jj + Half) * size;
-			for (int ii = -Half; ii <= Half; ii++) {
-				y_dat[ii + Idx] = (float)image[(int)x0 + ii + ((int)y0 + jj) * sizeX];
-				t[(ii + Idx) * 2] = (int)x0 + ii;
-				t[(ii + Idx) * 2 + 1] = (int)y0 + jj;
+		float minI, maxI; // Not present in GPU original file why ?
+		computeIntensityLimits(minI, maxI, image, sizeX, static_cast<int>(x0), static_cast<int>(y0), y_dat, t, size);
+		p_[0] = maxI - minI; // Not present in GPU original file why ?
+		p_[3] = minI;        // Not present in GPU original file why ?
 
-				max_intensity = std::max(max_intensity, y_dat[ii + Idx]); // Not present in GPU original file why ?
-				min_intensity = std::min(min_intensity, y_dat[ii + Idx]); // Not present in GPU original file why ?
-			}
-		}
-
-		p[0] = max_intensity - min_intensity; // Not present in GPU original file why ?
-		p[3] = min_intensity;                 // Not present in GPU original file why ?
-
-		for (int ii = 0; ii < n_; ii++) {
-			weight[ii] = 1/*sqrt((n_-nParam_+1) / (y_dat[ii]*y_dat[ii]))*/;
-			weight_sq[ii] = pow(weight[ii], 2);
+		for (int i = 0; i < n_; i++) {
+			weight[i] = 1/*sqrt((n_-nParam_+1) / (y_dat[ii]*y_dat[ii]))*/;
+			weight_sq[i] = pow(weight[i], 2);
 		}
 
 		float lambda;
@@ -78,7 +71,7 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 
 		//float X2;
 		float X2_old;
-		X2 = lm_matx(t, p, y_dat, weight_sq, alpha, beta, y_hat);
+		X2 = lm_matx(t, p_.data(), y_dat, weight_sq, alpha, beta, y_hat);
 
 		float max_ = 0;
 		for (int ii = 0; ii < nParam_; ii++) { max_ = std::max(max_, abs(beta[ii])); }
@@ -118,8 +111,8 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 			}
 
 			for (int ii = 0; ii < nParam_; ii++) {
-				p_try[ii] = p[ii] + delta_p[ii];
-				p_try[ii] = std::min(std::max(p_min[ii], p_try[ii]), p_max[ii]);
+				p_try[ii] = p_[ii] + delta_p[ii];
+				p_try[ii] = std::min(std::max(pMin_[ii], p_try[ii]), pMax_[ii]);
 			}
 
 			for (int ii = 0; ii < n_; ii++) {
@@ -142,9 +135,9 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 			if (rho > EPSILON_4) // it IS significantly better
 			{
 				X2_old = X2;
-				for (int ii = 0; ii < nParam_; ii++) { p[ii] = p_try[ii]; } // accept p_try
+				for (int ii = 0; ii < nParam_; ii++) { p_[ii] = p_try[ii]; } // accept p_try
 
-				X2 = lm_matx(t, p, y_dat, weight_sq, alpha, beta, y_hat);
+				X2 = lm_matx(t, p_.data(), y_dat, weight_sq, alpha, beta, y_hat);
 
 				lambda = std::max(lambda / LAMBDA_DN_FAC, 1.e-7f);
 			}
@@ -155,7 +148,7 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 			}
 
 			max_ = 0;
-			for (int ii = 0; ii < nParam_; ii++) { max_ = std::max(max_, abs(delta_p[ii] / p[ii])); }
+			for (int ii = 0; ii < nParam_; ii++) { max_ = std::max(max_, abs(delta_p[ii] / p_[ii])); }
 
 			if (max_ < EPSILON_2 && iteration > 2) { stop = 1; }
 
@@ -200,10 +193,10 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		// computing 'R_sq'
 		float R_sq = pow(t1 / (t2 * t3), 2);
 
-		x0 = p[1];
-		y0 = p[2];
-		I0 = p[0];
-		offset = p[3];
+		x0 = p_[1];
+		y0 = p_[2];
+		I0 = p_[0];
+		offset = p_[3];
 		if (_isnan(R_sq)) { RSS = static_cast<float>(0); }
 		else { RSS = R_sq; }
 
