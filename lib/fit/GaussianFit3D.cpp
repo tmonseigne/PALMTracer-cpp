@@ -4,35 +4,29 @@
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+#include <numbers>
 
-float GaussianFit3D::lm_matx(unsigned int* t, float* p, float* y_dat, float* weight, float* alpha, float* beta,
-                             float* y_hat)
+float GaussianFit3D::lm_matx(std::vector<unsigned int>& t, float* p, std::vector<float>& y_dat, std::vector<float>& weight, float* alpha, float* beta, std::vector<float>& y_hat)
 {
-	float* delta_y = (float*)malloc(n_ * sizeof(float));
+	std::vector<float> delta_y(n_);
 	for (size_t i = 0; i < n_; ++i) {
 		y_hat[i] = psf(static_cast<float>(t[i * 2]) - p[1], static_cast<float>(t[i * 2 + 1]) - p[2], p[0], p[3], p[4], theta_, p[5]);
 		delta_y[i] = y_dat[i] - y_hat[i];
 	}
 
 	// Computing Jacobian matrix (dydp)
-	float* dydp = (float*)malloc(n_ * nParam_ * sizeof(float));
+	std::vector<float> dydp(n_ * nParam_);
 	for (size_t i = 0; i < n_; ++i) {
 		deriv(&dydp[i * nParam_], static_cast<float>(t[i * 2]) - p[1], static_cast<float>(t[i * 2 + 1]) - p[2], p[0], p[3], p[4], theta_, false);
 	}
 
-	const float Res = chi2(alpha, beta, dydp, weight, delta_y);
-
-	// cleanup memory
-	free(delta_y);
-	free(dydp);
-
-	return Res;
+	return chi2(alpha, beta, dydp, weight, delta_y);
 }
 
 void GaussianFit3D::initP(const float x, const float y, const float sigmaX, const float sigmaY)
 {
 	pMin_ = {0, x - 1, y - 1, 0.1f, 0.1f, 0};
-	p_ = {2000, x, y, static_cast<float>(sqrt(2)) * sigmaX, static_cast<float>(sqrt(2)) * sigmaY, 700};
+	p_ = {2000, x, y, std::numbers::sqrt2_v<float> * sigmaX, std::numbers::sqrt2_v<float> * sigmaY, 700};
 	pMax_ = {65535, x + 1, y + 1, 20, 20, 65535};
 }
 
@@ -50,9 +44,8 @@ void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		// for real data
 		initP(x0, y0, sigmaX, sigmaY);
 
-		float* y_dat = (float*)malloc(n_ * sizeof(float));
-		float* weight = (float*)malloc(n_ * sizeof(float));
-		unsigned int* t = (unsigned int*)malloc(2 * n_ * sizeof(unsigned int));
+		std::vector<float> y_dat(n_), y_hat(n_), weight(n_);
+		std::vector<unsigned int> t(2 * n_);
 
 		// Initialization of y_dat & t (A vérifier)
 		float minI, maxI; // Not present in GPU original file why ?
@@ -61,9 +54,8 @@ void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		p_[5] = minI;        // Not present in GPU original file why ?
 
 		float lambda;
-		float alpha[36];
-		float beta[6];
-		float* y_hat = (float*)malloc(n_ * sizeof(float));
+		float alpha[N_PARAM2];
+		float beta[N_PARAM];
 
 		float X2_old;
 		X2 = lm_matx(t, p_.data(), y_dat, weight, alpha, beta, y_hat);
@@ -79,27 +71,28 @@ void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 
 		unsigned short iteration = 0;
 
-		float inter[36];
-		float inter1[36];
-		float* inter2 = (float*)malloc(n_ * sizeof(float));
-		float inter3[6];
+		std::array<float, N_PARAM2> inter;
+		std::array<float, N_PARAM2> inter1;
+		std::vector<float> inter2(n_);
+		std::array<float, N_PARAM> inter3;
 
-		float p_try[6];
-		float* delta_y = (float*)malloc(n_ * sizeof(float));
+		std::array<float, N_PARAM> p_try;
+		std::vector<float> delta_y(n_);
 		float X2_try;
 		float m;
 		float rho;
+		std::array<float, N_PARAM> delta_p;  // Déclaré une seule fois avant la boucle
 
 		while (stop == 0 && iteration <= iterNum) // Main Loop
 		{
 			iteration++;
-			float delta_p[6] = {0, 0, 0, 0, 0, 0};
+			delta_p.fill(0.0f);
 
 			// Copy alpha to inter
-			for (int i = 0; i < nParam_ * nParam_; ++i) { inter[i] = alpha[i]; }
+			for (int i = 0; i < nParam2_; ++i) { inter[i] = alpha[i]; }
 			for (int i = 0; i < nParam_; ++i) { inter[i * nParam_ + i] += lambda * alpha[i * nParam_ + i]; }
 
-			inverse(inter, inter1);
+			inverse(inter.data(), inter1.data());
 
 			for (int i = 0; i < nParam_; ++i) {
 				for (int cursor = 0; cursor < nParam_; cursor++) { delta_p[i] += inter1[i * nParam_ + cursor] * beta[cursor]; }
@@ -183,8 +176,8 @@ void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		t2 = sqrt(t2);
 		t3 = sqrt(t3);
 
-		// computing 'R_sq'
-		float R_sq = pow(t1 / (t2 * t3), 2);
+		// computing 'R'
+		const float R = t1 / (t2 * t3);
 
 		x0 = p_[1];
 		y0 = p_[2];
@@ -193,15 +186,7 @@ void GaussianFit3D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		sigmaY = p_[4] / sqrt(2.);
 		offset = p_[5];
 
-		if (_isnan(R_sq)) { RSS = static_cast<float>(0); }
-		else { RSS = R_sq; }
-
-		// cleanup memory
-		free(y_dat);
-		free(weight);
-		free(t);
-		free(y_hat);
-		free(inter2);
-		free(delta_y);
+		if (_isnan(R)) { RSS = static_cast<float>(0); }
+		else { RSS = R * R; }
 	}
 }

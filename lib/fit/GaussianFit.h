@@ -12,11 +12,9 @@ constexpr float LAMBDA_DN_FAC = 9;
 class GaussianFit
 {
 public:
-	unsigned short n_;
-	unsigned short nParam_;
-	std::vector<float> pMin_, p_, pMax_;
+	unsigned short n_, nParam_, nParam2_;
 
-	GaussianFit() : n_(0), nParam_(0) { }
+	GaussianFit() : n_(0), nParam_(0), nParam2_(0) { }
 	virtual ~GaussianFit() = default;
 
 protected:
@@ -26,11 +24,11 @@ protected:
 	static void deriv(float* out, float x, float y, float i0, float sigma, bool has_sigma);
 	static void deriv(float* out, float x, float y, float i0, float sigmaX, float sigmaY, float theta, bool has_theta);
 
-	float chi2(float* alpha, float* beta, const float* dydp, const float* weight, const float* deltaY) const;
+	float chi2(float* alpha, float* beta, const std::vector<float>& dydp, const  std::vector<float>& weight, const std::vector<float>& deltaY) const;
 
-	virtual float lm_matx(unsigned int* t, float* p, float* y_dat, float* weight, float* alpha, float* beta, float* y_hat) = 0;
+	virtual float lm_matx(std::vector<unsigned int>& t, float* p, std::vector<float>& y_dat, std::vector<float>& weight, float* alpha, float* beta, std::vector<float>& y_hat) = 0;
 	void inverse(float* in, float* out) const;
 
 	void preComputeFit(float& min, float& max, const unsigned short* image, unsigned long width, unsigned int x, unsigned int y,
-	                   float* y_dat, float* weight, unsigned int* t, unsigned short roi) const;
+	                   std::vector<float>& y_dat, std::vector<float>& weight, std::vector<unsigned int>& t, unsigned short roi) const;
 };

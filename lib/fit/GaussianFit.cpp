@@ -1,7 +1,10 @@
 #include "GaussianFit.h"
 
+#include <algorithm>
 #include <cmath>
 #include <vector>
+#include <numeric>
+#include <execution>
 
 float GaussianFit::psf(const float x, const float y, const float i0, const float sigma, const float offset)
 {
@@ -60,45 +63,36 @@ void GaussianFit::deriv(float* out, float x, float y, float i0, float sigmaX, fl
 	else { out[5] = 1; } // offset (quand theta est fixe)	
 }
 
-float GaussianFit::chi2(float* alpha, float* beta, const float* dydp, const float* weight, const float* deltaY) const
+float GaussianFit::chi2(float* alpha, float* beta, const std::vector<float>& dydp, const std::vector<float>& weight, const std::vector<float>& deltaY) const
 {
-	float* inter = (float*)malloc(nParam_ * n_ * sizeof(float));
-	for (int i = 0; i < n_; ++i) { for (int j = 0; j < nParam_; ++j) { inter[i * nParam_ + j] = weight[i] * dydp[i * nParam_ + j]; } }
+	std::vector<float> tmp(n_ * nParam_);
+	for (int i = 0; i < n_; ++i) { for (int j = 0; j < nParam_; ++j) { tmp[i * nParam_ + j] = weight[i] * dydp[i * nParam_ + j]; } }
 
 	// Computing alpha (A v�rifier)
 	for (int i = 0; i < nParam_; ++i) {
 		for (int j = 0; j < nParam_; ++j) {
 			alpha[nParam_ * i + j] = 0;
-			for (int k = 0; k < n_; k++) { alpha[nParam_ * i + j] += dydp[k * nParam_ + i] * inter[k * nParam_ + j]; }
+			for (int k = 0; k < n_; k++) { alpha[nParam_ * i + j] += dydp[k * nParam_ + i] * tmp[k * nParam_ + j]; }
 		}
 	}
 
 	// Computing beta
-	float* inter1 = (float*)malloc(n_ * sizeof(float));
-
-	for (int i = 0; i < n_; ++i) { inter1[i] = weight[i] * deltaY[i]; }
+	tmp.resize(n_);
+	std::ranges::transform(weight, deltaY, tmp.begin(), std::multiplies<>{});
 
 	for (int i = 0; i < nParam_; ++i) {
 		beta[i] = 0;
-		for (int j = 0; j < n_; ++j) { beta[i] += dydp[j * nParam_ + i] * inter1[j]; }
+		for (int j = 0; j < n_; ++j) { beta[i] += dydp[j * nParam_ + i] * tmp[j]; }
 	}
 
 	// Computing Chi_sq
-	float res = 0.;
-	for (int i = 0; i < n_; ++i) { res += deltaY[i] * inter1[i]; }
-
-	// cleanup memory
-	free(inter);
-	free(inter1);
-
-	return res;
+	return std::transform_reduce(std::execution::seq, deltaY.begin(), deltaY.end(), tmp.begin(), 0.0f);
 }
 
 void GaussianFit::inverse(float* in, float* out) const
 {
-	const unsigned short N = nParam_ * nParam_;
-	std::vector<float> m1(in, in + N); // Copie de in dans M1
-	std::vector<float> mi1(N, 0.0f);
+	std::vector<float> m1(in, in + nParam2_); // Copie de in dans M1
+	std::vector<float> mi1(nParam2_, 0.0f);
 	for (int i = 0; i < nParam_; ++i) { mi1[i * nParam_ + i] = 1.0f; } // Initialisation de la matrice identit�
 
 	// �limination de Gauss-Jordan
@@ -130,7 +124,7 @@ void GaussianFit::inverse(float* in, float* out) const
 }
 
 void GaussianFit::preComputeFit(float& min, float& max, const unsigned short* image, const unsigned long width,
-                                const unsigned int x, const unsigned int y, float* y_dat, float* weight, unsigned int* t, const unsigned short roi) const
+                                const unsigned int x, const unsigned int y, std::vector<float>& y_dat, std::vector<float>& weight, std::vector<unsigned int>& t, const unsigned short roi) const
 {
 	min = std::numeric_limits<float>::max();    // Plus grand float possible (FLT_MAX) // Not present in GPU original file why ?
 	max = std::numeric_limits<float>::lowest(); // Plus petit float possible (-FLT_MAX) // Not present in GPU original file why ?
