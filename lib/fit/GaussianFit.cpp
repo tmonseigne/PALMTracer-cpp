@@ -129,8 +129,8 @@ void GaussianFit::inverse(float* in, float* out) const
 	std::ranges::copy(mi1, out);
 }
 
-void GaussianFit::computeIntensityLimits(float& min, float& max, const unsigned short* image, const unsigned long width,
-                                         const unsigned int x, const unsigned int y, float* y_dat, unsigned int* t, const unsigned short roi)
+void GaussianFit::preComputeFit(float& min, float& max, const unsigned short* image, const unsigned long width,
+                                const unsigned int x, const unsigned int y, float* y_dat, float* weight, unsigned int* t, const unsigned short roi) const
 {
 	min = std::numeric_limits<float>::max();    // Plus grand float possible (FLT_MAX) // Not present in GPU original file why ?
 	max = std::numeric_limits<float>::lowest(); // Plus petit float possible (-FLT_MAX) // Not present in GPU original file why ?
@@ -146,5 +146,10 @@ void GaussianFit::computeIntensityLimits(float& min, float& max, const unsigned 
 			max = std::max(max, y_dat[j + Idx]); // Not present in GPU original file why ?
 			min = std::min(min, y_dat[j + Idx]); // Not present in GPU original file why ?
 		}
+	}
+
+	for (int i = 0; i < n_; i++) {
+		weight[i] = 1; //sqrt((n_-nParam_+1) / (y_dat[ii]*y_dat[ii]))
+		//weight[i] *= weight[i];
 	}
 }

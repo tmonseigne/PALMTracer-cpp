@@ -31,7 +31,6 @@ protected:
 	virtual float lm_matx(unsigned int* t, float* p, float* y_dat, float* weight, float* alpha, float* beta, float* y_hat) = 0;
 	void inverse(float* in, float* out) const;
 
-	static void computeIntensityLimits(float& min, float& max, const unsigned short* image, unsigned long width, unsigned int x, unsigned int y,
-	                                   float* y_dat, unsigned int* t, unsigned short roi);
-	void preRun(float x, float y);
+	void preComputeFit(float& min, float& max, const unsigned short* image, unsigned long width, unsigned int x, unsigned int y,
+	                   float* y_dat, float* weight, unsigned int* t, unsigned short roi) const;
 };

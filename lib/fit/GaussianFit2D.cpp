@@ -49,29 +49,22 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 
 		float* y_dat = (float*)malloc(n_ * sizeof(float));
 		float* weight = (float*)malloc(n_ * sizeof(float));
-		float* weight_sq = (float*)malloc(n_ * sizeof(float));
 		unsigned int* t = (unsigned int*)malloc(2 * n_ * sizeof(unsigned int));
 
 		// Initialization of y_dat & t (A vérifier)
 		float minI, maxI; // Not present in GPU original file why ?
-		computeIntensityLimits(minI, maxI, image, sizeX, static_cast<int>(x0), static_cast<int>(y0), y_dat, t, size);
+		preComputeFit(minI, maxI, image, sizeX, static_cast<int>(x0), static_cast<int>(y0), y_dat, weight, t, size);
 		p_[0] = maxI - minI; // Not present in GPU original file why ?
 		p_[3] = minI;        // Not present in GPU original file why ?
-
-		for (int i = 0; i < n_; i++) {
-			weight[i] = 1/*sqrt((n_-nParam_+1) / (y_dat[ii]*y_dat[ii]))*/;
-			weight_sq[i] = pow(weight[i], 2);
-		}
 
 		float lambda;
 		float alpha[16];
 		float beta[4];
-		//float y_hat[n_];
 		float* y_hat = (float*)malloc(n_ * sizeof(float));
 
 		//float X2;
 		float X2_old;
-		X2 = lm_matx(t, p_.data(), y_dat, weight_sq, alpha, beta, y_hat);
+		X2 = lm_matx(t, p_.data(), y_dat, weight, alpha, beta, y_hat);
 
 		float max_ = 0;
 		for (int ii = 0; ii < nParam_; ii++) { max_ = std::max(max_, abs(beta[ii])); }
@@ -119,7 +112,7 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 				delta_y[ii] = y_dat[ii] - psf((float)t[ii * 2] - p_try[1], (float)t[ii * 2 + 1] - p_try[2], p_try[0], sigma_, p_try[3]);
 			}
 
-			for (int ii = 0; ii < n_; ii++) { inter2[ii] = delta_y[ii] * weight_sq[ii]; } // delta_y .* weight_sq
+			for (int ii = 0; ii < n_; ii++) { inter2[ii] = delta_y[ii] * weight[ii]; } // delta_y .* weight
 
 			X2_try = 0;
 			for (int ii = 0; ii < n_; ii++) { X2_try += delta_y[ii] * inter2[ii]; }
@@ -137,7 +130,7 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 				X2_old = X2;
 				for (int ii = 0; ii < nParam_; ii++) { p_[ii] = p_try[ii]; } // accept p_try
 
-				X2 = lm_matx(t, p_.data(), y_dat, weight_sq, alpha, beta, y_hat);
+				X2 = lm_matx(t, p_.data(), y_dat, weight, alpha, beta, y_hat);
 
 				lambda = std::max(lambda / LAMBDA_DN_FAC, 1.e-7f);
 			}
@@ -203,7 +196,6 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		// cleanup memory
 		free(y_dat);
 		free(weight);
-		free(weight_sq);
 		free(t);
 		free(y_hat);
 		free(inter2);
