@@ -4,9 +4,14 @@
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+#include <iostream>
 #include <numbers>
+#include <array>
+#include <numeric>
+#include <ranges>
 
-float GaussianFit3D_Theta::lm_matx(std::vector<unsigned int>& t, float* p, std::vector<float>& y_dat, std::vector<float>& weight, float* alpha, float* beta, std::vector<float>& y_hat)
+float GaussianFit3D_Theta::lm_matx(std::vector<unsigned int>& t, float* p, std::vector<float>& y_dat, std::vector<float>& weight, float* alpha, float* beta,
+                                   std::vector<float>& y_hat)
 {
 	std::vector<float> delta_y(n_);
 	for (size_t i = 0; i < n_; ++i) {
@@ -38,9 +43,14 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 	n_ = size * size;
 	const unsigned short Half = size / 2;
 
-	float X2;
 	if (x0 >= (int)Half && x0 <= sizeX - (int)Half - 1 && y0 >= (int)Half && y0 <= sizeY - (int)Half - 1) {
 		initP(x0, y0, sigmaX, sigmaY, angle);
+
+		// Création des variables
+		float X2, X2_old, lambda;
+
+		std::array<float, N_PARAM2> alpha;
+		std::array<float, N_PARAM> beta;
 
 		std::vector<float> y_dat(n_), y_hat(n_), weight(n_);
 		std::vector<unsigned int> t(2 * n_);
@@ -51,15 +61,11 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 		p_[0] = maxI - minI; // Not present in GPU original file why ?
 		p_[6] = minI;        // Not present in GPU original file why ?
 
-		float lambda;
-		float alpha[N_PARAM2];
-		float beta[N_PARAM];
 
-		float X2_old;
-		X2 = lm_matx(t, p_.data(), y_dat, weight, alpha, beta, y_hat);
+		X2 = lm_matx(t, p_.data(), y_dat, weight, alpha.data(), beta.data(), y_hat);
 
-		float max_ = 0;
-		for (int i = 0; i < nParam_; ++i) { max_ = std::max(max_, abs(beta[i])); }
+		// Trouver la valeur absolue maximale
+		float max_ = std::ranges::max(std::views::transform(beta, [](const float x) { return std::abs(x); }));
 
 		unsigned int stop = 0;
 		if (max_ < EPSILON_1) { stop = 1; }
@@ -79,7 +85,7 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 		float X2_try;
 		float m;
 		float rho;
-		std::array<float, N_PARAM> delta_p;  // Déclaré une seule fois avant la boucle
+		std::array<float, N_PARAM> delta_p; // Déclaré une seule fois avant la boucle
 
 		while (stop == 0 && iteration <= iterNum) // Main Loop
 		{
@@ -118,77 +124,37 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 
 			rho = (X2 - X2_try) / m;
 
-			if (rho > EPSILON_4) // it IS significantly better
-			{
+			if (rho > EPSILON_4) { // it IS significantly better
 				X2_old = X2;
-				for (int i = 0; i < nParam_; ++i) {
-					p_[i] = p_try[i]; // accept p_try
-				}
+				for (int i = 0; i < nParam_; ++i) {p_[i] = p_try[i]; } // accept p_try
 
-				//p[5] = ANGLE;
-
-				X2 = lm_matx(t, p_.data(), y_dat, weight, alpha, beta, y_hat);
-
+				X2 = lm_matx(t, p_.data(), y_dat, weight, alpha.data(), beta.data(), y_hat);
 				lambda = std::max(lambda / LAMBDA_DN_FAC, 1.e-7f);
 			}
-			else // it IS NOT better
-			{
+			else { // it IS NOT better
 				X2 = X2_old; // do not accept a_try
-				lambda = std::min(lambda * LAMBDA_UP_FAC, 1.e7f);
+				lambda = std::min(lambda * LAMBDA_UP_FAC, LAMBDA_EPSILON);
 			}
 
 			max_ = 0;
 			for (int i = 0; i < nParam_; ++i) { max_ = std::max(max_, abs(delta_p[i] / p_[i])); }
 
 			if (max_ < EPSILON_2 && iteration > 2) { stop = 1; }
-
 			if (X2 / n_ < EPSILON_3 && iteration > 2) { stop = 1; }
 
-			max_ = 0;
-			for (int i = 0; i < nParam_; ++i) { max_ = std::max(max_, abs(beta[i])); }
+			max_ = std::ranges::max(std::views::transform(beta, [](const float x) { return std::abs(x); }));
 
 			if (max_ < EPSILON_1 && iteration > 2) { stop = 1; }
-
 			if (iteration == iterNum) { stop = 1; }
 		}
-
-		// computing "y_dat" mean & "y_hat" mean
-		float y_dat_mean = 0.;
-		float y_hat_mean = 0.;
-		for (int i = 0; i < n_; ++i) {
-			y_dat_mean += y_dat[i];
-			y_hat_mean += y_hat[i];
-		}
-		y_dat_mean /= n_;
-		y_hat_mean /= n_;
-
-		// computing 't1' & 't2' & 't3'
-		float t1 = 0.;
-		float t2 = 0.;
-		float t3 = 0.;
-		float diff_hat, diff_dat;
-
-		for (int i = 0; i < n_; ++i) {
-			diff_dat = y_dat[i] - y_dat_mean;
-			diff_hat = y_hat[i] - y_hat_mean;
-			t1 += diff_dat * diff_hat;
-			t2 += diff_dat * diff_dat;
-			t3 += diff_hat * diff_hat;
-		}
-		t2 = sqrt(t2);
-		t3 = sqrt(t3);
-
-		// computing 'R'
-		const float R = t1 / (t2 * t3);
 
 		x0 = p_[1];
 		y0 = p_[2];
 		I0 = p_[0];
-		sigmaX = p_[3] / sqrt(2.);
-		sigmaY = p_[4] / sqrt(2.);
+		sigmaX = p_[3] / std::numbers::sqrt2_v<float>;
+		sigmaY = p_[4] / std::numbers::sqrt2_v<float>;
 		angle = p_[5];
 		offset = p_[6]/*iteration*/;
-		if (_isnan(R)) { RSS = static_cast<float>(0); }
-		else { RSS = R * R; }
+		RSS = rss(y_dat, y_hat);
 	}
 }

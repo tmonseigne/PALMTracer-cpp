@@ -51,11 +51,11 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 		p_[4] = minI;        // Not present in GPU original file why ?
 
 		float lambda;
-		float alpha[N_PARAM2];
-		float beta[N_PARAM];
+		std::array<float, N_PARAM2> alpha;
+		std::array<float, N_PARAM> beta;
 
 		float X2_old;
-		X2 = lm_matx(t, p_.data(), y_dat, weight, alpha, beta, y_hat);
+		X2 = lm_matx(t, p_.data(), y_dat, weight, alpha.data(), beta.data(), y_hat);
 
 		float max_ = 0;
 		for (int i = 0; i < nParam_; ++i) { max_ = std::max(max_, abs(beta[i])); }
@@ -122,7 +122,7 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 				X2_old = X2;
 				for (int i = 0; i < nParam_; ++i) { p_[i] = p_try[i]; } // accept p_try
 
-				X2 = lm_matx(t, p_.data(), y_dat, weight, alpha, beta, y_hat);
+				X2 = lm_matx(t, p_.data(), y_dat, weight, alpha.data(), beta.data(), y_hat);
 
 				lambda = std::max(lambda / LAMBDA_DN_FAC, 1.e-7f);
 			}
@@ -147,41 +147,11 @@ void GaussianFit2D_Sigma::Run(unsigned short* image, unsigned long sizeX, unsign
 			if (iteration == iterNum) { stop = 1; }
 		}
 
-		// computing "y_dat" mean & "y_hat" mean
-		float y_dat_mean = 0.;
-		float y_hat_mean = 0.;
-		for (int i = 0; i < n_; ++i) {
-			y_dat_mean += y_dat[i];
-			y_hat_mean += y_hat[i];
-		}
-		y_dat_mean /= n_;
-		y_hat_mean /= n_;
-
-		// computing 't1' & 't2' & 't3'
-		float t1 = 0.;
-		float t2 = 0.;
-		float t3 = 0.;
-		float diff_hat, diff_dat;
-
-		for (int i = 0; i < n_; ++i) {
-			diff_dat = y_dat[i] - y_dat_mean;
-			diff_hat = y_hat[i] - y_hat_mean;
-			t1 += diff_dat * diff_hat;
-			t2 += diff_dat * diff_dat;
-			t3 += diff_hat * diff_hat;
-		}
-		t2 = sqrt(t2);
-		t3 = sqrt(t3);
-
-		// computing 'R'
-		const float R = t1 / (t2 * t3);
-
 		x0 = p_[1];
 		y0 = p_[2];
 		I0 = p_[0];
 		sigmaX = p_[3];
 		offset = p_[4];
-		if (_isnan(R)) { RSS = static_cast<float>(0); }
-		else { RSS = R * R; }
+		RSS = rss(y_dat, y_hat);
 	}
 }

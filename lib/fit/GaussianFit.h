@@ -6,6 +6,7 @@ constexpr float EPSILON_2 = 1e-6f;
 constexpr float EPSILON_3 = 1e-5f;
 constexpr float EPSILON_4 = 1e-2f;
 constexpr float LAMBDA_0 = 1e-2f;
+constexpr float LAMBDA_EPSILON = 1e7f;
 constexpr float LAMBDA_UP_FAC = 11;
 constexpr float LAMBDA_DN_FAC = 9;
 
@@ -25,6 +26,7 @@ protected:
 	static void deriv(float* out, float x, float y, float i0, float sigmaX, float sigmaY, float theta, bool has_theta);
 
 	float chi2(float* alpha, float* beta, const std::vector<float>& dydp, const  std::vector<float>& weight, const std::vector<float>& deltaY) const;
+	float rss(std::vector<float>& dat, std::vector<float>& hat) const;
 
 	virtual float lm_matx(std::vector<unsigned int>& t, float* p, std::vector<float>& y_dat, std::vector<float>& weight, float* alpha, float* beta, std::vector<float>& y_hat) = 0;
 	void inverse(float* in, float* out) const;

@@ -89,6 +89,27 @@ float GaussianFit::chi2(float* alpha, float* beta, const std::vector<float>& dyd
 	return std::transform_reduce(std::execution::seq, deltaY.begin(), deltaY.end(), tmp.begin(), 0.0f);
 }
 
+float GaussianFit::rss(std::vector<float>& dat, std::vector<float>& hat) const
+{
+	// computing "dat" mean & "hat" mean
+	const float Dat_Mean = std::accumulate(dat.begin(), dat.end(), 0.0f) / static_cast<float>(n_),
+	            Hat_Mean = std::accumulate(hat.begin(), hat.end(), 0.0f) / static_cast<float>(n_);
+
+	// Normalisation en place
+	for (int i = 0; i < n_; ++i) {
+		dat[i] -= Dat_Mean;
+		hat[i] -= Hat_Mean;
+	}
+
+	// Calcul des t1, t2, t3
+	const float T1 = std::inner_product(dat.begin(), dat.end(), hat.begin(), 0.0f), // dat * hat
+	            T2 = std::inner_product(dat.begin(), dat.end(), dat.begin(), 0.0f), // dat * dat
+	            T3 = std::inner_product(hat.begin(), hat.end(), hat.begin(), 0.0f), // hat * hat
+	            R = T1 / std::sqrt(T2 * T3);                                        // Calcul du R
+
+	return std::isnan(R) ? 0 : R * R;
+}
+
 void GaussianFit::inverse(float* in, float* out) const
 {
 	std::vector<float> m1(in, in + nParam2_); // Copie de in dans M1
@@ -124,7 +145,8 @@ void GaussianFit::inverse(float* in, float* out) const
 }
 
 void GaussianFit::preComputeFit(float& min, float& max, const unsigned short* image, const unsigned long width,
-                                const unsigned int x, const unsigned int y, std::vector<float>& y_dat, std::vector<float>& weight, std::vector<unsigned int>& t, const unsigned short roi) const
+                                const unsigned int x, const unsigned int y, std::vector<float>& y_dat, std::vector<float>& weight, std::vector<unsigned int>& t,
+                                const unsigned short roi) const
 {
 	min = std::numeric_limits<float>::max();    // Plus grand float possible (FLT_MAX) // Not present in GPU original file why ?
 	max = std::numeric_limits<float>::lowest(); // Plus petit float possible (-FLT_MAX) // Not present in GPU original file why ?
