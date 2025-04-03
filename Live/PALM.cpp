@@ -41,66 +41,66 @@ unsigned int pointsNumber;
 /**********************/
 
 
-CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsListSize, unsigned long sizeX, unsigned long sizeY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short roi)
+CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsListSize, unsigned long sizeX, unsigned long sizeY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double theta, unsigned short roi)
 {
 	long ret;
-	currentPoint = 0;
-	_image = image;
-	_pointsList = pointsList;
-	_pointsListSize = pointsListSize;
-	_nbSegParams = 13;
-	_nbPointsMaxPerPlane = _pointsListSize / _nbSegParams;
-	_sizeX = sizeX;
-	_sizeY = sizeY;
-	_waveletNo = waveletNo;
-	_thresholdVal = thresholdVal;
-	_watershedRatio = watershedRatio;
-	_aTrousPub = new ATrous();
-	_segPub = new USrtArray();
-	_outputPub = new FltArray();
-	_segmentPub = new Segment2D();
-	_volMin = volMin;
-	_intMin = intMin;
-	_gaussFit = gaussFit;
-	_sigmaX = (float)sigmaX;
-	_sigmaY = (float)sigmaY;
-	_angle = (float)angle;
-	_size = roi;
+	currentPoint_ = 0;
+	image_ = image;
+	pointsList_ = pointsList;
+	pointsListSize_ = pointsListSize;
+	nbSegParams_ = 13;
+	nbPointsMaxPerPlane_ = pointsListSize_ / nbSegParams_;
+	sizeX_ = sizeX;
+	sizeY_ = sizeY;
+	waveletNo_ = waveletNo;
+	thresholdVal_ = thresholdVal;
+	watershedRatio_ = watershedRatio;
+	aTrousPub_ = new ATrous();
+	segPub_ = new USrtArray();
+	outputPub_ = new FltArray();
+	segmentPub_ = new Segment2D();
+	volMin_ = volMin;
+	intMin_ = intMin;
+	gaussFit_ = gaussFit;
+	initSigmaX_ = (float)sigmaX;
+	initSigmaY_ = (float)sigmaY;
+	initTheta_ = (float)theta;
+	roi_ = roi;
 
-	for (int i = 0; i < 13; i++) { _structFiltParam[i] = 0; }
-	for (int i = 0; i < 13; i++) { _structFiltParamUse[i] = 0; }
-	for (int i = 0; i < 10; i++) { _planesToUse[i] = 0; }
-	for (int i = 0; i < 9; i++) { _operators[i] = 0; }
-	for (int i = 0; i < 9; i++) { _threshold[i] = 0; }
+	for (int i = 0; i < 13; i++) { structFiltParam_[i] = 0; }
+	for (int i = 0; i < 13; i++) { structFiltParamUse_[i] = 0; }
+	for (int i = 0; i < 10; i++) { planesToUse_[i] = 0; }
+	for (int i = 0; i < 9; i++) { operators_[i] = 0; }
+	for (int i = 0; i < 9; i++) { threshold_[i] = 0; }
 
 
-	_planesToUse[_waveletNo] = 2;
-	_threshold[_waveletNo] = _thresholdVal;
+	planesToUse_[waveletNo_] = 2;
+	threshold_[waveletNo_] = thresholdVal_;
 
-	if (_volMin > 0.) {
-		_structFiltParamUse[0] = 1; // minimum volume
-		_structFiltParam[0] = _volMin;
+	if (volMin_ > 0.) {
+		structFiltParamUse_[0] = 1; // minimum volume
+		structFiltParam_[0] = volMin_;
 	}
-	if (_intMin > 0.) {
-		_structFiltParamUse[2] = 1; // minimum intensity
-		_structFiltParam[2] = _intMin;
+	if (intMin_ > 0.) {
+		structFiltParamUse_[2] = 1; // minimum intensity
+		structFiltParam_[2] = intMin_;
 	}
 
-	_input = new USrtArray();
-	if ((ret = _input->alloc(_image, _sizeX, _sizeY)) < 0) { return; }
-	if ((ret = _aTrousPub->wDecomp->alloc(_sizeX, _sizeY, waveletNo + 2)) < 0) { return; }
-	if ((ret = _segPub->realloc(_sizeX, _sizeY)) < 0) { return; }
-	if ((ret = _outputPub->alloc(_sizeX, _sizeY)) < 0) { return; }
+	input_ = new USrtArray();
+	if ((ret = input_->alloc(image_, sizeX_, sizeY_)) < 0) { return; }
+	if ((ret = aTrousPub_->wDecomp->alloc(sizeX_, sizeY_, waveletNo + 2)) < 0) { return; }
+	if ((ret = segPub_->realloc(sizeX_, sizeY_)) < 0) { return; }
+	if ((ret = outputPub_->alloc(sizeX_, sizeY_)) < 0) { return; }
 
 
-	_planesToUseB = new BlArray(9);
+	planesToUseB_ = new BlArray(9);
 
-	_nbPlane = 0;
+	nbPlane_ = 0;
 	for (int i = 0; i < 9; i++) {
-		(*_planesToUseB)(i) = (_planesToUse[i] != 0);
-		if ((*_planesToUseB)(i)) { _nbPlane = i + 2; }
+		(*planesToUseB_)(i) = (planesToUse_[i] != 0);
+		if ((*planesToUseB_)(i)) { nbPlane_ = i + 2; }
 	}
-	(*_planesToUseB)(8) = false;
+	(*planesToUseB_)(8) = false;
 }
 
 unsigned long twoToThe_(unsigned long val)
@@ -149,7 +149,7 @@ int aTrousDecomposition2D(unsigned short* d_inputData, float* d_outputData, unsi
 }
 
 
-long CPALM::CPALMProcessing()
+long CPALM::Processing()
 {
 	int ret;
 	long nbStruct;
@@ -158,17 +158,17 @@ long CPALM::CPALMProcessing()
 	float begin = clock();
 	// copie des images : host --> device
 	unsigned short* d_images;
-	checkCudaErrors(cudaMalloc((void**)&d_images, _sizeX * _sizeY * sizeof(unsigned short)));
-	checkCudaErrors(cudaMemcpy(d_images, _input->data, _sizeX * _sizeY * sizeof(unsigned short), cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMalloc((void**)&d_images, sizeX_ * sizeY_ * sizeof(unsigned short)));
+	checkCudaErrors(cudaMemcpy(d_images, input_->data, sizeX_ * sizeY_ * sizeof(unsigned short), cudaMemcpyHostToDevice));
 
 	// memory allocation for : d_output
 	float* d_data;
-	checkCudaErrors(cudaMalloc((void**)&d_data, (_nbPlane) * _sizeX * _sizeY * sizeof(float)));
+	checkCudaErrors(cudaMalloc((void**)&d_data, (nbPlane_) * sizeX_ * sizeY_ * sizeof(float)));
 
 	// Decompostition : wavelet algorithm
-	aTrousDecomposition2D(d_images, d_data, _sizeY, _sizeX, 1, /**_planesToUseB,*/ _nbPlane, false/*true*/, false);
+	aTrousDecomposition2D(d_images, d_data, sizeY_, sizeX_, 1, /**planesToUseB_,*/ nbPlane_, false/*true*/, false);
 
-	checkCudaErrors(cudaMemcpy(_aTrousPub->wDecomp->data + _waveletNo * _sizeX * _sizeY, d_data + _waveletNo * _sizeX * _sizeY, _sizeX * _sizeY * sizeof(float), cudaMemcpyDeviceToHost));
+	checkCudaErrors(cudaMemcpy(aTrousPub_->wDecomp->data + waveletNo_ * sizeX_ * sizeY_, d_data + waveletNo_ * sizeX_ * sizeY_, sizeX_ * sizeY_ * sizeof(float), cudaMemcpyDeviceToHost));
 
 	// cleanup memory
 	checkCudaErrors(cudaFree(d_images));
@@ -177,84 +177,84 @@ long CPALM::CPALMProcessing()
 	float end = clock();
 
 	begin = clock();
-	for (long j = 0; j < long(_sizeX * _sizeY); j++) {
-		long offs = _waveletNo * _sizeX * _sizeY;
+	for (long j = 0; j < long(sizeX_ * sizeY_); j++) {
+		long offs = waveletNo_ * sizeX_ * sizeY_;
 
-		if (_aTrousPub->wDecomp->data[offs + j] > _thresholdVal) {
-			_outputPub->data[j] = _aTrousPub->wDecomp->data[offs + j];
-			_segPub->data[j] = 1;
+		if (aTrousPub_->wDecomp->data[offs + j] > thresholdVal_) {
+			outputPub_->data[j] = aTrousPub_->wDecomp->data[offs + j];
+			segPub_->data[j] = 1;
 		}
 		else {
-			_segPub->data[j] = 0;
-			_outputPub->data[j] = 0;
+			segPub_->data[j] = 0;
+			outputPub_->data[j] = 0;
 		}
 	}
 	end = clock();
 	begin = clock();
 
-	if (_watershedRatio == 1.) { if ((nbStruct = _segmentPub->segmentation(*_outputPub, *_segPub, 1e-8f, true, false)) < 0) { return (nbStruct); } }
-	else { if ((nbStruct = _segmentPub->watershedIntelligent(*_outputPub, *_segPub, 1e-8f, (float)_watershedRatio)) < 0) { return (nbStruct); } }
+	if (watershedRatio_ == 1.) { if ((nbStruct = segmentPub_->segmentation(*outputPub_, *segPub_, 1e-8f, true, false)) < 0) { return (nbStruct); } }
+	else { if ((nbStruct = segmentPub_->watershedIntelligent(*outputPub_, *segPub_, 1e-8f, (float)watershedRatio_)) < 0) { return (nbStruct); } }
 
 	end = clock();;
 	begin = clock();
 
 
-	if ((nbPointsSign = _segmentPub->computeStatistics(*_outputPub, *_segPub, _aTrousPub->wDecomp->data + _waveletNo * _sizeX * _sizeY, _gaussFit)) < 0) { return (nbPointsSign); }
+	if ((nbPointsSign = segmentPub_->computeStatistics(*outputPub_, *segPub_, aTrousPub_->wDecomp->data + waveletNo_ * sizeX_ * sizeY_, gaussFit_)) < 0) { return (nbPointsSign); }
 
 	begin = clock();
 
-	if ((_volMin > 0.) || (_intMin > 0.)) { if ((nbStruct = _segmentPub->filterData(*_segPub, _structFiltParam, _structFiltParamUse)) < 0) { return (ret); } }
+	if ((volMin_ > 0.) || (intMin_ > 0.)) { if ((nbStruct = segmentPub_->filterData(*segPub_, structFiltParam_, structFiltParamUse_)) < 0) { return (ret); } }
 
 	end = clock();
 
 	InfoStruct2D** p;
-	p = (InfoStruct2D**)_segmentPub->getTabInfo();
+	p = (InfoStruct2D**)segmentPub_->getTabInfo();
 
-	// le nombre de points détectés ne doit pas dépasser _nbPointsMaxPerPlane --> problème d'espace mémoire
-	for (int i = 1; i <= min(nbStruct, _nbPointsMaxPerPlane - 2); i++) {
-		_pointsList[currentPoint++] = 0.;
-		_pointsList[currentPoint++] = 0.;
-		_pointsList[currentPoint++] = 0.;
-		_pointsList[currentPoint++] = p[i]->data.moment.x;
-		_pointsList[currentPoint++] = p[i]->data.moment.y;
-		_pointsList[currentPoint++] = 0.;
-		_pointsList[currentPoint++] = 0.;
-		_pointsList[currentPoint++] = 0.;
-		_pointsList[currentPoint++] = p[i]->data.intensity;
-		_pointsList[currentPoint++] = p[i]->data.surf;
+	// le nombre de points détectés ne doit pas dépasser nbPointsMaxPerPlane_ --> problème d'espace mémoire
+	for (int i = 1; i <= min(nbStruct, nbPointsMaxPerPlane_ - 2); i++) {
+		pointsList_[currentPoint_++] = 0.;
+		pointsList_[currentPoint_++] = 0.;
+		pointsList_[currentPoint_++] = 0.;
+		pointsList_[currentPoint_++] = p[i]->data.moment.x;
+		pointsList_[currentPoint_++] = p[i]->data.moment.y;
+		pointsList_[currentPoint_++] = 0.;
+		pointsList_[currentPoint_++] = 0.;
+		pointsList_[currentPoint_++] = 0.;
+		pointsList_[currentPoint_++] = p[i]->data.intensity;
+		pointsList_[currentPoint_++] = p[i]->data.surf;
 
-		_pointsList[currentPoint++] = 0.; // Z coordinate
-		_pointsList[currentPoint++] = 0.; // Spectral or other
-		_pointsList[currentPoint++] = 0.; // Other
+		pointsList_[currentPoint_++] = 0.; // Z coordinate
+		pointsList_[currentPoint_++] = 0.; // Spectral or other
+		pointsList_[currentPoint_++] = 0.; // Other
 	}
 
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
+	pointsList_[currentPoint_++] = -1;
+	pointsList_[currentPoint_++] = -1;
+	pointsList_[currentPoint_++] = -1;
+	pointsList_[currentPoint_++] = -1;
+	pointsList_[currentPoint_++] = -1;
+	pointsList_[currentPoint_++] = -1;
+	pointsList_[currentPoint_++] = -1;
+	pointsList_[currentPoint_++] = -1;
+	pointsList_[currentPoint_++] = -1;
+	pointsList_[currentPoint_++] = -1;
 
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
-	_pointsList[currentPoint++] = -1;
+	pointsList_[currentPoint_++] = -1;
+	pointsList_[currentPoint_++] = -1;
+	pointsList_[currentPoint_++] = -1;
 
-	return (currentPoint);
+	return (currentPoint_);
 }
 
 
 CPALM::~CPALM()
 {
-	delete _aTrousPub;
-	delete _segPub;
-	delete _outputPub;
-	delete _segmentPub;
-	delete _input;
-	delete _planesToUseB;
+	delete aTrousPub_;
+	delete segPub_;
+	delete outputPub_;
+	delete segmentPub_;
+	delete input_;
+	delete planesToUseB_;
 }
 
 _declspec(dllexport) void _stdcall __OpenPALMProcessing(unsigned short* image, double* pointsList, unsigned long pointsListSize, unsigned long sizeX, unsigned long sizeY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short size)
@@ -265,7 +265,7 @@ _declspec(dllexport) void _stdcall __OpenPALMProcessing(unsigned short* image, d
 	c = new CPALM(image, pointsList, pointsListSize, sizeX, sizeY, waveletNo, thresholdVal, watershedRatio, volMin, intMin, gaussFit, sigmaX, sigmaY, angle, size);
 }
 
-_declspec(dllexport) long _stdcall __PALMProcessing() { return c->CPALMProcessing(); }
+_declspec(dllexport) long _stdcall __PALMProcessing() { return c->Processing(); }
 
 _declspec(dllexport) void _stdcall __closePALMProcessing() { delete c; }
 

@@ -47,43 +47,42 @@ class CPALM
 public:
 	// TODO : ajoutez ici vos méthodes.
 
-	long CPALMProcessing();
-	CPALM(unsigned short* image, double* pointsList, unsigned long pointsListSize, unsigned long sizeX, unsigned long sizeY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short roi);
+	long Processing();
+	CPALM(unsigned short* image, double* pointsList, unsigned long pointsListSize, unsigned long sizeX, unsigned long sizeY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double theta, unsigned short roi);
 	~CPALM();
-	unsigned long _sizeX;
-	unsigned long _sizeY;
-	unsigned short* _image;
-	double* _pointsList;
+	unsigned long sizeX_;
+	unsigned long sizeY_;
+	unsigned short* image_;
+	double* pointsList_;
 
 private:
 
-	long _pointsListSize;
-	int _nbPointsMaxPerPlane;
-	int _nbSegParams;
-	unsigned long _waveletNo;
-	double _thresholdVal;
-	double _volMin;
-	double _intMin;
-	double _watershedRatio;
-	unsigned short _gaussFit;
-	float _sigmaX;
-	float _sigmaY;
-	float _angle;
-	unsigned short _size;
-	long currentPoint;
+	long pointsListSize_;
+	int nbPointsMaxPerPlane_;
+	int nbSegParams_;
+	unsigned long waveletNo_;
+	double thresholdVal_;
+	double volMin_;
+	double intMin_;
+	double watershedRatio_;
+	unsigned short gaussFit_;
+	float initSigmaX_;
+	float initSigmaY_;
+	float initTheta_;
+	unsigned short roi_;
+	long currentPoint_;
 
-	double _structFiltParam[13];
-	unsigned short _structFiltParamUse[13];
-	unsigned short _planesToUse[10];
-	unsigned short _operators[9];
-	double _threshold[9];
+	double structFiltParam_[13];
+	unsigned short structFiltParamUse_[13];
+	unsigned short planesToUse_[10];
+	unsigned short operators_[9];
+	double threshold_[9];
 
-	ATrous* _aTrousPub;
-	USrtArray* _segPub;
-	FltArray* _outputPub;
-	Segment2D* _segmentPub;
-	USrtArray* _input;
-	BlArray* _planesToUseB;
-	BlArray* _planesToUseB2;
-	int _nbPlane;
+	ATrous* aTrousPub_;
+	USrtArray* segPub_;
+	FltArray* outputPub_;
+	Segment2D* segmentPub_;
+	USrtArray* input_;
+	BlArray* planesToUseB_;
+	int nbPlane_;
 };

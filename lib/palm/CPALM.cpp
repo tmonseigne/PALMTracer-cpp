@@ -9,102 +9,102 @@
 
 CPALM::CPALM(unsigned short* image, double* pointsList, const unsigned long pointsListSize, const unsigned long sizeX, const unsigned long sizeY,
              const unsigned long waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin,
-             const unsigned short gaussFit, const double sigmaX, const double sigmaY, const double angle, const unsigned short roi)
+             const unsigned short gaussFit, const double sigmaX, const double sigmaY, const double theta, const unsigned short roi)
 {
-	currentPoint = 0;
-	_image = image;
-	_pointsList = pointsList;
-	_pointsListSize = pointsListSize;
-	_nbSegParams = 13; /*_nbSegParams = 10;*/
-	_nbPointsMaxPerPlane = _pointsListSize / _nbSegParams;
-	_sizeX = sizeX;
-	_sizeY = sizeY;
-	_waveletNo = waveletNo;
-	_thresholdVal = thresholdVal;
-	_watershedRatio = watershedRatio;
-	_aTrousPub = new ATrous();
-	_segPub = new USrtArray();
-	_outputPub = new FltArray();
-	_segmentPub = new Segment2D();
-	_volMin = volMin;
-	_intMin = intMin;
-	_gaussFit = gaussFit;
-	_sigmaX = (float)sigmaX;
-	_sigmaY = (float)sigmaY;
-	_angle = (float)angle;
-	_size = roi;
+	currentPoint_ = 0;
+	image_ = image;
+	pointsList_ = pointsList;
+	pointsListSize_ = pointsListSize;
+	nbSegParams_ = 13; /*nbSegParams_ = 10;*/
+	nbPointsMaxPerPlane_ = pointsListSize_ / nbSegParams_;
+	sizeX_ = sizeX;
+	sizeY_ = sizeY;
+	waveletNo_ = waveletNo;
+	thresholdVal_ = thresholdVal;
+	watershedRatio_ = watershedRatio;
+	aTrousPub_ = new ATrous();
+	segPub_ = new USrtArray();
+	outputPub_ = new FltArray();
+	segmentPub_ = new Segment2D();
+	volMin_ = volMin;
+	intMin_ = intMin;
+	gaussFit_ = gaussFit;
+	initSigmaX_ = (float)sigmaX;
+	initSigmaY_ = (float)sigmaY;
+	initTheta_ = (float)theta;
+	roi_ = roi;
 
-	for (double& i : _structFiltParam) { i = 0; }
-	for (unsigned short& i : _structFiltParamUse) { i = 0; }
-	for (unsigned short& i : _planesToUse) { i = 0; }
-	for (unsigned short& _operator : _operators) { _operator = 0; }
-	for (double& i : _threshold) { i = 0; }
+	for (double& i : structFiltParam_) { i = 0; }
+	for (unsigned short& i : structFiltParamUse_) { i = 0; }
+	for (unsigned short& i : planesToUse_) { i = 0; }
+	for (unsigned short& _operator : operators_) { _operator = 0; }
+	for (double& i : threshold_) { i = 0; }
 
 
-	_planesToUse[_waveletNo] = 2;
-	_threshold[_waveletNo] = _thresholdVal;
+	planesToUse_[waveletNo_] = 2;
+	threshold_[waveletNo_] = thresholdVal_;
 
-	if (_volMin > 0.) {
-		_structFiltParamUse[0] = 1; // minimum volume
-		_structFiltParam[0] = _volMin;
+	if (volMin_ > 0.) {
+		structFiltParamUse_[0] = 1; // minimum volume
+		structFiltParam_[0] = volMin_;
 	}
-	if (_intMin > 0.) {
-		_structFiltParamUse[2] = 1; // minimum intensity
-		_structFiltParam[2] = _intMin;
+	if (intMin_ > 0.) {
+		structFiltParamUse_[2] = 1; // minimum intensity
+		structFiltParam_[2] = intMin_;
 	}
 
-	_input = new USrtArray();
-	if (_input->alloc(_image, _sizeX, _sizeY) < 0) { return; }
-	if (_aTrousPub->wDecomp->alloc(_sizeX, _sizeY, waveletNo + 2) < 0) { return; }
-	if (_segPub->realloc(_sizeX, _sizeY) < 0) { return; }
-	if (_outputPub->alloc(_sizeX, _sizeY) < 0) { return; }
+	input_ = new USrtArray();
+	if (input_->alloc(image_, sizeX_, sizeY_) < 0) { return; }
+	if (aTrousPub_->wDecomp->alloc(sizeX_, sizeY_, waveletNo + 2) < 0) { return; }
+	if (segPub_->realloc(sizeX_, sizeY_) < 0) { return; }
+	if (outputPub_->alloc(sizeX_, sizeY_) < 0) { return; }
 
 
-	_planesToUseB = new BlArray(9);
+	planesToUseB_ = new BlArray(9);
 
-	_nbPlane = 0;
+	nbPlane_ = 0;
 	for (int i = 0; i < 9; i++) {
-		(*_planesToUseB)(i) = _planesToUse[i] != 0;
-		if ((*_planesToUseB)(i)) { _nbPlane = i + 2; }
+		(*planesToUseB_)(i) = planesToUse_[i] != 0;
+		if ((*planesToUseB_)(i)) { nbPlane_ = i + 2; }
 	}
-	(*_planesToUseB)(8) = false;
+	(*planesToUseB_)(8) = false;
 }
 
-long CPALM::CPALMProcessing()
+long CPALM::Processing()
 {
 	int ret;
 	long nbStruct;
 	int nbPointsSign;
 
-	if ((ret = _aTrousPub->aTrousDecomposition2D(*_input, *_aTrousPub->wDecomp, *_planesToUseB, _nbPlane, false)) < 0) { return ret; }
+	if ((ret = aTrousPub_->aTrousDecomposition2D(*input_, *aTrousPub_->wDecomp, *planesToUseB_, nbPlane_, false)) < 0) { return ret; }
 
-	for (long j = 0; j < long(_sizeX * _sizeY); j++) {
-		const long offs = _waveletNo * _sizeX * _sizeY;
-		if (_aTrousPub->wDecomp->data[offs + j] > _thresholdVal) {
-			_outputPub->data[j] = _aTrousPub->wDecomp->data[offs + j];
-			_segPub->data[j] = 1;
+	for (long j = 0; j < long(sizeX_ * sizeY_); j++) {
+		const long offs = waveletNo_ * sizeX_ * sizeY_;
+		if (aTrousPub_->wDecomp->data[offs + j] > thresholdVal_) {
+			outputPub_->data[j] = aTrousPub_->wDecomp->data[offs + j];
+			segPub_->data[j] = 1;
 		}
 		else {
-			_segPub->data[j] = 0;
-			_outputPub->data[j] = 0;
+			segPub_->data[j] = 0;
+			outputPub_->data[j] = 0;
 		}
 	}
 
-	if (_watershedRatio == 1.) { if ((nbStruct = _segmentPub->segmentation(*_outputPub, *_segPub, 1e-8f, true, false)) < 0) { return nbStruct; } }
-	else { if ((nbStruct = _segmentPub->watershedIntelligent(*_outputPub, *_segPub, 1e-8f, (float)_watershedRatio)) < 0) { return nbStruct; } }
+	if (watershedRatio_ == 1.) { if ((nbStruct = segmentPub_->segmentation(*outputPub_, *segPub_, 1e-8f, true, false)) < 0) { return nbStruct; } }
+	else { if ((nbStruct = segmentPub_->watershedIntelligent(*outputPub_, *segPub_, 1e-8f, (float)watershedRatio_)) < 0) { return nbStruct; } }
 
 
-	if ((nbPointsSign = _segmentPub->computeStatistics(*_outputPub, *_segPub, _aTrousPub->wDecomp->data + _waveletNo * _sizeX * _sizeY, _gaussFit)) < 0) {
+	if ((nbPointsSign = segmentPub_->computeStatistics(*outputPub_, *segPub_, aTrousPub_->wDecomp->data + waveletNo_ * sizeX_ * sizeY_, gaussFit_)) < 0) {
 		return nbPointsSign;
 	}
 
 
-	if (_volMin > 0. || _intMin > 0.) { if ((nbStruct = _segmentPub->filterData(*_segPub, _structFiltParam, _structFiltParamUse)) < 0) { return ret; } }
+	if (volMin_ > 0. || intMin_ > 0.) { if ((nbStruct = segmentPub_->filterData(*segPub_, structFiltParam_, structFiltParamUse_)) < 0) { return ret; } }
 
-	InfoStruct2D** p = (InfoStruct2D**)_segmentPub->getTabInfo();
+	InfoStruct2D** p = (InfoStruct2D**)segmentPub_->getTabInfo();
 
-	for (int i = 1; i <= min(nbStruct, _nbPointsMaxPerPlane - 2); ++i) {
-		switch (_gaussFit) {
+	for (int i = 1; i <= min(nbStruct, nbPointsMaxPerPlane_ - 2); ++i) {
+		switch (gaussFit_) {
 			case 0:
 			case 5: {
 				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, 0, 0, 0);
@@ -116,9 +116,9 @@ long CPALM::CPALMProcessing()
 			case 1: // Sigma is constant
 			{
 				// Gaussian fit of 2D
-				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, _sigmaX, 0, 0);
+				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, initSigmaX_, 0, 0);
 				GaussianFit2D* fit = new GaussianFit2D();
-				fit->Run(_image, _sizeY, _sizeX, x_, y_, intensity_, sigmaX_, offset_, rss_, 10, _size);
+				fit->Run(image_, sizeY_, sizeX_, x_, y_, intensity_, sigmaX_, offset_, rss_, 10, roi_);
 				sigmaY_ = sigmaX_;
 				fillPointList(p[i]->data);
 				break;
@@ -126,9 +126,9 @@ long CPALM::CPALMProcessing()
 
 			case 2: {
 				// Gaussian fit of 2D
-				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, _sigmaX, 0, 0);
+				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, initSigmaX_, 0, 0);
 				GaussianFit2D_Sigma* fit = new GaussianFit2D_Sigma();
-				fit->Run(_image, _sizeY, _sizeX, x_, y_, intensity_, sigmaX_, offset_, rss_, 10, _size);
+				fit->Run(image_, sizeY_, sizeX_, x_, y_, intensity_, sigmaX_, offset_, rss_, 10, roi_);
 				sigmaY_ = sigmaX_;
 				fillPointList(p[i]->data);
 				break;
@@ -137,45 +137,45 @@ long CPALM::CPALMProcessing()
 			case 3: // Theta is constant
 			{
 				// Gaussian fit of 3D
-				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, _sigmaX, _sigmaY, _angle);
+				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, initSigmaX_, initSigmaY_, initTheta_);
 				GaussianFit3D* fit = new GaussianFit3D();
-				fit->Run(_image, _sizeY, _sizeX, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, 10, _size);
+				fit->Run(image_, sizeY_, sizeX_, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, 10, roi_);
 				fillPointList(p[i]->data);
 				break;
 			}
 
 			case 4: {
 				// Gaussian fit of 3D
-				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, _sigmaX, _sigmaY, _angle);
+				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, initSigmaX_, initSigmaY_, initTheta_);
 				GaussianFit3D_Theta* fit = new GaussianFit3D_Theta();
-				fit->Run(_image, _sizeY, _sizeX, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, 20 * 7, _size);
+				fit->Run(image_, sizeY_, sizeX_, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, 20 * 7, roi_);
 				fillPointList(p[i]->data);
 				break;
 			}
 
 			default: // Error on Gauss Fit Param
-				std::fill_n(_pointsList + currentPoint, 13, -1);
-				currentPoint += 13;
+				std::fill_n(pointsList_ + currentPoint_, 13, -1);
+				currentPoint_ += 13;
 				break;
 		}
 	}
 
 	// Blank Line
-	std::fill_n(_pointsList + currentPoint, 13, -1);
-	currentPoint += 13;
+	std::fill_n(pointsList_ + currentPoint_, 13, -1);
+	currentPoint_ += 13;
 
-	return currentPoint;
+	return currentPoint_;
 }
 
 
 CPALM::~CPALM()
 {
-	delete _aTrousPub;
-	delete _segPub;
-	delete _outputPub;
-	delete _segmentPub;
-	delete _input;
-	delete _planesToUseB;
+	delete aTrousPub_;
+	delete segPub_;
+	delete outputPub_;
+	delete segmentPub_;
+	delete input_;
+	delete planesToUseB_;
 }
 
 void CPALM::initGaussianFitParam(const double x, const double y, const double sigmaX, const double sigmaY, const double theta)
@@ -192,18 +192,18 @@ void CPALM::initGaussianFitParam(const double x, const double y, const double si
 
 void CPALM::fillPointList(const InfoDataRich2D& data)
 {
-	_pointsList[currentPoint++] = sigmaX_;
-	_pointsList[currentPoint++] = sigmaY_;
-	_pointsList[currentPoint++] = theta_;
-	_pointsList[currentPoint++] = y_;
-	_pointsList[currentPoint++] = x_;
-	_pointsList[currentPoint++] = intensity_;
-	_pointsList[currentPoint++] = offset_;
-	_pointsList[currentPoint++] = rss_;
-	_pointsList[currentPoint++] = data.intensity;
-	_pointsList[currentPoint++] = data.surf;
+	pointsList_[currentPoint_++] = sigmaX_;
+	pointsList_[currentPoint_++] = sigmaY_;
+	pointsList_[currentPoint_++] = theta_;
+	pointsList_[currentPoint_++] = y_;
+	pointsList_[currentPoint_++] = x_;
+	pointsList_[currentPoint_++] = intensity_;
+	pointsList_[currentPoint_++] = offset_;
+	pointsList_[currentPoint_++] = rss_;
+	pointsList_[currentPoint_++] = data.intensity;
+	pointsList_[currentPoint_++] = data.surf;
 
-	_pointsList[currentPoint++] = 0.; // Z coordinate
-	_pointsList[currentPoint++] = 0.; // Spectral or other
-	_pointsList[currentPoint++] = 0.; // Other
+	pointsList_[currentPoint_++] = 0.; // Z coordinate
+	pointsList_[currentPoint_++] = 0.; // Spectral or other
+	pointsList_[currentPoint_++] = 0.; // Other
 }

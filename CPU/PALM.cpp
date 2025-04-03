@@ -20,7 +20,7 @@ void _stdcall _OpenPALMProcessing(unsigned short* image, double* pointsList, con
 }
 
 _declspec(dllexport)
-long _stdcall _PALMProcessing() { return c->CPALMProcessing(); }
+long _stdcall _PALMProcessing() { return c->Processing(); }
 
 _declspec(dllexport)
 void _stdcall _closePALMProcessing() { delete c; }
@@ -33,5 +33,5 @@ long _stdcall Process(unsigned short* image, double* pointsList, const unsigned 
 {
 	auto palm = CPALM(image, pointsList, pointsListSize, sizeX, sizeY, waveletNo, thresholdVal, watershedRatio,
 	                  volMin, intMin, gaussFit, sigmaX, sigmaY, angle, roi);
-	return palm.CPALMProcessing();
+	return palm.Processing();
 }
