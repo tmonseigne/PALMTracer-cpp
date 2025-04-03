@@ -68,7 +68,7 @@ long CPALM::Processing()
 	long nbStruct;
 	int nbPointsSign;
 	const size_t Size = height_ * width_;
-	if ((ret = aTrousPub_.aTrousDecomposition2D(input_, *aTrousPub_.wDecomp, planesToUseB_, nbPlane_, false)) < 0) { return ret; }
+	if ((ret = aTrousPub_.ATrousDecomposition2D(input_, *aTrousPub_.wDecomp, planesToUseB_, nbPlane_, false)) < 0) { return ret; }
 
 	for (long j = 0; j < Size; j++) {
 		const long offs = waveletNo_ * Size;
@@ -95,7 +95,7 @@ long CPALM::Processing()
 	auto p = reinterpret_cast<InfoStruct2D**>(segmentPub_.getTabInfo());
 
 	for (int i = 1; i <= min(nbStruct, nPointsMaxPerPlane_ - 2); ++i) {
-		initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, initSigmaX_, initSigmaY_, initTheta_);
+		initGaussianFitParam(p[i]->data_.moment.y, p[i]->data_.moment.x, initSigmaX_, initSigmaY_, initTheta_);
 		switch (gaussFit_) {
 			default: {
 				sigmaX_ = 0;
@@ -140,7 +140,7 @@ long CPALM::Processing()
 				break;
 			}
 		}
-		fillPointList(p[i]->data);
+		fillPointList(p[i]->data_);
 	}
 
 	// Blank Line

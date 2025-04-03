@@ -13,7 +13,7 @@
 #define SIZE_CROSS	4
 
 
-class Segment
+class Segmentation
 {
 protected:
 	unsigned long nbInfoStruct;
@@ -21,7 +21,7 @@ protected:
 	static void inc(unsigned long& nSeg, unsigned long** ptr, long& sizePtr);
 
 public:
-	Segment();
-	virtual ~Segment();
+	Segmentation() = default;
+	virtual ~Segmentation() = default;
 	unsigned long getNbStructs() const;
 };

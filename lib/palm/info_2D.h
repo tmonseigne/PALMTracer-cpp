@@ -119,9 +119,15 @@ typedef struct
 class InfoStruct2D
 {
 public:
-	InfoStruct2D(int index);
-	~InfoStruct2D();
-	InfoStruct2D* next;
+	explicit InfoStruct2D(const int index)
+	{
+		data_.index = index;
+		data_.zOrderComputed = 0;
+		next_ = nullptr;
+	}
 
-	InfoDataRich2D data;
+	~InfoStruct2D() = default;
+	InfoStruct2D* next_;
+
+	InfoDataRich2D data_;
 };

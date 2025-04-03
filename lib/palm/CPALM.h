@@ -2,7 +2,7 @@
 #include <array>
 
 #include "ATrous.h"
-#include "segmentation_2D.h"
+#include "Segmentation2D.h"
 #include "tools/allDataLib.h"
 
 // Cette classe est exportée de PALM.dll
@@ -38,7 +38,7 @@ private:
 	ATrous aTrousPub_;
 	USrtArray segPub_;
 	FltArray outputPub_;
-	Segment2D segmentPub_;
+	Segmentation2D segmentPub_;
 	USrtArray input_;
 	BlArray planesToUseB_ = BlArray(9);
 	size_t nbPlane_;

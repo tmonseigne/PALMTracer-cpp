@@ -1,11 +1,6 @@
-#include "segmentation.h"
+#include "Segmentation.h"
 
-Segment::Segment() { }
-
-Segment::~Segment() { }
-
-
-void Segment::inc(unsigned long& nSeg, unsigned long** ptr, long& sizePtr)
+void Segmentation::inc(unsigned long& nSeg, unsigned long** ptr, long& sizePtr)
 {
 	int i;
 	if (nSeg == 65535) { return; }
@@ -27,4 +22,4 @@ void Segment::inc(unsigned long& nSeg, unsigned long** ptr, long& sizePtr)
 	free(newPtr);
 }
 
-unsigned long Segment::getNbStructs() const { return nbInfoStruct; }
+unsigned long Segmentation::getNbStructs() const { return nbInfoStruct; }

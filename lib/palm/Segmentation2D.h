@@ -1,12 +1,12 @@
 #pragma once
 
 #include "Windows.h"
-#include "segmentation.h"
+#include "Segmentation.h"
 #include "info_2D.h"
 #include "tools/allDataLib.h"
 
 
-class Segment2D : public Segment
+class Segmentation2D : public Segmentation
 {
 private:
 	InfoStruct2D* headInfo;
@@ -27,9 +27,9 @@ private:
 	static float tic();
 
 public:
-	Segment2D();
-	Segment2D(unsigned long _nbInfoStruct);
-	~Segment2D() override;
+	Segmentation2D();
+	Segmentation2D(unsigned long _nbInfoStruct);
+	~Segmentation2D() override;
 
 	int computeStatistics(FltArray& data, USrtArray& seg, float* waveData, unsigned short gaussFit, bool doRealoc = true);
 

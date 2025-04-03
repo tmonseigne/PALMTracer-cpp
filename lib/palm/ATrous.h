@@ -33,7 +33,6 @@ private:
 	int b3SplineFiltering2D(float* srcData, float* destData, unsigned long sizeDataX, unsigned long sizeDataY, unsigned long currentPlane);
 
 public:
-	int aTrousDecomposition2D(FltArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long nbPlane, bool realProj);
-	int aTrousDecomposition2D(USrtArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long nbPlane, bool realProj);
+	int ATrousDecomposition2D(USrtArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long nbPlane, bool realProj);
 };
 

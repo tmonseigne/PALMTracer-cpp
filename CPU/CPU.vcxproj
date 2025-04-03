@@ -130,12 +130,9 @@
     <ClCompile Include="..\lib\fit\GaussianFit3D.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit3D_Theta.cpp" />
     <ClCompile Include="..\lib\palm\ATrous.cpp" />
-    <ClCompile Include="..\lib\palm\ATrous2D.cpp" />
     <ClCompile Include="..\lib\palm\CPALM.cpp" />
-    <ClCompile Include="..\lib\palm\info_2D.cpp" />
-    <ClCompile Include="..\lib\palm\segmentation.cpp" />
-    <ClCompile Include="..\lib\palm\segmentation_2D.cpp" />
-    <ClCompile Include="..\lib\palm\watershed_2D.cpp" />
+    <ClCompile Include="..\lib\palm\Segmentation.cpp" />
+    <ClCompile Include="..\lib\palm\Segmentation2D.cpp" />
     <ClCompile Include="..\lib\tools\arrayType.cpp" />
     <ClCompile Include="..\lib\tools\BlArray.cpp" />
     <ClCompile Include="..\lib\tools\FltArray.cpp" />
@@ -156,8 +153,8 @@
     <ClInclude Include="..\lib\palm\CPALM.h" />
     <ClInclude Include="..\lib\palm\info_2D.h" />
     <ClInclude Include="..\lib\palm\parameters.h" />
-    <ClInclude Include="..\lib\palm\segmentation.h" />
-    <ClInclude Include="..\lib\palm\segmentation_2D.h" />
+    <ClInclude Include="..\lib\palm\Segmentation.h" />
+    <ClInclude Include="..\lib\palm\Segmentation2D.h" />
     <ClInclude Include="..\lib\tools\allDataLib.h" />
     <ClInclude Include="..\lib\tools\arrayType.h" />
     <ClInclude Include="..\lib\tools\BlArray.h" />
