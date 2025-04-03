@@ -17,12 +17,8 @@ private:
 	void desalloc();
 
 	int filterStructureWS(FltArray& potential, USrtArray& seg, float thresholdRatio);
-	static int getLocalMax(FltArray& image, USrtArray& seg, float threshold);
+	static int getLocalMax(FltArray& potential, USrtArray& seg, float threshold);
 	int watershed(FltArray& potential, USrtArray& seg, float threshold) const;
-
-	int filterStructureWS(USrtArray& potential, USrtArray& seg, float thresholdRatio);
-	static int getLocalMax(USrtArray& image, USrtArray& seg, float threshold);
-	int watershed(USrtArray& potential, USrtArray& seg, float threshold) const;
 
 	static float tic();
 

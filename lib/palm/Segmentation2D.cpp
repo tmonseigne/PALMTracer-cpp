@@ -593,23 +593,23 @@ FltArray &image: input image
 USrtArray &localMax: local maximum
 float threshold: a point to be considered as a local maximum have to be > to threshold.
 ********************************************************************************************************************/
-int Segmentation2D::getLocalMax(FltArray& image, USrtArray& seg, const float threshold)
+int Segmentation2D::getLocalMax(FltArray& potential, USrtArray& seg, const float threshold)
 {
 	seg = (unsigned short)0;
 	long ii, jj;
 	long label = 1;
-	const long sizeDataY = image.size(1);
-	const long sizeDataX = image.size(0);
+	const long sizeDataY = potential.size(1);
+	const long sizeDataX = potential.size(0);
 
 
 	for (long i = 0; i < sizeDataX; i++) {
 		for (long j = 0; j < sizeDataY; j++) {
-			if (image.data[i * sizeDataY + j] > threshold) {
+			if (potential.data[i * sizeDataY + j] > threshold) {
 				bool err = false;
 				//test if it is a new maximum from the vicinity
 				for (ii = __max(i - 1, 0); ii <= __min(i + 1, sizeDataX - 1) && !err; ii++) {
 					for (jj = __max(j - 1, 0); jj <= __min(j + 1, sizeDataY - 1) && !err; jj++) {
-						if (ii != i || jj != j) { if (image.data[i * sizeDataY + j] < image.data[ii * sizeDataY + jj]) { err = true; } }
+						if (ii != i || jj != j) { if (potential.data[i * sizeDataY + j] < potential.data[ii * sizeDataY + jj]) { err = true; } }
 					}
 				}
 				if (!err) { //new maximum found
@@ -753,257 +753,6 @@ int Segmentation2D::watershedIntelligent(FltArray& potential, USrtArray& seg, co
 	mixIndex(seg);
 	return nbInfoStruct;
 }
-
-/********************************************************************************************************************
-int Segmentation2D::filterStructureWS(...) filter the structure of the watershed.
-USrtArray &potential: input image
-USrtArray &localMax: local maximum
-float thresholdRatio: value to distinguish if 2 strucutres in contact have to be considered as a single structure (
-							oversegmentation)
-********************************************************************************************************************/
-int Segmentation2D::filterStructureWS(USrtArray& potential, USrtArray& seg, const float thresholdRatio)
-{
-	wsFusion2D* ptrStr = (wsFusion2D*)malloc((nbInfoStruct + 1) * sizeof(wsFusion2D));
-	long i, j;
-
-	const long sizeDataY = potential.size(1);
-	const long sizeDataX = potential.size(0);
-	long label;
-	bool change = true;
-	while (change) {
-		const long oldNbInfoStruct = nbInfoStruct;
-
-
-		for (i = 1; i <= (long)nbInfoStruct; i++) {
-			ptrStr[i].maxPotentialWithNeighbor = -1e10;
-			ptrStr[i].minPotentialOnTheStructure = +1e10;
-			ptrStr[i].maxPotentialOnTheStructure = -1e10;
-			ptrStr[i].structureInContact = 0;
-			ptrStr[i].kept = true;
-			ptrStr[i].locked = false;
-			ptrStr[i].structureToBecaume = i;
-			ptrStr[i].newIndex = 0;
-		}
-
-
-		for (i = 0; i < sizeDataX; i++) {
-			for (j = 0; j < sizeDataY; j++) {
-				if (seg.data[i * sizeDataY + j] > 0) {
-					if (ptrStr[seg.data[i * sizeDataY + j]].minPotentialOnTheStructure > potential.data[i * sizeDataY + j]) {
-						ptrStr[seg.data[i * sizeDataY + j]].minPotentialOnTheStructure = potential.data[i * sizeDataY + j];
-					}
-					if (ptrStr[seg.data[i * sizeDataY + j]].maxPotentialOnTheStructure < potential.data[i * sizeDataY + j]) {
-						ptrStr[seg.data[i * sizeDataY + j]].x = i;
-						ptrStr[seg.data[i * sizeDataY + j]].y = j;
-						ptrStr[seg.data[i * sizeDataY + j]].maxPotentialOnTheStructure = potential.data[i * sizeDataY + j];
-					}
-					for (long ii = __max(i - 1, 0); ii <= __min(i + 1, sizeDataX - 1); ii++) {
-						for (long jj = __max(j - 1, 0); jj <= __min(j + 1, sizeDataY - 1); jj++) {
-							if (ii != i || jj != j) {
-								if (seg.data[ii * sizeDataY + jj] != 0) {
-									if (seg.data[i * sizeDataY + j] != seg.data[ii * sizeDataY + jj]) {
-										if (potential.data[i * sizeDataY + j] > ptrStr[seg.data[i * sizeDataY + j]].maxPotentialWithNeighbor) {
-											ptrStr[seg.data[i * sizeDataY + j]].maxPotentialWithNeighbor = potential.data[i * sizeDataY + j];
-											ptrStr[seg.data[i * sizeDataY + j]].structureInContact = seg.data[ii * sizeDataY + jj];
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-
-
-		change = false;
-		for (i = 1; i <= oldNbInfoStruct; i++) {
-			if (ptrStr[i].structureInContact > 0) {
-				if (ptrStr[i].locked == false && ptrStr[ptrStr[i].structureInContact].locked == false) {
-					const double ratio = (ptrStr[i].maxPotentialOnTheStructure - ptrStr[i].maxPotentialWithNeighbor) / (
-						                     ptrStr[i].maxPotentialOnTheStructure - ptrStr[i].minPotentialOnTheStructure);
-
-					if (ratio < thresholdRatio) {
-						if (ptrStr[i].maxPotentialOnTheStructure < ptrStr[ptrStr[i].structureInContact].maxPotentialOnTheStructure) {
-							ptrStr[i].structureToBecaume = ptrStr[i].structureInContact;
-							nbInfoStruct--;
-							ptrStr[ptrStr[i].structureInContact].locked = true;
-							ptrStr[i].locked = true;
-							change = true;
-						}
-					}
-				}
-			}
-		}
-
-		label = 0;
-
-		for (i = 1; i <= oldNbInfoStruct; i++) {
-			if (ptrStr[i].structureToBecaume == i) {
-				label++;
-				ptrStr[i].newIndex = label;
-			}
-		}
-
-
-		for (i = 0; i < sizeDataX; i++) {
-			for (j = 0; j < sizeDataY; j++) {
-				if (seg.data[i * sizeDataY + j] != 0) {
-					seg.data[i * sizeDataY + j] = (unsigned short)ptrStr[ptrStr[seg.data[i * sizeDataY + j]].structureToBecaume].newIndex;
-				}
-			}
-		}
-	}
-
-	seg = (unsigned short)0;
-
-	label = 0;
-	for (i = 1; i <= (long)nbInfoStruct; i++) {
-		if (ptrStr[i].structureToBecaume == i) {
-			label++;
-			seg.data[ptrStr[i].x * sizeDataY + ptrStr[i].y] = (unsigned short)label;
-		}
-	}
-
-
-	free(ptrStr);
-
-	return label - 1;
-}
-
-/********************************************************************************************************************
-int Segmentation2D::getLocalMax(...) compute local maximum of the image an mark them in the image seg.
-USrtArray &image: input image
-USrtArray &localMax: local maximum
-float threshold: a point to be considered as a local maximum have to be > to threshold.
-********************************************************************************************************************/
-int Segmentation2D::getLocalMax(USrtArray& image, USrtArray& seg, const float threshold)
-{
-	seg = (unsigned short)0;
-	long ii, jj;
-	long label = 1;
-	const long sizeDataY = image.size(1);
-	const long sizeDataX = image.size(0);
-
-
-	for (long i = 0; i < sizeDataX; i++) {
-		for (long j = 0; j < sizeDataY; j++) {
-			if (image.data[i * sizeDataY + j] > threshold) {
-				bool err = false;
-				//test if it is a new maximum from the vicinity
-				for (ii = __max(i - 1, 0); ii <= __min(i + 1, sizeDataX - 1) && !err; ii++) {
-					for (jj = __max(j - 1, 0); jj <= __min(j + 1, sizeDataY - 1) && !err; jj++) {
-						if (ii != i || jj != j) {
-							if (image.data[i * sizeDataY + j] < image.data[ii * sizeDataY + jj] || image.data[ii * sizeDataY + jj] <= threshold) { err = true; }
-						}
-					}
-				}
-				if (!err) { //new maximum found. 
-					unsigned short maxi = 0;
-					err = false;
-					for (ii = __max(i - 1, 0); ii <= __min(i + 1, sizeDataX - 1) && !err; ii++) {
-						for (jj = __max(j - 1, 0); jj <= __min(j + 1, sizeDataY - 1) && !err; jj++) {
-							if (ii != i || jj != j) {
-								if (maxi < seg.data[ii * sizeDataY + jj]) {
-									maxi = seg.data[ii * sizeDataY + jj];
-									err = true;
-								}
-							}
-						}
-					}
-					if (maxi > 0) { seg.data[i * sizeDataY + j] = maxi; }
-					else {
-						seg.data[i * sizeDataY + j] = (unsigned short)label;
-						label++;
-					}
-				}
-			}
-		}
-	}
-
-	return label - 1;
-}
-
-
-/********************************************************************************************************************
-int Segmentation2D::watershed(...) compute watershed segmentation insied the reagion upper the threshold value
-USrtArray &potential: defines the potential function the makes the watershed segmented area growing
-USrtArray &seg: it contains the result of the watershed segmentation.
-********************************************************************************************************************/
-int Segmentation2D::watershed(USrtArray& potential, USrtArray& seg, const float threshold) const
-{
-	float cle;
-
-	coor2D p;
-	coor2D p1;
-
-	const long sizeDataY = potential.size(1);
-	const long sizeDataX = potential.size(0);
-
-	Heap<coor2D> tas(sizeDataY * sizeDataX);
-
-
-	// Initialisation des marqueurs
-	for (p.y = 0; p.y < sizeDataY; p.y++) {
-		for (p.x = 0; p.x < sizeDataX; p.x++) {
-			bool vois = false;
-
-			if (seg.data[p.x * sizeDataY + p.y] != 0) {
-				for (p1.x = p.x - 1; p1.x <= p.x + 1 && !vois; p1.x++) {
-					for (p1.y = p.y - 1; p1.y <= p.y + 1 && !vois; p1.y++) {
-						if (p1.x != p.x || p1.y != p.y) {
-							if (p1.x >= 0) {
-								if (p1.x < potential.size(0)) {
-									if (p1.y >= 0) { if (p1.y < potential.size(1)) { if (seg.data[p1.x * sizeDataY + p1.y] == 0) { vois = true; } } }
-								}
-							}
-						}
-					}
-				}
-
-				// On empile les points frontieres.
-				if (vois) {
-					cle = (float)-potential.data[p1.x * sizeDataY + p1.y];
-					tas.Push(p, cle);
-				}
-			}
-		}
-	}
-
-
-	// Croissance prioritaire.
-	int it = 0;
-	while (!tas.Empty()) {
-		it = it + 1;
-		p = tas.Pop();
-		for (p1.x = p.x - 1; p1.x <= p.x + 1; p1.x++) {
-			for (p1.y = p.y - 1; p1.y <= p.y + 1; p1.y++) {
-				if (p1.x != p.x || p1.y != p.y) {
-					if (p1.x >= 0) {
-						if (p1.x < potential.size(0)) {
-							if (p1.y >= 0) {
-								if (p1.y < potential.size(1)) {
-									if (potential.data[p1.x * sizeDataY + p1.y] > threshold) {
-										if (seg.data[p1.x * sizeDataY + p1.y] == 0) {
-											// On empile ce nouveau avec une priorité legèrement supérieure
-											// a sa vrai valeur de potentiel.
-											cle = (float)(-potential.data[p1.x * sizeDataY + p1.y] + (float)it * EPSILON);
-											tas.Push(p1, cle);
-											seg.data[p1.x * sizeDataY + p1.y] = seg.data[p.x * sizeDataY + p.y];
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	return nbInfoStruct;
-}
-
 
 #undef MAX_ELEMENTS
 #undef EPSILON
