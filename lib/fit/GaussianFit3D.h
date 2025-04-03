@@ -3,7 +3,7 @@
 #include "GaussianFit.h"
 
 
-class GaussianFit3D : GaussianFit
+class GaussianFit3D final : GaussianFit
 {
 public:
 	static constexpr unsigned short N_PARAM = 6; // I0, x0, y0, sigmaX, sigmaY, offset
@@ -19,10 +19,11 @@ public:
 		nParam2_ = N_PARAM2;
 	}
 
-	void Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& sigmaY, float& angle,
-	         float& offset, float& RSS, int iterNum, unsigned short size);
+	void Run(const unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x, float& y, float& intensity,
+	         float& sigmaX, float& sigmaY, float& theta, float& offset, float& rss, int iterNum, unsigned short roi);
 
 protected:
 	void initP(float x, float y, float sigmaX, float sigmaY);
-	float lm_matx(const std::vector<unsigned int>& t, const float* p, const std::vector<float>& dat, const std::vector<float>& weight, float* alpha, float* beta, std::vector<float>& hat) override;
+	float lm_matx(const std::vector<unsigned int>& t, const float* p, const std::vector<float>& dat, const std::vector<float>& weight,
+	              float* alpha, float* beta, std::vector<float>& hat) override;
 };

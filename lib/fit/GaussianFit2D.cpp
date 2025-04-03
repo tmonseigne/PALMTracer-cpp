@@ -1,16 +1,20 @@
 #include "GaussianFit2D.h"
 #include <algorithm>
-#include <cfloat>
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+#include <iostream>
+#include <numeric>
+#include <ranges>
 
-float GaussianFit2D::lm_matx(const std::vector<unsigned int>& t, const float* p, const std::vector<float>& dat, const std::vector<float>& weight, float* alpha, float* beta, std::vector<float>& hat)
+float GaussianFit2D::lm_matx(const std::vector<unsigned int>& t, const float* p, const std::vector<float>& dat, const std::vector<float>& weight,
+                             float* alpha, float* beta, std::vector<float>& hat)
 {
-	std::vector<float> delta_y(n_);
+	std::vector<float> delta(n_);
 	for (size_t i = 0; i < n_; ++i) {
 		hat[i] = psf(static_cast<float>(t[i * 2]) - p[1], static_cast<float>(t[i * 2 + 1]) - p[2], p[0], sigma_, p[3]);
-		delta_y[i] = dat[i] - hat[i];
+		delta[i] = dat[i] - hat[i];
 	}
 
 	// Computing Jacobian matrix (dydp)
@@ -19,7 +23,7 @@ float GaussianFit2D::lm_matx(const std::vector<unsigned int>& t, const float* p,
 		deriv(&dydp[i * nParam_], static_cast<float>(t[i * 2]) - p[1], static_cast<float>(t[i * 2 + 1]) - p[2], p[0], sigma_, false);
 	}
 
-	return chi2(alpha, beta, dydp, weight, delta_y);
+	return chi2(alpha, beta, dydp, weight, delta);
 }
 
 void GaussianFit2D::initP(const float x, const float y)
@@ -30,25 +34,25 @@ void GaussianFit2D::initP(const float x, const float y)
 }
 
 
-void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& I0, float& sigmaX, float& offset,
-                        float& RSS, int iterNum, unsigned short size)
+void GaussianFit2D::Run(const unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x, float& y, float& intensity,
+                        float& sigma, float& offset, float& rss, int iterNum, unsigned short roi)
 {
-	if (size % 2 == 0) { size--; } // Not present in GPU original file why ?
+	if (roi % 2 == 0) { roi--; } // Not present in GPU original file why ?
 
-	n_ = size * size;
-	const unsigned short Half = size / 2;
-	sigma_ = sigmaX;
+	n_ = roi * roi;
+	const unsigned short Half = roi / 2;
+	sigma_ = sigma;
 
 	float X2;
-	if (x0 >= Half && x0 <= sizeX - Half - 1 && y0 >= Half && y0 <= sizeY - Half - 1) {
-		initP(x0, y0);
+	if (x >= Half && x <= sizeX - Half - 1 && y >= Half && y <= sizeY - Half - 1) {
+		initP(x, y);
 
 		std::vector<float> dat(n_), hat(n_), weight(n_);
 		std::vector<unsigned int> t(2 * n_);
 
 		// Initialization of dat & t (A vérifier)
 		float minI, maxI; // Not present in GPU original file why ?
-		preComputeFit(minI, maxI, image, sizeX, static_cast<int>(x0), static_cast<int>(y0), dat, weight, t, size);
+		preComputeFit(minI, maxI, image, sizeX, static_cast<int>(x), static_cast<int>(y), dat, weight, t, roi);
 		p_[0] = maxI - minI; // Not present in GPU original file why ?
 		p_[3] = minI;        // Not present in GPU original file why ?
 
@@ -80,7 +84,7 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 		float X2_try;
 		float m;
 		float rho;
-		std::array<float, N_PARAM> delta_p;  // Déclaré une seule fois avant la boucle
+		std::array<float, N_PARAM> delta_p; // Déclaré une seule fois avant la boucle
 
 		while (stop == 0 && iteration < iterNum) // Main Loop
 		{
@@ -102,9 +106,7 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 				p_try[i] = std::min(std::max(pMin_[i], p_try[i]), pMax_[i]);
 			}
 
-			for (int i = 0; i < n_; ++i) {
-				delta_y[i] = dat[i] - psf((float)t[i * 2] - p_try[1], (float)t[i * 2 + 1] - p_try[2], p_try[0], sigma_, p_try[3]);
-			}
+			for (int i = 0; i < n_; ++i) { delta_y[i] = dat[i] - psf((float)t[i * 2] - p_try[1], (float)t[i * 2 + 1] - p_try[2], p_try[0], sigma_, p_try[3]); }
 
 			for (int i = 0; i < n_; ++i) { inter2[i] = delta_y[i] * weight[i]; } // delta_y .* weight
 
@@ -142,10 +144,10 @@ void GaussianFit2D::Run(unsigned short* image, unsigned long sizeX, unsigned lon
 			if (iteration == iterNum) { stop = 1; }
 		}
 
-		x0 = p_[1];
-		y0 = p_[2];
-		I0 = p_[0];
+		x = p_[1];
+		y = p_[2];
+		intensity = p_[0];
 		offset = p_[3];
-		RSS = computeRSS(dat, hat);
+		rss = computeRSS(dat, hat);
 	}
 }

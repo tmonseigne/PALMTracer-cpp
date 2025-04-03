@@ -41,7 +41,7 @@ unsigned int pointsNumber;
 /**********************/
 
 
-CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsListSize, unsigned long sizeX, unsigned long sizeY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short size)
+CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsListSize, unsigned long sizeX, unsigned long sizeY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short roi)
 {
 	long ret;
 	nbCalls = 0;
@@ -66,7 +66,7 @@ CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsList
 	_sigmaX = (float)sigmaX;
 	_sigmaY = (float)sigmaY;
 	_angle = (float)angle;
-	_size = size;
+	_size = roi;
 
 	for (int i = 0; i < 13; i++) { _structFiltParam[i] = 0; }
 	for (int i = 0; i < 13; i++) { _structFiltParamUse[i] = 0; }

@@ -13,10 +13,10 @@ void _stdcall _OpenPALMProcessing(unsigned short* image, double* pointsList, con
                                   const unsigned long sizeX, const unsigned long sizeY, const unsigned long waveletNo,
                                   const double thresholdVal, const double watershedRatio, const double volMin,
                                   const double intMin, const unsigned short gaussFit, const double sigmaX, const double sigmaY,
-                                  const double angle, const unsigned short size)
+                                  const double angle, const unsigned short roi)
 {
 	c = new CPALM(image, pointsList, pointsListSize, sizeX, sizeY, waveletNo, thresholdVal, watershedRatio,
-	              volMin, intMin, gaussFit, sigmaX, sigmaY, angle, size);
+	              volMin, intMin, gaussFit, sigmaX, sigmaY, angle, roi);
 }
 
 _declspec(dllexport)
@@ -29,9 +29,9 @@ _declspec(dllexport)
 long _stdcall Process(unsigned short* image, double* pointsList, const unsigned long pointsListSize,
                       const unsigned long sizeX, const unsigned long sizeY, const unsigned long waveletNo,
                       const double thresholdVal, const double watershedRatio, const double volMin, const double intMin, const unsigned short gaussFit,
-                      const double sigmaX, const double sigmaY, const double angle, const unsigned short size)
+                      const double sigmaX, const double sigmaY, const double angle, const unsigned short roi)
 {
 	auto palm = CPALM(image, pointsList, pointsListSize, sizeX, sizeY, waveletNo, thresholdVal, watershedRatio,
-	                  volMin, intMin, gaussFit, sigmaX, sigmaY, angle, size);
+	                  volMin, intMin, gaussFit, sigmaX, sigmaY, angle, roi);
 	return palm.CPALMProcessing();
 }

@@ -34,16 +34,16 @@ void GaussianFit3D_Theta::initP(const float x, const float y, const float sigmaX
 	pMax_ = {65535, x + 1, y + 1, 20, 20, 150, 65535};
 }
 
-void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& i0, float& sigmaX, float& sigmaY,
-                              float& angle, float& offset, float& rss, int iterNum, unsigned short size)
+void GaussianFit3D_Theta::Run(const unsigned short* image, const unsigned long sizeX, const unsigned long sizeY,
+                              float& x, float& y, float& intensity, float& sigmaX, float& sigmaY, float& theta, float& offset,
+                              float& rss, const int iterNum, unsigned short roi)
 {
-	if (size % 2 == 0) { size--; } // Not present in GPU original file why ?
+	if (roi % 2 == 0) { roi--; } // Not present in GPU original file why ?
+	n_ = roi * roi;
 
-	n_ = size * size;
-	const unsigned short Half = size / 2;
-
-	if (Half <= x0 && x0 <= sizeX - Half - 1 && Half <= y0 && y0 <= sizeY - Half - 1) {
-		initP(x0, y0, sigmaX, sigmaY, angle);
+	const unsigned short Half = roi / 2, Ux = static_cast<unsigned short>(x), Uy = static_cast<unsigned short>(y);
+	if (Half <= Ux && Ux <= sizeX - Half - 1 && Half <= Uy && Uy <= sizeY - Half - 1) {
+		initP(x, y, sigmaX, sigmaY, theta);
 
 		// Création des variables
 		float lambda = LAMBDA_0;
@@ -55,7 +55,7 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 
 		// Initialization of dat & t (A vérifier)
 		float minI, maxI; // Not present in GPU original file why ?
-		preComputeFit(minI, maxI, image, sizeX, static_cast<int>(x0), static_cast<int>(y0), dat, weight, t, size);
+		preComputeFit(minI, maxI, image, sizeX, static_cast<int>(x), static_cast<int>(y), dat, weight, t, roi);
 		p_[0] = maxI - minI; // Not present in GPU original file why ?
 		p_[6] = minI;        // Not present in GPU original file why ?
 
@@ -63,26 +63,21 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 		float x2_old = x2;
 
 		// Trouver la valeur absolue maximale
-		float m = std::ranges::max(std::views::transform(beta, [](const float x) { return std::abs(x); }));
+		float m = std::ranges::max(std::views::transform(beta, [](const float b) { return std::abs(b); }));
 
-		unsigned int stop = 0;
-		if (m < EPSILON_1) { stop = 1; }
-
+		bool stop = false;
+		if (m < EPSILON_1) { stop = true; }
 
 		unsigned short iteration = 0;
-		while (stop == 0 && iteration <= iterNum) // Main Loop
-		{
+		while (!stop) { // Main Loop
 			iteration++;
 			deltaP.fill(0.0f);
 
 			std::copy_n(alpha.begin(), nParam2_, alphaR.begin()); // Copy du alpha
 			for (unsigned short i = 0; i < nParam_; ++i) { alphaR[i * nParam_ + i] += lambda * alpha[i * nParam_ + i]; }
-
 			inverse(alphaR.data(), alphaRi.data());
 
-			for (unsigned short i = 0; i < nParam_; ++i) {
-				for (int j = 0; j < nParam_; ++j) { deltaP[i] += alphaRi[i * nParam_ + j] * beta[j]; }
-			}
+			for (unsigned short i = 0; i < nParam_; ++i) { for (int j = 0; j < nParam_; ++j) { deltaP[i] += alphaRi[i * nParam_ + j] * beta[j]; } }
 
 			for (unsigned short i = 0; i < nParam_; ++i) {
 				p_try[i] = p_[i] + deltaP[i];
@@ -95,11 +90,11 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 			}
 
 			// deltaY .* weight
-			std::transform(deltaY.begin(), deltaY.end(), weight.begin(), deltaY_w.begin(), std::multiplies<float>());
+			std::ranges::transform(deltaY, weight, deltaY_w.begin(), std::multiplies<>());
 			const float X2_Try = std::transform_reduce(deltaY.begin(), deltaY.end(), deltaY_w.begin(), 0.0f, std::plus<float>(), std::multiplies<float>());
 
 			// lambda * deltaP + beta
-			std::transform(deltaP.begin(), deltaP.end(), beta.begin(), beta_l_deltaP.begin(), [lambda](float delta, float b) { return lambda * delta + b; });
+			std::ranges::transform(deltaP, beta, beta_l_deltaP.begin(), [lambda](const float d, const float b) { return lambda * d + b; });
 
 			m = std::inner_product(deltaP.begin(), deltaP.end(), beta_l_deltaP.begin(), 0.0f);
 
@@ -118,21 +113,21 @@ void GaussianFit3D_Theta::Run(unsigned short* image, unsigned long sizeX, unsign
 			m = 0;
 			for (unsigned short i = 0; i < nParam_; ++i) { m = std::max(m, abs(deltaP[i] / p_[i])); }
 
-			if (m < EPSILON_2 && iteration > 2) { stop = 1; }
-			if (x2 / static_cast<float>(n_) < EPSILON_3 && iteration > 2) { stop = 1; }
+			if (m < EPSILON_2 && iteration > 2) { stop = true; }
+			if (x2 / static_cast<float>(n_) < EPSILON_3 && iteration > 2) { stop = true; }
 
-			m = std::ranges::max(std::views::transform(beta, [](const float x) { return std::abs(x); }));
+			m = std::ranges::max(std::views::transform(beta, [](const float b) { return std::abs(b); }));
 
-			if (m < EPSILON_1 && iteration > 2) { stop = 1; }
-			if (iteration == iterNum) { stop = 1; }
+			if (m < EPSILON_1 && iteration > 2) { stop = true; }
+			if (iteration >= iterNum) { stop = true; }
 		}
 
-		x0 = p_[1];
-		y0 = p_[2];
-		i0 = p_[0];
+		x = p_[1];
+		y = p_[2];
+		intensity = p_[0];
 		sigmaX = p_[3] / std::numbers::sqrt2_v<float>;
 		sigmaY = p_[4] / std::numbers::sqrt2_v<float>;
-		angle = p_[5];
+		theta = p_[5];
 		offset = p_[6]/*iteration*/;
 		rss = computeRSS(dat, hat);
 	}

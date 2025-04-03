@@ -2,9 +2,9 @@
 
 #include <algorithm>
 #include <cmath>
-#include <vector>
-#include <numeric>
 #include <execution>
+#include <numeric>
+#include <vector>
 
 float GaussianFit::psf(const float x, const float y, const float i0, const float sigma, const float offset)
 {
@@ -20,7 +20,7 @@ float GaussianFit::psf(const float x, const float y, const float i0, const float
 	return i0 * exp(-(Factor1 * Factor1 + Factor2 * Factor2)) + offset;
 }
 
-void GaussianFit::deriv(float* out, float x, float y, float i0, float sigma, bool has_sigma)
+void GaussianFit::deriv(float* out, const float x, const float y, const float i0, const float sigma, const bool has_sigma)
 {
 	const auto X_2 = x * x, Y_2 = y * y, Sigma_2 = sigma * sigma;
 	const auto Exp = exp(-(X_2 + Y_2) / (2 * Sigma_2));
@@ -37,7 +37,7 @@ void GaussianFit::deriv(float* out, float x, float y, float i0, float sigma, boo
 	else { out[3] = 1; } // offset (quand sigma est fixe)
 }
 
-void GaussianFit::deriv(float* out, float x, float y, float i0, float sigmaX, float sigmaY, float theta, bool has_theta)
+void GaussianFit::deriv(float* out, const float x, const float y, const float i0, const float sigmaX, const float sigmaY, const float theta, const bool has_theta)
 {
 	const auto X_2 = x * x, Y_2 = y * y, X_Y = x * y, SigmaX_2 = sigmaX * sigmaX, SigmaY_2 = sigmaY * sigmaY;
 	const auto CosT = cos(theta), SinT = sin(theta);
@@ -65,7 +65,7 @@ void GaussianFit::deriv(float* out, float x, float y, float i0, float sigmaX, fl
 
 float GaussianFit::chi2(float* alpha, float* beta, const std::vector<float>& dydp, const std::vector<float>& weight, const std::vector<float>& deltaY) const
 {
-	std::vector<float> tmp(n_ * nParam_);
+	std::vector<float> tmp(static_cast<size_t>(n_ * nParam_));
 	for (int i = 0; i < n_; ++i) { for (int j = 0; j < nParam_; ++j) { tmp[i * nParam_ + j] = weight[i] * dydp[i * nParam_ + j]; } }
 
 	// Computing alpha (A v�rifier)
@@ -145,8 +145,8 @@ void GaussianFit::inverse(float* in, float* out) const
 }
 
 void GaussianFit::preComputeFit(float& min, float& max, const unsigned short* image, const unsigned long width,
-                                const unsigned int x, const unsigned int y, std::vector<float>& y_dat, std::vector<float>& weight, std::vector<unsigned int>& t,
-                                const unsigned short roi) const
+                                const unsigned int x, const unsigned int y, std::vector<float>& dat, std::vector<float>& weight, std::vector<unsigned int>& t,
+                                const unsigned short roi)
 {
 	min = std::numeric_limits<float>::max();    // Plus grand float possible (FLT_MAX) // Not present in GPU original file why ?
 	max = std::numeric_limits<float>::lowest(); // Plus petit float possible (-FLT_MAX) // Not present in GPU original file why ?
@@ -155,17 +155,19 @@ void GaussianFit::preComputeFit(float& min, float& max, const unsigned short* im
 	for (int i = -Half; i <= Half; ++i) {
 		const int Idx = Half + (i + Half) * roi;
 		for (int j = -Half; j <= Half; ++j) {
-			y_dat[j + Idx] = static_cast<float>(image[x + j + (y + i) * width]);
-			t[(j + Idx) * 2] = x + j;
-			t[(j + Idx) * 2 + 1] = y + i;
+			dat[j + Idx] = static_cast<float>(image[x + j + (y + i) * width]);
+			const auto TIdx = (j + Idx) * 2;
+			t[TIdx] = x + j;
+			t[TIdx + 1] = y + i;
 
-			max = std::max(max, y_dat[j + Idx]); // Not present in GPU original file why ?
-			min = std::min(min, y_dat[j + Idx]); // Not present in GPU original file why ?
+			max = std::max(max, dat[j + Idx]); // Not present in GPU original file why ?
+			min = std::min(min, dat[j + Idx]); // Not present in GPU original file why ?
 		}
 	}
 
-	for (int i = 0; i < n_; ++i) {
-		weight[i] = 1; //sqrt((n_-nParam_+1) / (y_dat[ii]*y_dat[ii]))
-		//weight[i] *= weight[i];
-	}
+	std::ranges::fill(weight, 1);
+	//for (int i = 0; i < n_; ++i) {
+	//	weight[i] = 1; //sqrt((n_-nParam_+1) / (dat[ii]*dat[ii]))
+	//	//weight[i] *= weight[i];
+	//}
 }

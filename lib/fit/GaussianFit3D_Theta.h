@@ -17,8 +17,8 @@ public:
 		nParam2_ = N_PARAM2;
 	}
 
-	void Run(unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x0, float& y0, float& i0,
-	         float& sigmaX, float& sigmaY, float& angle, float& offset, float& rss, int iterNum, unsigned short size);
+	void Run(const unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x, float& y, float& intensity,
+	         float& sigmaX, float& sigmaY, float& theta, float& offset, float& rss, int iterNum, unsigned short roi);
 
 protected:
 	void initP(float x, float y, float sigmaX, float sigmaY, float theta);

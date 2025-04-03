@@ -7,7 +7,7 @@
 #include "fit/GaussianFit3D.h"
 #include "fit/GaussianFit3D_Theta.h"
 
-CPALM::CPALM(unsigned short* image, double* pointsList, const unsigned long pointsListSize, const unsigned long sizeX, const unsigned long sizeY, const unsigned long waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin, const unsigned short gaussFit, const double sigmaX, const double sigmaY, const double angle, const unsigned short size)
+CPALM::CPALM(unsigned short* image, double* pointsList, const unsigned long pointsListSize, const unsigned long sizeX, const unsigned long sizeY, const unsigned long waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin, const unsigned short gaussFit, const double sigmaX, const double sigmaY, const double angle, const unsigned short roi)
 {
 	nbCalls = 0;
 	currentPoint = 0;
@@ -31,13 +31,13 @@ CPALM::CPALM(unsigned short* image, double* pointsList, const unsigned long poin
 	_sigmaX = (float)sigmaX;
 	_sigmaY = (float)sigmaY;
 	_angle = (float)angle;
-	_size = size;
+	_size = roi;
 
-	for (int i = 0; i < 13; i++) { _structFiltParam[i] = 0; }
-	for (int i = 0; i < 13; i++) { _structFiltParamUse[i] = 0; }
-	for (int i = 0; i < 10; i++) { _planesToUse[i] = 0; }
-	for (int i = 0; i < 9; i++) { _operators[i] = 0; }
-	for (int i = 0; i < 9; i++) { _threshold[i] = 0; }
+	for (double& i : _structFiltParam) { i = 0; }
+	for (unsigned short& i : _structFiltParamUse) { i = 0; }
+	for (unsigned short& i : _planesToUse) { i = 0; }
+	for (unsigned short& _operator : _operators) { _operator = 0; }
+	for (double& i : _threshold) { i = 0; }
 
 
 	_planesToUse[_waveletNo] = 2;
@@ -100,7 +100,7 @@ long CPALM::CPALMProcessing()
 
 	InfoStruct2D** p = (InfoStruct2D**)_segmentPub->getTabInfo();
 
-	for (int i = 1; i <= min(nbStruct, _nbPointsMaxPerPlane - 2); i++) {
+	for (int i = 1; i <= min(nbStruct, _nbPointsMaxPerPlane - 2); ++i) {
 		switch (_gaussFit) {
 			case 0: 
 			case 5:
@@ -134,7 +134,7 @@ long CPALM::CPALMProcessing()
 
 				// Gaussian fit of 2D
 				GaussianFit2D* fit = new GaussianFit2D();
-				fit->Run(_image, _sizeY, _sizeX, x0, y0, I0, sigmaX, offset, RSS, /*30*/10, _size);
+				fit->Run(_image, _sizeY, _sizeX, x0, y0, I0, sigmaX, offset, RSS, 10, _size);
 
 
 				_pointsList[currentPoint++] = sigmaX;
@@ -165,7 +165,7 @@ long CPALM::CPALMProcessing()
 
 				// Gaussian fit of 2D
 				GaussianFit2D_Sigma* fit = new GaussianFit2D_Sigma();
-				fit->Run(_image, _sizeY, _sizeX, x0, y0, I0, sigmaX, offset, RSS, 10/*30*/, _size);
+				fit->Run(_image, _sizeY, _sizeX, x0, y0, I0, sigmaX, offset, RSS, 10, _size);
 
 
 				_pointsList[currentPoint++] = sigmaX;
