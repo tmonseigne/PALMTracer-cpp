@@ -49,10 +49,7 @@
     <ClCompile Include="..\lib\palm\ATrous2D.cpp">
       <Filter>Palm</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\palm\info_2D.cpp">
-      <Filter>Palm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\palm\segmentation.cpp">
+    <ClCompile Include="..\lib\palm\Segmentation.cpp">
       <Filter>Palm</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\palm\watershed_2D.cpp">
@@ -110,7 +107,7 @@
     <ClInclude Include="..\lib\palm\parameters.h">
       <Filter>Palm</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\segmentation.h">
+    <ClInclude Include="..\lib\palm\Segmentation.h">
       <Filter>Palm</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\palm\segmentation_2D.h">
@@ -126,9 +123,6 @@
       <Filter>Tools</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tools\FltArray.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tools\generalParam.h">
       <Filter>Tools</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tools\lists.h">

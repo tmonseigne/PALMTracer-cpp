@@ -1,4 +1,5 @@
 #include "Segmentation2D.h"
+#include "tools/NoError.h"
 
 #define MAX_ELEMENTS 10000000
 #define EPSILON 0.0000001

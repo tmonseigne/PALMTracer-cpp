@@ -15,6 +15,7 @@ links to the current objet.
 #include "palm/parameters.h"
 
 float globalDistMax;
+#define PI 3.1415926535897932384626433832795
 
 /*********************************************************************************************
 double distanceToBorder()

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "errc.h"
-#include "generalParam.h"
 
 /*
  * Base class of Heap.

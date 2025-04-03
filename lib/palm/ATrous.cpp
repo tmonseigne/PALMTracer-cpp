@@ -14,57 +14,6 @@ unsigned long twoToThe(const unsigned long val)
 	return (unsigned long)1 << val;
 }
 
-ATrous::ATrous()
-{
-	temp1 = new FltArray();
-	temp2 = new FltArray();
-	inputV0 = new FltArray();
-	VN = new FltArray();
-	VNplus1 = new FltArray();
-	wDecomp = new FltArray();
-}
-
-
-ATrous::~ATrous()
-{
-	delete temp1;
-	delete temp2;
-	delete inputV0;
-	delete VN;
-	delete VNplus1;
-	delete wDecomp;
-}
-
-/*
-Gives the noise degeneration for the used wavelet in the a trous algorithm.
-For example 0.3548 is the standard deviation in the first for a input image 
-full filled of gaussian noise with a std=1.
-*/
-double ATrous::stdRef(const long dim, const unsigned long realProj, const unsigned long plan)
-{
-	static double _1DRealProj[11] = {0.368862, 0.243017, 0.172412, 0.121539, 0.085503, 0.060303, 0.043978, 0.030842, 0.020708, 0.015012, 0.011179};
-	static double _1D[11] = {0.723077, 0.285706, 0.179198, 0.122700, 0.085704, 0.060338, 0.043984, 0.030842, 0.020721, 0.015015, 0.011192};
-	static double _2DRealProj[4] = {0.3548, 0.1669, 0.0816, 0.0590};
-	static double _2D[4] = {0.8868, 0.2046, 0.0862, 0.0598};
-	static double _3DRealProj[4] = {0.2900, 0.0930, 0.0340, 0.0160};
-	static double _3D[4] = {0.9500, 0.1200, 0.0360, 0.0180};
-	switch (dim) {
-		case 1: {
-			if (realProj) { return _1DRealProj[plan]; }
-			return _1D[plan];
-		}
-		case 2: {
-			if (realProj) { return _2DRealProj[plan]; }
-			return _2D[plan];
-		}
-		case 3: {
-			if (realProj) { return _3DRealProj[plan]; }
-			return _3D[plan];
-		}
-		default: return 0.;
-	}
-}
-
 int ATrous::offsetTest(int i, int j, const int maxSizeI, const int maxSizeJ)
 {
 	//Same as offset but if i or j are out of bounds, it changes them to be in bounds.
@@ -72,40 +21,14 @@ int ATrous::offsetTest(int i, int j, const int maxSizeI, const int maxSizeJ)
 	if (i >= maxSizeI) { i = maxSizeI - 1; }
 	if (j < 0) { j = 0; }
 	if (j >= maxSizeJ) { j = maxSizeJ - 1; }
-	return i * maxSizeJ + j;
+	return offset(i, j, maxSizeJ);
 }
 
 
+//Compute the offset translate   tab[i][j] to tab[i*maxSizeJ+j]
 int ATrous::offset(const int i, const int j, const int maxSizeJ)
 {
-	//Compute the offset translate   tab[i][j] to tab[i*maxSizeJ+j]
 	return i * maxSizeJ + j;
-}
-
-
-int ATrous::testSizes2D(FltArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long& nbPlane)
-{
-	//Test inputData, outputData, planesToUse, nbPlane
-
-	if (!inputData.isThereData()) { return W_INIT_ERR; }
-	if (!outputData.isThereData()) { return W_INIT_ERR; }
-	if (!planesToUse.isThereData()) { return W_INIT_ERR; }
-	if (inputData.dim() + 1 != outputData.dim()) { return W_DIM_ERR; }
-	if (inputData.size(0) != outputData.size(0) || inputData.size(1) != outputData.size(1)) { return W_SIZE_ERR; }
-	if (planesToUse.dim() != 1) { return W_DIM_ERR; }
-	for (unsigned long i = outputData.size(2); i < (unsigned long)planesToUse.size(0); i++) { planesToUse(i - 1) = false; }
-
-
-	if (inputData.size(0) < 9 || inputData.size(1) < 9) { return W_SIZE_ERR; }
-	if (nbPlane < 2) { return W_SIZE_ERR; }
-	long sizeWavelet = twoToThe(nbPlane + 1);
-	while (inputData.size(0) <= sizeWavelet || inputData.size(1) <= sizeWavelet) {
-		nbPlane--;
-		sizeWavelet = twoToThe(nbPlane + 1);
-	}
-
-
-	return RET_OK;
 }
 
 
@@ -192,64 +115,6 @@ void ATrous::projectionV02D(unsigned short* srcData, float* destData, const unsi
 	else { for (i = 0; i < (long)(sizeDataX * sizeDataY); i++) { destData[i] = (float)srcData[i]; } }
 }
 
-void ATrous::projectionV02D(float* srcData, float* destData, const unsigned long realProj, const unsigned long sizeDataX, const unsigned long sizeDataY)
-{
-	//Makes a projection in V0 space to be in the apropriate condition of the multiresolution,
-	//realProj make be set to 1 if realProj=0 it just copy the data from srcData to destData
-
-	int i, j, cur_i, cur_j, offs;
-	const double tab[3] = {0.1666666666, 0.6666666666666, 0.16666666666};
-	if (realProj == 1) {
-		i = 0;
-		for (j = 0; j < (long)sizeDataY; j++) {
-			offs = OFFSET(i, j);
-			destData[offs] = 0.0;
-			for (cur_i = -1; cur_i < 2; cur_i++) {
-				for (cur_j = -1; cur_j < 2; cur_j++) { destData[offs] += (float)(srcData[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]); }
-			}
-		}
-
-
-		for (i = 1; i < (long)sizeDataX - 1; i++) {
-			j = 0;
-			offs = OFFSET(i, j);
-			destData[offs] = 0.0;
-			for (cur_i = -1; cur_i < 2; cur_i++) {
-				for (cur_j = -1; cur_j < 2; cur_j++) { destData[offs] += (float)(srcData[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]); }
-			}
-
-
-			for (j = 1; j < (long)sizeDataY - 1; j++) {
-				offs = OFFSET(i, j);
-				destData[offs] = 0.0;
-				for (cur_i = -1; cur_i < 2; cur_i++) {
-					for (cur_j = -1; cur_j < 2; cur_j++) {
-						destData[offs] += (float)(srcData[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
-					}
-				}
-			}
-
-			j = sizeDataY - 1;
-			offs = OFFSET(i, j);
-			destData[offs] = 0.0;
-			for (cur_i = -1; cur_i < 2; cur_i++) {
-				for (cur_j = -1; cur_j < 2; cur_j++) { destData[offs] += (float)(srcData[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]); }
-			}
-		}
-
-		i = sizeDataX - 1;
-		for (j = 0; j < (long)sizeDataY; j++) {
-			offs = OFFSET(i, j);
-			destData[offs] = 0.0;
-			for (cur_i = -1; cur_i < 2; cur_i++) {
-				for (cur_j = -1; cur_j < 2; cur_j++) { destData[offs] += (float)(srcData[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]); }
-			}
-		}
-	}
-	else { for (i = 0; i < (long)(sizeDataX * sizeDataY); i++) { destData[i] = (float)srcData[i]; } }
-}
-
-
 int ATrous::b3SplineFiltering2D(float* srcData, float* destData, const unsigned long sizeDataX, const unsigned long sizeDataY, const unsigned long currentPlane)
 {
 	//Makes the projection in V(x) with hte knowlage of V(x-1)
@@ -260,8 +125,8 @@ int ATrous::b3SplineFiltering2D(float* srcData, float* destData, const unsigned 
 
 	int ret;
 
-	if ((ret = temp2->realloc(sizeDataX, sizeDataY)) < 0) { return ret; }
-	float* buff = temp2->data;
+	if ((ret = temp2_.realloc(sizeDataX, sizeDataY)) < 0) { return ret; }
+	float* buff = temp2_.data;
 
 
 	//type_border Type = Bord;

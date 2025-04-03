@@ -49,7 +49,7 @@ CPALM::CPALM(unsigned short* image, double* points, const unsigned long pointsLi
 
 	input_ = new USrtArray();
 	if (input_.alloc(image_, height_, width_) < 0) { return; }
-	if (aTrousPub_.wDecomp->alloc(height_, width_, waveletNo + 2) < 0) { return; }
+	if (aTrousPub_.wDecomp_.alloc(height_, width_, waveletNo + 2) < 0) { return; }
 	if (segPub_.realloc(height_, width_) < 0) { return; }
 	if (outputPub_.alloc(height_, width_) < 0) { return; }
 
@@ -68,12 +68,12 @@ long CPALM::Processing()
 	long nbStruct;
 	int nbPointsSign;
 	const size_t Size = height_ * width_;
-	if ((ret = aTrousPub_.ATrousDecomposition2D(input_, *aTrousPub_.wDecomp, planesToUseB_, nbPlane_, false)) < 0) { return ret; }
+	if ((ret = aTrousPub_.ATrousDecomposition2D(input_, aTrousPub_.wDecomp_, planesToUseB_, nbPlane_, false)) < 0) { return ret; }
 
 	for (long j = 0; j < Size; j++) {
 		const long offs = waveletNo_ * Size;
-		if (aTrousPub_.wDecomp->data[offs + j] > thresholdVal_) {
-			outputPub_.data[j] = aTrousPub_.wDecomp->data[offs + j];
+		if (aTrousPub_.wDecomp_.data[offs + j] > thresholdVal_) {
+			outputPub_.data[j] = aTrousPub_.wDecomp_.data[offs + j];
 			segPub_.data[j] = 1;
 		}
 		else {
@@ -85,7 +85,7 @@ long CPALM::Processing()
 	if ((nbStruct = segmentPub_.watershedIntelligent(outputPub_, segPub_, 1e-8f, watershedRatio_)) < 0) { return nbStruct; }
 
 
-	if ((nbPointsSign = segmentPub_.computeStatistics(outputPub_, segPub_, aTrousPub_.wDecomp->data + waveletNo_ * Size, gaussFit_)) < 0) {
+	if ((nbPointsSign = segmentPub_.computeStatistics(outputPub_, segPub_, aTrousPub_.wDecomp_.data + waveletNo_ * Size, gaussFit_)) < 0) {
 		return nbPointsSign;
 	}
 

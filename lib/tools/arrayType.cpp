@@ -5,6 +5,8 @@
 
 #ifdef		_ARRAY_TYPE_
 
+#include "NoError.h"
+
 //*****************		CONSTRUCTORS		DESTRUCTOR		ALLOC		**************
 ArrayType::ArrayType()
 {

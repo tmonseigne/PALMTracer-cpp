@@ -88,7 +88,7 @@ CPALM::CPALM(unsigned short* image, double* points, unsigned long pointsListSize
 
 	input_ = new USrtArray();
 	if ((ret = input_->alloc(image_, height_, width_)) < 0) { return; }
-	if ((ret = aTrousPub_->wDecomp->alloc(height_, width_, waveletNo + 2)) < 0) { return; }
+	if ((ret = aTrousPub_->wDecomp_->alloc(height_, width_, waveletNo + 2)) < 0) { return; }
 	if ((ret = segPub_->realloc(height_, width_)) < 0) { return; }
 	if ((ret = outputPub_->alloc(height_, width_)) < 0) { return; }
 
@@ -168,7 +168,7 @@ long CPALM::Processing()
 	// Decompostition : wavelet algorithm
 	aTrousDecomposition2D(d_images, d_data, width_, height_, 1, /**planesToUseB_,*/ nbPlane_, false/*true*/, false);
 
-	checkCudaErrors(cudaMemcpy(aTrousPub_->wDecomp->data + waveletNo_ * height_ * width_, d_data + waveletNo_ * height_ * width_, height_ * width_ * sizeof(float), cudaMemcpyDeviceToHost));
+	checkCudaErrors(cudaMemcpy(aTrousPub_->wDecomp_->data + waveletNo_ * height_ * width_, d_data + waveletNo_ * height_ * width_, height_ * width_ * sizeof(float), cudaMemcpyDeviceToHost));
 
 	// cleanup memory
 	checkCudaErrors(cudaFree(d_images));
@@ -180,8 +180,8 @@ long CPALM::Processing()
 	for (long j = 0; j < long(height_ * width_); j++) {
 		long offs = waveletNo_ * height_ * width_;
 
-		if (aTrousPub_->wDecomp->data[offs + j] > thresholdVal_) {
-			outputPub_->data[j] = aTrousPub_->wDecomp->data[offs + j];
+		if (aTrousPub_->wDecomp_->data[offs + j] > thresholdVal_) {
+			outputPub_->data[j] = aTrousPub_->wDecomp_->data[offs + j];
 			segPub_->data[j] = 1;
 		}
 		else {
@@ -199,7 +199,7 @@ long CPALM::Processing()
 	begin = clock();
 
 
-	if ((nbPointsSign = segmentPub_->computeStatistics(*outputPub_, *segPub_, aTrousPub_->wDecomp->data + waveletNo_ * height_ * width_, gaussFit_)) < 0) { return (nbPointsSign); }
+	if ((nbPointsSign = segmentPub_->computeStatistics(*outputPub_, *segPub_, aTrousPub_->wDecomp_->data + waveletNo_ * height_ * width_, gaussFit_)) < 0) { return (nbPointsSign); }
 
 	begin = clock();
 

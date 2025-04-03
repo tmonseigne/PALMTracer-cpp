@@ -50,12 +50,6 @@
     <ClCompile Include="..\lib\tracking\likenessDistInten\time_nodes_dist_Inten.cpp">
       <Filter>Kernel\likeness DistInten</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\palm\info_3D.cpp">
-      <Filter>Palm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\palm\info_2D.cpp">
-      <Filter>Palm</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Tracking.h" />
@@ -72,9 +66,6 @@
       <Filter>Tools</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tools\FltArray.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tools\generalParam.h">
       <Filter>Tools</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tools\lists.h">

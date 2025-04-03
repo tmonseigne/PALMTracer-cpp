@@ -110,7 +110,6 @@
     <ClInclude Include="..\lib\tools\BlArray.h" />
     <ClInclude Include="..\lib\tools\errc.h" />
     <ClInclude Include="..\lib\tools\FltArray.h" />
-    <ClInclude Include="..\lib\tools\generalParam.h" />
     <ClInclude Include="..\lib\tools\lists.h" />
     <ClInclude Include="..\lib\tools\NoError.h" />
     <ClInclude Include="..\lib\tools\pandore.h" />
@@ -131,8 +130,6 @@
     <ClInclude Include="Tracking.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\lib\palm\info_2D.cpp" />
-    <ClCompile Include="..\lib\palm\info_3D.cpp" />
     <ClCompile Include="..\lib\tools\arrayType.cpp" />
     <ClCompile Include="..\lib\tools\BlArray.cpp" />
     <ClCompile Include="..\lib\tools\FltArray.cpp" />

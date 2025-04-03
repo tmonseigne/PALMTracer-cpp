@@ -13,7 +13,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include "tools/generalParam.h"
 
 
 #ifndef _HEADER_FILE_

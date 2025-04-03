@@ -84,8 +84,13 @@ typedef struct
 class InfoStruct3D
 {
 public:
-	InfoStruct3D(int index);
-	~InfoStruct3D();
+	InfoStruct3D(const int index)
+	{
+		data.index = index;
+		next = nullptr;
+	}
+
+	~InfoStruct3D() = default;
 	InfoStruct3D* next;
 
 	InfoData3D data;
