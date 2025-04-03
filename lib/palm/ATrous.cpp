@@ -29,12 +29,12 @@ int ATrous::offsetTest(int i, int j, const int maxSizeI, const int maxSizeJ)
 int ATrous::offset(const int i, const int j, const int maxSizeJ) { return i * maxSizeJ + j; }
 
 
-int ATrous::testSizes2D(const size_t height, const size_t width, FltArray& out, bool* planesToUse, size_t& nbPlane)
+int ATrous::testSizes2D(const size_t height, const size_t width, bool* planesToUse, size_t& nbPlane)
 {
 	//Test in, out, planesToUse, nbPlane
 
-	if (!out.isThereData()) { return W_INIT_ERR; }
-	for (size_t i = out.size(2); i < 9; ++i) { planesToUse[i - 1] = false; }
+	if (!wDecomp_.isThereData()) { return W_INIT_ERR; }
+	for (size_t i = wDecomp_.size(2); i < 9; ++i) { planesToUse[i - 1] = false; }
 
 
 	if (nbPlane < 2) { return W_SIZE_ERR; }
@@ -49,10 +49,10 @@ int ATrous::testSizes2D(const size_t height, const size_t width, FltArray& out, 
 }
 
 
-void ATrous::projectionV02D(const unsigned short* srcData, float* destData, const size_t realProj, const size_t height, const size_t width)
+void ATrous::projectionV02D(const unsigned short* image, const size_t realProj, const size_t height, const size_t width)
 {
 	//Makes a projection in V0 space to be in the apropriate condition of the multiresolution, 
-	//realProj make be set to 1 if realProj=0 it just copy the data from srcData to destData
+	//realProj make be set to 1 if realProj=0 it just copy the data from image to destData
 
 	int i, j, cur_i, cur_j, offs;
 	const double tab[3] = {0.1666666666, 0.6666666666666, 0.16666666666};
@@ -60,9 +60,9 @@ void ATrous::projectionV02D(const unsigned short* srcData, float* destData, cons
 		i = 0;
 		for (j = 0; j < width; j++) {
 			offs = OFFSET(i, j);
-			destData[offs] = 0.0;
+			wDecomp_(offs) = 0.0;
 			for (cur_i = -1; cur_i < 2; cur_i++) {
-				for (cur_j = -1; cur_j < 2; cur_j++) { destData[offs] += (float)(srcData[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]); }
+				for (cur_j = -1; cur_j < 2; cur_j++) { wDecomp_(offs) += (float)(image[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]); }
 			}
 		}
 
@@ -70,40 +70,40 @@ void ATrous::projectionV02D(const unsigned short* srcData, float* destData, cons
 		for (i = 1; i < height - 1; i++) {
 			j = 0;
 			offs = OFFSET(i, j);
-			destData[offs] = 0.0;
+			wDecomp_(offs) = 0.0;
 			for (cur_i = -1; cur_i < 2; cur_i++) {
-				for (cur_j = -1; cur_j < 2; cur_j++) { destData[offs] += (float)(srcData[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]); }
+				for (cur_j = -1; cur_j < 2; cur_j++) { wDecomp_(offs) += (float)(image[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]); }
 			}
 
 
 			for (j = 1; j < width - 1; j++) {
 				offs = OFFSET(i, j);
-				destData[offs] = 0.0;
+				wDecomp_(offs) = 0.0;
 				for (cur_i = -1; cur_i < 2; cur_i++) {
 					for (cur_j = -1; cur_j < 2; cur_j++) {
-						destData[offs] += (float)(srcData[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
+						wDecomp_(offs) += (float)(image[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
 					}
 				}
 			}
 
 			j = width - 1;
 			offs = OFFSET(i, j);
-			destData[offs] = 0.0;
+			wDecomp_(offs) = 0.0;
 			for (cur_i = -1; cur_i < 2; cur_i++) {
-				for (cur_j = -1; cur_j < 2; cur_j++) { destData[offs] += (float)(srcData[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]); }
+				for (cur_j = -1; cur_j < 2; cur_j++) { wDecomp_(offs) += (float)(image[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]); }
 			}
 		}
 
 		i = height - 1;
 		for (j = 0; j < (long)width; j++) {
 			offs = OFFSET(i, j);
-			destData[offs] = 0.0;
+			wDecomp_(offs) = 0.0;
 			for (cur_i = -1; cur_i < 2; cur_i++) {
-				for (cur_j = -1; cur_j < 2; cur_j++) { destData[offs] += (float)(srcData[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]); }
+				for (cur_j = -1; cur_j < 2; cur_j++) { wDecomp_(offs) += (float)(image[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]); }
 			}
 		}
 	}
-	else { for (i = 0; i < (height * width); i++) { destData[i] = (float)srcData[i]; } }
+	else { for (i = 0; i < (height * width); i++) { wDecomp_(i) = (float)image[i]; } }
 }
 
 int ATrous::b3SplineFiltering2D(const float* srcData, float* destData, const size_t height, const size_t width, const size_t currentPlane)
@@ -166,7 +166,7 @@ int ATrous::b3SplineFiltering2D(const float* srcData, float* destData, const siz
 	return RET_OK;
 }
 
-int ATrous::ATrousDecomposition2D(unsigned short* image, const size_t height, const size_t width, FltArray& outputData, bool* planesToUse, size_t nbPlane, const bool realProj)
+int ATrous::ATrousDecomposition2D(unsigned short* image, const size_t height, const size_t width, bool* planesToUse, size_t nbPlane, const bool realProj)
 {
 	/**
 		WAVELET TRANSFORM WITH "A TROUS" ALGORITHM
@@ -196,16 +196,16 @@ int ATrous::ATrousDecomposition2D(unsigned short* image, const size_t height, co
 	tmp_.resize(height * width);
 
 	//test if nbPlane is not too big !!!
-	if ((ret = testSizes2D(height, width, outputData, planesToUse, nbPlane)) < 0) { return ret; }
+	if ((ret = testSizes2D(height, width, planesToUse, nbPlane)) < 0) { return ret; }
 
 
 	//allocation of a direct way to reach the differents planes
 	if ((waveletPlanes = (float**)malloc(sizeof(float*) * nbPlane)) == NULL) { return W_INIT_ERR; }
-	for (currentPlane = 0; currentPlane < nbPlane; currentPlane++) { waveletPlanes[currentPlane] = outputData.data + height * width * currentPlane; }
+	for (currentPlane = 0; currentPlane < nbPlane; currentPlane++) { waveletPlanes[currentPlane] = wDecomp_.data + height * width * currentPlane; }
 
 	//do the initialisation of multiresolution algorthm (initialisation of the first wavelet plane)
 	//signal is projected in V0 space
-	projectionV02D(image, outputData.data, (int)realProj, height, width);
+	projectionV02D(image, realProj, height, width);
 
 	//Projection of the input signal in each wavelet space.
 	//The signal waveletPlanes[0] is the projection of the input signal in the W1 space,

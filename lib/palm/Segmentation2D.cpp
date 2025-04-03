@@ -651,7 +651,6 @@ int Segmentation2D::watershed(FltArray& potential, USrtArray& seg, const float t
 	coor2D p;
 	coor2D p1;
 
-
 	const long sizeDataY = potential.size(1);
 	const long sizeDataX = potential.size(0);
 

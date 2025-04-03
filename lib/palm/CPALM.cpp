@@ -67,7 +67,7 @@ long CPALM::Processing()
 	long nbStruct;
 	int nbPointsSign;
 	const size_t Size = height_ * width_;
-	if ((ret = aTrousPub_.ATrousDecomposition2D(image_,height_, width_, aTrousPub_.wDecomp_, planesToUseB_.data(), nbPlane_, false)) < 0) { return ret; }
+	if ((ret = aTrousPub_.ATrousDecomposition2D(image_,height_, width_, planesToUseB_.data(), nbPlane_, false)) < 0) { return ret; }
 
 	for (long j = 0; j < Size; j++) {
 		const long offs = waveletNo_ * Size;
