@@ -97,60 +97,52 @@ long CPALM::Processing()
 	InfoStruct2D** p = (InfoStruct2D**)segmentPub_.getTabInfo();
 
 	for (int i = 1; i <= min(nbStruct, nbPointsMaxPerPlane_ - 2); ++i) {
+		initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, initSigmaX_, initSigmaY_, initTheta_);
 		switch (gaussFit_) {
-			case 0:
-			case 5: {
-				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, 0, 0, 0);
+			default: {
+				sigmaX_ = 0;
+				sigmaY_ = 0;
+				theta_ = 0;
 				rss_ = 0;
-				fillPointList(p[i]->data);
 				break;
 			}
 
-			case 1: // Sigma is constant
-			{
+			case 1: { // Sigma is constant
+			
 				// Gaussian fit of 2D
-				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, initSigmaX_, 0, 0);
 				GaussianFit2D fit;
 				fit.Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, offset_, rss_, 10, roi_);
-				sigmaY_ = sigmaX_;
-				fillPointList(p[i]->data);
+				sigmaX_ = initSigmaX_;
+				sigmaY_ = initSigmaX_;
+				theta_ = 0;
 				break;
 			}
 
 			case 2: {
 				// Gaussian fit of 2D
-				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, initSigmaX_, 0, 0);
 				GaussianFit2D_Sigma fit;
 				fit.Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, offset_, rss_, 10, roi_);
 				sigmaY_ = sigmaX_;
-				fillPointList(p[i]->data);
+				theta_ = 0;
 				break;
 			}
 
-			case 3: // Theta is constant
-			{
+			case 3: {// Theta is constant
+			
 				// Gaussian fit of 3D
-				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, initSigmaX_, initSigmaY_, initTheta_);
 				GaussianFit3D fit;
 				fit.Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, 10, roi_);
-				fillPointList(p[i]->data);
 				break;
 			}
 
 			case 4: {
 				// Gaussian fit of 3D
-				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, initSigmaX_, initSigmaY_, initTheta_);
 				GaussianFit3D_Theta fit;
-				fit.Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, 20 * 7, roi_);
-				fillPointList(p[i]->data);
+				fit.Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, 140, roi_);
 				break;
 			}
-
-			default: // Error on Gauss Fit Param
-				std::fill_n(pointsList_ + currentPoint_, 13, -1);
-				currentPoint_ += 13;
-				break;
 		}
+		fillPointList(p[i]->data);
 	}
 
 	// Blank Line
