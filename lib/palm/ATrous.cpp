@@ -4,14 +4,14 @@
 #include "tools/NoError.h"
 
 
-#define	OFFSET(i,j)	offset((i),(j),sizeDataY)
-#define	OFFSETTEST(i,j)	offsetTest((i),(j),sizeDataX,sizeDataY)
+#define	OFFSET(i,j)	offset((i),(j),width)
+#define	OFFSETTEST(i,j)	offsetTest((i),(j),height,width)
 
 
-unsigned long twoToThe(const unsigned long val)
+size_t twoToThe(const size_t val)
 {
-	if (val == 0) { return 1; }
-	return (unsigned long)1 << val;
+	if (val == 0) { return 1; }           // 2^0 = 1
+	return static_cast<size_t>(1) << val; // 1 décalé à gauche de 'val' bits
 }
 
 int ATrous::offsetTest(int i, int j, const int maxSizeI, const int maxSizeJ)
@@ -26,13 +26,10 @@ int ATrous::offsetTest(int i, int j, const int maxSizeI, const int maxSizeJ)
 
 
 //Compute the offset translate   tab[i][j] to tab[i*maxSizeJ+j]
-int ATrous::offset(const int i, const int j, const int maxSizeJ)
-{
-	return i * maxSizeJ + j;
-}
+int ATrous::offset(const int i, const int j, const int maxSizeJ) { return i * maxSizeJ + j; }
 
 
-int ATrous::testSizes2D(USrtArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long& nbPlane)
+int ATrous::testSizes2D(USrtArray& inputData, FltArray& outputData, BlArray& planesToUse, size_t& nbPlane)
 {
 	//Test inputData, outputData, planesToUse, nbPlane
 
@@ -41,7 +38,7 @@ int ATrous::testSizes2D(USrtArray& inputData, FltArray& outputData, BlArray& pla
 	if (inputData.dim() + 1 != outputData.dim()) { return W_DIM_ERR; }
 	if (inputData.size(0) != outputData.size(0) || inputData.size(1) != outputData.size(1)) { return W_SIZE_ERR; }
 	if (planesToUse.dim() != 1) { return W_DIM_ERR; }
-	for (unsigned long i = outputData.size(2); i < (unsigned long)planesToUse.size(0); i++) { planesToUse(i - 1) = false; }
+	for (size_t i = outputData.size(2); i < (size_t)planesToUse.size(0); i++) { planesToUse(i - 1) = false; }
 
 
 	if (inputData.size(0) < 9 || inputData.size(1) < 9) { return W_SIZE_ERR; }
@@ -57,8 +54,8 @@ int ATrous::testSizes2D(USrtArray& inputData, FltArray& outputData, BlArray& pla
 }
 
 
-void ATrous::projectionV02D(unsigned short* srcData, float* destData, const unsigned long realProj, const unsigned long sizeDataX,
-                            const unsigned long sizeDataY)
+void ATrous::projectionV02D(unsigned short* srcData, float* destData, const size_t realProj, const size_t height,
+                            const size_t width)
 {
 	//Makes a projection in V0 space to be in the apropriate condition of the multiresolution, 
 	//realProj make be set to 1 if realProj=0 it just copy the data from srcData to destData
@@ -67,7 +64,7 @@ void ATrous::projectionV02D(unsigned short* srcData, float* destData, const unsi
 	const double tab[3] = {0.1666666666, 0.6666666666666, 0.16666666666};
 	if (realProj == 1) {
 		i = 0;
-		for (j = 0; j < (long)sizeDataY; j++) {
+		for (j = 0; j < (long)width; j++) {
 			offs = OFFSET(i, j);
 			destData[offs] = 0.0;
 			for (cur_i = -1; cur_i < 2; cur_i++) {
@@ -76,7 +73,7 @@ void ATrous::projectionV02D(unsigned short* srcData, float* destData, const unsi
 		}
 
 
-		for (i = 1; i < (long)sizeDataX - 1; i++) {
+		for (i = 1; i < (long)height - 1; i++) {
 			j = 0;
 			offs = OFFSET(i, j);
 			destData[offs] = 0.0;
@@ -85,7 +82,7 @@ void ATrous::projectionV02D(unsigned short* srcData, float* destData, const unsi
 			}
 
 
-			for (j = 1; j < (long)sizeDataY - 1; j++) {
+			for (j = 1; j < (long)width - 1; j++) {
 				offs = OFFSET(i, j);
 				destData[offs] = 0.0;
 				for (cur_i = -1; cur_i < 2; cur_i++) {
@@ -95,7 +92,7 @@ void ATrous::projectionV02D(unsigned short* srcData, float* destData, const unsi
 				}
 			}
 
-			j = sizeDataY - 1;
+			j = width - 1;
 			offs = OFFSET(i, j);
 			destData[offs] = 0.0;
 			for (cur_i = -1; cur_i < 2; cur_i++) {
@@ -103,8 +100,8 @@ void ATrous::projectionV02D(unsigned short* srcData, float* destData, const unsi
 			}
 		}
 
-		i = sizeDataX - 1;
-		for (j = 0; j < (long)sizeDataY; j++) {
+		i = height - 1;
+		for (j = 0; j < (long)width; j++) {
 			offs = OFFSET(i, j);
 			destData[offs] = 0.0;
 			for (cur_i = -1; cur_i < 2; cur_i++) {
@@ -112,10 +109,10 @@ void ATrous::projectionV02D(unsigned short* srcData, float* destData, const unsi
 			}
 		}
 	}
-	else { for (i = 0; i < (long)(sizeDataX * sizeDataY); i++) { destData[i] = (float)srcData[i]; } }
+	else { for (i = 0; i < (long)(height * width); i++) { destData[i] = (float)srcData[i]; } }
 }
 
-int ATrous::b3SplineFiltering2D(float* srcData, float* destData, const unsigned long sizeDataX, const unsigned long sizeDataY, const unsigned long currentPlane)
+int ATrous::b3SplineFiltering2D(float* srcData, float* destData, const size_t height, const size_t width, const size_t currentPlane)
 {
 	//Makes the projection in V(x) with hte knowlage of V(x-1)
 	int i, j, offsetij;
@@ -123,67 +120,59 @@ int ATrous::b3SplineFiltering2D(float* srcData, float* destData, const unsigned 
 	const float coeffH1 = 1. / 4.;
 	const float coeffH2 = 1. / 16.;
 
-	int ret;
-
-	if ((ret = temp2_.realloc(sizeDataX, sizeDataY)) < 0) { return ret; }
-	float* buff = temp2_.data;
-
-
-	//type_border Type = Bord;
-
 	const int step = twoToThe(currentPlane);
 
 
 	//convolution in Y axe
-	for (i = 0; i < (long)sizeDataX; i++) {
+	for (i = 0; i < (long)height; i++) {
 		for (j = 0; j < 2 * step; j++) {
 			offsetij = OFFSET(i, j);
-			buff[offsetij] = coeffH0 * srcData[offsetij] + coeffH1 * (srcData[OFFSETTEST(i, j - step)] + srcData[OFFSETTEST(i, j + step)]) + coeffH2 * (
+			tmp_[offsetij] = coeffH0 * srcData[offsetij] + coeffH1 * (srcData[OFFSETTEST(i, j - step)] + srcData[OFFSETTEST(i, j + step)]) + coeffH2 * (
 				                 srcData[OFFSETTEST(i, j - 2 * step)] + srcData[OFFSETTEST(i, j + 2 * step)]);
 		}
 
-		for (j = 2 * step; j < (long)sizeDataY - 2 * step; j++) {
+		for (j = 2 * step; j < (long)width - 2 * step; j++) {
 			offsetij = OFFSET(i, j);
-			buff[offsetij] = coeffH0 * srcData[offsetij] + coeffH1 * (srcData[OFFSET(i, j - step)] + srcData[OFFSET(i, j + step)]) + coeffH2 * (
+			tmp_[offsetij] = coeffH0 * srcData[offsetij] + coeffH1 * (srcData[OFFSET(i, j - step)] + srcData[OFFSET(i, j + step)]) + coeffH2 * (
 				                 srcData[OFFSET(i, j - 2 * step)] + srcData[OFFSET(i, j + 2 * step)]);
 		}
 
-		for (j = sizeDataY - 2 * step; j < (long)sizeDataY; j++) {
+		for (j = width - 2 * step; j < (long)width; j++) {
 			offsetij = OFFSET(i, j);
-			buff[offsetij] = coeffH0 * srcData[offsetij] + coeffH1 * (srcData[OFFSETTEST(i, j - step)] + srcData[OFFSETTEST(i, j + step)]) + coeffH2 * (
+			tmp_[offsetij] = coeffH0 * srcData[offsetij] + coeffH1 * (srcData[OFFSETTEST(i, j - step)] + srcData[OFFSETTEST(i, j + step)]) + coeffH2 * (
 				                 srcData[OFFSETTEST(i, j - 2 * step)] + srcData[OFFSETTEST(i, j + 2 * step)]);
 		}
 	}
 
 	//convolution in X axe
 	for (i = 0; i < 2 * step; i++) {
-		for (j = 0; j < (long)sizeDataY; j++) {
+		for (j = 0; j < (long)width; j++) {
 			offsetij = OFFSET(i, j);
-			destData[offsetij] = coeffH0 * buff[offsetij] + coeffH1 * (buff[OFFSETTEST(i - step, j)] + buff[OFFSETTEST(i + step, j)]) + coeffH2 * (
-				                     buff[OFFSETTEST(i - 2 * step, j)] + buff[OFFSETTEST(i + 2 * step, j)]);
+			destData[offsetij] = coeffH0 * tmp_[offsetij] + coeffH1 * (tmp_[OFFSETTEST(i - step, j)] + tmp_[OFFSETTEST(i + step, j)]) + coeffH2 * (
+				                     tmp_[OFFSETTEST(i - 2 * step, j)] + tmp_[OFFSETTEST(i + 2 * step, j)]);
 		}
 	}
 
-	for (i = 2 * step; i < (long)sizeDataX - 2 * step; i++) {
-		for (j = 0; j < (long)sizeDataY; j++) {
+	for (i = 2 * step; i < (long)height - 2 * step; i++) {
+		for (j = 0; j < (long)width; j++) {
 			offsetij = OFFSET(i, j);
-			destData[offsetij] = coeffH0 * buff[offsetij] + coeffH1 * (buff[OFFSET(i - step, j)] + buff[OFFSET(i + step, j)]) + coeffH2 * (
-				                     buff[OFFSET(i - 2 * step, j)] + buff[OFFSET(i + 2 * step, j)]);
+			destData[offsetij] = coeffH0 * tmp_[offsetij] + coeffH1 * (tmp_[OFFSET(i - step, j)] + tmp_[OFFSET(i + step, j)]) + coeffH2 * (
+				                     tmp_[OFFSET(i - 2 * step, j)] + tmp_[OFFSET(i + 2 * step, j)]);
 		}
 	}
 
-	for (i = sizeDataX - 2 * step; i < (long)sizeDataX; i++) {
-		for (j = 0; j < (long)sizeDataY; j++) {
+	for (i = height - 2 * step; i < (long)height; i++) {
+		for (j = 0; j < (long)width; j++) {
 			offsetij = OFFSET(i, j);
-			destData[offsetij] = coeffH0 * buff[offsetij] + coeffH1 * (buff[OFFSETTEST(i - step, j)] + buff[OFFSETTEST(i + step, j)]) + coeffH2 * (
-				                     buff[OFFSETTEST(i - 2 * step, j)] + buff[OFFSETTEST(i + 2 * step, j)]);
+			destData[offsetij] = coeffH0 * tmp_[offsetij] + coeffH1 * (tmp_[OFFSETTEST(i - step, j)] + tmp_[OFFSETTEST(i + step, j)]) + coeffH2 * (
+				                     tmp_[OFFSETTEST(i - 2 * step, j)] + tmp_[OFFSETTEST(i + 2 * step, j)]);
 		}
 	}
 
 	return RET_OK;
 }
 
-int ATrous::ATrousDecomposition2D(USrtArray& inputData, FltArray& outputData, BlArray& planesToUse, unsigned long nbPlane, const bool realProj)
+int ATrous::ATrousDecomposition2D(USrtArray& inputData, FltArray& outputData, BlArray& planesToUse, size_t nbPlane, const bool realProj)
 {
 	/**
 		WAVELET TRANSFORM WITH "A TROUS" ALGORITHM
@@ -207,11 +196,12 @@ int ATrous::ATrousDecomposition2D(USrtArray& inputData, FltArray& outputData, Bl
 
 
 	int ret;
-	unsigned long currentPlane;
+	size_t currentPlane;
 	float** waveletPlanes;
 
-	const unsigned long sizeDataX = inputData.size(0);
-	const unsigned long sizeDataY = inputData.size(1);
+	const size_t height = inputData.size(0);
+	const size_t width = inputData.size(1);
+	tmp_.resize(height * width);
 
 	//test if nbPlane is not too big !!!
 	if ((ret = testSizes2D(inputData, outputData, planesToUse, nbPlane)) < 0) { return ret; }
@@ -219,24 +209,24 @@ int ATrous::ATrousDecomposition2D(USrtArray& inputData, FltArray& outputData, Bl
 
 	//allocation of a direct way to reach the differents planes
 	if ((waveletPlanes = (float**)malloc(sizeof(float*) * nbPlane)) == NULL) { return W_INIT_ERR; }
-	for (currentPlane = 0; currentPlane < nbPlane; currentPlane++) { waveletPlanes[currentPlane] = outputData.data + sizeDataX * sizeDataY * currentPlane; }
+	for (currentPlane = 0; currentPlane < nbPlane; currentPlane++) { waveletPlanes[currentPlane] = outputData.data + height * width * currentPlane; }
 
 	//do the initialisation of multiresolution algorthm (initialisation of the first wavelet plane)
 	//signal is projected in V0 space
-	projectionV02D(inputData.data, outputData.data, (int)realProj, sizeDataX, sizeDataY);
+	projectionV02D(inputData.data, outputData.data, (int)realProj, height, width);
 
 	//Projection of the input signal in each wavelet space.
 	//The signal waveletPlanes[0] is the projection of the input signal in the W1 space,
 	//the signal waveletPlanes[x] is the projection of the input signal in the W(x+1) space...
-	for (currentPlane = 0; currentPlane < (unsigned long)(nbPlane - 1); currentPlane++) {
+	for (currentPlane = 0; currentPlane < (nbPlane - 1); currentPlane++) {
 		//Firstly it computes in waveletPlanes[x+1] the projection of V(x) with the knowlege of the projection in V(x-1)
-		if ((ret = b3SplineFiltering2D(waveletPlanes[currentPlane], waveletPlanes[currentPlane + 1], sizeDataX, sizeDataY, currentPlane)) < 0) { return ret; }
+		if ((ret = b3SplineFiltering2D(waveletPlanes[currentPlane], waveletPlanes[currentPlane + 1], height, width, currentPlane)) < 0) { return ret; }
 		//Secondly it computes in waveletPlanes[x] the projection of W(x+1)
 		//As proj( W(x+1) ) = proj( V(x) ) - proj( V(x+1) ) ;	proj(Vx) is in waveletPlanes[x+1] 
 		//and proj(Vx+1) is in waveletPlanes[x+2]
 		//	waveletPlanes[x+1][*]=waveletPlanes[x+1][*]-waveletPlanes[x+2][*]
 
-		for (unsigned long i = 0; i < (unsigned long)(sizeDataX * sizeDataY); i++) { waveletPlanes[currentPlane][i] -= waveletPlanes[currentPlane + 1][i]; }
+		for (size_t i = 0; i < (height * width); i++) { waveletPlanes[currentPlane][i] -= waveletPlanes[currentPlane + 1][i]; }
 	}
 
 	free(waveletPlanes);
