@@ -29,21 +29,17 @@ int ATrous::offsetTest(int i, int j, const int maxSizeI, const int maxSizeJ)
 int ATrous::offset(const int i, const int j, const int maxSizeJ) { return i * maxSizeJ + j; }
 
 
-int ATrous::testSizes2D(USrtArray& in, FltArray& out, bool* planesToUse, size_t& nbPlane)
+int ATrous::testSizes2D(const size_t height, const size_t width, FltArray& out, bool* planesToUse, size_t& nbPlane)
 {
 	//Test in, out, planesToUse, nbPlane
 
-	if (!in.isThereData()) { return W_INIT_ERR; }
 	if (!out.isThereData()) { return W_INIT_ERR; }
-	if (in.dim() + 1 != out.dim()) { return W_DIM_ERR; }
-	if (in.size(0) != out.size(0) || in.size(1) != out.size(1)) { return W_SIZE_ERR; }
 	for (size_t i = out.size(2); i < 9; ++i) { planesToUse[i - 1] = false; }
 
 
-	if (in.size(0) < 9 || in.size(1) < 9) { return W_SIZE_ERR; }
 	if (nbPlane < 2) { return W_SIZE_ERR; }
 	long sizeWavelet = twoToThe(nbPlane + 1);
-	while (in.size(0) <= sizeWavelet || in.size(1) <= sizeWavelet) {
+	while (height <= sizeWavelet || width <= sizeWavelet) {
 		nbPlane--;
 		sizeWavelet = twoToThe(nbPlane + 1);
 	}
@@ -170,13 +166,13 @@ int ATrous::b3SplineFiltering2D(const float* srcData, float* destData, const siz
 	return RET_OK;
 }
 
-int ATrous::ATrousDecomposition2D(USrtArray& inputData, FltArray& outputData, bool* planesToUse, size_t nbPlane, const bool realProj)
+int ATrous::ATrousDecomposition2D(unsigned short* image, const size_t height, const size_t width, FltArray& outputData, bool* planesToUse, size_t nbPlane, const bool realProj)
 {
 	/**
 		WAVELET TRANSFORM WITH "A TROUS" ALGORITHM
 
-		Makes the transformation of the 2D signal "inputData".
-		"inputData" must be a USrtArray array of 2 dimentions ( 2D image).
+		Makes the transformation of the 2D signal "image".
+		"image" must be a USrtArray array of 2 dimentions ( 2D image).
 
 
 		The algorithm makes a decompostion of the input signal in "outputData.size(2)" wavelet planes ("outputData").
@@ -197,12 +193,10 @@ int ATrous::ATrousDecomposition2D(USrtArray& inputData, FltArray& outputData, bo
 	size_t currentPlane;
 	float** waveletPlanes;
 
-	const size_t height = inputData.size(0);
-	const size_t width = inputData.size(1);
 	tmp_.resize(height * width);
 
 	//test if nbPlane is not too big !!!
-	if ((ret = testSizes2D(inputData, outputData, planesToUse, nbPlane)) < 0) { return ret; }
+	if ((ret = testSizes2D(height, width, outputData, planesToUse, nbPlane)) < 0) { return ret; }
 
 
 	//allocation of a direct way to reach the differents planes
@@ -211,7 +205,7 @@ int ATrous::ATrousDecomposition2D(USrtArray& inputData, FltArray& outputData, bo
 
 	//do the initialisation of multiresolution algorthm (initialisation of the first wavelet plane)
 	//signal is projected in V0 space
-	projectionV02D(inputData.data, outputData.data, (int)realProj, height, width);
+	projectionV02D(image, outputData.data, (int)realProj, height, width);
 
 	//Projection of the input signal in each wavelet space.
 	//The signal waveletPlanes[0] is the projection of the input signal in the W1 space,

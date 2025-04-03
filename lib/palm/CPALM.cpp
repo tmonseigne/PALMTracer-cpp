@@ -18,6 +18,7 @@ CPALM::CPALM(unsigned short* image, double* points, const unsigned long pointsLi
 	nPointsMaxPerPlane_ = nPoints_ / N_SEGMENTS;
 	height_ = height;
 	width_ = width;
+	size_ = height_ * width_;
 	waveletNo_ = waveletNo;
 	thresholdVal_ = thresholdVal;
 	watershedRatio_ = watershedRatio;
@@ -47,7 +48,6 @@ CPALM::CPALM(unsigned short* image, double* points, const unsigned long pointsLi
 		structFiltParam_[2] = intMin_;
 	}
 
-	if (input_.alloc(image_, height_, width_) < 0) { return; }
 	if (aTrousPub_.wDecomp_.alloc(height_, width_, waveletNo + 2) < 0) { return; }
 	if (segPub_.realloc(height_, width_) < 0) { return; }
 	if (outputPub_.alloc(height_, width_) < 0) { return; }
@@ -67,7 +67,7 @@ long CPALM::Processing()
 	long nbStruct;
 	int nbPointsSign;
 	const size_t Size = height_ * width_;
-	if ((ret = aTrousPub_.ATrousDecomposition2D(input_, aTrousPub_.wDecomp_, planesToUseB_.data(), nbPlane_, false)) < 0) { return ret; }
+	if ((ret = aTrousPub_.ATrousDecomposition2D(image_,height_, width_, aTrousPub_.wDecomp_, planesToUseB_.data(), nbPlane_, false)) < 0) { return ret; }
 
 	for (long j = 0; j < Size; j++) {
 		const long offs = waveletNo_ * Size;

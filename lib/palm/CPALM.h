@@ -24,7 +24,7 @@ public:
 private:
 	unsigned short* image_;
 	double* points_;
-	size_t height_, width_, nPoints_, nPointsMaxPerPlane_, waveletNo_, currentPoint_, roi_;
+	size_t height_, width_, size_, nPoints_, nPointsMaxPerPlane_, waveletNo_, currentPoint_, roi_;
 	double thresholdVal_, volMin_, intMin_, watershedRatio_;
 
 	size_t gaussFit_;
@@ -40,7 +40,6 @@ private:
 	USrtArray segPub_;
 	FltArray outputPub_;
 	Segmentation2D segmentPub_;
-	USrtArray input_;
 	std::array<bool, N_PLANES> planesToUseB_;
 	size_t nbPlane_;
 
