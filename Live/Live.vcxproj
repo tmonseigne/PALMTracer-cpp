@@ -132,7 +132,6 @@
     <ClCompile Include="..\lib\palm\segmentation_2D.cpp" />
     <ClCompile Include="..\lib\palm\watershed_2D.cpp" />
     <ClCompile Include="..\lib\tools\arrayType.cpp" />
-    <ClCompile Include="..\lib\tools\BlArray.cpp" />
     <ClCompile Include="..\lib\tools\FltArray.cpp" />
     <ClCompile Include="..\lib\tools\miscTools.cpp" />
     <ClCompile Include="..\lib\tools\operators.cpp" />
@@ -207,7 +206,6 @@
     <ClInclude Include="..\lib\palm\segmentation_2D.h" />
     <ClInclude Include="..\lib\tools\allDataLib.h" />
     <ClInclude Include="..\lib\tools\arrayType.h" />
-    <ClInclude Include="..\lib\tools\BlArray.h" />
     <ClInclude Include="..\lib\tools\errc.h" />
     <ClInclude Include="..\lib\tools\FltArray.h" />
     <ClInclude Include="..\lib\tools\lists.h" />

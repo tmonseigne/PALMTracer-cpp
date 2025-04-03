@@ -222,14 +222,6 @@ DataType&ArrayType::operator()(long i, long j, long k, long l) { return data[((i
 #undef ArrayType2
 #undef DataType2
 
-#define DataType2 bool
-#define BOOL_TYPE1
-#define ArrayType2 BlArray
-#include "operators.cpp"
-#undef BOOL_TYPE1
-#undef ArrayType2
-#undef DataType2
-
 //**************		++		*********************
 #ifndef BOOL_TYPE
 ArrayType& ArrayType::operator++()

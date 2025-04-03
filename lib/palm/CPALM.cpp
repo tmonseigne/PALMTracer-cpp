@@ -47,7 +47,6 @@ CPALM::CPALM(unsigned short* image, double* points, const unsigned long pointsLi
 		structFiltParam_[2] = intMin_;
 	}
 
-	input_ = new USrtArray();
 	if (input_.alloc(image_, height_, width_) < 0) { return; }
 	if (aTrousPub_.wDecomp_.alloc(height_, width_, waveletNo + 2) < 0) { return; }
 	if (segPub_.realloc(height_, width_) < 0) { return; }
@@ -55,11 +54,11 @@ CPALM::CPALM(unsigned short* image, double* points, const unsigned long pointsLi
 
 
 	nbPlane_ = 0;
-	for (int i = 0; i < 9; i++) {
-		(planesToUseB_)(i) = planesToUse_[i] != 0;
-		if ((planesToUseB_)(i)) { nbPlane_ = i + 2; }
+	for (size_t i = 0; i < N_PLANES; i++) {
+		planesToUseB_[i] = planesToUse_[i] != 0;
+		if (planesToUseB_[i]) { nbPlane_ = i + 2; }
 	}
-	(planesToUseB_)(8) = false;
+	planesToUseB_[8] = false;
 }
 
 long CPALM::Processing()
@@ -68,7 +67,7 @@ long CPALM::Processing()
 	long nbStruct;
 	int nbPointsSign;
 	const size_t Size = height_ * width_;
-	if ((ret = aTrousPub_.ATrousDecomposition2D(input_, aTrousPub_.wDecomp_, planesToUseB_, nbPlane_, false)) < 0) { return ret; }
+	if ((ret = aTrousPub_.ATrousDecomposition2D(input_, aTrousPub_.wDecomp_, planesToUseB_.data(), nbPlane_, false)) < 0) { return ret; }
 
 	for (long j = 0; j < Size; j++) {
 		const long offs = waveletNo_ * Size;

@@ -85,7 +85,6 @@ public:
 	ArrayType& operator+=(double val);
 	ArrayType& operator+=(const USrtArray& arrayType);
 	ArrayType& operator+=(const FltArray& arrayType);
-	ArrayType& operator+=(const BlArray& arrayType);
 #endif
 
 
@@ -115,7 +114,6 @@ public:
 	ArrayType& operator*=(double val);
 	ArrayType& operator*=(const USrtArray& arrayType);
 	ArrayType& operator*=(const FltArray& arrayType);
-	ArrayType& operator*=(const BlArray& arrayType);
 #endif
 
 	//**************		/=		*********************=
@@ -141,10 +139,8 @@ public:
 	ArrayType& operator=(unsigned long val);
 	ArrayType& operator=(float val);
 	ArrayType& operator=(double val);
-	ArrayType& operator=(bool val);
 	ArrayType& operator=(const USrtArray& arrayType);
 	ArrayType& operator=(const FltArray& arrayType);
-	ArrayType& operator=(const BlArray& arrayType);
 
 #ifndef BOOL_TYPE
 	ArrayType& operator++();

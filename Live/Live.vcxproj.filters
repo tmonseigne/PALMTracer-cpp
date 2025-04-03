@@ -64,9 +64,6 @@
     <ClCompile Include="..\lib\tools\arrayType.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tools\BlArray.cpp">
-      <Filter>Tools</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\tools\FltArray.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
@@ -114,9 +111,6 @@
       <Filter>Palm</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tools\arrayType.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tools\BlArray.h">
       <Filter>Tools</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tools\errc.h">

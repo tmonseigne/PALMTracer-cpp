@@ -9,6 +9,7 @@
 //class PALM_API CPALM {
 
 constexpr size_t N_SEGMENTS = 13;
+constexpr size_t N_PLANES = 9;
 
 class CPALM
 {
@@ -32,15 +33,15 @@ private:
 	std::array<double, N_SEGMENTS> structFiltParam_;
 	std::array<unsigned short, N_SEGMENTS> structFiltParamUse_;
 	std::array<size_t, 10> planesToUse_;
-	std::array<size_t, 9> operators_;
-	std::array<double, 9> threshold_;
+	std::array<size_t, N_PLANES> operators_;
+	std::array<double, N_PLANES> threshold_;
 
 	ATrous aTrousPub_;
 	USrtArray segPub_;
 	FltArray outputPub_;
 	Segmentation2D segmentPub_;
 	USrtArray input_;
-	BlArray planesToUseB_ = BlArray(9);
+	std::array<bool, N_PLANES> planesToUseB_;
 	size_t nbPlane_;
 
 	// Gaussian Fit Parameters
