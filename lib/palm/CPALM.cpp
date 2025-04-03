@@ -125,12 +125,12 @@ long CPALM::CPALMProcessing()
 
 			case 1: // Sigma is constant
 			{
-				float y0 = p[i]->data.moment.x;
-				float x0 = p[i]->data.moment.y;
-				float I0 = 0.;
-				float sigmaX = _sigmaX;
-				float offset = 0.;
-				float RSS = -1.;
+				double y0 = p[i]->data.moment.x;
+				double x0 = p[i]->data.moment.y;
+				double I0 = 0.;
+				double sigmaX = _sigmaX;
+				double offset = 0.;
+				double RSS = -1.;
 
 				// Gaussian fit of 2D
 				GaussianFit2D* fit = new GaussianFit2D();
@@ -156,12 +156,12 @@ long CPALM::CPALMProcessing()
 			}
 
 			case 2: {
-				float y0 = p[i]->data.moment.x;
-				float x0 = p[i]->data.moment.y;
-				float I0 = 0.;
-				float sigmaX = _sigmaX;
-				float offset;
-				float RSS = -1.;
+				double y0 = p[i]->data.moment.x;
+				double x0 = p[i]->data.moment.y;
+				double I0 = 0.;
+				double sigmaX = _sigmaX;
+				double offset;
+				double RSS = -1.;
 
 				// Gaussian fit of 2D
 				GaussianFit2D_Sigma* fit = new GaussianFit2D_Sigma();
@@ -188,14 +188,14 @@ long CPALM::CPALMProcessing()
 
 			case 3: // Theta is constant
 			{
-				float y0 = p[i]->data.moment.x;
-				float x0 = p[i]->data.moment.y;
-				float I0 = 0./*p[i]->data.intensity*/; // p[i]->data.max.val - p[i]->data.min.val
-				float sigmaX = _sigmaX;
-				float sigmaY = _sigmaY;
-				float angle = _angle;
-				float offset = 0.; // p[i]->data.min.val
-				float RSS = -1.;
+				double y0 = p[i]->data.moment.x;
+				double x0 = p[i]->data.moment.y;
+				double I0 = 0./*p[i]->data.intensity*/; // p[i]->data.max.val - p[i]->data.min.val
+				double sigmaX = _sigmaX;
+				double sigmaY = _sigmaY;
+				double angle = _angle;
+				double offset = 0.; // p[i]->data.min.val
+				double RSS = -1.;
 
 				// Gaussian fit of 3D
 
@@ -221,14 +221,14 @@ long CPALM::CPALMProcessing()
 			}
 
 			case 4: {
-				float y0 = p[i]->data.moment.x;
-				float x0 = p[i]->data.moment.y;
-				float I0 = 0./*p[i]->data.intensity*/; // p[i]->data.max.val - p[i]->data.min.val
-				float sigmaX = _sigmaX;
-				float sigmaY = _sigmaY;
-				float angle = _angle;
-				float offset = 0.; // p[i]->data.min.val
-				float RSS = -1.;
+				double y0 = p[i]->data.moment.x;
+				double x0 = p[i]->data.moment.y;
+				double I0 = 0./*p[i]->data.intensity*/; // p[i]->data.max.val - p[i]->data.min.val
+				double sigmaX = _sigmaX;
+				double sigmaY = _sigmaY;
+				double angle = _angle;
+				double offset = 0.; // p[i]->data.min.val
+				double RSS = -1.;
 
 				// Gaussian fit of 3D
 
@@ -255,14 +255,14 @@ long CPALM::CPALMProcessing()
 
 			case 6: // Theta is constant --> for 3D calibration
 			{
-				float y0 = p[i]->data.moment.x;
-				float x0 = p[i]->data.moment.y;
-				float I0 = 0./*p[i]->data.intensity*/; // p[i]->data.max.val - p[i]->data.min.val
-				float sigmaX = _sigmaX;
-				float sigmaY = _sigmaY;
-				float angle = _angle;
-				float offset = 0.; // p[i]->data.min.val
-				float RSS = -1.;
+				double y0 = p[i]->data.moment.x;
+				double x0 = p[i]->data.moment.y;
+				double I0 = 0./*p[i]->data.intensity*/; // p[i]->data.max.val - p[i]->data.min.val
+				double sigmaX = _sigmaX;
+				double sigmaY = _sigmaY;
+				double angle = _angle;
+				double offset = 0.; // p[i]->data.min.val
+				double RSS = -1.;
 
 				// Gaussian fit of 3D
 

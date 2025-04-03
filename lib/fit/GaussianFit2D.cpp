@@ -1,32 +1,32 @@
 #include "GaussianFit2D.h"
+
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdlib>
-#include <ctime>
 #include <iostream>
 #include <numeric>
 #include <ranges>
 
-float GaussianFit2D::lm_matx(const std::vector<unsigned int>& t, const float* p, const std::vector<float>& dat, const std::vector<float>& weight,
-                             float* alpha, float* beta, std::vector<float>& hat)
+double GaussianFit2D::lm_matx(const std::vector<size_t>& t, const double* p, const std::vector<double>& dat, const std::vector<double>& weight,
+                              double* alpha, double* beta, std::vector<double>& hat)
 {
-	std::vector<float> delta(n_);
+	std::vector<double> delta(n_);
 	for (size_t i = 0; i < n_; ++i) {
-		hat[i] = psf(static_cast<float>(t[i * 2]) - p[1], static_cast<float>(t[i * 2 + 1]) - p[2], p[0], sigma_, p[3]);
+		hat[i] = psf(static_cast<double>(t[i * 2]) - p[1], static_cast<double>(t[i * 2 + 1]) - p[2], p[0], sigma_, p[3]);
 		delta[i] = dat[i] - hat[i];
 	}
 
 	// Computing Jacobian matrix (dydp)
-	std::vector<float> dydp(n_ * nParam_);
+	std::vector<double> dydp(n_ * nParam_);
 	for (size_t i = 0; i < n_; ++i) {
-		deriv(&dydp[i * nParam_], static_cast<float>(t[i * 2]) - p[1], static_cast<float>(t[i * 2 + 1]) - p[2], p[0], sigma_, false);
+		deriv(&dydp[i * nParam_], static_cast<double>(t[i * 2]) - p[1], static_cast<double>(t[i * 2 + 1]) - p[2], p[0], sigma_, false);
 	}
 
 	return chi2(alpha, beta, dydp, weight, delta);
 }
 
-void GaussianFit2D::initP(const float x, const float y)
+void GaussianFit2D::initP(const double x, const double y)
 {
 	pMin_ = {0, x - 1, y - 1, 0};
 	p_ = {1000, x, y, 1000};
@@ -34,114 +34,92 @@ void GaussianFit2D::initP(const float x, const float y)
 }
 
 
-void GaussianFit2D::Run(const unsigned short* image, unsigned long sizeX, unsigned long sizeY, float& x, float& y, float& intensity,
-                        float& sigma, float& offset, float& rss, int iterNum, unsigned short roi)
+void GaussianFit2D::Run(const unsigned short* image, const size_t sizeX, const size_t sizeY,
+                        double& x, double& y, double& intensity, double& sigma, double& offset,
+                        double& rss, const size_t iterNum, size_t roi)
 {
 	if (roi % 2 == 0) { roi--; } // Not present in GPU original file why ?
-
 	n_ = roi * roi;
-	const unsigned short Half = roi / 2;
 	sigma_ = sigma;
 
-	float X2;
-	if (x >= Half && x <= sizeX - Half - 1 && y >= Half && y <= sizeY - Half - 1) {
+	const size_t Half = roi / 2, Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
+	if (Half <= Ux && Ux <= sizeX - Half - 1 && Half <= Uy && Uy <= sizeY - Half - 1) {
 		initP(x, y);
 
-		std::vector<float> dat(n_), hat(n_), weight(n_);
-		std::vector<unsigned int> t(2 * n_);
+		// Création des variables
+		double lambda = LAMBDA_0;
+
+		std::array<double, N_PARAM2> alpha, alphaR, alphaRi;
+		std::array<double, N_PARAM> beta, beta_l_deltaP, p_try, deltaP;
+		std::vector<double> dat(n_), hat(n_), weight(n_), deltaY(n_), deltaY_w(n_);
+		std::vector<size_t> t(2 * n_);
 
 		// Initialization of dat & t (A vérifier)
-		float minI, maxI; // Not present in GPU original file why ?
+		double minI, maxI; // Not present in GPU original file why ?
 		preComputeFit(minI, maxI, image, sizeX, static_cast<int>(x), static_cast<int>(y), dat, weight, t, roi);
 		p_[0] = maxI - minI; // Not present in GPU original file why ?
 		p_[3] = minI;        // Not present in GPU original file why ?
 
-		float lambda;
-		std::array<float, N_PARAM2> alpha;
-		std::array<float, N_PARAM> beta;
+		double x2 = lm_matx(t, p_.data(), dat, weight, alpha.data(), beta.data(), hat);
+		double x2_old = x2;
 
-		float X2_old;
-		X2 = lm_matx(t, p_.data(), dat, weight, alpha.data(), beta.data(), hat);
+		// Trouver la valeur absolue maximale
+		double m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::abs(b); }));
 
-		float max_ = 0;
-		for (int i = 0; i < nParam_; ++i) { max_ = std::max(max_, abs(beta[i])); }
+		bool stop = false;
+		if (m < EPSILON_1) { stop = true; }
 
-		unsigned int stop = 0;
-		if (max_ < EPSILON_1) { stop = 1; }
-
-		lambda = LAMBDA_0;
-		X2_old = X2;
-
-		unsigned short iteration = 0;
-
-		std::array<float, N_PARAM2> inter;
-		std::array<float, N_PARAM2> inter1;
-		std::vector<float> inter2(n_);
-		std::array<float, N_PARAM> inter3;
-
-		std::array<float, N_PARAM> p_try;
-		std::vector<float> delta_y(n_);
-		float X2_try;
-		float m;
-		float rho;
-		std::array<float, N_PARAM> delta_p; // Déclaré une seule fois avant la boucle
-
-		while (stop == 0 && iteration < iterNum) // Main Loop
-		{
+		size_t iteration = 0;
+		while (!stop) { // Main Loop
 			iteration++;
-			delta_p.fill(0.0f);
+			deltaP.fill(0.0);
 
-			// Copy alpha to inter
-			for (int i = 0; i < nParam2_; ++i) { inter[i] = alpha[i]; }
-			for (int i = 0; i < nParam_; ++i) { inter[i * nParam_ + i] += lambda * alpha[i * nParam_ + i]; }
+			std::copy_n(alpha.begin(), nParam2_, alphaR.begin()); // Copy du alpha
+			for (size_t i = 0; i < nParam_; ++i) { alphaR[i * nParam_ + i] += lambda * alpha[i * nParam_ + i]; }
+			inverse(alphaR.data(), alphaRi.data());
 
-			inverse(inter.data(), inter1.data());
+			for (size_t i = 0; i < nParam_; ++i) { for (size_t j = 0; j < nParam_; ++j) { deltaP[i] += alphaRi[i * nParam_ + j] * beta[j]; } }
 
-			for (int i = 0; i < nParam_; ++i) {
-				for (int cursor = 0; cursor < nParam_; cursor++) { delta_p[i] += inter1[i * nParam_ + cursor] * beta[cursor]; }
-			}
-
-			for (int i = 0; i < nParam_; ++i) {
-				p_try[i] = p_[i] + delta_p[i];
+			for (size_t i = 0; i < nParam_; ++i) {
+				p_try[i] = p_[i] + deltaP[i];
 				p_try[i] = std::min(std::max(pMin_[i], p_try[i]), pMax_[i]);
 			}
 
-			for (int i = 0; i < n_; ++i) { delta_y[i] = dat[i] - psf((float)t[i * 2] - p_try[1], (float)t[i * 2 + 1] - p_try[2], p_try[0], sigma_, p_try[3]); }
+			for (size_t i = 0; i < n_; ++i) {
+				deltaY[i] = dat[i] - psf(static_cast<double>(t[i * 2]) - p_try[1], static_cast<double>(t[i * 2 + 1]) - p_try[2], p_try[0], sigma_, p_try[3]);
+			}
 
-			for (int i = 0; i < n_; ++i) { inter2[i] = delta_y[i] * weight[i]; } // delta_y .* weight
+			// deltaY .* weight
+			std::ranges::transform(deltaY, weight, deltaY_w.begin(), std::multiplies<>());
+			const double X2_Try = std::transform_reduce(deltaY.begin(), deltaY.end(), deltaY_w.begin(), 0.0, std::plus<double>(), std::multiplies<double>());
 
-			X2_try = 0;
-			for (int i = 0; i < n_; ++i) { X2_try += delta_y[i] * inter2[i]; }
-			for (int i = 0; i < nParam_; ++i) { inter3[i] = lambda * delta_p[i] + beta[i]; } // lambda * delta_p + beta
+			// lambda * deltaP + beta
+			std::ranges::transform(deltaP, beta, beta_l_deltaP.begin(), [lambda](const double d, const double b) { return lambda * d + b; });
+
+			m = std::inner_product(deltaP.begin(), deltaP.end(), beta_l_deltaP.begin(), 0.0);
+
+			if ((x2 - X2_Try) / (2 * m) > EPSILON_4) { // it IS significantly better
+				x2_old = x2;
+				std::copy_n(p_try.begin(), nParam_, p_.begin()); // accept p_try
+
+				x2 = lm_matx(t, p_.data(), dat, weight, alpha.data(), beta.data(), hat);
+				lambda = std::max(lambda / LAMBDA_DN_FAC, LAMBDA_EPSILON_MIN);
+			}
+			else {           // it IS NOT better
+				x2 = x2_old; // do not accept a_try
+				lambda = std::min(lambda * LAMBDA_UP_FAC, LAMBDA_EPSILON_MAX);
+			}
 
 			m = 0;
-			for (int i = 0; i < nParam_; ++i) { m += delta_p[i] * inter3[i]; }
-			m *= 2;
+			for (size_t i = 0; i < nParam_; ++i) { m = std::max(m, abs(deltaP[i] / p_[i])); }
 
-			rho = (X2 - X2_try) / m;
+			if (m < EPSILON_2 && iteration > 2) { stop = true; }
+			if (x2 / static_cast<double>(n_) < EPSILON_3 && iteration > 2) { stop = true; }
 
-			if (rho > EPSILON_4) // it IS significantly better
-			{
-				X2_old = X2;
-				for (int i = 0; i < nParam_; ++i) { p_[i] = p_try[i]; } // accept p_try
-				X2 = lm_matx(t, p_.data(), dat, weight, alpha.data(), beta.data(), hat);
-				lambda = std::max(lambda / LAMBDA_DN_FAC, 1.e-7f);
-			}
-			else // it IS NOT better
-			{
-				X2 = X2_old; // do not accept a_try
-				lambda = std::min(lambda * LAMBDA_UP_FAC, 1.e7f);
-			}
+			m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::abs(b); }));
 
-			max_ = 0;
-			for (int i = 0; i < nParam_; ++i) { max_ = std::max(max_, abs(delta_p[i] / p_[i])); }
-			if (max_ < EPSILON_2 && iteration > 2) { stop = 1; }
-			if (X2 / n_ < EPSILON_3 && iteration > 2) { stop = 1; }
-
-			max_ = 0;
-			for (int i = 0; i < nParam_; ++i) { max_ = std::max(max_, abs(beta[i])); }
-			if (max_ < EPSILON_1 && iteration > 2) { stop = 1; }
-			if (iteration == iterNum) { stop = 1; }
+			if (m < EPSILON_1 && iteration > 2) { stop = true; }
+			if (iteration >= iterNum) { stop = true; }
 		}
 
 		x = p_[1];

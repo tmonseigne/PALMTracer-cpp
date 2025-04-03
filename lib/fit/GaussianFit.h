@@ -1,39 +1,39 @@
 #pragma once
 #include <vector>
 
-constexpr float EPSILON_1 = 1e-6f;
-constexpr float EPSILON_2 = 1e-6f;
-constexpr float EPSILON_3 = 1e-5f;
-constexpr float EPSILON_4 = 1e-2f;
-constexpr float LAMBDA_0 = 1e-2f;
-constexpr float LAMBDA_EPSILON_MAX = 1e7f;
-constexpr float LAMBDA_EPSILON_MIN = 1e-7f;
-constexpr float LAMBDA_UP_FAC = 11;
-constexpr float LAMBDA_DN_FAC = 9;
+constexpr double EPSILON_1 = 1e-6;
+constexpr double EPSILON_2 = 1e-6;
+constexpr double EPSILON_3 = 1e-5;
+constexpr double EPSILON_4 = 1e-2;
+constexpr double LAMBDA_0 = 1e-2;
+constexpr double LAMBDA_EPSILON_MAX = 1e7;
+constexpr double LAMBDA_EPSILON_MIN = 1e-7;
+constexpr double LAMBDA_UP_FAC = 11;
+constexpr double LAMBDA_DN_FAC = 9;
 
 class GaussianFit
 {
 public:
-	unsigned short n_, nParam_, nParam2_;
+	size_t n_, nParam_, nParam2_;
 
 	GaussianFit() : n_(0), nParam_(0), nParam2_(0) { }
 	virtual ~GaussianFit() = default;
 
 protected:
-	static float psf(float x, float y, float i0, float sigma, float offset);
-	static float psf(float x, float y, float i0, float sigmaX, float sigmaY, float theta, float offset);
+	static double psf(double x, double y, double i0, double sigma, double offset);
+	static double psf(double x, double y, double i0, double sigmaX, double sigmaY, double theta, double offset);
 
-	static void deriv(float* out, float x, float y, float i0, float sigma, bool has_sigma);
-	static void deriv(float* out, float x, float y, float i0, float sigmaX, float sigmaY, float theta, bool has_theta);
+	static void deriv(double* out, double x, double y, double i0, double sigma, bool has_sigma);
+	static void deriv(double* out, double x, double y, double i0, double sigmaX, double sigmaY, double theta, bool has_theta);
 
-	float chi2(float* alpha, float* beta, const std::vector<float>& dydp, const std::vector<float>& weight, const std::vector<float>& deltaY) const;
-	float computeRSS(std::vector<float>& dat, std::vector<float>& hat) const;
+	double chi2(double* alpha, double* beta, const std::vector<double>& dydp, const std::vector<double>& weight, const std::vector<double>& deltaY) const;
+	double computeRSS(std::vector<double>& dat, std::vector<double>& hat) const;
 
-	virtual float lm_matx(const std::vector<unsigned int>& t, const float* p, const std::vector<float>& dat, const std::vector<float>& weight,
-	                      float* alpha, float* beta, std::vector<float>& hat) = 0;
+	virtual double lm_matx(const std::vector<size_t>& t, const double* p, const std::vector<double>& dat, const std::vector<double>& weight,
+	                      double* alpha, double* beta, std::vector<double>& hat) = 0;
 
-	void inverse(float* in, float* out) const;
+	void inverse(double* in, double* out) const;
 
-	static void preComputeFit(float& min, float& max, const unsigned short* image, unsigned long width, unsigned int x, unsigned int y,
-	                          std::vector<float>& dat, std::vector<float>& weight, std::vector<unsigned int>& t, unsigned short roi);
+	static void preComputeFit(double& min, double& max, const unsigned short* image, size_t width, size_t x, size_t y,
+	                          std::vector<double>& dat, std::vector<double>& weight, std::vector<size_t>& t, size_t roi);
 };
