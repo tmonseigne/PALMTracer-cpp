@@ -20,7 +20,6 @@ public:
 	double* _pointsList;
 
 private:
-	unsigned long nbCalls;
 
 	long _pointsListSize;
 	int _nbPointsMaxPerPlane;
@@ -51,4 +50,10 @@ private:
 	BlArray* _planesToUseB;
 	BlArray* _planesToUseB2;
 	int _nbPlane;
+
+	// Gaussian Fit Parameters
+	double y_, x_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_;
+
+	void initGaussianFitParam(double x, double y, double sigmaX, double sigmaY, double theta);
+	void fillPointList(const InfoDataRich2D& data);
 };

@@ -56,7 +56,6 @@ public:
 	double* _pointsList;
 
 private:
-	unsigned long nbCalls;
 
 	long _pointsListSize;
 	int _nbPointsMaxPerPlane;

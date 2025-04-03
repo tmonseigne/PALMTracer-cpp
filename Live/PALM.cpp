@@ -44,7 +44,6 @@ unsigned int pointsNumber;
 CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsListSize, unsigned long sizeX, unsigned long sizeY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double angle, unsigned short roi)
 {
 	long ret;
-	nbCalls = 0;
 	currentPoint = 0;
 	_image = image;
 	_pointsList = pointsList;
@@ -153,7 +152,6 @@ int aTrousDecomposition2D(unsigned short* d_inputData, float* d_outputData, unsi
 long CPALM::CPALMProcessing()
 {
 	int ret;
-	nbCalls++;
 	long nbStruct;
 	int nbPointsSign;
 

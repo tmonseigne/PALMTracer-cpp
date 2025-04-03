@@ -7,9 +7,10 @@
 #include "fit/GaussianFit3D.h"
 #include "fit/GaussianFit3D_Theta.h"
 
-CPALM::CPALM(unsigned short* image, double* pointsList, const unsigned long pointsListSize, const unsigned long sizeX, const unsigned long sizeY, const unsigned long waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin, const unsigned short gaussFit, const double sigmaX, const double sigmaY, const double angle, const unsigned short roi)
+CPALM::CPALM(unsigned short* image, double* pointsList, const unsigned long pointsListSize, const unsigned long sizeX, const unsigned long sizeY,
+             const unsigned long waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin,
+             const unsigned short gaussFit, const double sigmaX, const double sigmaY, const double angle, const unsigned short roi)
 {
-	nbCalls = 0;
 	currentPoint = 0;
 	_image = image;
 	_pointsList = pointsList;
@@ -72,13 +73,13 @@ CPALM::CPALM(unsigned short* image, double* pointsList, const unsigned long poin
 long CPALM::CPALMProcessing()
 {
 	int ret;
-	nbCalls++;
 	long nbStruct;
 	int nbPointsSign;
 
 	if ((ret = _aTrousPub->aTrousDecomposition2D(*_input, *_aTrousPub->wDecomp, *_planesToUseB, _nbPlane, false)) < 0) { return ret; }
 
-	for (long j = 0; j < long(_sizeX * _sizeY); j++) { const long offs = _waveletNo * _sizeX * _sizeY;
+	for (long j = 0; j < long(_sizeX * _sizeY); j++) {
+		const long offs = _waveletNo * _sizeX * _sizeY;
 		if (_aTrousPub->wDecomp->data[offs + j] > _thresholdVal) {
 			_outputPub->data[j] = _aTrousPub->wDecomp->data[offs + j];
 			_segPub->data[j] = 1;
@@ -93,7 +94,9 @@ long CPALM::CPALMProcessing()
 	else { if ((nbStruct = _segmentPub->watershedIntelligent(*_outputPub, *_segPub, 1e-8f, (float)_watershedRatio)) < 0) { return nbStruct; } }
 
 
-	if ((nbPointsSign = _segmentPub->computeStatistics(*_outputPub, *_segPub, _aTrousPub->wDecomp->data + _waveletNo * _sizeX * _sizeY, _gaussFit)) < 0) { return nbPointsSign; }
+	if ((nbPointsSign = _segmentPub->computeStatistics(*_outputPub, *_segPub, _aTrousPub->wDecomp->data + _waveletNo * _sizeX * _sizeY, _gaussFit)) < 0) {
+		return nbPointsSign;
+	}
 
 
 	if (_volMin > 0. || _intMin > 0.) { if ((nbStruct = _segmentPub->filterData(*_segPub, _structFiltParam, _structFiltParamUse)) < 0) { return ret; } }
@@ -102,190 +105,54 @@ long CPALM::CPALMProcessing()
 
 	for (int i = 1; i <= min(nbStruct, _nbPointsMaxPerPlane - 2); ++i) {
 		switch (_gaussFit) {
-			case 0: 
-			case 5:
-			{
-				_pointsList[currentPoint++] = 0.;
-				_pointsList[currentPoint++] = 0.;
-				_pointsList[currentPoint++] = 0.;
-				_pointsList[currentPoint++] = p[i]->data.moment.x;
-				_pointsList[currentPoint++] = p[i]->data.moment.y;
-				_pointsList[currentPoint++] = 0.;
-				_pointsList[currentPoint++] = 0.;
-				_pointsList[currentPoint++] = 0.;
-				_pointsList[currentPoint++] = p[i]->data.intensity;
-				_pointsList[currentPoint++] = p[i]->data.surf;
-
-				_pointsList[currentPoint++] = 0.; // Z coordinate
-				_pointsList[currentPoint++] = 0.; // Spectral or other
-				_pointsList[currentPoint++] = 0.; // Other
-
+			case 0:
+			case 5: {
+				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, 0, 0, 0);
+				rss_ = 0;
+				fillPointList(p[i]->data);
 				break;
 			}
 
 			case 1: // Sigma is constant
 			{
-				double y0 = p[i]->data.moment.x;
-				double x0 = p[i]->data.moment.y;
-				double I0 = 0.;
-				double sigmaX = _sigmaX;
-				double offset = 0.;
-				double RSS = -1.;
-
 				// Gaussian fit of 2D
+				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, _sigmaX, 0, 0);
 				GaussianFit2D* fit = new GaussianFit2D();
-				fit->Run(_image, _sizeY, _sizeX, x0, y0, I0, sigmaX, offset, RSS, 10, _size);
-
-
-				_pointsList[currentPoint++] = sigmaX;
-				_pointsList[currentPoint++] = sigmaX;
-				_pointsList[currentPoint++] = 0.;
-				_pointsList[currentPoint++] = y0;
-				_pointsList[currentPoint++] = x0;
-				_pointsList[currentPoint++] = I0;
-				_pointsList[currentPoint++] = offset;
-				_pointsList[currentPoint++] = RSS;
-				_pointsList[currentPoint++] = p[i]->data.intensity;
-				_pointsList[currentPoint++] = p[i]->data.surf;
-
-				_pointsList[currentPoint++] = 0.; // Z coordinate
-				_pointsList[currentPoint++] = 0.; // Spectral or other
-				_pointsList[currentPoint++] = 0.; // Other
-
+				fit->Run(_image, _sizeY, _sizeX, x_, y_, intensity_, sigmaX_, offset_, rss_, 10, _size);
+				sigmaY_ = sigmaX_;
+				fillPointList(p[i]->data);
 				break;
 			}
 
 			case 2: {
-				double y0 = p[i]->data.moment.x;
-				double x0 = p[i]->data.moment.y;
-				double I0 = 0.;
-				double sigmaX = _sigmaX;
-				double offset;
-				double RSS = -1.;
-
 				// Gaussian fit of 2D
+				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, _sigmaX, 0, 0);
 				GaussianFit2D_Sigma* fit = new GaussianFit2D_Sigma();
-				fit->Run(_image, _sizeY, _sizeX, x0, y0, I0, sigmaX, offset, RSS, 10, _size);
-
-
-				_pointsList[currentPoint++] = sigmaX;
-				_pointsList[currentPoint++] = sigmaX;
-				_pointsList[currentPoint++] = 0.;
-				_pointsList[currentPoint++] = y0;
-				_pointsList[currentPoint++] = x0;
-				_pointsList[currentPoint++] = I0;
-				_pointsList[currentPoint++] = offset;
-				_pointsList[currentPoint++] = RSS;
-				_pointsList[currentPoint++] = p[i]->data.intensity;
-				_pointsList[currentPoint++] = p[i]->data.surf;
-
-				_pointsList[currentPoint++] = 0.; // Z coordinate
-				_pointsList[currentPoint++] = 0.; // Spectral or other
-				_pointsList[currentPoint++] = 0.; // Other
-
+				fit->Run(_image, _sizeY, _sizeX, x_, y_, intensity_, sigmaX_, offset_, rss_, 10, _size);
+				sigmaY_ = sigmaX_;
+				fillPointList(p[i]->data);
 				break;
 			}
 
 			case 3: // Theta is constant
 			{
-				double y0 = p[i]->data.moment.x;
-				double x0 = p[i]->data.moment.y;
-				double I0 = 0./*p[i]->data.intensity*/; // p[i]->data.max.val - p[i]->data.min.val
-				double sigmaX = _sigmaX;
-				double sigmaY = _sigmaY;
-				double angle = _angle;
-				double offset = 0.; // p[i]->data.min.val
-				double RSS = -1.;
-
 				// Gaussian fit of 3D
-
+				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, _sigmaX, _sigmaY, _angle);
 				GaussianFit3D* fit = new GaussianFit3D();
-				fit->Run(_image, _sizeY, _sizeX, x0, y0, I0, sigmaX, sigmaY, angle, offset, RSS, /*20*//*50*//*20 * 6*/10/*7 * 20*/, _size);
-
-				_pointsList[currentPoint++] = sigmaX;
-				_pointsList[currentPoint++] = sigmaY;
-				_pointsList[currentPoint++] = angle;
-				_pointsList[currentPoint++] = y0;
-				_pointsList[currentPoint++] = x0;
-				_pointsList[currentPoint++] = I0;
-				_pointsList[currentPoint++] = offset;
-				_pointsList[currentPoint++] = RSS;
-				_pointsList[currentPoint++] = p[i]->data.intensity;
-				_pointsList[currentPoint++] = p[i]->data.surf;
-
-				_pointsList[currentPoint++] = 0.; // Z coordinate
-				_pointsList[currentPoint++] = 0.; // Spectral or other
-				_pointsList[currentPoint++] = 0.; // Other
-
+				fit->Run(_image, _sizeY, _sizeX, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, 10, _size);
+				fillPointList(p[i]->data);
 				break;
 			}
 
 			case 4: {
-				double y0 = p[i]->data.moment.x;
-				double x0 = p[i]->data.moment.y;
-				double I0 = 0./*p[i]->data.intensity*/; // p[i]->data.max.val - p[i]->data.min.val
-				double sigmaX = _sigmaX;
-				double sigmaY = _sigmaY;
-				double angle = _angle;
-				double offset = 0.; // p[i]->data.min.val
-				double RSS = -1.;
-
 				// Gaussian fit of 3D
-
+				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, _sigmaX, _sigmaY, _angle);
 				GaussianFit3D_Theta* fit = new GaussianFit3D_Theta();
-				fit->Run(_image, _sizeY, _sizeX, x0, y0, I0, sigmaX, sigmaY, angle, offset, RSS, 20 * 7, _size);
-
-				_pointsList[currentPoint++] = sigmaX;
-				_pointsList[currentPoint++] = sigmaY;
-				_pointsList[currentPoint++] = angle;
-				_pointsList[currentPoint++] = y0;
-				_pointsList[currentPoint++] = x0;
-				_pointsList[currentPoint++] = I0;
-				_pointsList[currentPoint++] = offset;
-				_pointsList[currentPoint++] = RSS;
-				_pointsList[currentPoint++] = p[i]->data.intensity;
-				_pointsList[currentPoint++] = p[i]->data.surf;
-
-				_pointsList[currentPoint++] = 0.; // Z coordinate
-				_pointsList[currentPoint++] = 0.; // Spectral or other
-				_pointsList[currentPoint++] = 0.; // Other
-
+				fit->Run(_image, _sizeY, _sizeX, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, 20 * 7, _size);
+				fillPointList(p[i]->data);
 				break;
 			}
 
-			case 6: // Theta is constant --> for 3D calibration
-			{
-				double y0 = p[i]->data.moment.x;
-				double x0 = p[i]->data.moment.y;
-				double I0 = 0./*p[i]->data.intensity*/; // p[i]->data.max.val - p[i]->data.min.val
-				double sigmaX = _sigmaX;
-				double sigmaY = _sigmaY;
-				double angle = _angle;
-				double offset = 0.; // p[i]->data.min.val
-				double RSS = -1.;
-
-				// Gaussian fit of 3D
-
-				GaussianFit3D* fit = new GaussianFit3D();
-				fit->Run(_image, _sizeY, _sizeX, x0, y0, I0, sigmaX, sigmaY, angle, offset, RSS, 7 * 20, _size);
-
-				_pointsList[currentPoint++] = sigmaX;
-				_pointsList[currentPoint++] = sigmaY;
-				_pointsList[currentPoint++] = angle;
-				_pointsList[currentPoint++] = y0;
-				_pointsList[currentPoint++] = x0;
-				_pointsList[currentPoint++] = I0;
-				_pointsList[currentPoint++] = offset;
-				_pointsList[currentPoint++] = RSS;
-				_pointsList[currentPoint++] = p[i]->data.intensity;
-				_pointsList[currentPoint++] = p[i]->data.surf;
-
-				_pointsList[currentPoint++] = 0.; // Z coordinate
-				_pointsList[currentPoint++] = 0.; // Spectral or other
-				_pointsList[currentPoint++] = 0.; // Other
-
-				break;
-			}
 			default: // Error on Gauss Fit Param
 				std::fill_n(_pointsList + currentPoint, 13, -1);
 				currentPoint += 13;
@@ -309,4 +176,34 @@ CPALM::~CPALM()
 	delete _segmentPub;
 	delete _input;
 	delete _planesToUseB;
+}
+
+void CPALM::initGaussianFitParam(const double x, const double y, const double sigmaX, const double sigmaY, const double theta)
+{
+	x_ = x;
+	y_ = y;
+	intensity_ = 0;
+	sigmaX_ = sigmaX;
+	sigmaY_ = sigmaY;
+	theta_ = theta;
+	offset_ = 0;
+	rss_ = -1;
+}
+
+void CPALM::fillPointList(const InfoDataRich2D& data)
+{
+	_pointsList[currentPoint++] = sigmaX_;
+	_pointsList[currentPoint++] = sigmaY_;
+	_pointsList[currentPoint++] = theta_;
+	_pointsList[currentPoint++] = y_;
+	_pointsList[currentPoint++] = x_;
+	_pointsList[currentPoint++] = intensity_;
+	_pointsList[currentPoint++] = offset_;
+	_pointsList[currentPoint++] = rss_;
+	_pointsList[currentPoint++] = data.intensity;
+	_pointsList[currentPoint++] = data.surf;
+
+	_pointsList[currentPoint++] = 0.; // Z coordinate
+	_pointsList[currentPoint++] = 0.; // Spectral or other
+	_pointsList[currentPoint++] = 0.; // Other
 }
