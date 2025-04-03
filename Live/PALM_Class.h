@@ -48,10 +48,10 @@ public:
 	// TODO : ajoutez ici vos méthodes.
 
 	long Processing();
-	CPALM(unsigned short* image, double* pointsList, unsigned long pointsListSize, unsigned long sizeX, unsigned long sizeY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double theta, unsigned short roi);
+	CPALM(unsigned short* image, double* points, unsigned long pointsListSize, unsigned long height, unsigned long width, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double theta, unsigned short roi);
 	~CPALM();
-	unsigned long sizeX_;
-	unsigned long sizeY_;
+	unsigned long height_;
+	unsigned long width_;
 	unsigned short* image_;
 	double* pointsList_;
 

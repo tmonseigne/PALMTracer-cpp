@@ -7,18 +7,18 @@
 #include "fit/GaussianFit3D.h"
 #include "fit/GaussianFit3D_Theta.h"
 
-CPALM::CPALM(unsigned short* image, double* pointsList, const unsigned long pointsListSize, const unsigned long sizeX, const unsigned long sizeY,
+CPALM::CPALM(unsigned short* image, double* points, const unsigned long pointsListSize, const unsigned long height, const unsigned long width,
              const unsigned long waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin,
              const unsigned short gaussFit, const double sigmaX, const double sigmaY, const double theta, const unsigned short roi)
 {
 	currentPoint_ = 0;
 	image_ = image;
-	pointsList_ = pointsList;
+	pointsList_ = points;
 	pointsListSize_ = pointsListSize;
 	nbSegParams_ = 13; /*nbSegParams_ = 10;*/
 	nbPointsMaxPerPlane_ = pointsListSize_ / nbSegParams_;
-	sizeX_ = sizeX;
-	sizeY_ = sizeY;
+	height_ = height;
+	width_ = width;
 	waveletNo_ = waveletNo;
 	thresholdVal_ = thresholdVal;
 	watershedRatio_ = watershedRatio;
@@ -29,15 +29,15 @@ CPALM::CPALM(unsigned short* image, double* pointsList, const unsigned long poin
 	volMin_ = volMin;
 	intMin_ = intMin;
 	gaussFit_ = gaussFit;
-	initSigmaX_ = (float)sigmaX;
-	initSigmaY_ = (float)sigmaY;
-	initTheta_ = (float)theta;
+	initSigmaX_ = sigmaX;
+	initSigmaY_ = sigmaY;
+	initTheta_ = theta;
 	roi_ = roi;
 
 	for (double& i : structFiltParam_) { i = 0; }
 	for (unsigned short& i : structFiltParamUse_) { i = 0; }
-	for (unsigned short& i : planesToUse_) { i = 0; }
-	for (unsigned short& _operator : operators_) { _operator = 0; }
+	for (size_t& i : planesToUse_) { i = 0; }
+	for (size_t& _operator : operators_) { _operator = 0; }
 	for (double& i : threshold_) { i = 0; }
 
 
@@ -54,10 +54,10 @@ CPALM::CPALM(unsigned short* image, double* pointsList, const unsigned long poin
 	}
 
 	input_ = new USrtArray();
-	if (input_->alloc(image_, sizeX_, sizeY_) < 0) { return; }
-	if (aTrousPub_->wDecomp->alloc(sizeX_, sizeY_, waveletNo + 2) < 0) { return; }
-	if (segPub_->realloc(sizeX_, sizeY_) < 0) { return; }
-	if (outputPub_->alloc(sizeX_, sizeY_) < 0) { return; }
+	if (input_->alloc(image_, height_, width_) < 0) { return; }
+	if (aTrousPub_->wDecomp->alloc(height_, width_, waveletNo + 2) < 0) { return; }
+	if (segPub_->realloc(height_, width_) < 0) { return; }
+	if (outputPub_->alloc(height_, width_) < 0) { return; }
 
 
 	planesToUseB_ = new BlArray(9);
@@ -75,11 +75,11 @@ long CPALM::Processing()
 	int ret;
 	long nbStruct;
 	int nbPointsSign;
-
+	const size_t Size = height_ * width_;
 	if ((ret = aTrousPub_->aTrousDecomposition2D(*input_, *aTrousPub_->wDecomp, *planesToUseB_, nbPlane_, false)) < 0) { return ret; }
 
-	for (long j = 0; j < long(sizeX_ * sizeY_); j++) {
-		const long offs = waveletNo_ * sizeX_ * sizeY_;
+	for (long j = 0; j < Size; j++) {
+		const long offs = waveletNo_ * Size;
 		if (aTrousPub_->wDecomp->data[offs + j] > thresholdVal_) {
 			outputPub_->data[j] = aTrousPub_->wDecomp->data[offs + j];
 			segPub_->data[j] = 1;
@@ -91,10 +91,10 @@ long CPALM::Processing()
 	}
 
 	if (watershedRatio_ == 1.) { if ((nbStruct = segmentPub_->segmentation(*outputPub_, *segPub_, 1e-8f, true, false)) < 0) { return nbStruct; } }
-	else { if ((nbStruct = segmentPub_->watershedIntelligent(*outputPub_, *segPub_, 1e-8f, (float)watershedRatio_)) < 0) { return nbStruct; } }
+	else { if ((nbStruct = segmentPub_->watershedIntelligent(*outputPub_, *segPub_, 1e-8f, watershedRatio_)) < 0) { return nbStruct; } }
 
 
-	if ((nbPointsSign = segmentPub_->computeStatistics(*outputPub_, *segPub_, aTrousPub_->wDecomp->data + waveletNo_ * sizeX_ * sizeY_, gaussFit_)) < 0) {
+	if ((nbPointsSign = segmentPub_->computeStatistics(*outputPub_, *segPub_, aTrousPub_->wDecomp->data + waveletNo_ * Size, gaussFit_)) < 0) {
 		return nbPointsSign;
 	}
 
@@ -118,7 +118,7 @@ long CPALM::Processing()
 				// Gaussian fit of 2D
 				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, initSigmaX_, 0, 0);
 				GaussianFit2D* fit = new GaussianFit2D();
-				fit->Run(image_, sizeY_, sizeX_, x_, y_, intensity_, sigmaX_, offset_, rss_, 10, roi_);
+				fit->Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, offset_, rss_, 10, roi_);
 				sigmaY_ = sigmaX_;
 				fillPointList(p[i]->data);
 				break;
@@ -128,7 +128,7 @@ long CPALM::Processing()
 				// Gaussian fit of 2D
 				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, initSigmaX_, 0, 0);
 				GaussianFit2D_Sigma* fit = new GaussianFit2D_Sigma();
-				fit->Run(image_, sizeY_, sizeX_, x_, y_, intensity_, sigmaX_, offset_, rss_, 10, roi_);
+				fit->Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, offset_, rss_, 10, roi_);
 				sigmaY_ = sigmaX_;
 				fillPointList(p[i]->data);
 				break;
@@ -139,7 +139,7 @@ long CPALM::Processing()
 				// Gaussian fit of 3D
 				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, initSigmaX_, initSigmaY_, initTheta_);
 				GaussianFit3D* fit = new GaussianFit3D();
-				fit->Run(image_, sizeY_, sizeX_, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, 10, roi_);
+				fit->Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, 10, roi_);
 				fillPointList(p[i]->data);
 				break;
 			}
@@ -148,7 +148,7 @@ long CPALM::Processing()
 				// Gaussian fit of 3D
 				initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, initSigmaX_, initSigmaY_, initTheta_);
 				GaussianFit3D_Theta* fit = new GaussianFit3D_Theta();
-				fit->Run(image_, sizeY_, sizeX_, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, 20 * 7, roi_);
+				fit->Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, 20 * 7, roi_);
 				fillPointList(p[i]->data);
 				break;
 			}

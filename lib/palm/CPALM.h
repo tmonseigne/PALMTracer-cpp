@@ -9,7 +9,7 @@
 class CPALM
 {
 public:
-	CPALM(unsigned short* image, double* pointsList, unsigned long pointsListSize, unsigned long sizeX, unsigned long sizeY,
+	CPALM(unsigned short* image, double* points, unsigned long pointsListSize, unsigned long height, unsigned long width,
 	      unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX,
 	      double sigmaY, double theta, unsigned short roi);
 	~CPALM();
@@ -18,29 +18,29 @@ public:
 
 private:
 
-	unsigned long sizeX_;
-	unsigned long sizeY_;
+	size_t height_;
+	size_t width_;
 	unsigned short* image_;
 	double* pointsList_;
 	long pointsListSize_;
 	int nbPointsMaxPerPlane_;
 	int nbSegParams_;
-	unsigned long waveletNo_;
+	size_t waveletNo_;
 	double thresholdVal_;
 	double volMin_;
 	double intMin_;
 	double watershedRatio_;
-	unsigned short gaussFit_;
-	float initSigmaX_;
-	float initSigmaY_;
-	float initTheta_;
-	unsigned short roi_;
+	size_t gaussFit_;
+	double initSigmaX_;
+	double initSigmaY_;
+	double initTheta_;
+	size_t roi_;
 	long currentPoint_;
 
 	double structFiltParam_[13];
 	unsigned short structFiltParamUse_[13];
-	unsigned short planesToUse_[10];
-	unsigned short operators_[9];
+	size_t planesToUse_[10];
+	size_t operators_[9];
 	double threshold_[9];
 
 	ATrous* aTrousPub_;

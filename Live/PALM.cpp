@@ -41,17 +41,17 @@ unsigned int pointsNumber;
 /**********************/
 
 
-CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsListSize, unsigned long sizeX, unsigned long sizeY, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double theta, unsigned short roi)
+CPALM::CPALM(unsigned short* image, double* points, unsigned long pointsListSize, unsigned long height, unsigned long width, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double theta, unsigned short roi)
 {
 	long ret;
 	currentPoint_ = 0;
 	image_ = image;
-	pointsList_ = pointsList;
+	pointsList_ = points;
 	pointsListSize_ = pointsListSize;
 	nbSegParams_ = 13;
 	nbPointsMaxPerPlane_ = pointsListSize_ / nbSegParams_;
-	sizeX_ = sizeX;
-	sizeY_ = sizeY;
+	height_ = height;
+	width_ = width;
 	waveletNo_ = waveletNo;
 	thresholdVal_ = thresholdVal;
 	watershedRatio_ = watershedRatio;
@@ -87,10 +87,10 @@ CPALM::CPALM(unsigned short* image, double* pointsList, unsigned long pointsList
 	}
 
 	input_ = new USrtArray();
-	if ((ret = input_->alloc(image_, sizeX_, sizeY_)) < 0) { return; }
-	if ((ret = aTrousPub_->wDecomp->alloc(sizeX_, sizeY_, waveletNo + 2)) < 0) { return; }
-	if ((ret = segPub_->realloc(sizeX_, sizeY_)) < 0) { return; }
-	if ((ret = outputPub_->alloc(sizeX_, sizeY_)) < 0) { return; }
+	if ((ret = input_->alloc(image_, height_, width_)) < 0) { return; }
+	if ((ret = aTrousPub_->wDecomp->alloc(height_, width_, waveletNo + 2)) < 0) { return; }
+	if ((ret = segPub_->realloc(height_, width_)) < 0) { return; }
+	if ((ret = outputPub_->alloc(height_, width_)) < 0) { return; }
 
 
 	planesToUseB_ = new BlArray(9);
@@ -158,17 +158,17 @@ long CPALM::Processing()
 	float begin = clock();
 	// copie des images : host --> device
 	unsigned short* d_images;
-	checkCudaErrors(cudaMalloc((void**)&d_images, sizeX_ * sizeY_ * sizeof(unsigned short)));
-	checkCudaErrors(cudaMemcpy(d_images, input_->data, sizeX_ * sizeY_ * sizeof(unsigned short), cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMalloc((void**)&d_images, height_ * width_ * sizeof(unsigned short)));
+	checkCudaErrors(cudaMemcpy(d_images, input_->data, height_ * width_ * sizeof(unsigned short), cudaMemcpyHostToDevice));
 
 	// memory allocation for : d_output
 	float* d_data;
-	checkCudaErrors(cudaMalloc((void**)&d_data, (nbPlane_) * sizeX_ * sizeY_ * sizeof(float)));
+	checkCudaErrors(cudaMalloc((void**)&d_data, (nbPlane_) * height_ * width_ * sizeof(float)));
 
 	// Decompostition : wavelet algorithm
-	aTrousDecomposition2D(d_images, d_data, sizeY_, sizeX_, 1, /**planesToUseB_,*/ nbPlane_, false/*true*/, false);
+	aTrousDecomposition2D(d_images, d_data, width_, height_, 1, /**planesToUseB_,*/ nbPlane_, false/*true*/, false);
 
-	checkCudaErrors(cudaMemcpy(aTrousPub_->wDecomp->data + waveletNo_ * sizeX_ * sizeY_, d_data + waveletNo_ * sizeX_ * sizeY_, sizeX_ * sizeY_ * sizeof(float), cudaMemcpyDeviceToHost));
+	checkCudaErrors(cudaMemcpy(aTrousPub_->wDecomp->data + waveletNo_ * height_ * width_, d_data + waveletNo_ * height_ * width_, height_ * width_ * sizeof(float), cudaMemcpyDeviceToHost));
 
 	// cleanup memory
 	checkCudaErrors(cudaFree(d_images));
@@ -177,8 +177,8 @@ long CPALM::Processing()
 	float end = clock();
 
 	begin = clock();
-	for (long j = 0; j < long(sizeX_ * sizeY_); j++) {
-		long offs = waveletNo_ * sizeX_ * sizeY_;
+	for (long j = 0; j < long(height_ * width_); j++) {
+		long offs = waveletNo_ * height_ * width_;
 
 		if (aTrousPub_->wDecomp->data[offs + j] > thresholdVal_) {
 			outputPub_->data[j] = aTrousPub_->wDecomp->data[offs + j];
@@ -199,7 +199,7 @@ long CPALM::Processing()
 	begin = clock();
 
 
-	if ((nbPointsSign = segmentPub_->computeStatistics(*outputPub_, *segPub_, aTrousPub_->wDecomp->data + waveletNo_ * sizeX_ * sizeY_, gaussFit_)) < 0) { return (nbPointsSign); }
+	if ((nbPointsSign = segmentPub_->computeStatistics(*outputPub_, *segPub_, aTrousPub_->wDecomp->data + waveletNo_ * height_ * width_, gaussFit_)) < 0) { return (nbPointsSign); }
 
 	begin = clock();
 
