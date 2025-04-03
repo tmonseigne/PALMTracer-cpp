@@ -82,8 +82,7 @@ long CPALM::Processing()
 		}
 	}
 
-	if (watershedRatio_ == 1.) { if ((nbStruct = segmentPub_.segmentation(outputPub_, segPub_, 1e-8f, true, false)) < 0) { return nbStruct; } }
-	else { if ((nbStruct = segmentPub_.watershedIntelligent(outputPub_, segPub_, 1e-8f, watershedRatio_)) < 0) { return nbStruct; } }
+	if ((nbStruct = segmentPub_.watershedIntelligent(outputPub_, segPub_, 1e-8f, watershedRatio_)) < 0) { return nbStruct; }
 
 
 	if ((nbPointsSign = segmentPub_.computeStatistics(outputPub_, segPub_, aTrousPub_.wDecomp->data + waveletNo_ * Size, gaussFit_)) < 0) {

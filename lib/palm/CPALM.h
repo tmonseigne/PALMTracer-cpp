@@ -1,7 +1,7 @@
 #pragma once
 #include <array>
 
-#include "aTrous.h"
+#include "ATrous.h"
 #include "segmentation_2D.h"
 #include "tools/allDataLib.h"
 

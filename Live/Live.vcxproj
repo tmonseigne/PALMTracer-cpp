@@ -125,8 +125,8 @@
     <ClCompile Include="..\lib\fit\GaussianFit2D_Sigma.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit3D.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit3D_Theta.cpp" />
-    <ClCompile Include="..\lib\palm\aTrous.cpp" />
-    <ClCompile Include="..\lib\palm\aTrous2D.cpp" />
+    <ClCompile Include="..\lib\palm\ATrous.cpp" />
+    <ClCompile Include="..\lib\palm\ATrous2D.cpp" />
     <ClCompile Include="..\lib\palm\CPALM.cpp" />
     <ClCompile Include="..\lib\palm\info_2D.cpp" />
     <ClCompile Include="..\lib\palm\segmentation.cpp" />

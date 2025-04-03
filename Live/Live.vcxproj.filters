@@ -43,10 +43,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PALM.cpp" />
-    <ClCompile Include="..\lib\palm\aTrous.cpp">
+    <ClCompile Include="..\lib\palm\ATrous.cpp">
       <Filter>Palm</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\palm\aTrous2D.cpp">
+    <ClCompile Include="..\lib\palm\ATrous2D.cpp">
       <Filter>Palm</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\palm\info_2D.cpp">
@@ -98,7 +98,7 @@
   <ItemGroup>
     <ClInclude Include="PALM.h" />
     <ClInclude Include="PALM_Class.h" />
-    <ClInclude Include="..\lib\palm\aTrous.h">
+    <ClInclude Include="..\lib\palm\ATrous.h">
       <Filter>Palm</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\palm\info_2D.h">

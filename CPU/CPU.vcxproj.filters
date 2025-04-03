@@ -29,10 +29,10 @@
     <ClCompile Include="..\lib\fit\GaussianFit3D_Theta.cpp">
       <Filter>Fit</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\palm\aTrous.cpp">
+    <ClCompile Include="..\lib\palm\ATrous.cpp">
       <Filter>Palm</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\palm\aTrous2D.cpp">
+    <ClCompile Include="..\lib\palm\ATrous2D.cpp">
       <Filter>Palm</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\palm\info_2D.cpp">
@@ -101,7 +101,7 @@
     <ClInclude Include="..\lib\fit\GaussianFit3D_Theta.h">
       <Filter>Fit</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\aTrous.h">
+    <ClInclude Include="..\lib\palm\ATrous.h">
       <Filter>Palm</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\palm\info_2D.h">

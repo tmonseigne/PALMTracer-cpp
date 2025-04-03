@@ -1,5 +1,5 @@
 #pragma once
-#include "palm/aTrous.h"
+#include "palm/ATrous.h"
 #include "palm/segmentation_2D.h"
 #include "tools/allDataLib.h"
 

@@ -24,10 +24,6 @@ private:
 	static int getLocalMax(USrtArray& image, USrtArray& seg, float threshold);
 	int watershed(USrtArray& potential, USrtArray& seg, float threshold) const;
 
-	unsigned short segmentationPositiveValues(FltArray& data, USrtArray& seg, double val, bool diagonal);
-	unsigned short segmentationPositiveValues(FltArray& data, USrtArray& seg, double val, bool diagonal, USrtArray& segHoles);
-	unsigned short segmentationNegativeValues(FltArray& data, USrtArray& seg, double val, bool diagonal);
-
 	static float tic();
 
 public:
@@ -35,9 +31,6 @@ public:
 	Segment2D(unsigned long _nbInfoStruct);
 	~Segment2D() override;
 
-	unsigned short segmentation(FltArray& data, USrtArray& seg, double val, bool diagonal, bool fillHoles);
-
-	//int computeStatistics(FltArray &data, USrtArray &seg, bool doRealoc=true);
 	int computeStatistics(FltArray& data, USrtArray& seg, float* waveData, unsigned short gaussFit, bool doRealoc = true);
 
 	unsigned long filterData(USrtArray& seg, double* param, unsigned short* useParam);

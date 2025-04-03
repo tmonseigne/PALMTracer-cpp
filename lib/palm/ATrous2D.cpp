@@ -1,4 +1,4 @@
-#include "aTrous.h"
+#include "ATrous.h"
 #include "tools/allDataLib.h"
 #include "tools/NoError.h"
 
