@@ -46,7 +46,7 @@ CPALM::CPALM(unsigned short* image, double* points, unsigned long pointsListSize
 	long ret;
 	currentPoint_ = 0;
 	image_ = image;
-	pointsList_ = points;
+	points_ = points;
 	pointsListSize_ = pointsListSize;
 	nbSegParams_ = 13;
 	nbPointsMaxPerPlane_ = pointsListSize_ / nbSegParams_;
@@ -210,38 +210,38 @@ long CPALM::Processing()
 	InfoStruct2D** p;
 	p = (InfoStruct2D**)segmentPub_->getTabInfo();
 
-	// le nombre de points détectés ne doit pas dépasser nbPointsMaxPerPlane_ --> problème d'espace mémoire
+	// le nombre de points détectés ne doit pas dépasser nPointsMaxPerPlane_ --> problème d'espace mémoire
 	for (int i = 1; i <= min(nbStruct, nbPointsMaxPerPlane_ - 2); i++) {
-		pointsList_[currentPoint_++] = 0.;
-		pointsList_[currentPoint_++] = 0.;
-		pointsList_[currentPoint_++] = 0.;
-		pointsList_[currentPoint_++] = p[i]->data.moment.x;
-		pointsList_[currentPoint_++] = p[i]->data.moment.y;
-		pointsList_[currentPoint_++] = 0.;
-		pointsList_[currentPoint_++] = 0.;
-		pointsList_[currentPoint_++] = 0.;
-		pointsList_[currentPoint_++] = p[i]->data.intensity;
-		pointsList_[currentPoint_++] = p[i]->data.surf;
+		points_[currentPoint_++] = 0.;
+		points_[currentPoint_++] = 0.;
+		points_[currentPoint_++] = 0.;
+		points_[currentPoint_++] = p[i]->data.moment.x;
+		points_[currentPoint_++] = p[i]->data.moment.y;
+		points_[currentPoint_++] = 0.;
+		points_[currentPoint_++] = 0.;
+		points_[currentPoint_++] = 0.;
+		points_[currentPoint_++] = p[i]->data.intensity;
+		points_[currentPoint_++] = p[i]->data.surf;
 
-		pointsList_[currentPoint_++] = 0.; // Z coordinate
-		pointsList_[currentPoint_++] = 0.; // Spectral or other
-		pointsList_[currentPoint_++] = 0.; // Other
+		points_[currentPoint_++] = 0.; // Z coordinate
+		points_[currentPoint_++] = 0.; // Spectral or other
+		points_[currentPoint_++] = 0.; // Other
 	}
 
-	pointsList_[currentPoint_++] = -1;
-	pointsList_[currentPoint_++] = -1;
-	pointsList_[currentPoint_++] = -1;
-	pointsList_[currentPoint_++] = -1;
-	pointsList_[currentPoint_++] = -1;
-	pointsList_[currentPoint_++] = -1;
-	pointsList_[currentPoint_++] = -1;
-	pointsList_[currentPoint_++] = -1;
-	pointsList_[currentPoint_++] = -1;
-	pointsList_[currentPoint_++] = -1;
+	points_[currentPoint_++] = -1;
+	points_[currentPoint_++] = -1;
+	points_[currentPoint_++] = -1;
+	points_[currentPoint_++] = -1;
+	points_[currentPoint_++] = -1;
+	points_[currentPoint_++] = -1;
+	points_[currentPoint_++] = -1;
+	points_[currentPoint_++] = -1;
+	points_[currentPoint_++] = -1;
+	points_[currentPoint_++] = -1;
 
-	pointsList_[currentPoint_++] = -1;
-	pointsList_[currentPoint_++] = -1;
-	pointsList_[currentPoint_++] = -1;
+	points_[currentPoint_++] = -1;
+	points_[currentPoint_++] = -1;
+	points_[currentPoint_++] = -1;
 
 	return (currentPoint_);
 }

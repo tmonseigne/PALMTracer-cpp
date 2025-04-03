@@ -8,6 +8,8 @@
 // Cette classe est exportée de PALM.dll
 //class PALM_API CPALM {
 
+constexpr size_t N_SEGMENTS = 13;
+
 class CPALM
 {
 public:
@@ -19,27 +21,16 @@ public:
 	long Processing();
 
 private:
-	size_t height_;
-	size_t width_;
 	unsigned short* image_;
-	double* pointsList_;
-	long pointsListSize_;
-	int nbPointsMaxPerPlane_;
-	int nbSegParams_;
-	size_t waveletNo_;
-	double thresholdVal_;
-	double volMin_;
-	double intMin_;
-	double watershedRatio_;
-	size_t gaussFit_;
-	double initSigmaX_;
-	double initSigmaY_;
-	double initTheta_;
-	size_t roi_;
-	long currentPoint_;
+	double* points_;
+	size_t height_, width_, nPoints_, nPointsMaxPerPlane_, waveletNo_, currentPoint_, roi_;
+	double thresholdVal_, volMin_, intMin_, watershedRatio_;
 
-	std::array<double, 13> structFiltParam_;
-	std::array<unsigned short, 13> structFiltParamUse_;
+	size_t gaussFit_;
+	double initSigmaX_, initSigmaY_, initTheta_;
+
+	std::array<double, N_SEGMENTS> structFiltParam_;
+	std::array<unsigned short, N_SEGMENTS> structFiltParamUse_;
 	std::array<size_t, 10> planesToUse_;
 	std::array<size_t, 9> operators_;
 	std::array<double, 9> threshold_;
@@ -50,7 +41,7 @@ private:
 	Segment2D segmentPub_;
 	USrtArray input_;
 	BlArray planesToUseB_ = BlArray(9);
-	int nbPlane_;
+	size_t nbPlane_;
 
 	// Gaussian Fit Parameters
 	double y_, x_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_;

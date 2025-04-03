@@ -13,10 +13,9 @@ CPALM::CPALM(unsigned short* image, double* points, const unsigned long pointsLi
 {
 	currentPoint_ = 0;
 	image_ = image;
-	pointsList_ = points;
-	pointsListSize_ = pointsListSize;
-	nbSegParams_ = 13; /*nbSegParams_ = 10;*/
-	nbPointsMaxPerPlane_ = pointsListSize_ / nbSegParams_;
+	points_ = points;
+	nPoints_ = pointsListSize;
+	nPointsMaxPerPlane_ = nPoints_ / N_SEGMENTS;
 	height_ = height;
 	width_ = width;
 	waveletNo_ = waveletNo;
@@ -94,9 +93,9 @@ long CPALM::Processing()
 
 	if (volMin_ > 0. || intMin_ > 0.) { if ((nbStruct = segmentPub_.filterData(segPub_, structFiltParam_.data(), structFiltParamUse_.data())) < 0) { return ret; } }
 
-	InfoStruct2D** p = (InfoStruct2D**)segmentPub_.getTabInfo();
+	auto p = reinterpret_cast<InfoStruct2D**>(segmentPub_.getTabInfo());
 
-	for (int i = 1; i <= min(nbStruct, nbPointsMaxPerPlane_ - 2); ++i) {
+	for (int i = 1; i <= min(nbStruct, nPointsMaxPerPlane_ - 2); ++i) {
 		initGaussianFitParam(p[i]->data.moment.y, p[i]->data.moment.x, initSigmaX_, initSigmaY_, initTheta_);
 		switch (gaussFit_) {
 			default: {
@@ -146,10 +145,10 @@ long CPALM::Processing()
 	}
 
 	// Blank Line
-	std::fill_n(pointsList_ + currentPoint_, 13, -1);
-	currentPoint_ += 13;
+	std::fill_n(points_ + currentPoint_, N_SEGMENTS, -1);
+	currentPoint_ += N_SEGMENTS;
 
-	return currentPoint_;
+	return static_cast<long>(currentPoint_);
 }
 
 
@@ -167,17 +166,17 @@ void CPALM::initGaussianFitParam(const double x, const double y, const double si
 
 void CPALM::fillPointList(const InfoDataRich2D& data)
 {
-	pointsList_[currentPoint_++] = sigmaX_;
-	pointsList_[currentPoint_++] = sigmaY_;
-	pointsList_[currentPoint_++] = theta_;
-	pointsList_[currentPoint_++] = y_;
-	pointsList_[currentPoint_++] = x_;
-	pointsList_[currentPoint_++] = intensity_;
-	pointsList_[currentPoint_++] = offset_;
-	pointsList_[currentPoint_++] = rss_;
-	pointsList_[currentPoint_++] = data.intensity;
-	pointsList_[currentPoint_++] = data.surf;
-	pointsList_[currentPoint_++] = 0.; // Z coordinate
-	pointsList_[currentPoint_++] = 0.; // Spectral or other
-	pointsList_[currentPoint_++] = 0.; // Other
+	points_[currentPoint_++] = sigmaX_;
+	points_[currentPoint_++] = sigmaY_;
+	points_[currentPoint_++] = theta_;
+	points_[currentPoint_++] = y_;
+	points_[currentPoint_++] = x_;
+	points_[currentPoint_++] = intensity_;
+	points_[currentPoint_++] = offset_;
+	points_[currentPoint_++] = rss_;
+	points_[currentPoint_++] = data.intensity;
+	points_[currentPoint_++] = data.surf;
+	points_[currentPoint_++] = 0.; // Z coordinate
+	points_[currentPoint_++] = 0.; // Spectral or other
+	points_[currentPoint_++] = 0.; // Other
 }

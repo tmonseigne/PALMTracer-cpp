@@ -53,7 +53,7 @@ public:
 	unsigned long height_;
 	unsigned long width_;
 	unsigned short* image_;
-	double* pointsList_;
+	double* points_;
 
 private:
 
