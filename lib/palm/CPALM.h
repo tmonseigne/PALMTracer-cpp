@@ -1,4 +1,6 @@
 #pragma once
+#include <array>
+
 #include "aTrous.h"
 #include "segmentation_2D.h"
 #include "tools/allDataLib.h"
@@ -12,12 +14,11 @@ public:
 	CPALM(unsigned short* image, double* points, unsigned long pointsListSize, unsigned long height, unsigned long width,
 	      unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX,
 	      double sigmaY, double theta, unsigned short roi);
-	~CPALM();
+	~CPALM() = default;
 
 	long Processing();
 
 private:
-
 	size_t height_;
 	size_t width_;
 	unsigned short* image_;
@@ -37,18 +38,18 @@ private:
 	size_t roi_;
 	long currentPoint_;
 
-	double structFiltParam_[13];
-	unsigned short structFiltParamUse_[13];
-	size_t planesToUse_[10];
-	size_t operators_[9];
-	double threshold_[9];
+	std::array<double, 13> structFiltParam_;
+	std::array<unsigned short, 13> structFiltParamUse_;
+	std::array<size_t, 10> planesToUse_;
+	std::array<size_t, 9> operators_;
+	std::array<double, 9> threshold_;
 
-	ATrous* aTrousPub_;
-	USrtArray* segPub_;
-	FltArray* outputPub_;
-	Segment2D* segmentPub_;
-	USrtArray* input_;
-	BlArray* planesToUseB_;
+	ATrous aTrousPub_;
+	USrtArray segPub_;
+	FltArray outputPub_;
+	Segment2D segmentPub_;
+	USrtArray input_;
+	BlArray planesToUseB_ = BlArray(9);
 	int nbPlane_;
 
 	// Gaussian Fit Parameters
