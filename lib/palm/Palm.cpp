@@ -10,10 +10,10 @@
 Palm::Palm(unsigned short* image, double* points, const unsigned long pointsListSize, const unsigned long height, const unsigned long width,
            const unsigned long waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin,
            const unsigned short gaussFit, const double sigmaX, const double sigmaY, const double theta, const unsigned short roi)
-	: image_(image), points_(points), height_(height), width_(width), size_(height * width), nPointsMaxPerPlane_(pointsListSize / N_SEGMENTS),
-	  waveletNo_(waveletNo), currentPoint_(0), roi_(roi), thresholdVal_(thresholdVal), volMin_(volMin), intMin_(intMin), watershedRatio_(watershedRatio),
-	  gaussFit_(gaussFit), initSigmaX_(sigmaX), initSigmaY_(sigmaY), initTheta_(theta), segmentPub_(height, width),
-	  y_(0), x_(0), intensity_(0), sigmaX_(0), sigmaY_(0), theta_(0), offset_(0), rss_(0)
+	: image_(image), points_(points), height_(height), width_(width), size_(static_cast<size_t>(height) * width),
+	  nPointsMaxPerPlane_(pointsListSize / N_SEGMENTS), waveletNo_(waveletNo), currentPoint_(0), roi_(roi), thresholdVal_(thresholdVal),
+	  volMin_(volMin), intMin_(intMin), watershedRatio_(watershedRatio), gaussFit_(gaussFit), initSigmaX_(sigmaX), initSigmaY_(sigmaY),
+	  initTheta_(theta), segmentPub_(height, width), y_(0), x_(0), intensity_(0), sigmaX_(0), sigmaY_(0), theta_(0), offset_(0), rss_(0)
 {
 	structFiltParam_.fill(0);
 	structFiltParamUse_.fill(0);

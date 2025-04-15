@@ -107,7 +107,7 @@ size_t Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double
 
 
 	if (useParam[6] == 1) {
-		long oldIndex;
+		size_t oldIndex;
 		ptr = headInfo_;
 		ind = 0;
 		ptrOld = nullptr;
@@ -149,7 +149,7 @@ size_t Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double
 
 
 	for (size_t indexFilter = 9; indexFilter <= 11; ++indexFilter) {
-		if (useParam[indexFilter] == 1 && nbInfoStruct_ > param[indexFilter] && (long)param[indexFilter] > 0) {
+		if (useParam[indexFilter] == 1 && nbInfoStruct_ > static_cast<size_t>(param[indexFilter]) && static_cast<int>(param[indexFilter]) > 0) {
 			//N first structure with the biggest surface (indexFilter=9), the biggest surface (indexFilter=10) or 
 			//the biggest total intensity (indexFilter=11)
 			ptrOld = nullptr;
@@ -317,13 +317,13 @@ int Segmentation2D::ComputeStatistics(const std::vector<double>& data, const std
 				currData.boundingBox.yMin = std::min<size_t>(currData.boundingBox.yMin, j);
 
 
-				if (val > currData.max.val || currData.surf == 1) {
+				if (val > currData.max.val || static_cast<int>(currData.surf) == 1) {
 					currData.max.val = val;
 					currData.max.x = i;
 					currData.max.y = j;
 				}
 
-				if (val < currData.min.val || currData.surf == 1) {
+				if (val < currData.min.val || static_cast<int>(currData.surf) == 1) {
 					currData.min.val = val;
 					currData.min.x = i;
 					currData.min.y = j;
@@ -405,14 +405,13 @@ double thresholdRatio: value to distinguish if 2 strucutres in contact have to b
 ********************************************************************************************************************/
 int Segmentation2D::filterStructureWS(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double thresholdRatio)
 {
-	auto ptrStr = (wsFusion2D*)malloc((nbInfoStruct_ + 1) * sizeof(wsFusion2D));
-
+	std::vector< wsFusion2D> ptrStr(nbInfoStruct_ + 1);
 	long label;
 	bool change = true;
 	while (change) {
 		const size_t OldNbInfoStruct = nbInfoStruct_;
 
-		for (size_t i = 1; i <= (long)nbInfoStruct_; i++) {
+		for (size_t i = 1; i <= nbInfoStruct_; i++) {
 			ptrStr[i].maxPotentialWithNeighbor = -1e10;
 			ptrStr[i].minPotentialOnTheStructure = +1e10;
 			ptrStr[i].maxPotentialOnTheStructure = -1e10;
@@ -491,12 +490,9 @@ int Segmentation2D::filterStructureWS(const std::vector<double>& potential, std:
 	for (size_t i = 1; i <= nbInfoStruct_; ++i) {
 		if (ptrStr[i].structureToBecaume == i) {
 			label++;
-			seg[ptrStr[i].x * width_ + ptrStr[i].y] = (unsigned short)label;
+			seg[ptrStr[i].x * width_ + ptrStr[i].y] = static_cast<unsigned short>(label);
 		}
 	}
-
-	free(ptrStr);
-
 	return label - 1;
 }
 

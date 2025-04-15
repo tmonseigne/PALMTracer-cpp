@@ -35,7 +35,7 @@ void GaussianFit3D::initP(const double x, const double y, const double sigmaX, c
 }
 
 void GaussianFit3D::Run(const unsigned short* image, const size_t sizeX, const size_t sizeY,
-                        double& x, double& y, double& intensity, double& sigmaX, double& sigmaY, double& theta, double& offset,
+                        double& x, double& y, double& intensity, double& sigmaX, double& sigmaY, const double& theta, double& offset,
                         double& rss, const size_t iterNum, size_t roi)
 {
 	if (roi % 2 == 0) { roi--; } // Not present in GPU original file why ?

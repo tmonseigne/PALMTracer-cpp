@@ -20,7 +20,7 @@ public:
 	}
 
 	void Run(const unsigned short* image, size_t sizeX, size_t sizeY, double& x, double& y, double& intensity,
-	         double& sigmaX, double& sigmaY, double& theta, double& offset, double& rss, size_t iterNum, size_t roi);
+	         double& sigmaX, double& sigmaY, const double& theta, double& offset, double& rss, size_t iterNum, size_t roi);
 
 protected:
 	void initP(double x, double y, double sigmaX, double sigmaY);

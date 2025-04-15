@@ -5,7 +5,7 @@
 #include "tools/NoError.h"
 
 
-size_t twoToThe(const size_t val)
+size_t TwoToThe(const size_t val)
 {
 	if (val == 0) { return 1; }           // 2^0 = 1
 	return static_cast<size_t>(1) << val; // 1 décalé à gauche de 'val' bits
@@ -31,13 +31,13 @@ int ATrous::testSizes2D(bool* planesToUse, size_t& nbPlane) const
 
 
 	if (nbPlane < 2) { return W_SIZE_ERR; }
-	long sizeWavelet = twoToThe(nbPlane + 1);
+	size_t sizeWavelet = TwoToThe(nbPlane + 1);
 	while (height_ <= sizeWavelet || width_ <= sizeWavelet) {
 		nbPlane--;
-		sizeWavelet = twoToThe(nbPlane + 1);
+		sizeWavelet = TwoToThe(nbPlane + 1);
 	}
 
-	return nbPlane;
+	return static_cast<int>(nbPlane);
 }
 
 
@@ -104,53 +104,51 @@ void ATrous::b3SplineFiltering2D(const std::vector<double>& in, std::vector<doub
 	constexpr double CoeffH0 = 3. / 8.;
 	constexpr double CoeffH1 = 1. / 4.;
 	constexpr double CoeffH2 = 1. / 16.;
-
-	const size_t step = twoToThe(plane);
-
+	const size_t Step = TwoToThe(plane);
 
 	//convolution in Y axe
 	for (i = 0; i < height_; ++i) {
-		for (j = 0; j < 2 * step; ++j) {
+		for (j = 0; j < 2 * Step; ++j) {
 			idx = offset(i, j);
-			tmp_[idx] = CoeffH0 * in[idx] + CoeffH1 * (in[offsetTest(i, j - step)] + in[offsetTest(i, j + step)])
-			            + CoeffH2 * (in[offsetTest(i, j - 2 * step)] + in[offsetTest(i, j + 2 * step)]);
+			tmp_[idx] = CoeffH0 * in[idx] + CoeffH1 * (in[offsetTest(i, j - Step)] + in[offsetTest(i, j + Step)])
+			            + CoeffH2 * (in[offsetTest(i, j - 2 * Step)] + in[offsetTest(i, j + 2 * Step)]);
 		}
 
-		for (j = 2 * step; j < width_ - 2 * step; ++j) {
+		for (j = 2 * Step; j < width_ - 2 * Step; ++j) {
 			idx = offset(i, j);
-			tmp_[idx] = CoeffH0 * in[idx] + CoeffH1 * (in[offset(i, j - step)] + in[offset(i, j + step)])
-			            + CoeffH2 * (in[offset(i, j - 2 * step)] + in[offset(i, j + 2 * step)]);
+			tmp_[idx] = CoeffH0 * in[idx] + CoeffH1 * (in[offset(i, j - Step)] + in[offset(i, j + Step)])
+			            + CoeffH2 * (in[offset(i, j - 2 * Step)] + in[offset(i, j + 2 * Step)]);
 		}
 
-		for (j = width_ - 2 * step; j < width_; ++j) {
+		for (j = width_ - 2 * Step; j < width_; ++j) {
 			idx = offset(i, j);
-			tmp_[idx] = CoeffH0 * in[idx] + CoeffH1 * (in[offsetTest(i, j - step)] + in[offsetTest(i, j + step)])
-			            + CoeffH2 * (in[offsetTest(i, j - 2 * step)] + in[offsetTest(i, j + 2 * step)]);
+			tmp_[idx] = CoeffH0 * in[idx] + CoeffH1 * (in[offsetTest(i, j - Step)] + in[offsetTest(i, j + Step)])
+			            + CoeffH2 * (in[offsetTest(i, j - 2 * Step)] + in[offsetTest(i, j + 2 * Step)]);
 		}
 	}
 
 	//convolution in X axe
-	for (i = 0; i < 2 * step; ++i) {
+	for (i = 0; i < 2 * Step; ++i) {
 		for (j = 0; j < width_; ++j) {
 			idx = offset(i, j);
-			out[idx] = CoeffH0 * tmp_[idx] + CoeffH1 * (tmp_[offsetTest(i - step, j)] + tmp_[offsetTest(i + step, j)])
-			           + CoeffH2 * (tmp_[offsetTest(i - 2 * step, j)] + tmp_[offsetTest(i + 2 * step, j)]);
+			out[idx] = CoeffH0 * tmp_[idx] + CoeffH1 * (tmp_[offsetTest(i - Step, j)] + tmp_[offsetTest(i + Step, j)])
+			           + CoeffH2 * (tmp_[offsetTest(i - 2 * Step, j)] + tmp_[offsetTest(i + 2 * Step, j)]);
 		}
 	}
 
-	for (i = 2 * step; i < height_ - 2 * step; ++i) {
+	for (i = 2 * Step; i < height_ - 2 * Step; ++i) {
 		for (j = 0; j < width_; ++j) {
 			idx = offset(i, j);
-			out[idx] = CoeffH0 * tmp_[idx] + CoeffH1 * (tmp_[offset(i - step, j)] + tmp_[offset(i + step, j)])
-			           + CoeffH2 * (tmp_[offset(i - 2 * step, j)] + tmp_[offset(i + 2 * step, j)]);
+			out[idx] = CoeffH0 * tmp_[idx] + CoeffH1 * (tmp_[offset(i - Step, j)] + tmp_[offset(i + Step, j)])
+			           + CoeffH2 * (tmp_[offset(i - 2 * Step, j)] + tmp_[offset(i + 2 * Step, j)]);
 		}
 	}
 
-	for (i = height_ - 2 * step; i < height_; ++i) {
+	for (i = height_ - 2 * Step; i < height_; ++i) {
 		for (j = 0; j < width_; ++j) {
 			idx = offset(i, j);
-			out[idx] = CoeffH0 * tmp_[idx] + CoeffH1 * (tmp_[offsetTest(i - step, j)] + tmp_[offsetTest(i + step, j)])
-			           + CoeffH2 * (tmp_[offsetTest(i - 2 * step, j)] + tmp_[offsetTest(i + 2 * step, j)]);
+			out[idx] = CoeffH0 * tmp_[idx] + CoeffH1 * (tmp_[offsetTest(i - Step, j)] + tmp_[offsetTest(i + Step, j)])
+			           + CoeffH2 * (tmp_[offsetTest(i - 2 * Step, j)] + tmp_[offsetTest(i + 2 * Step, j)]);
 		}
 	}
 }
