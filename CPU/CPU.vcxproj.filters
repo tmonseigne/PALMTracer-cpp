@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="PALM.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="..\lib\tools\USrtArray.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
@@ -29,13 +29,10 @@
     <ClCompile Include="..\lib\palm\ATrous.cpp">
       <Filter>Palm</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\palm\Segmentation.cpp">
-      <Filter>Palm</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\palm\Segmentation2D.cpp">
       <Filter>Palm</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\palm\CPALM.cpp">
+    <ClCompile Include="..\lib\palm\Palm.cpp">
       <Filter>Palm</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\fit\GaussianFit.cpp">
@@ -43,7 +40,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PALM.h" />
+    <ClInclude Include="main.h" />
     <ClInclude Include="..\lib\tools\errc.h">
       <Filter>Tools</Filter>
     </ClInclude>
@@ -89,7 +86,7 @@
     <ClInclude Include="..\lib\palm\info_2D.h">
       <Filter>Palm</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\CPALM.h">
+    <ClInclude Include="..\lib\palm\Palm.h">
       <Filter>Palm</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\palm\parameters.h">
@@ -103,7 +100,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="PALM.def" />
+    <None Include="CPU_PALM.def" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Tools">

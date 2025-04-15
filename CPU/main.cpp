@@ -2,10 +2,10 @@
 //
 
 
-#include "PALM.h"
-#include "palm/CPALM.h"
+#include "main.h"
+#include "palm/Palm.h"
 
-CPALM* c;
+Palm* c;
 
 
 _declspec(dllexport)
@@ -15,7 +15,7 @@ void _stdcall _OpenPALMProcessing(unsigned short* image, double* pointsList, con
                                   const double intMin, const unsigned short gaussFit, const double sigmaX, const double sigmaY,
                                   const double angle, const unsigned short roi)
 {
-	c = new CPALM(image, pointsList, pointsListSize, sizeX, sizeY, waveletNo, thresholdVal, watershedRatio,
+	c = new Palm(image, pointsList, pointsListSize, sizeX, sizeY, waveletNo, thresholdVal, watershedRatio,
 	              volMin, intMin, gaussFit, sigmaX, sigmaY, angle, roi);
 }
 
@@ -31,7 +31,7 @@ long _stdcall Process(unsigned short* image, double* pointsList, const unsigned 
                       const double thresholdVal, const double watershedRatio, const double volMin, const double intMin, const unsigned short gaussFit,
                       const double sigmaX, const double sigmaY, const double angle, const unsigned short roi)
 {
-	auto palm = CPALM(image, pointsList, pointsListSize, sizeX, sizeY, waveletNo, thresholdVal, watershedRatio,
+	auto palm = Palm(image, pointsList, pointsListSize, sizeX, sizeY, waveletNo, thresholdVal, watershedRatio,
 	                  volMin, intMin, gaussFit, sigmaX, sigmaY, angle, roi);
 	return palm.Processing();
 }

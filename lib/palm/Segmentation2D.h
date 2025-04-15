@@ -1,37 +1,34 @@
 #pragma once
 
-#include "Windows.h"
-#include "Segmentation.h"
+#include <vector>
 #include "info_2D.h"
-#include "tools/allDataLib.h"
+#include "Segmentation.h"
 
 
-class Segmentation2D : public Segmentation
+class Segmentation2D final : public Segmentation
 {
+public:
+	Segmentation2D(const size_t height, const size_t width)
+		: height_(height), width_(width), size_(height * width), headInfo_(nullptr) { nbInfoStruct_ = 0; }
+
+	~Segmentation2D() override { desalloc(); }
+
+	int ComputeStatistics(const std::vector<float>& data, const std::vector<unsigned short>& seg, const float* waveData, unsigned short gaussFit, bool doRealoc = true);
+
+	size_t FilterData(std::vector<unsigned short>& seg, const double* param, const unsigned short* useParam);
+	std::vector<InfoStruct2D*> GetTabInfo() const { return tabInfo_; }
+
+	int WatershedIntelligent(const std::vector<float>& potential, std::vector<unsigned short>& seg, double threshold, double thresholdRatio);
+
 private:
-	InfoStruct2D* headInfo;
-	InfoStruct2D** tabInfo;
+	size_t height_, width_, size_;
+	InfoStruct2D* headInfo_;
+	std::vector<InfoStruct2D*> tabInfo_;
 
-
-	int alloc(unsigned long nbStruct);
+	int alloc(size_t nbStruct);
 	void desalloc();
 
-	int filterStructureWS(FltArray& potential, USrtArray& seg, float thresholdRatio);
-	static int getLocalMax(FltArray& potential, USrtArray& seg, float threshold);
-	int watershed(FltArray& potential, USrtArray& seg, float threshold) const;
-
-	static float tic();
-
-public:
-	Segmentation2D();
-	Segmentation2D(unsigned long _nbInfoStruct);
-	~Segmentation2D() override;
-
-	int computeStatistics(FltArray& data, USrtArray& seg, float* waveData, unsigned short gaussFit, bool doRealoc = true);
-
-	unsigned long filterData(USrtArray& seg, double* param, unsigned short* useParam);
-	void** getTabInfo() const;
-
-	int watershedIntelligent(FltArray& potential, USrtArray& seg, float threshold, float thresholdRatio);
-	void mixIndex(USrtArray& seg) const;
+	int filterStructureWS(const std::vector<float>& potential, std::vector<unsigned short>& seg, double thresholdRatio);
+	int getLocalMax(const std::vector<float>& potential, std::vector<unsigned short>& seg, double threshold) const;
+	size_t watershed(const std::vector<float>& potential, std::vector<unsigned short>& seg, double threshold) const;
 };

@@ -3,28 +3,24 @@
 
 #include "ATrous.h"
 #include "Segmentation2D.h"
-#include "tools/allDataLib.h"
-
-// Cette classe est exportée de PALM.dll
-//class PALM_API CPALM {
 
 constexpr size_t N_SEGMENTS = 13;
 constexpr size_t N_PLANES = 9;
 
-class CPALM
+class Palm
 {
 public:
-	CPALM(unsigned short* image, double* points, unsigned long pointsListSize, unsigned long height, unsigned long width,
+	Palm(unsigned short* image, double* points, unsigned long pointsListSize, unsigned long height, unsigned long width,
 	      unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX,
 	      double sigmaY, double theta, unsigned short roi);
-	~CPALM() = default;
+	~Palm() = default;
 
 	long Processing();
 
 private:
 	unsigned short* image_;
 	double* points_;
-	size_t height_, width_, size_, nPoints_, nPointsMaxPerPlane_, waveletNo_, currentPoint_, roi_;
+	size_t height_, width_, size_, nPointsMaxPerPlane_, waveletNo_, currentPoint_, roi_;
 	double thresholdVal_, volMin_, intMin_, watershedRatio_;
 
 	size_t gaussFit_;
@@ -37,8 +33,8 @@ private:
 	std::array<double, N_PLANES> threshold_;
 
 	ATrous aTrousPub_;
-	USrtArray segPub_;
-	FltArray outputPub_;
+	std::vector<unsigned short> segPub_;
+	std::vector<float> outputPub_;
 	Segmentation2D segmentPub_;
 	std::array<bool, N_PLANES> planesToUseB_;
 	size_t nbPlane_;

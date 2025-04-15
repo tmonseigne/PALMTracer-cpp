@@ -4,7 +4,7 @@
 #include "tools/allDataLib.h"
 
 // Cette classe est exportée de PALM.dll
-//class PALM_API CPALM {
+//class PALM_API Palm {
 
 // includes, project
 //#include <helper_cuda.h>
@@ -42,14 +42,14 @@ extern "C"
 void convertUSrtToFloat(unsigned short* input, float* output, unsigned short numImages, unsigned short width, unsigned short height);
 
 
-class CPALM
+class Palm
 {
 public:
 	// TODO : ajoutez ici vos méthodes.
 
 	long Processing();
-	CPALM(unsigned short* image, double* points, unsigned long pointsListSize, unsigned long height, unsigned long width, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double theta, unsigned short roi);
-	~CPALM();
+	Palm(unsigned short* image, double* points, unsigned long pointsListSize, unsigned long height, unsigned long width, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double theta, unsigned short roi);
+	~Palm();
 	unsigned long height_;
 	unsigned long width_;
 	unsigned short* image_;

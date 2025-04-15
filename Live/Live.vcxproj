@@ -128,7 +128,6 @@
     <ClCompile Include="..\lib\palm\ATrous.cpp" />
     <ClCompile Include="..\lib\palm\ATrous2D.cpp" />
     <ClCompile Include="..\lib\palm\CPALM.cpp" />
-    <ClCompile Include="..\lib\palm\Segmentation.cpp" />
     <ClCompile Include="..\lib\palm\segmentation_2D.cpp" />
     <ClCompile Include="..\lib\palm\watershed_2D.cpp" />
     <ClCompile Include="..\lib\tools\arrayType.cpp" />

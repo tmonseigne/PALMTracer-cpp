@@ -1,35 +1,20 @@
 // PALM.cpp : définit le point d'entrée pour l'application DLL.
 //
 
-#include "CPALM.h"
+#include "Palm.h"
 #include "fit/GaussianFit2D.h"
 #include "fit/GaussianFit2D_Sigma.h"
 #include "fit/GaussianFit3D.h"
 #include "fit/GaussianFit3D_Theta.h"
 
-CPALM::CPALM(unsigned short* image, double* points, const unsigned long pointsListSize, const unsigned long height, const unsigned long width,
+Palm::Palm(unsigned short* image, double* points, const unsigned long pointsListSize, const unsigned long height, const unsigned long width,
              const unsigned long waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin,
              const unsigned short gaussFit, const double sigmaX, const double sigmaY, const double theta, const unsigned short roi)
+	: image_(image), points_(points), height_(height), width_(width), size_(height * width), nPointsMaxPerPlane_(pointsListSize / N_SEGMENTS),
+	  waveletNo_(waveletNo), currentPoint_(0), roi_(roi), thresholdVal_(thresholdVal), volMin_(volMin), intMin_(intMin), watershedRatio_(watershedRatio),
+	  gaussFit_(gaussFit), initSigmaX_(sigmaX), initSigmaY_(sigmaY), initTheta_(theta), segmentPub_(height, width),
+	  y_(0), x_(0), intensity_(0), sigmaX_(0), sigmaY_(0), theta_(0), offset_(0), rss_(0)
 {
-	currentPoint_ = 0;
-	image_ = image;
-	points_ = points;
-	nPoints_ = pointsListSize;
-	nPointsMaxPerPlane_ = nPoints_ / N_SEGMENTS;
-	height_ = height;
-	width_ = width;
-	size_ = height_ * width_;
-	waveletNo_ = waveletNo;
-	thresholdVal_ = thresholdVal;
-	watershedRatio_ = watershedRatio;
-	volMin_ = volMin;
-	intMin_ = intMin;
-	gaussFit_ = gaussFit;
-	initSigmaX_ = sigmaX;
-	initSigmaY_ = sigmaY;
-	initTheta_ = theta;
-	roi_ = roi;
-
 	structFiltParam_.fill(0);
 	structFiltParamUse_.fill(0);
 	planesToUse_.fill(0);
@@ -48,9 +33,9 @@ CPALM::CPALM(unsigned short* image, double* points, const unsigned long pointsLi
 		structFiltParam_[2] = intMin_;
 	}
 
+	segPub_.resize(size_);
+	outputPub_.resize(size_);
 	if (aTrousPub_.wDecomp_.alloc(height_, width_, waveletNo + 2) < 0) { return; }
-	if (segPub_.realloc(height_, width_) < 0) { return; }
-	if (outputPub_.alloc(height_, width_) < 0) { return; }
 
 
 	nbPlane_ = 0;
@@ -61,40 +46,33 @@ CPALM::CPALM(unsigned short* image, double* points, const unsigned long pointsLi
 	planesToUseB_[8] = false;
 }
 
-long CPALM::Processing()
+long Palm::Processing()
 {
 	int ret;
-	long nbStruct;
-	int nbPointsSign;
-	const size_t Size = height_ * width_;
-	if ((ret = aTrousPub_.ATrousDecomposition2D(image_,height_, width_, planesToUseB_.data(), nbPlane_, false)) < 0) { return ret; }
+	if ((ret = aTrousPub_.ATrousDecomposition2D(image_, height_, width_, planesToUseB_.data(), nbPlane_, false)) < 0) { return ret; }
 
-	for (long j = 0; j < Size; j++) {
-		const long offs = waveletNo_ * Size;
+	for (long j = 0; j < size_; j++) {
+		const long offs = waveletNo_ * size_;
 		if (aTrousPub_.wDecomp_.data[offs + j] > thresholdVal_) {
-			outputPub_.data[j] = aTrousPub_.wDecomp_.data[offs + j];
-			segPub_.data[j] = 1;
+			outputPub_[j] = aTrousPub_.wDecomp_.data[offs + j];
+			segPub_[j] = 1;
 		}
 		else {
-			segPub_.data[j] = 0;
-			outputPub_.data[j] = 0;
+			segPub_[j] = 0;
+			outputPub_[j] = 0;
 		}
 	}
 
-	if ((nbStruct = segmentPub_.watershedIntelligent(outputPub_, segPub_, 1e-8f, watershedRatio_)) < 0) { return nbStruct; }
+	if ((ret = segmentPub_.WatershedIntelligent(outputPub_, segPub_, 1e-8, watershedRatio_)) < 0) { return ret; }
+	if ((ret = segmentPub_.ComputeStatistics(outputPub_, segPub_, aTrousPub_.wDecomp_.data + waveletNo_ * size_, gaussFit_)) < 0) { return ret; }
 
 
-	if ((nbPointsSign = segmentPub_.computeStatistics(outputPub_, segPub_, aTrousPub_.wDecomp_.data + waveletNo_ * Size, gaussFit_)) < 0) {
-		return nbPointsSign;
-	}
+	if (volMin_ > 0. || intMin_ > 0.) { if ((ret = segmentPub_.FilterData(segPub_, structFiltParam_.data(), structFiltParamUse_.data())) < 0) { return ret; } }
 
+	const auto& P = segmentPub_.GetTabInfo();
 
-	if (volMin_ > 0. || intMin_ > 0.) { if ((nbStruct = segmentPub_.filterData(segPub_, structFiltParam_.data(), structFiltParamUse_.data())) < 0) { return ret; } }
-
-	auto p = reinterpret_cast<InfoStruct2D**>(segmentPub_.getTabInfo());
-
-	for (int i = 1; i <= min(nbStruct, nPointsMaxPerPlane_ - 2); ++i) {
-		initGaussianFitParam(p[i]->data_.moment.y, p[i]->data_.moment.x, initSigmaX_, initSigmaY_, initTheta_);
+	for (size_t i = 1; i <= std::min<size_t>(ret, nPointsMaxPerPlane_ - 2); ++i) {
+		initGaussianFitParam(P[i]->data_.moment.y, P[i]->data_.moment.x, initSigmaX_, initSigmaY_, initTheta_);
 		switch (gaussFit_) {
 			default: {
 				sigmaX_ = 0;
@@ -105,7 +83,7 @@ long CPALM::Processing()
 			}
 
 			case 1: { // Sigma is constant
-			
+
 				// Gaussian fit of 2D
 				GaussianFit2D fit;
 				fit.Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, offset_, rss_, 10, roi_);
@@ -124,8 +102,8 @@ long CPALM::Processing()
 				break;
 			}
 
-			case 3: {// Theta is constant
-			
+			case 3: { // Theta is constant
+
 				// Gaussian fit of 3D
 				GaussianFit3D fit;
 				fit.Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, 10, roi_);
@@ -139,7 +117,7 @@ long CPALM::Processing()
 				break;
 			}
 		}
-		fillPointList(p[i]->data_);
+		fillPointList(P[i]->data_);
 	}
 
 	// Blank Line
@@ -150,7 +128,7 @@ long CPALM::Processing()
 }
 
 
-void CPALM::initGaussianFitParam(const double x, const double y, const double sigmaX, const double sigmaY, const double theta)
+void Palm::initGaussianFitParam(const double x, const double y, const double sigmaX, const double sigmaY, const double theta)
 {
 	x_ = x;
 	y_ = y;
@@ -162,7 +140,7 @@ void CPALM::initGaussianFitParam(const double x, const double y, const double si
 	rss_ = -1;
 }
 
-void CPALM::fillPointList(const InfoDataRich2D& data)
+void Palm::fillPointList(const InfoDataRich2D& data)
 {
 	points_[currentPoint_++] = sigmaX_;
 	points_[currentPoint_++] = sigmaY_;

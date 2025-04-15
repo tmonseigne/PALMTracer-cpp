@@ -49,9 +49,6 @@
     <ClCompile Include="..\lib\palm\ATrous2D.cpp">
       <Filter>Palm</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\palm\Segmentation.cpp">
-      <Filter>Palm</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\palm\watershed_2D.cpp">
       <Filter>Palm</Filter>
     </ClCompile>

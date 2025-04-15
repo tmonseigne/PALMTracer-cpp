@@ -30,7 +30,7 @@
 #endif
 
 
-CPALM* c;
+Palm* c;
 
 double sum;
 unsigned int pointsNumber;
@@ -41,7 +41,7 @@ unsigned int pointsNumber;
 /**********************/
 
 
-CPALM::CPALM(unsigned short* image, double* points, unsigned long pointsListSize, unsigned long height, unsigned long width, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double theta, unsigned short roi)
+Palm::Palm(unsigned short* image, double* points, unsigned long pointsListSize, unsigned long height, unsigned long width, unsigned long waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, unsigned short gaussFit, double sigmaX, double sigmaY, double theta, unsigned short roi)
 {
 	long ret;
 	currentPoint_ = 0;
@@ -149,7 +149,7 @@ int aTrousDecomposition2D(unsigned short* d_inputData, float* d_outputData, unsi
 }
 
 
-long CPALM::Processing()
+long Palm::Processing()
 {
 	int ret;
 	long nbStruct;
@@ -247,7 +247,7 @@ long CPALM::Processing()
 }
 
 
-CPALM::~CPALM()
+Palm::~Palm()
 {
 	delete aTrousPub_;
 	delete segPub_;
@@ -262,7 +262,7 @@ _declspec(dllexport) void _stdcall __OpenPALMProcessing(unsigned short* image, d
 	sum = 0.;
 	pointsNumber = 0;
 
-	c = new CPALM(image, pointsList, pointsListSize, sizeX, sizeY, waveletNo, thresholdVal, watershedRatio, volMin, intMin, gaussFit, sigmaX, sigmaY, angle, size);
+	c = new Palm(image, pointsList, pointsListSize, sizeX, sizeY, waveletNo, thresholdVal, watershedRatio, volMin, intMin, gaussFit, sigmaX, sigmaY, angle, size);
 }
 
 _declspec(dllexport) long _stdcall __PALMProcessing() { return c->Processing(); }

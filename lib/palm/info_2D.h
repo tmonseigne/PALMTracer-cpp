@@ -5,26 +5,16 @@
 
 #define MAX_NB_ANGLES_GABOR	8
 #define MAX_NB_FREQ_GABOR	13
+#include <memory>
 
 typedef struct
 {
-	double x;
-	double y;
+	double x, y;
 } val2D;
 
-
 typedef struct
 {
-	long x;
-	long y;
-} coor2D;
-
-typedef struct
-{
-	long xMin;
-	long xMax;
-	long yMin;
-	long yMax;
+	size_t xMin, xMax, yMin, yMax;
 } box2D;
 
 typedef struct
@@ -45,36 +35,25 @@ typedef struct
 typedef struct
 {
 	double val;
-	unsigned long x;
-	unsigned long y;
+	size_t x, y;
 } maxStruct2D;
 
 typedef struct
 {
-	double xx;
-	double yy;
-	double xy;
+	double xx, yy, xy;
 } varianceStruct2D;
 
 typedef struct
 {
-	double real;
-	double imag;
-} cpx;
-
-typedef struct
-{
-	double max;
-	double mean;
-	double angleMax;
+	double max, mean, angleMax;
 } gaborCoefs;
 
 typedef struct
 {
-	unsigned long peri;
-	unsigned long surf;
-	maxStruct2D max;
+	size_t peri;
+	size_t surf;
 	maxStruct2D min;
+	maxStruct2D max;
 	double stdev;
 	double morpho;
 	val2D moment;
@@ -84,14 +63,10 @@ typedef struct
 	varianceStruct2D var;
 	val2D sigma;
 	double angle;
-	unsigned long index;
-	unsigned long time;
+	size_t index;
+	size_t time;
 	long maxLength;
-	unsigned long zOrderComputed;
-	cpx zernikeMoments[36];
-	gaborCoefs gaborMoments[MAX_NB_FREQ_GABOR];
-	bool isPseudoZernike;
-	coor2D centerZernike;
+	size_t zOrderComputed;
 	box2D boundingBox;
 	unsigned short nbSubstructures;
 } InfoDataRich2D;
@@ -99,8 +74,8 @@ typedef struct
 
 typedef struct
 {
-	unsigned long peri;
-	unsigned long surf;
+	size_t peri;
+	size_t surf;
 	maxStruct2D max;
 	double morpho;
 	val2D moment;
@@ -110,8 +85,8 @@ typedef struct
 	varianceStruct2D var;
 	val2D sigma;
 	double angle;
-	unsigned long index;
-	unsigned long time;
+	size_t index;
+	size_t time;
 	long maxLength;
 } InfoData2D;
 
@@ -119,7 +94,7 @@ typedef struct
 class InfoStruct2D
 {
 public:
-	explicit InfoStruct2D(const int index)
+	explicit InfoStruct2D(const size_t index)
 	{
 		data_.index = index;
 		data_.zOrderComputed = 0;

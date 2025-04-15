@@ -110,7 +110,7 @@
     <Link>
       <OutputFile>../PALM\CPU_PALM.dll</OutputFile>
       <AdditionalLibraryDirectories>../_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <ModuleDefinitionFile>.\PALM.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>.\CPU_PALM.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -130,17 +130,16 @@
     <ClCompile Include="..\lib\fit\GaussianFit3D.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit3D_Theta.cpp" />
     <ClCompile Include="..\lib\palm\ATrous.cpp" />
-    <ClCompile Include="..\lib\palm\CPALM.cpp" />
-    <ClCompile Include="..\lib\palm\Segmentation.cpp" />
+    <ClCompile Include="..\lib\palm\Palm.cpp" />
     <ClCompile Include="..\lib\palm\Segmentation2D.cpp" />
     <ClCompile Include="..\lib\tools\arrayType.cpp" />
     <ClCompile Include="..\lib\tools\FltArray.cpp" />
     <ClCompile Include="..\lib\tools\operators.cpp" />
     <ClCompile Include="..\lib\tools\USrtArray.cpp" />
-    <ClCompile Include="PALM.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="PALM.def" />
+    <None Include="CPU_PALM.def" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\fit\GaussianFit.h" />
@@ -149,7 +148,7 @@
     <ClInclude Include="..\lib\fit\GaussianFit3D.h" />
     <ClInclude Include="..\lib\fit\GaussianFit3D_Theta.h" />
     <ClInclude Include="..\lib\palm\ATrous.h" />
-    <ClInclude Include="..\lib\palm\CPALM.h" />
+    <ClInclude Include="..\lib\palm\Palm.h" />
     <ClInclude Include="..\lib\palm\info_2D.h" />
     <ClInclude Include="..\lib\palm\parameters.h" />
     <ClInclude Include="..\lib\palm\Segmentation.h" />
@@ -162,7 +161,7 @@
     <ClInclude Include="..\lib\tools\NoError.h" />
     <ClInclude Include="..\lib\tools\pandore.h" />
     <ClInclude Include="..\lib\tools\USrtArray.h" />
-    <ClInclude Include="PALM.h" />
+    <ClInclude Include="main.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
