@@ -2,18 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="..\lib\tools\USrtArray.cpp">
-      <Filter>Tools</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\tools\FltArray.cpp">
-      <Filter>Tools</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\tools\arrayType.cpp">
-      <Filter>Tools</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\tools\operators.cpp">
-      <Filter>Tools</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\fit\GaussianFit2D.cpp">
       <Filter>Fit</Filter>
     </ClCompile>
@@ -41,28 +29,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h" />
-    <ClInclude Include="..\lib\tools\errc.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tools\lists.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tools\pandore.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tools\allDataLib.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\tools\NoError.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tools\USrtArray.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tools\FltArray.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tools\arrayType.h">
       <Filter>Tools</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\fit\GaussianFit.h">
@@ -87,9 +54,6 @@
       <Filter>Palm</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\palm\Palm.h">
-      <Filter>Palm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\palm\parameters.h">
       <Filter>Palm</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\palm\Segmentation.h">

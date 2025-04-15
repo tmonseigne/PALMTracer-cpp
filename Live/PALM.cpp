@@ -16,7 +16,6 @@
 #include "GaussianFit3D.h"
 #include "GaussianFit3D_Theta.h"
 #include "PALM_Class.h"
-#include "palm/parameters.h"
 
 #ifdef _MANAGED
 #pragma managed(push, off)

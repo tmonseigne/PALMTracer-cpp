@@ -56,19 +56,10 @@
     <ClInclude Include="..\lib\tools\arrayType.h">
       <Filter>Tools</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tools\errc.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\tools\FltArray.h">
       <Filter>Tools</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tools\lists.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\tools\NoError.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tools\pandore.h">
       <Filter>Tools</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tools\USrtArray.h">

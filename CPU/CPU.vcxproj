@@ -132,10 +132,6 @@
     <ClCompile Include="..\lib\palm\ATrous.cpp" />
     <ClCompile Include="..\lib\palm\Palm.cpp" />
     <ClCompile Include="..\lib\palm\Segmentation2D.cpp" />
-    <ClCompile Include="..\lib\tools\arrayType.cpp" />
-    <ClCompile Include="..\lib\tools\FltArray.cpp" />
-    <ClCompile Include="..\lib\tools\operators.cpp" />
-    <ClCompile Include="..\lib\tools\USrtArray.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -150,17 +146,9 @@
     <ClInclude Include="..\lib\palm\ATrous.h" />
     <ClInclude Include="..\lib\palm\Palm.h" />
     <ClInclude Include="..\lib\palm\info_2D.h" />
-    <ClInclude Include="..\lib\palm\parameters.h" />
     <ClInclude Include="..\lib\palm\Segmentation.h" />
     <ClInclude Include="..\lib\palm\Segmentation2D.h" />
-    <ClInclude Include="..\lib\tools\allDataLib.h" />
-    <ClInclude Include="..\lib\tools\arrayType.h" />
-    <ClInclude Include="..\lib\tools\errc.h" />
-    <ClInclude Include="..\lib\tools\FltArray.h" />
-    <ClInclude Include="..\lib\tools\lists.h" />
     <ClInclude Include="..\lib\tools\NoError.h" />
-    <ClInclude Include="..\lib\tools\pandore.h" />
-    <ClInclude Include="..\lib\tools\USrtArray.h" />
     <ClInclude Include="main.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
