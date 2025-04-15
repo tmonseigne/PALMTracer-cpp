@@ -1,25 +1,24 @@
 #pragma once
 #include <vector>
 
-#include "tools/allDataLib.h"
-
 
 class ATrous
 {
 public:
+	size_t height_, width_, size_;
 	std::vector<double> tmp_;
-	FltArray wDecomp_;
+	std::vector<std::vector<float>> wDecomp_;
 	ATrous() = default;
 	~ATrous() = default;
 
-	int ATrousDecomposition2D(unsigned short* image, size_t height, size_t width, bool* planesToUse, size_t nbPlane, bool realProj);
+	int ATrousDecomposition2D(const unsigned short* image, size_t height, size_t width, bool* planesToUse, size_t nbPlane, bool realProj);
 
 	//2D transform:
 private:
-	static int offsetTest(int i, int j, int maxSizeI, int maxSizeJ);
-	static int offset(int i, int j, int maxSizeJ);
-	int testSizes2D(size_t height, size_t width, bool* planesToUse, size_t& nbPlane);
-	void projectionV02D(const unsigned short* image, size_t realProj, size_t height, size_t width);
-	int b3SplineFiltering2D(const float* srcData, float* destData, size_t height, size_t width, size_t currentPlane);
+	size_t offsetTest(int i, int j) const;
+	size_t offset(size_t i, size_t j) const;
+	int testSizes2D(bool* planesToUse, size_t& nbPlane) const;
+	void projectionV02D(const unsigned short* image, size_t realProj);
+	void b3SplineFiltering2D(const std::vector<float>& in, std::vector<float>& out, size_t plane);
 };
 

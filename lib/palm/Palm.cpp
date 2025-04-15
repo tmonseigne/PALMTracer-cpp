@@ -8,8 +8,8 @@
 #include "fit/GaussianFit3D_Theta.h"
 
 Palm::Palm(unsigned short* image, double* points, const unsigned long pointsListSize, const unsigned long height, const unsigned long width,
-             const unsigned long waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin,
-             const unsigned short gaussFit, const double sigmaX, const double sigmaY, const double theta, const unsigned short roi)
+           const unsigned long waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin,
+           const unsigned short gaussFit, const double sigmaX, const double sigmaY, const double theta, const unsigned short roi)
 	: image_(image), points_(points), height_(height), width_(width), size_(height * width), nPointsMaxPerPlane_(pointsListSize / N_SEGMENTS),
 	  waveletNo_(waveletNo), currentPoint_(0), roi_(roi), thresholdVal_(thresholdVal), volMin_(volMin), intMin_(intMin), watershedRatio_(watershedRatio),
 	  gaussFit_(gaussFit), initSigmaX_(sigmaX), initSigmaY_(sigmaY), initTheta_(theta), segmentPub_(height, width),
@@ -35,8 +35,8 @@ Palm::Palm(unsigned short* image, double* points, const unsigned long pointsList
 
 	segPub_.resize(size_);
 	outputPub_.resize(size_);
-	if (aTrousPub_.wDecomp_.alloc(height_, width_, waveletNo + 2) < 0) { return; }
-
+	aTrousPub_.wDecomp_.resize(waveletNo + 2);
+	for (auto& wavelet : aTrousPub_.wDecomp_) { wavelet.resize(size_); }
 
 	nbPlane_ = 0;
 	for (size_t i = 0; i < N_PLANES; i++) {
@@ -52,9 +52,8 @@ long Palm::Processing()
 	if ((ret = aTrousPub_.ATrousDecomposition2D(image_, height_, width_, planesToUseB_.data(), nbPlane_, false)) < 0) { return ret; }
 
 	for (long j = 0; j < size_; j++) {
-		const long offs = waveletNo_ * size_;
-		if (aTrousPub_.wDecomp_.data[offs + j] > thresholdVal_) {
-			outputPub_[j] = aTrousPub_.wDecomp_.data[offs + j];
+		if (aTrousPub_.wDecomp_[waveletNo_][j] > thresholdVal_) {
+			outputPub_[j] = aTrousPub_.wDecomp_[waveletNo_][j];
 			segPub_[j] = 1;
 		}
 		else {
@@ -64,7 +63,7 @@ long Palm::Processing()
 	}
 
 	if ((ret = segmentPub_.WatershedIntelligent(outputPub_, segPub_, 1e-8, watershedRatio_)) < 0) { return ret; }
-	if ((ret = segmentPub_.ComputeStatistics(outputPub_, segPub_, aTrousPub_.wDecomp_.data + waveletNo_ * size_, gaussFit_)) < 0) { return ret; }
+	if ((ret = segmentPub_.ComputeStatistics(outputPub_, segPub_, aTrousPub_.wDecomp_[waveletNo_], gaussFit_)) < 0) { return ret; }
 
 
 	if (volMin_ > 0. || intMin_ > 0.) { if ((ret = segmentPub_.FilterData(segPub_, structFiltParam_.data(), structFiltParamUse_.data())) < 0) { return ret; } }

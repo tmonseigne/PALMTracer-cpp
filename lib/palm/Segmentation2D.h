@@ -13,7 +13,7 @@ public:
 
 	~Segmentation2D() override { desalloc(); }
 
-	int ComputeStatistics(const std::vector<float>& data, const std::vector<unsigned short>& seg, const float* waveData, unsigned short gaussFit, bool doRealoc = true);
+	int ComputeStatistics(const std::vector<float>& data, const std::vector<unsigned short>& seg, const std::vector<float>& waveData, size_t gaussFit, bool doRealoc = true);
 
 	size_t FilterData(std::vector<unsigned short>& seg, const double* param, const unsigned short* useParam);
 	std::vector<InfoStruct2D*> GetTabInfo() const { return tabInfo_; }

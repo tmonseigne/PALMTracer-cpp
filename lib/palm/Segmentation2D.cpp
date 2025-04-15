@@ -250,8 +250,8 @@ size_t Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double
 	return nbInfoStruct_;
 }
 
-int Segmentation2D::ComputeStatistics(const std::vector<float>& data, const std::vector<unsigned short>& seg, const float* waveData,
-                                      const unsigned short gaussFit, const bool doRealoc)
+int Segmentation2D::ComputeStatistics(const std::vector<float>& data, const std::vector<unsigned short>& seg, const std::vector<float>& waveData,
+                                      const size_t gaussFit, const bool doRealoc)
 {
 	double val;
 	size_t cptPoints = 0;

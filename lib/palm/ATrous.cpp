@@ -1,11 +1,8 @@
 #include "ATrous.h"
 
-#include "tools/allDataLib.h"
+#include <algorithm>
+
 #include "tools/NoError.h"
-
-
-#define	OFFSET(i,j)	offset((i),(j),width)
-#define	OFFSETTEST(i,j)	offsetTest((i),(j),height,width)
 
 
 size_t twoToThe(const size_t val)
@@ -14,159 +11,151 @@ size_t twoToThe(const size_t val)
 	return static_cast<size_t>(1) << val; // 1 décalé à gauche de 'val' bits
 }
 
-int ATrous::offsetTest(int i, int j, const int maxSizeI, const int maxSizeJ)
+size_t ATrous::offsetTest(int i, int j) const
 {
-	//Same as offset but if i or j are out of bounds, it changes them to be in bounds.
-	if (i < 0) { i = 0; }
-	if (i >= maxSizeI) { i = maxSizeI - 1; }
-	if (j < 0) { j = 0; }
-	if (j >= maxSizeJ) { j = maxSizeJ - 1; }
-	return offset(i, j, maxSizeJ);
+	i = std::clamp(i, 0, static_cast<int>(height_) - 1);
+	j = std::clamp(j, 0, static_cast<int>(width_) - 1);
+	return offset(static_cast<size_t>(i), static_cast<size_t>(j));
 }
 
 
 //Compute the offset translate   tab[i][j] to tab[i*maxSizeJ+j]
-int ATrous::offset(const int i, const int j, const int maxSizeJ) { return i * maxSizeJ + j; }
+size_t ATrous::offset(const size_t i, const size_t j) const { return i * width_ + j; }
 
 
-int ATrous::testSizes2D(const size_t height, const size_t width, bool* planesToUse, size_t& nbPlane)
+int ATrous::testSizes2D(bool* planesToUse, size_t& nbPlane) const
 {
 	//Test in, out, planesToUse, nbPlane
 
-	if (!wDecomp_.isThereData()) { return W_INIT_ERR; }
-	for (size_t i = wDecomp_.size(2); i < 9; ++i) { planesToUse[i - 1] = false; }
+	for (size_t i = wDecomp_.size(); i < 9; ++i) { planesToUse[i - 1] = false; }
 
 
 	if (nbPlane < 2) { return W_SIZE_ERR; }
 	long sizeWavelet = twoToThe(nbPlane + 1);
-	while (height <= sizeWavelet || width <= sizeWavelet) {
+	while (height_ <= sizeWavelet || width_ <= sizeWavelet) {
 		nbPlane--;
 		sizeWavelet = twoToThe(nbPlane + 1);
 	}
-
 
 	return nbPlane;
 }
 
 
-void ATrous::projectionV02D(const unsigned short* image, const size_t realProj, const size_t height, const size_t width)
+void ATrous::projectionV02D(const unsigned short* image, const size_t realProj)
 {
 	//Makes a projection in V0 space to be in the apropriate condition of the multiresolution, 
 	//realProj make be set to 1 if realProj=0 it just copy the data from image to destData
 
-	int i, j, cur_i, cur_j, offs;
-	const double tab[3] = {0.1666666666, 0.6666666666666, 0.16666666666};
+	constexpr double tab[3] = {0.1666666666, 0.6666666666666, 0.16666666666};
 	if (realProj == 1) {
-		i = 0;
-		for (j = 0; j < width; j++) {
-			offs = OFFSET(i, j);
-			wDecomp_(offs) = 0.0;
-			for (cur_i = -1; cur_i < 2; cur_i++) {
-				for (cur_j = -1; cur_j < 2; cur_j++) { wDecomp_(offs) += (float)(image[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]); }
+		int i = 0, j, cur_i, cur_j;
+		size_t idx;
+		for (j = 0; j < width_; ++j) {
+			idx = offset(i, j);
+			wDecomp_[0][idx] = 0.0;
+			for (cur_i = -1; cur_i < 2; ++cur_i) {
+				for (cur_j = -1; cur_j < 2; ++cur_j) { wDecomp_[0][idx] += image[offsetTest(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]; }
 			}
 		}
 
 
-		for (i = 1; i < height - 1; i++) {
+		for (i = 1; i < height_ - 1; ++i) {
 			j = 0;
-			offs = OFFSET(i, j);
-			wDecomp_(offs) = 0.0;
-			for (cur_i = -1; cur_i < 2; cur_i++) {
-				for (cur_j = -1; cur_j < 2; cur_j++) { wDecomp_(offs) += (float)(image[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]); }
+			idx = offset(i, j);
+			wDecomp_[0][idx] = 0.0;
+			for (cur_i = -1; cur_i < 2; ++cur_i) {
+				for (cur_j = -1; cur_j < 2; ++cur_j) { wDecomp_[0][idx] += image[offsetTest(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]; }
 			}
 
 
-			for (j = 1; j < width - 1; j++) {
-				offs = OFFSET(i, j);
-				wDecomp_(offs) = 0.0;
-				for (cur_i = -1; cur_i < 2; cur_i++) {
-					for (cur_j = -1; cur_j < 2; cur_j++) {
-						wDecomp_(offs) += (float)(image[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]);
-					}
+			for (j = 1; j < width_ - 1; ++j) {
+				idx = offset(i, j);
+				wDecomp_[0][idx] = 0.0;
+				for (cur_i = -1; cur_i < 2; ++cur_i) {
+					for (cur_j = -1; cur_j < 2; ++cur_j) { wDecomp_[0][idx] += image[offsetTest(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]; }
 				}
 			}
 
-			j = width - 1;
-			offs = OFFSET(i, j);
-			wDecomp_(offs) = 0.0;
-			for (cur_i = -1; cur_i < 2; cur_i++) {
-				for (cur_j = -1; cur_j < 2; cur_j++) { wDecomp_(offs) += (float)(image[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]); }
+			j = width_ - 1;
+			idx = offset(i, j);
+			wDecomp_[0][idx] = 0.0;
+			for (cur_i = -1; cur_i < 2; ++cur_i) {
+				for (cur_j = -1; cur_j < 2; ++cur_j) { wDecomp_[0][idx] += image[offsetTest(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]; }
 			}
 		}
 
-		i = height - 1;
-		for (j = 0; j < (long)width; j++) {
-			offs = OFFSET(i, j);
-			wDecomp_(offs) = 0.0;
-			for (cur_i = -1; cur_i < 2; cur_i++) {
-				for (cur_j = -1; cur_j < 2; cur_j++) { wDecomp_(offs) += (float)(image[OFFSETTEST(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]); }
+		i = height_ - 1;
+		for (j = 0; j < width_; ++j) {
+			idx = offset(i, j);
+			wDecomp_[0][idx] = 0.0;
+			for (cur_i = -1; cur_i < 2; ++cur_i) {
+				for (cur_j = -1; cur_j < 2; ++cur_j) { wDecomp_[0][idx] += image[offsetTest(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]; }
 			}
 		}
 	}
-	else { for (i = 0; i < (height * width); i++) { wDecomp_(i) = (float)image[i]; } }
+	else { for (size_t i = 0; i < size_; ++i) { wDecomp_[0][i] = image[i]; } }
 }
 
-int ATrous::b3SplineFiltering2D(const float* srcData, float* destData, const size_t height, const size_t width, const size_t currentPlane)
+void ATrous::b3SplineFiltering2D(const std::vector<float>& in, std::vector<float>& out, const size_t plane)
 {
 	//Makes the projection in V(x) with hte knowlage of V(x-1)
-	int i, j, offsetij;
-	const float coeffH0 = 3. / 8.;
-	const float coeffH1 = 1. / 4.;
-	const float coeffH2 = 1. / 16.;
+	int i, j;
+	size_t idx;
+	constexpr float CoeffH0 = 3.f / 8.f;
+	constexpr float CoeffH1 = 1.f / 4.f;
+	constexpr float CoeffH2 = 1.f / 16.f;
 
-	const int step = twoToThe(currentPlane);
+	const size_t step = twoToThe(plane);
 
 
 	//convolution in Y axe
-	for (i = 0; i < (long)height; i++) {
-		for (j = 0; j < 2 * step; j++) {
-			offsetij = OFFSET(i, j);
-			tmp_[offsetij] = coeffH0 * srcData[offsetij] + coeffH1 * (srcData[OFFSETTEST(i, j - step)] + srcData[OFFSETTEST(i, j + step)]) + coeffH2 * (
-				                 srcData[OFFSETTEST(i, j - 2 * step)] + srcData[OFFSETTEST(i, j + 2 * step)]);
+	for (i = 0; i < height_; ++i) {
+		for (j = 0; j < 2 * step; ++j) {
+			idx = offset(i, j);
+			tmp_[idx] = CoeffH0 * in[idx] + CoeffH1 * (in[offsetTest(i, j - step)] + in[offsetTest(i, j + step)])
+			            + CoeffH2 * (in[offsetTest(i, j - 2 * step)] + in[offsetTest(i, j + 2 * step)]);
 		}
 
-		for (j = 2 * step; j < (long)width - 2 * step; j++) {
-			offsetij = OFFSET(i, j);
-			tmp_[offsetij] = coeffH0 * srcData[offsetij] + coeffH1 * (srcData[OFFSET(i, j - step)] + srcData[OFFSET(i, j + step)]) + coeffH2 * (
-				                 srcData[OFFSET(i, j - 2 * step)] + srcData[OFFSET(i, j + 2 * step)]);
+		for (j = 2 * step; j < width_ - 2 * step; ++j) {
+			idx = offset(i, j);
+			tmp_[idx] = CoeffH0 * in[idx] + CoeffH1 * (in[offset(i, j - step)] + in[offset(i, j + step)])
+			            + CoeffH2 * (in[offset(i, j - 2 * step)] + in[offset(i, j + 2 * step)]);
 		}
 
-		for (j = width - 2 * step; j < (long)width; j++) {
-			offsetij = OFFSET(i, j);
-			tmp_[offsetij] = coeffH0 * srcData[offsetij] + coeffH1 * (srcData[OFFSETTEST(i, j - step)] + srcData[OFFSETTEST(i, j + step)]) + coeffH2 * (
-				                 srcData[OFFSETTEST(i, j - 2 * step)] + srcData[OFFSETTEST(i, j + 2 * step)]);
+		for (j = width_ - 2 * step; j < width_; ++j) {
+			idx = offset(i, j);
+			tmp_[idx] = CoeffH0 * in[idx] + CoeffH1 * (in[offsetTest(i, j - step)] + in[offsetTest(i, j + step)])
+			            + CoeffH2 * (in[offsetTest(i, j - 2 * step)] + in[offsetTest(i, j + 2 * step)]);
 		}
 	}
 
 	//convolution in X axe
-	for (i = 0; i < 2 * step; i++) {
-		for (j = 0; j < (long)width; j++) {
-			offsetij = OFFSET(i, j);
-			destData[offsetij] = coeffH0 * tmp_[offsetij] + coeffH1 * (tmp_[OFFSETTEST(i - step, j)] + tmp_[OFFSETTEST(i + step, j)]) + coeffH2 * (
-				                     tmp_[OFFSETTEST(i - 2 * step, j)] + tmp_[OFFSETTEST(i + 2 * step, j)]);
+	for (i = 0; i < 2 * step; ++i) {
+		for (j = 0; j < width_; ++j) {
+			idx = offset(i, j);
+			out[idx] = CoeffH0 * tmp_[idx] + CoeffH1 * (tmp_[offsetTest(i - step, j)] + tmp_[offsetTest(i + step, j)])
+			           + CoeffH2 * (tmp_[offsetTest(i - 2 * step, j)] + tmp_[offsetTest(i + 2 * step, j)]);
 		}
 	}
 
-	for (i = 2 * step; i < height - 2 * step; i++) {
-		for (j = 0; j < width; j++) {
-			offsetij = OFFSET(i, j);
-			destData[offsetij] = coeffH0 * tmp_[offsetij] + coeffH1 * (tmp_[OFFSET(i - step, j)] + tmp_[OFFSET(i + step, j)]) + coeffH2 * (
-				                     tmp_[OFFSET(i - 2 * step, j)] + tmp_[OFFSET(i + 2 * step, j)]);
+	for (i = 2 * step; i < height_ - 2 * step; ++i) {
+		for (j = 0; j < width_; ++j) {
+			idx = offset(i, j);
+			out[idx] = CoeffH0 * tmp_[idx] + CoeffH1 * (tmp_[offset(i - step, j)] + tmp_[offset(i + step, j)])
+			           + CoeffH2 * (tmp_[offset(i - 2 * step, j)] + tmp_[offset(i + 2 * step, j)]);
 		}
 	}
 
-	for (i = height - 2 * step; i < height; i++) {
-		for (j = 0; j < width; j++) {
-			offsetij = OFFSET(i, j);
-			destData[offsetij] = coeffH0 * tmp_[offsetij] + coeffH1 * (tmp_[OFFSETTEST(i - step, j)] + tmp_[OFFSETTEST(i + step, j)]) + coeffH2 * (
-				                     tmp_[OFFSETTEST(i - 2 * step, j)] + tmp_[OFFSETTEST(i + 2 * step, j)]);
+	for (i = height_ - 2 * step; i < height_; ++i) {
+		for (j = 0; j < width_; ++j) {
+			idx = offset(i, j);
+			out[idx] = CoeffH0 * tmp_[idx] + CoeffH1 * (tmp_[offsetTest(i - step, j)] + tmp_[offsetTest(i + step, j)])
+			           + CoeffH2 * (tmp_[offsetTest(i - 2 * step, j)] + tmp_[offsetTest(i + 2 * step, j)]);
 		}
 	}
-
-	return RET_OK;
 }
 
-int ATrous::ATrousDecomposition2D(unsigned short* image, const size_t height, const size_t width, bool* planesToUse, size_t nbPlane, const bool realProj)
+int ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t height, const size_t width, bool* planesToUse, size_t nbPlane, const bool realProj)
 {
 	/**
 		WAVELET TRANSFORM WITH "A TROUS" ALGORITHM
@@ -188,43 +177,33 @@ int ATrous::ATrousDecomposition2D(unsigned short* image, const size_t height, co
 		is smooth enough to be already in this basis. If "realProj" is true the projection is done.
 	**/
 
-
+	height_ = height;
+	width_ = width;
+	size_ = height_ * width_;
 	int ret;
-	size_t currentPlane;
-	float** waveletPlanes;
-
-	tmp_.resize(height * width);
+	tmp_.resize(size_);
 
 	//test if nbPlane is not too big !!!
-	if ((ret = testSizes2D(height, width, planesToUse, nbPlane)) < 0) { return ret; }
+	if ((ret = testSizes2D(planesToUse, nbPlane)) < 0) { return ret; }
 
 
 	//allocation of a direct way to reach the differents planes
-	if ((waveletPlanes = (float**)malloc(sizeof(float*) * nbPlane)) == NULL) { return W_INIT_ERR; }
-	for (currentPlane = 0; currentPlane < nbPlane; currentPlane++) { waveletPlanes[currentPlane] = wDecomp_.data + height * width * currentPlane; }
 
 	//do the initialisation of multiresolution algorthm (initialisation of the first wavelet plane)
 	//signal is projected in V0 space
-	projectionV02D(image, realProj, height, width);
+	projectionV02D(image, realProj);
 
 	//Projection of the input signal in each wavelet space.
-	//The signal waveletPlanes[0] is the projection of the input signal in the W1 space,
-	//the signal waveletPlanes[x] is the projection of the input signal in the W(x+1) space...
-	for (currentPlane = 0; currentPlane < (nbPlane - 1); currentPlane++) {
+	//the signal waveletPlanes[x] is the projection of the input signal in the W(x+1) space
+	for (size_t i = 0; i < nbPlane - 1; ++i) {
 		//Firstly it computes in waveletPlanes[x+1] the projection of V(x) with the knowlege of the projection in V(x-1)
-		if ((ret = b3SplineFiltering2D(waveletPlanes[currentPlane], waveletPlanes[currentPlane + 1], height, width, currentPlane)) < 0) { return ret; }
+		b3SplineFiltering2D(wDecomp_[i], wDecomp_[i + 1], i);
 		//Secondly it computes in waveletPlanes[x] the projection of W(x+1)
 		//As proj( W(x+1) ) = proj( V(x) ) - proj( V(x+1) ) ;	proj(Vx) is in waveletPlanes[x+1] 
 		//and proj(Vx+1) is in waveletPlanes[x+2]
 		//	waveletPlanes[x+1][*]=waveletPlanes[x+1][*]-waveletPlanes[x+2][*]
-
-		for (size_t i = 0; i < (height * width); i++) { waveletPlanes[currentPlane][i] -= waveletPlanes[currentPlane + 1][i]; }
+		for (size_t j = 0; j < size_; ++j) { wDecomp_[i][j] -= wDecomp_[i + 1][j]; }
 	}
 
-	free(waveletPlanes);
-	return nbPlane;
+	return static_cast<int>(nbPlane);
 }
-
-
-#undef	OFFSET
-#undef	OFFSETTEST
