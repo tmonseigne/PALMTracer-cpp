@@ -1,15 +1,12 @@
 /*******************************************************************************************************************
 								Link class to treat data from segmentation of images 3D (16bit only)
 *******************************************************************************************************************/
+#pragma once
 
-#ifndef __link_3D__
-#define __link_3D__
 
 typedef struct
 {
-	double x;
-	double y;
-	double z;
+	double x, y, z;
 } val3D;
 
 typedef struct
@@ -95,6 +92,3 @@ public:
 
 	InfoData3D data;
 };
-
-
-#endif

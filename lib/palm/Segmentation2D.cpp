@@ -51,7 +51,7 @@ size_t Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double
 	InfoStruct2D *ptr = headInfo_, *ptrMax, *ptrOld = nullptr;
 	size_t ind = 0;
 	bool unselected;
-	float valMax;
+	double valMax;
 	const size_t NbInfoStructOld = nbInfoStruct_;
 
 	char* tabBound = nullptr;
@@ -153,17 +153,17 @@ size_t Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double
 			//N first structure with the biggest surface (indexFilter=9), the biggest surface (indexFilter=10) or 
 			//the biggest total intensity (indexFilter=11)
 			ptrOld = nullptr;
-			for (size_t i = 0; i < (long)param[indexFilter]; ++i) {
+			for (size_t i = 0; i < static_cast<size_t>(param[indexFilter]); ++i) {
 				if (ptrOld == nullptr) { ptr = headInfo_; }
 				else { ptr = ptrOld->next_; }
 
 				switch (indexFilter) {
-					case 9: valMax = (float)ptr->data_.surf;
+					case 9: valMax = ptr->data_.surf;
 						break;
-					case 10: valMax = (float)(ptr->data_.surf * ptr->data_.mean);
+					case 10: valMax = ptr->data_.surf * ptr->data_.mean;
 						break;
 					case 11:
-					default: valMax = (float)ptr->data_.max.val;
+					default: valMax = ptr->data_.max.val;
 						break;
 				}
 
@@ -172,17 +172,17 @@ size_t Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double
 				while (ptr->next_) {
 					switch (indexFilter) {
 						case 9: if (valMax <= ptr->next_->data_.surf) {
-								valMax = (float)ptr->next_->data_.surf;
+								valMax = ptr->next_->data_.surf;
 								ptrMax = ptr;
 							}
 							break;
-						case 10: if (valMax <= (long)ptr->next_->data_.surf * ptr->next_->data_.mean) {
-								valMax = (float)((long)ptr->next_->data_.surf * ptr->next_->data_.mean);
+						case 10: if (valMax <= ptr->next_->data_.surf * ptr->next_->data_.mean) {
+								valMax = ptr->next_->data_.surf * ptr->next_->data_.mean;
 								ptrMax = ptr;
 							}
 							break;
-						case 11: if (valMax <= (float)ptr->next_->data_.max.val) {
-								valMax = (float)ptr->next_->data_.max.val;
+						case 11: if (valMax <= ptr->next_->data_.max.val) {
+								valMax = ptr->next_->data_.max.val;
 								ptrMax = ptr;
 							}
 							break;
@@ -232,7 +232,7 @@ size_t Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double
 	for (size_t i = 0; i < size_; ++i) {
 		if (seg[i] != 0) {
 			if (tabInfo_[seg[i]] == nullptr) { seg[i] = 0; }
-			else { seg[i] = (unsigned short)tabInfo_[seg[i]]->data_.index; }
+			else { seg[i] = static_cast<unsigned short>(tabInfo_[seg[i]]->data_.index); }
 		}
 	}
 
@@ -250,7 +250,7 @@ size_t Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double
 	return nbInfoStruct_;
 }
 
-int Segmentation2D::ComputeStatistics(const std::vector<float>& data, const std::vector<unsigned short>& seg, const std::vector<float>& waveData,
+int Segmentation2D::ComputeStatistics(const std::vector<double>& data, const std::vector<unsigned short>& seg, const std::vector<double>& waveData,
                                       const size_t gaussFit, const bool doRealoc)
 {
 	double val;
@@ -398,12 +398,12 @@ int Segmentation2D::ComputeStatistics(const std::vector<float>& data, const std:
 
 /********************************************************************************************************************
 int Segmentation2D::filterStructureWS(...) filter the structure of the watershed.
-std::vector<float> &potential: input image
+std::vector<double> &potential: input image
 std::vector<unsigned short> &localMax: local maximum
-float thresholdRatio: value to distinguish if 2 strucutres in contact have to be considered as a single structure (
+double thresholdRatio: value to distinguish if 2 strucutres in contact have to be considered as a single structure (
 							oversegmentation)
 ********************************************************************************************************************/
-int Segmentation2D::filterStructureWS(const std::vector<float>& potential, std::vector<unsigned short>& seg, const double thresholdRatio)
+int Segmentation2D::filterStructureWS(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double thresholdRatio)
 {
 	auto ptrStr = (wsFusion2D*)malloc((nbInfoStruct_ + 1) * sizeof(wsFusion2D));
 
@@ -502,11 +502,11 @@ int Segmentation2D::filterStructureWS(const std::vector<float>& potential, std::
 
 /********************************************************************************************************************
 int Segmentation2D::getLocalMax(...) compute local maximum of the image an mark them in the image seg.
-std::vector<float> &image: input image
+std::vector<double> &image: input image
 std::vector<unsigned short> &localMax: local maximum
-float threshold: a point to be considered as a local maximum have to be > to threshold.
+double threshold: a point to be considered as a local maximum have to be > to threshold.
 ********************************************************************************************************************/
-int Segmentation2D::getLocalMax(const std::vector<float>& potential, std::vector<unsigned short>& seg, const double threshold) const
+int Segmentation2D::getLocalMax(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double threshold) const
 {
 	std::ranges::fill(seg, 0);
 	unsigned short label = 1;
@@ -553,12 +553,12 @@ using coord = std::pair<long, long>;
 struct Compare
 {
 	// min-heap (priorit� la plus faible d'abord)
-	bool operator()(const std::pair<float, coord>& a, const std::pair<float, coord>& b) const { return a.first > b.first; }
+	bool operator()(const std::pair<double, coord>& a, const std::pair<double, coord>& b) const { return a.first > b.first; }
 };
 
-size_t Segmentation2D::watershed(const std::vector<float>& potential, std::vector<unsigned short>& seg, const double threshold) const
+size_t Segmentation2D::watershed(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double threshold) const
 {
-	std::priority_queue<std::pair<float, coord>, std::vector<std::pair<float, coord>>, Compare> heap;
+	std::priority_queue<std::pair<double, coord>, std::vector<std::pair<double, coord>>, Compare> heap;
 
 	for (size_t x = 0, idx = 0; x < height_; ++x) {
 		for (size_t y = 0; y < width_; ++y, ++idx) {
@@ -579,7 +579,7 @@ size_t Segmentation2D::watershed(const std::vector<float>& potential, std::vecto
 			}
 
 			if (vois) {
-				float cle = -potential[idx];
+				double cle = -potential[idx];
 				heap.emplace(cle, coord{x, y});
 			}
 		}
@@ -601,7 +601,7 @@ size_t Segmentation2D::watershed(const std::vector<float>& potential, std::vecto
 
 				const size_t Nid = nx * width_ + ny;
 				if (potential[Nid] > threshold && seg[Nid] == 0) {
-					float newCle = -potential[Nid] + static_cast<float>(it) * EPSILON;
+					double newCle = -potential[Nid] + static_cast<double>(it) * EPSILON;
 					heap.emplace(newCle, coord{nx, ny});
 					seg[Nid] = seg[p.first * width_ + p.second];
 				}
@@ -615,15 +615,15 @@ size_t Segmentation2D::watershed(const std::vector<float>& potential, std::vecto
 /********************************************************************************************************************
 int Segmentation2D::watershedIntelligent(...) compute watershed segmentation insied the reagion upper the threshold value.
 It tries to minimize the oversegmentation.
-std::vector<float> &potential: defines the potential function the makes the watershed segmented area growing
+std::vector<double> &potential: defines the potential function the makes the watershed segmented area growing
 std::vector<unsigned short> &seg: it contains the result of the watershed segmentation.
-float threshold: define the threshold value to distinguish the segmented structures
-float thresholdRatio: value 0<= X <=1. Makes a fusion to minimize the oversegmentation
+double threshold: define the threshold value to distinguish the segmented structures
+double thresholdRatio: value 0<= X <=1. Makes a fusion to minimize the oversegmentation
 						if X=0 simple watershed
 						if X=1 no watershed
 return value: number of detected structures
 ********************************************************************************************************************/
-int Segmentation2D::WatershedIntelligent(const std::vector<float>& potential, std::vector<unsigned short>& seg, const double threshold,
+int Segmentation2D::WatershedIntelligent(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double threshold,
                                          const double thresholdRatio)
 {
 	int ret;
@@ -634,7 +634,7 @@ int Segmentation2D::WatershedIntelligent(const std::vector<float>& potential, st
 	//first watershed
 	if ((ret = watershed(potential, seg, threshold)) < 0) { return ret; }
 
-	if (thresholdRatio == 0) { return nbInfoStruct_; }
+	if (static_cast<int>(thresholdRatio) == 0) { return nbInfoStruct_; }
 
 	//filter the germinates to minimize the oversegmentation
 	if ((ret = filterStructureWS(potential, seg, thresholdRatio)) < 0) { return ret; }

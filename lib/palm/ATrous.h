@@ -7,7 +7,7 @@ class ATrous
 public:
 	size_t height_, width_, size_;
 	std::vector<double> tmp_;
-	std::vector<std::vector<float>> wDecomp_;
+	std::vector<std::vector<double>> wDecomp_;
 	ATrous() = default;
 	~ATrous() = default;
 
@@ -19,6 +19,6 @@ private:
 	size_t offset(size_t i, size_t j) const;
 	int testSizes2D(bool* planesToUse, size_t& nbPlane) const;
 	void projectionV02D(const unsigned short* image, size_t realProj);
-	void b3SplineFiltering2D(const std::vector<float>& in, std::vector<float>& out, size_t plane);
+	void b3SplineFiltering2D(const std::vector<double>& in, std::vector<double>& out, size_t plane);
 };
 

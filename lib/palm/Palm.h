@@ -34,7 +34,7 @@ private:
 
 	ATrous aTrousPub_;
 	std::vector<unsigned short> segPub_;
-	std::vector<float> outputPub_;
+	std::vector<double> outputPub_;
 	Segmentation2D segmentPub_;
 	std::array<bool, N_PLANES> planesToUseB_;
 	size_t nbPlane_;

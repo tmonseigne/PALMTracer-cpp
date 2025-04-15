@@ -19,7 +19,7 @@ double GaussianFit3D_Theta::lm_matx(const std::vector<size_t>& t, const double* 
 	}
 
 	// Computing Jacobian matrix (dydp)
-	std::vector<double> dydp(static_cast<size_t>(n_ * nParam_));
+	std::vector<double> dydp(n_ * nParam_);
 	for (size_t i = 0; i < n_; ++i) {
 		deriv(&dydp[i * nParam_], static_cast<double>(t[i * 2]) - p[1], static_cast<double>(t[i * 2 + 1]) - p[2], p[0], p[3], p[4], p[5], true);
 	}

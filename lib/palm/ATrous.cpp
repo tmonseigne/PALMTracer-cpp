@@ -96,14 +96,14 @@ void ATrous::projectionV02D(const unsigned short* image, const size_t realProj)
 	else { for (size_t i = 0; i < size_; ++i) { wDecomp_[0][i] = image[i]; } }
 }
 
-void ATrous::b3SplineFiltering2D(const std::vector<float>& in, std::vector<float>& out, const size_t plane)
+void ATrous::b3SplineFiltering2D(const std::vector<double>& in, std::vector<double>& out, const size_t plane)
 {
 	//Makes the projection in V(x) with hte knowlage of V(x-1)
 	int i, j;
 	size_t idx;
-	constexpr float CoeffH0 = 3.f / 8.f;
-	constexpr float CoeffH1 = 1.f / 4.f;
-	constexpr float CoeffH2 = 1.f / 16.f;
+	constexpr double CoeffH0 = 3. / 8.;
+	constexpr double CoeffH1 = 1. / 4.;
+	constexpr double CoeffH2 = 1. / 16.;
 
 	const size_t step = twoToThe(plane);
 

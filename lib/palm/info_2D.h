@@ -3,10 +3,6 @@
 *******************************************************************************************************************/
 #pragma once
 
-#define MAX_NB_ANGLES_GABOR	8
-#define MAX_NB_FREQ_GABOR	13
-#include <memory>
-
 typedef struct
 {
 	double x, y;
@@ -19,10 +15,10 @@ typedef struct
 
 typedef struct
 {
-	float maxPotentialWithNeighbor;
+	double maxPotentialWithNeighbor;
 	long structureInContact;
-	float minPotentialOnTheStructure;
-	float maxPotentialOnTheStructure;
+	double minPotentialOnTheStructure;
+	double maxPotentialOnTheStructure;
 	long x;
 	long y;
 	bool kept;
@@ -51,7 +47,7 @@ typedef struct
 typedef struct
 {
 	size_t peri;
-	size_t surf;
+	double surf;
 	maxStruct2D min;
 	maxStruct2D max;
 	double stdev;

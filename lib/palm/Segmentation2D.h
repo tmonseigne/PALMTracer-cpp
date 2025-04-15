@@ -13,12 +13,12 @@ public:
 
 	~Segmentation2D() override { desalloc(); }
 
-	int ComputeStatistics(const std::vector<float>& data, const std::vector<unsigned short>& seg, const std::vector<float>& waveData, size_t gaussFit, bool doRealoc = true);
+	int ComputeStatistics(const std::vector<double>& data, const std::vector<unsigned short>& seg, const std::vector<double>& waveData, size_t gaussFit, bool doRealoc = true);
 
 	size_t FilterData(std::vector<unsigned short>& seg, const double* param, const unsigned short* useParam);
 	std::vector<InfoStruct2D*> GetTabInfo() const { return tabInfo_; }
 
-	int WatershedIntelligent(const std::vector<float>& potential, std::vector<unsigned short>& seg, double threshold, double thresholdRatio);
+	int WatershedIntelligent(const std::vector<double>& potential, std::vector<unsigned short>& seg, double threshold, double thresholdRatio);
 
 private:
 	size_t height_, width_, size_;
@@ -28,7 +28,7 @@ private:
 	int alloc(size_t nbStruct);
 	void desalloc();
 
-	int filterStructureWS(const std::vector<float>& potential, std::vector<unsigned short>& seg, double thresholdRatio);
-	int getLocalMax(const std::vector<float>& potential, std::vector<unsigned short>& seg, double threshold) const;
-	size_t watershed(const std::vector<float>& potential, std::vector<unsigned short>& seg, double threshold) const;
+	int filterStructureWS(const std::vector<double>& potential, std::vector<unsigned short>& seg, double thresholdRatio);
+	int getLocalMax(const std::vector<double>& potential, std::vector<unsigned short>& seg, double threshold) const;
+	size_t watershed(const std::vector<double>& potential, std::vector<unsigned short>& seg, double threshold) const;
 };
