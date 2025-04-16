@@ -114,7 +114,7 @@ size_t Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double
 		while (ptr) {
 			ind++;
 			unselected = false;
-			for (size_t i = 1; i <= NbInfoStructOld && !unselected; i++) {
+			for (size_t i = 1; i <= NbInfoStructOld && !unselected; ++i) {
 				if (tabInfo_[i]) {
 					const auto& Data = ptr->data_;
 					const auto& TabData = tabInfo_[i]->data_;
@@ -241,7 +241,7 @@ size_t Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double
 	tabInfo_[0] = nullptr;
 	tabInfo_[1] = headInfo_;
 	ptr = headInfo_;
-	for (ind = 2; ind <= nbInfoStruct_; ind++) {
+	for (ind = 2; ind <= nbInfoStruct_; ++ind) {
 		tabInfo_[ind] = ptr->next_;
 		ptr = ptr->next_;
 	}
@@ -343,7 +343,7 @@ int Segmentation2D::ComputeStatistics(const std::vector<double>& data, const std
 	}
 
 
-	for (size_t ind = 1; ind <= nbInfoStruct_; ind++) {
+	for (size_t ind = 1; ind <= nbInfoStruct_; ++ind) {
 		auto& currData = tabInfo_[ind]->data_;
 		if (currData.surf > 0) {
 			if (gaussFit == 5) {
@@ -351,8 +351,8 @@ int Segmentation2D::ComputeStatistics(const std::vector<double>& data, const std
 				currData.moment.y = 0.;
 				double mean = 0.;
 
-				for (auto ii = -2; ii <= 2; ii++) {     // height_
-					for (auto jj = -2; jj <= 2; jj++) { // width_
+				for (auto ii = -2; ii <= 2; ++ii) {     // height_
+					for (auto jj = -2; jj <= 2; ++jj) { // width_
 						const int Refx = ii + currData.max.x, Refy = jj + currData.max.y;
 
 						if (Refx >= 0 && Refx < height_ && Refy < width_ && Refy >= 0) {
@@ -403,13 +403,13 @@ double thresholdRatio: value to distinguish if 2 strucutres in contact have to b
 ********************************************************************************************************************/
 int Segmentation2D::filterStructureWS(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double thresholdRatio)
 {
-	std::vector< wsFusion2D> ptrStr(nbInfoStruct_ + 1);
+	std::vector<wsFusion2D> ptrStr(nbInfoStruct_ + 1);
 	int label;
 	bool change = true;
 	while (change) {
 		const size_t OldNbInfoStruct = nbInfoStruct_;
 
-		for (size_t i = 1; i <= nbInfoStruct_; i++) {
+		for (size_t i = 1; i <= nbInfoStruct_; ++i) {
 			ptrStr[i].maxPotentialWithNeighbor = -1e10;
 			ptrStr[i].minPotentialOnTheStructure = +1e10;
 			ptrStr[i].maxPotentialOnTheStructure = -1e10;
@@ -430,8 +430,8 @@ int Segmentation2D::filterStructureWS(const std::vector<double>& potential, std:
 						ptrStr[seg[idx]].y = j;
 						ptrStr[seg[idx]].maxPotentialOnTheStructure = potential[idx];
 					}
-					for (size_t ii = i == 0 ? 0 : i - 1; ii <= std::min(i + 1, height_ - 1); ii++) {
-						for (size_t jj = j == 0 ? 0 : j - 1; jj <= std::min(j + 1, width_ - 1); jj++) {
+					for (size_t ii = i == 0 ? 0 : i - 1; ii <= std::min(i + 1, height_ - 1); ++ii) {
+						for (size_t jj = j == 0 ? 0 : j - 1; jj <= std::min(j + 1, width_ - 1); ++jj) {
 							if (ii != i || jj != j) {
 								if (seg[ii * width_ + jj] != 0) {
 									if (seg[idx] != seg[ii * width_ + jj]) {
@@ -510,8 +510,8 @@ unsigned short Segmentation2D::getLocalMax(const std::vector<double>& potential,
 			if (potential[idx] > threshold) {
 				bool err = false;
 				//test if it is a new maximum from the vicinity
-				for (size_t ii = i == 0 ? 0 : i - 1; ii <= std::min(i + 1, height_ - 1) && !err; ii++) {
-					for (size_t jj = j == 0 ? 0 : j - 1; jj <= std::min(j + 1, width_ - 1) && !err; jj++) {
+				for (size_t ii = i == 0 ? 0 : i - 1; ii <= std::min(i + 1, height_ - 1) && !err; ++ii) {
+					for (size_t jj = j == 0 ? 0 : j - 1; jj <= std::min(j + 1, width_ - 1) && !err; ++jj) {
 						if (ii != i || jj != j) { if (potential[idx] < potential[ii * width_ + jj]) { err = true; } }
 					}
 				}
@@ -622,19 +622,19 @@ int Segmentation2D::WatershedIntelligent(const std::vector<double>& potential, s
 	int ret;
 
 	//first, find the local maximum to set the different germinates
-	if ((nbInfoStruct_ = getLocalMax(potential, seg, threshold)) < 0) { return nbInfoStruct_; }
+	nbInfoStruct_ = getLocalMax(potential, seg, threshold);
 
 	//first watershed
-	if ((ret = watershed(potential, seg, threshold)) < 0) { return ret; }
+	watershed(potential, seg, threshold);
 
-	if (static_cast<int>(thresholdRatio) == 0) { return nbInfoStruct_; }
+	if (static_cast<int>(thresholdRatio) == 0) { return static_cast<int>(nbInfoStruct_); }
 
 	//filter the germinates to minimize the oversegmentation
 	if ((ret = filterStructureWS(potential, seg, thresholdRatio)) < 0) { return ret; }
 
 	//second watershed
-	if ((ret = watershed(potential, seg, threshold)) < 0) { return ret; }
-	return nbInfoStruct_;
+	watershed(potential, seg, threshold);
+	return static_cast<int>(nbInfoStruct_);
 }
 
 #undef EPSILON

@@ -21,4 +21,3 @@ private:
 	void projectionV02D(const unsigned short* image, size_t realProj);
 	void b3SplineFiltering2D(const std::vector<double>& in, std::vector<double>& out, size_t plane);
 };
-

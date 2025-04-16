@@ -39,7 +39,7 @@ Palm::Palm(unsigned short* image, double* points, const size_t pointsListSize, c
 	for (auto& wavelet : aTrousPub_.wDecomp_) { wavelet.resize(size_); }
 
 	nbPlane_ = 0;
-	for (size_t i = 0; i < N_PLANES; i++) {
+	for (size_t i = 0; i < N_PLANES; ++i) {
 		planesToUseB_[i] = planesToUse_[i] != 0;
 		if (planesToUseB_[i]) { nbPlane_ = i + 2; }
 	}

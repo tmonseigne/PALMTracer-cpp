@@ -10,7 +10,7 @@
 #include <ranges>
 
 double GaussianFit3D_Theta::lm_matx(const std::vector<size_t>& t, const double* p, const std::vector<double>& dat, const std::vector<double>& weight,
-                                   double* alpha, double* beta, std::vector<double>& hat)
+                                    double* alpha, double* beta, std::vector<double>& hat)
 {
 	std::vector<double> delta(n_);
 	for (size_t i = 0; i < n_; ++i) {

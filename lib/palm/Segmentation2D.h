@@ -8,12 +8,12 @@
 class Segmentation2D final : public Segmentation
 {
 public:
-	Segmentation2D(const size_t height, const size_t width)
-		: height_(height), width_(width), size_(height * width), headInfo_(nullptr) { nbInfoStruct_ = 0; }
+	Segmentation2D(const size_t height, const size_t width) : height_(height), width_(width), size_(height * width), headInfo_(nullptr) { nbInfoStruct_ = 0; }
 
 	~Segmentation2D() override { desalloc(); }
 
-	int ComputeStatistics(const std::vector<double>& data, const std::vector<unsigned short>& seg, const std::vector<double>& waveData, size_t gaussFit, bool doRealoc = true);
+	int ComputeStatistics(const std::vector<double>& data, const std::vector<unsigned short>& seg, const std::vector<double>& waveData, size_t gaussFit,
+	                      bool doRealoc = true);
 
 	size_t FilterData(std::vector<unsigned short>& seg, const double* param, const unsigned short* useParam);
 	std::vector<InfoStruct2D*> GetTabInfo() const { return tabInfo_; }

@@ -16,7 +16,7 @@ void _stdcall _OpenPALMProcessing(unsigned short* image, double* pointsList, con
                                   const double angle, const unsigned short roi)
 {
 	c = new Palm(image, pointsList, pointsListSize, sizeX, sizeY, waveletNo, thresholdVal, watershedRatio,
-	              volMin, intMin, gaussFit, sigmaX, sigmaY, angle, roi);
+	             volMin, intMin, gaussFit, sigmaX, sigmaY, angle, roi);
 }
 
 _declspec(dllexport)
@@ -32,6 +32,6 @@ long _stdcall Process(unsigned short* image, double* pointsList, const unsigned 
                       const double sigmaX, const double sigmaY, const double angle, const unsigned short roi)
 {
 	auto palm = Palm(image, pointsList, pointsListSize, sizeX, sizeY, waveletNo, thresholdVal, watershedRatio,
-	                  volMin, intMin, gaussFit, sigmaX, sigmaY, angle, roi);
+	                 volMin, intMin, gaussFit, sigmaX, sigmaY, angle, roi);
 	return palm.Processing();
 }

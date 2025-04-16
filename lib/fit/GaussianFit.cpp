@@ -37,7 +37,8 @@ void GaussianFit::deriv(double* out, const double x, const double y, const doubl
 	else { out[3] = 1; } // offset (quand sigma est fixe)
 }
 
-void GaussianFit::deriv(double* out, const double x, const double y, const double i0, const double sigmaX, const double sigmaY, const double theta, const bool has_theta)
+void GaussianFit::deriv(double* out, const double x, const double y, const double i0, const double sigmaX, const double sigmaY, const double theta,
+                        const bool has_theta)
 {
 	const auto X_2 = x * x, Y_2 = y * y, X_Y = x * y, SigmaX_2 = sigmaX * sigmaX, SigmaY_2 = sigmaY * sigmaY;
 	const auto CosT = cos(theta), SinT = sin(theta);
@@ -63,7 +64,8 @@ void GaussianFit::deriv(double* out, const double x, const double y, const doubl
 	else { out[5] = 1; } // offset (quand theta est fixe)	
 }
 
-double GaussianFit::chi2(double* alpha, double* beta, const std::vector<double>& dydp, const std::vector<double>& weight, const std::vector<double>& deltaY) const
+double GaussianFit::chi2(double* alpha, double* beta, const std::vector<double>& dydp, const std::vector<double>& weight,
+                         const std::vector<double>& deltaY) const
 {
 	std::vector<double> tmp(n_ * nParam_);
 	for (size_t i = 0; i < n_; ++i) { for (size_t j = 0; j < nParam_; ++j) { tmp[i * nParam_ + j] = weight[i] * dydp[i * nParam_ + j]; } }
@@ -72,7 +74,7 @@ double GaussianFit::chi2(double* alpha, double* beta, const std::vector<double>&
 	for (size_t i = 0; i < nParam_; ++i) {
 		for (size_t j = 0; j < nParam_; ++j) {
 			alpha[nParam_ * i + j] = 0;
-			for (size_t k = 0; k < n_; k++) { alpha[nParam_ * i + j] += dydp[k * nParam_ + i] * tmp[k * nParam_ + j]; }
+			for (size_t k = 0; k < n_; ++k) { alpha[nParam_ * i + j] += dydp[k * nParam_ + i] * tmp[k * nParam_ + j]; }
 		}
 	}
 
@@ -93,7 +95,7 @@ double GaussianFit::computeRSS(std::vector<double>& dat, std::vector<double>& ha
 {
 	// computing "dat" mean & "hat" mean
 	const double Dat_Mean = std::accumulate(dat.begin(), dat.end(), 0.0) / static_cast<double>(n_),
-	            Hat_Mean = std::accumulate(hat.begin(), hat.end(), 0.0) / static_cast<double>(n_);
+	             Hat_Mean = std::accumulate(hat.begin(), hat.end(), 0.0) / static_cast<double>(n_);
 
 	// Normalisation en place
 	for (size_t i = 0; i < n_; ++i) {
@@ -103,16 +105,16 @@ double GaussianFit::computeRSS(std::vector<double>& dat, std::vector<double>& ha
 
 	// Calcul des t1, t2, t3
 	const double T1 = std::inner_product(dat.begin(), dat.end(), hat.begin(), 0.0), // dat * hat
-	            T2 = std::inner_product(dat.begin(), dat.end(), dat.begin(), 0.0), // dat * dat
-	            T3 = std::inner_product(hat.begin(), hat.end(), hat.begin(), 0.0), // hat * hat
-	            R = T1 / std::sqrt(T2 * T3);                                        // Calcul du R
+	             T2 = std::inner_product(dat.begin(), dat.end(), dat.begin(), 0.0), // dat * dat
+	             T3 = std::inner_product(hat.begin(), hat.end(), hat.begin(), 0.0), // hat * hat
+	             R = T1 / std::sqrt(T2 * T3);                                       // Calcul du R
 
 	return std::isnan(R) ? 0 : R * R;
 }
 
 void GaussianFit::inverse(double* in, double* out) const
 {
-	std::vector<double> m1(in, in + nParam2_), mi1(nParam2_, 0.0); // Copie de 'in' dans 'm1' et mise à 0 de 'mi1'
+	std::vector<double> m1(in, in + nParam2_), mi1(nParam2_, 0.0);       // Copie de 'in' dans 'm1' et mise à 0 de 'mi1'
 	for (size_t i = 0; i < nParam_; ++i) { mi1[i * nParam_ + i] = 1.0; } // Initialisation de la matrice identité
 
 	// �limination de Gauss-Jordan

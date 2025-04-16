@@ -4,19 +4,19 @@
 #pragma once
 
 
-typedef struct
+using val3D = struct
 {
 	double x, y, z;
-} val3D;
+};
 
-typedef struct
+using coor3D = struct
 {
 	long x;
 	long y;
 	long z;
-} coor3D;
+};
 
-typedef struct
+using wsFusion3D = struct
 {
 	float maxPotentialWithNeighbor;
 	long structureInContact;
@@ -29,26 +29,26 @@ typedef struct
 	bool locked;
 	long structureToBecaume;
 	long newIndex;
-} wsFusion3D;
+};
 
 
-typedef struct
+using anglesEuler = struct
 {
 	double phi;
 	double teta;
 	double psi;
-} anglesEuler;
+};
 
 
-typedef struct
+using maxStruct3D = struct
 {
 	double val;
 	unsigned long x;
 	unsigned long y;
 	unsigned long z;
-} maxStruct3D;
+};
 
-typedef struct
+using varianceStruct3D = struct
 {
 	double xx;
 	double yy;
@@ -56,10 +56,10 @@ typedef struct
 	double xy;
 	double yz;
 	double xz;
-} varianceStruct3D;
+};
 
 
-typedef struct
+using InfoData3D = struct
 {
 	unsigned long surfVol;
 	unsigned long volume;
@@ -75,7 +75,7 @@ typedef struct
 	double det;
 	unsigned long index;
 	unsigned long time;
-} InfoData3D;
+};
 
 
 class InfoStruct3D

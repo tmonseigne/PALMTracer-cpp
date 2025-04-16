@@ -11,7 +11,8 @@ public :
 
 	std::array<double, N_PARAM> pMin_, p_, pMax_; // Possible maintenant
 
-	GaussianFit2D_Sigma(): pMin_(), p_(), pMax_()
+	GaussianFit2D_Sigma()
+		: pMin_(), p_(), pMax_()
 	{
 		nParam_ = N_PARAM;
 		nParam2_ = N_PARAM2;
@@ -22,6 +23,6 @@ public :
 
 protected:
 	double lm_matx(const std::vector<size_t>& t, const double* p, const std::vector<double>& dat, const std::vector<double>& weight,
-	              double* alpha, double* beta, std::vector<double>& hat) override;
+	               double* alpha, double* beta, std::vector<double>& hat) override;
 	void initP(double x, double y, double sigma);
 };

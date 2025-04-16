@@ -13,7 +13,8 @@ public:
 
 	double theta_;
 
-	GaussianFit3D() : pMin_(), p_(), pMax_(), theta_(0)
+	GaussianFit3D()
+		: pMin_(), p_(), pMax_(), theta_(0)
 	{
 		nParam_ = N_PARAM;
 		nParam2_ = N_PARAM2;
@@ -25,5 +26,5 @@ public:
 protected:
 	void initP(double x, double y, double sigmaX, double sigmaY);
 	double lm_matx(const std::vector<size_t>& t, const double* p, const std::vector<double>& dat, const std::vector<double>& weight,
-	              double* alpha, double* beta, std::vector<double>& hat) override;
+	               double* alpha, double* beta, std::vector<double>& hat) override;
 };

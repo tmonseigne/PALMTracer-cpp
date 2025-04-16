@@ -11,8 +11,8 @@ class Palm
 {
 public:
 	Palm(unsigned short* image, double* points, size_t pointsListSize, size_t height, size_t width,
-	      size_t waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, size_t gaussFit, double sigmaX,
-	      double sigmaY, double theta, size_t roi);
+	     size_t waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, size_t gaussFit, double sigmaX,
+	     double sigmaY, double theta, size_t roi);
 	~Palm() = default;
 
 	int Processing();

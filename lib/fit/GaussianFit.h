@@ -30,7 +30,7 @@ protected:
 	double computeRSS(std::vector<double>& dat, std::vector<double>& hat) const;
 
 	virtual double lm_matx(const std::vector<size_t>& t, const double* p, const std::vector<double>& dat, const std::vector<double>& weight,
-	                      double* alpha, double* beta, std::vector<double>& hat) = 0;
+	                       double* alpha, double* beta, std::vector<double>& hat) = 0;
 
 	void inverse(double* in, double* out) const;
 

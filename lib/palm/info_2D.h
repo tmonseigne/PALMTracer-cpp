@@ -3,17 +3,17 @@
 *******************************************************************************************************************/
 #pragma once
 
-typedef struct
+using val2D = struct
 {
 	double x, y;
-} val2D;
+};
 
-typedef struct
+using box2D = struct
 {
 	size_t xMin, xMax, yMin, yMax;
-} box2D;
+};
 
-typedef struct
+using wsFusion2D = struct
 {
 	double maxPotentialWithNeighbor;
 	int structureInContact;
@@ -25,26 +25,26 @@ typedef struct
 	bool locked;
 	int structureToBecaume;
 	int newIndex;
-} wsFusion2D;
+};
 
 
-typedef struct
+using maxStruct2D = struct
 {
 	double val;
 	size_t x, y;
-} maxStruct2D;
+};
 
-typedef struct
+using varianceStruct2D = struct
 {
 	double xx, yy, xy;
-} varianceStruct2D;
+};
 
-typedef struct
+using gaborCoefs = struct
 {
 	double max, mean, angleMax;
-} gaborCoefs;
+};
 
-typedef struct
+using InfoDataRich2D = struct
 {
 	size_t peri;
 	double surf;
@@ -65,10 +65,10 @@ typedef struct
 	size_t zOrderComputed;
 	box2D boundingBox;
 	size_t nbSubstructures;
-} InfoDataRich2D;
+};
 
 
-typedef struct
+using InfoData2D = struct
 {
 	size_t peri;
 	size_t surf;
@@ -84,7 +84,7 @@ typedef struct
 	size_t index;
 	size_t time;
 	int maxLength;
-} InfoData2D;
+};
 
 
 class InfoStruct2D
