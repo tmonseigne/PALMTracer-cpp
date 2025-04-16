@@ -1,21 +1,16 @@
 #include "ATrous.h"
 
 #include <algorithm>
+#include <array>
 
 #include "tools/NoError.h"
 
 
-size_t TwoToThe(const size_t val)
+size_t ATrous::offsetTest(const int i, const int j) const
 {
-	if (val == 0) { return 1; }           // 2^0 = 1
-	return static_cast<size_t>(1) << val; // 1 décalé à gauche de 'val' bits
-}
-
-size_t ATrous::offsetTest(int i, int j) const
-{
-	i = std::clamp(i, 0, static_cast<int>(height_) - 1);
-	j = std::clamp(j, 0, static_cast<int>(width_) - 1);
-	return offset(static_cast<size_t>(i), static_cast<size_t>(j));
+	const auto Clamped_I = static_cast<size_t>(std::clamp(i, 0, static_cast<int>(height_) - 1));
+	const auto Clamped_J = static_cast<size_t>(std::clamp(j, 0, static_cast<int>(width_) - 1));
+	return offset(Clamped_I, Clamped_J);
 }
 
 
@@ -26,129 +21,80 @@ size_t ATrous::offset(const size_t i, const size_t j) const { return i * width_ 
 int ATrous::testSizes2D(bool* planesToUse, size_t& nbPlane) const
 {
 	//Test in, out, planesToUse, nbPlane
-
-	for (size_t i = wDecomp_.size(); i < 9; ++i) { planesToUse[i - 1] = false; }
-
-
+	std::fill(planesToUse + wDecomp_.size(), planesToUse + 9, false);
 	if (nbPlane < 2) { return W_SIZE_ERR; }
-	size_t sizeWavelet = TwoToThe(nbPlane + 1);
-	while (height_ <= sizeWavelet || width_ <= sizeWavelet) {
-		nbPlane--;
-		sizeWavelet = TwoToThe(nbPlane + 1);
+	while (height_ <= twoToThe(nbPlane + 1) || width_ <= twoToThe(nbPlane + 1)) {
+		if (--nbPlane < 2) { return W_SIZE_ERR; } // sï¿½curitï¿½ si boucle infinie
 	}
-
 	return static_cast<int>(nbPlane);
 }
 
 
-void ATrous::projectionV02D(const unsigned short* image, const size_t realProj)
+void ATrous::projectionV02D(const unsigned short* image, const bool realProj)
 {
 	//Makes a projection in V0 space to be in the apropriate condition of the multiresolution, 
-	//realProj make be set to 1 if realProj=0 it just copy the data from image to destData
-
-	constexpr double tab[3] = {0.1666666666, 0.6666666666666, 0.16666666666};
-	if (realProj == 1) {
-		int i = 0, j, cur_i, cur_j;
-		size_t idx;
-		for (j = 0; j < width_; ++j) {
-			idx = offset(i, j);
-			wDecomp_[0][idx] = 0.0;
-			for (cur_i = -1; cur_i < 2; ++cur_i) {
-				for (cur_j = -1; cur_j < 2; ++cur_j) { wDecomp_[0][idx] += image[offsetTest(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]; }
-			}
-		}
-
-
-		for (i = 1; i < height_ - 1; ++i) {
-			j = 0;
-			idx = offset(i, j);
-			wDecomp_[0][idx] = 0.0;
-			for (cur_i = -1; cur_i < 2; ++cur_i) {
-				for (cur_j = -1; cur_j < 2; ++cur_j) { wDecomp_[0][idx] += image[offsetTest(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]; }
-			}
-
-
-			for (j = 1; j < width_ - 1; ++j) {
-				idx = offset(i, j);
-				wDecomp_[0][idx] = 0.0;
-				for (cur_i = -1; cur_i < 2; ++cur_i) {
-					for (cur_j = -1; cur_j < 2; ++cur_j) { wDecomp_[0][idx] += image[offsetTest(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]; }
+	//realProj make be set to 1 if realProj=0 it just copies the data from image to destData
+	if (realProj) {
+		constexpr std::array Tab = {0.1666666666, 0.6666666666666, 0.16666666666};
+		for (size_t i = 0; i < height_; ++i) {
+			for (size_t j = 0; j < width_; ++j) {
+				const size_t Idx = offset(i, j);
+				double acc = 0.0;
+				for (int di = -1; di <= 1; ++di) {
+					for (int dj = -1; dj <= 1; ++dj) {
+						const size_t SourceIdx = offsetTest(static_cast<int>(i) + di, static_cast<int>(j) + dj);
+						acc += image[SourceIdx] * Tab[di + 1] * Tab[dj + 1];
+					}
 				}
-			}
-
-			j = width_ - 1;
-			idx = offset(i, j);
-			wDecomp_[0][idx] = 0.0;
-			for (cur_i = -1; cur_i < 2; ++cur_i) {
-				for (cur_j = -1; cur_j < 2; ++cur_j) { wDecomp_[0][idx] += image[offsetTest(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]; }
-			}
-		}
-
-		i = height_ - 1;
-		for (j = 0; j < width_; ++j) {
-			idx = offset(i, j);
-			wDecomp_[0][idx] = 0.0;
-			for (cur_i = -1; cur_i < 2; ++cur_i) {
-				for (cur_j = -1; cur_j < 2; ++cur_j) { wDecomp_[0][idx] += image[offsetTest(i + cur_i, j + cur_j)] * tab[cur_i + 1] * tab[cur_j + 1]; }
+				wDecomp_[0][Idx] = acc;
 			}
 		}
 	}
-	else { for (size_t i = 0; i < size_; ++i) { wDecomp_[0][i] = image[i]; } }
+	else {
+		std::transform(image, image + size_, wDecomp_[0].begin(),
+		               [](const unsigned short val) { return static_cast<double>(val); });
+	}
 }
 
 void ATrous::b3SplineFiltering2D(const std::vector<double>& in, std::vector<double>& out, const size_t plane)
 {
 	//Makes the projection in V(x) with hte knowlage of V(x-1)
-	int i, j;
-	size_t idx;
-	constexpr double CoeffH0 = 3. / 8.;
-	constexpr double CoeffH1 = 1. / 4.;
-	constexpr double CoeffH2 = 1. / 16.;
-	const size_t Step = TwoToThe(plane);
+	constexpr double CoeffH0 = 3.0 / 8.0, CoeffH1 = 1.0 / 4.0, CoeffH2 = 1.0 / 16.0;
 
-	//convolution in Y axe
-	for (i = 0; i < height_; ++i) {
-		for (j = 0; j < 2 * Step; ++j) {
-			idx = offset(i, j);
-			tmp_[idx] = CoeffH0 * in[idx] + CoeffH1 * (in[offsetTest(i, j - Step)] + in[offsetTest(i, j + Step)])
-			            + CoeffH2 * (in[offsetTest(i, j - 2 * Step)] + in[offsetTest(i, j + 2 * Step)]);
-		}
+	const size_t Step = twoToThe(plane);
+	const size_t DoubleStep = 2 * Step;
+	const int IStep = static_cast<int>(Step);
+	const int IDoubleStep = static_cast<int>(DoubleStep);
 
-		for (j = 2 * Step; j < width_ - 2 * Step; ++j) {
-			idx = offset(i, j);
-			tmp_[idx] = CoeffH0 * in[idx] + CoeffH1 * (in[offset(i, j - Step)] + in[offset(i, j + Step)])
-			            + CoeffH2 * (in[offset(i, j - 2 * Step)] + in[offset(i, j + 2 * Step)]);
-		}
+	auto get = [&](const std::vector<double>& data, const int y, const int x) -> double { return data[offsetTest(y, x)]; };
 
-		for (j = width_ - 2 * Step; j < width_; ++j) {
-			idx = offset(i, j);
-			tmp_[idx] = CoeffH0 * in[idx] + CoeffH1 * (in[offsetTest(i, j - Step)] + in[offsetTest(i, j + Step)])
-			            + CoeffH2 * (in[offsetTest(i, j - 2 * Step)] + in[offsetTest(i, j + 2 * Step)]);
-		}
-	}
+	// Lambda pour simplifier l'accÃ¨s au voisinage avec ou sans test de bord
+	auto convolutionY = [&](const size_t idx, const int i, const int j) -> double
+	{
+		return CoeffH0 * in[idx] + CoeffH1 * (get(in, i, j - IStep) + get(in, i, j + IStep)) +
+		       CoeffH2 * (get(in, i, j - IDoubleStep) + get(in, i, j + IDoubleStep));
+	};
 
-	//convolution in X axe
-	for (i = 0; i < 2 * Step; ++i) {
-		for (j = 0; j < width_; ++j) {
-			idx = offset(i, j);
-			out[idx] = CoeffH0 * tmp_[idx] + CoeffH1 * (tmp_[offsetTest(i - Step, j)] + tmp_[offsetTest(i + Step, j)])
-			           + CoeffH2 * (tmp_[offsetTest(i - 2 * Step, j)] + tmp_[offsetTest(i + 2 * Step, j)]);
+	// Lambda pour simplifier l'accÃ¨s au voisinage avec ou sans test de bord
+	auto convolutionX = [&](const size_t idx, const int i, const int j) -> double
+	{
+		return CoeffH0 * tmp_[idx] + CoeffH1 * (get(tmp_, i - IStep, j) + get(tmp_, i + IStep, j)) +
+		       CoeffH2 * (get(tmp_, i - IDoubleStep, j) + get(tmp_, i + IDoubleStep, j));
+	};
+
+	// Convolution horizontale (Y-axis)
+	for (size_t i = 0; i < height_; ++i) {
+		for (size_t j = 0; j < width_; ++j) {
+			const size_t Idx = offset(i, j);
+			tmp_[Idx] = convolutionY(Idx, static_cast<int>(i), static_cast<int>(j));
 		}
 	}
 
-	for (i = 2 * Step; i < height_ - 2 * Step; ++i) {
-		for (j = 0; j < width_; ++j) {
-			idx = offset(i, j);
-			out[idx] = CoeffH0 * tmp_[idx] + CoeffH1 * (tmp_[offset(i - Step, j)] + tmp_[offset(i + Step, j)])
-			           + CoeffH2 * (tmp_[offset(i - 2 * Step, j)] + tmp_[offset(i + 2 * Step, j)]);
-		}
-	}
-
-	for (i = height_ - 2 * Step; i < height_; ++i) {
-		for (j = 0; j < width_; ++j) {
-			idx = offset(i, j);
-			out[idx] = CoeffH0 * tmp_[idx] + CoeffH1 * (tmp_[offsetTest(i - Step, j)] + tmp_[offsetTest(i + Step, j)])
-			           + CoeffH2 * (tmp_[offsetTest(i - 2 * Step, j)] + tmp_[offsetTest(i + 2 * Step, j)]);
+	// Convolution verticale (X-axis)
+	for (size_t i = 0; i < height_; ++i) {
+		for (size_t j = 0; j < width_; ++j) {
+			const size_t Idx = offset(i, j);
+			out[Idx] = convolutionX(Idx, static_cast<int>(i), static_cast<int>(j));
 		}
 	}
 }
@@ -184,22 +130,15 @@ int ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t heig
 	//test if nbPlane is not too big !!!
 	if ((ret = testSizes2D(planesToUse, nbPlane)) < 0) { return ret; }
 
-
-	//allocation of a direct way to reach the differents planes
-
-	//do the initialisation of multiresolution algorthm (initialisation of the first wavelet plane)
-	//signal is projected in V0 space
+	//do the initialisation of multiresolution algorthm (initialisation of the first wavelet plane) signal is projected in V0 space
 	projectionV02D(image, realProj);
 
-	//Projection of the input signal in each wavelet space.
-	//the signal waveletPlanes[x] is the projection of the input signal in the W(x+1) space
+	//Projection of the input signal in each wavelet space. the signal waveletPlanes[x] is the projection of the input signal in the W(x+1) space
 	for (size_t i = 0; i < nbPlane - 1; ++i) {
 		//Firstly it computes in waveletPlanes[x+1] the projection of V(x) with the knowlege of the projection in V(x-1)
 		b3SplineFiltering2D(wDecomp_[i], wDecomp_[i + 1], i);
 		//Secondly it computes in waveletPlanes[x] the projection of W(x+1)
-		//As proj( W(x+1) ) = proj( V(x) ) - proj( V(x+1) ) ;	proj(Vx) is in waveletPlanes[x+1] 
-		//and proj(Vx+1) is in waveletPlanes[x+2]
-		//	waveletPlanes[x+1][*]=waveletPlanes[x+1][*]-waveletPlanes[x+2][*]
+		//As proj(W(x+1)) = proj(W(x)) - proj(W(x+1));	proj(Vx) is in waveletPlanes[x+1] and proj(Vx+1) is in waveletPlanes[x+2]
 		for (size_t j = 0; j < size_; ++j) { wDecomp_[i][j] -= wDecomp_[i + 1][j]; }
 	}
 

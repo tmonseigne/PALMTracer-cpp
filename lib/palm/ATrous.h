@@ -15,9 +15,10 @@ public:
 
 	//2D transform:
 private:
-	size_t offsetTest(int i, int j) const;
-	size_t offset(size_t i, size_t j) const;
+	[[nodiscard]] static constexpr size_t twoToThe(const size_t val) noexcept { return (val == 0) ? 1 : (static_cast<size_t>(1) << val); }
+	[[nodiscard]] size_t offsetTest(int i, int j) const;
+	[[nodiscard]] size_t offset(size_t i, size_t j) const;
 	int testSizes2D(bool* planesToUse, size_t& nbPlane) const;
-	void projectionV02D(const unsigned short* image, size_t realProj);
+	void projectionV02D(const unsigned short* image, bool realProj);
 	void b3SplineFiltering2D(const std::vector<double>& in, std::vector<double>& out, size_t plane);
 };
