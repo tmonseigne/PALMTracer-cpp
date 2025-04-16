@@ -7,9 +7,9 @@
 #include "fit/GaussianFit3D.h"
 #include "fit/GaussianFit3D_Theta.h"
 
-Palm::Palm(unsigned short* image, double* points, const unsigned long pointsListSize, const unsigned long height, const unsigned long width,
-           const unsigned long waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin,
-           const unsigned short gaussFit, const double sigmaX, const double sigmaY, const double theta, const unsigned short roi)
+Palm::Palm(unsigned short* image, double* points, const size_t pointsListSize, const size_t height, const size_t width,
+           const size_t waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin,
+           const size_t gaussFit, const double sigmaX, const double sigmaY, const double theta, const size_t roi)
 	: image_(image), points_(points), height_(height), width_(width), size_(static_cast<size_t>(height) * width),
 	  nPointsMaxPerPlane_(pointsListSize / N_SEGMENTS), waveletNo_(waveletNo), currentPoint_(0), roi_(roi), thresholdVal_(thresholdVal),
 	  volMin_(volMin), intMin_(intMin), watershedRatio_(watershedRatio), gaussFit_(gaussFit), initSigmaX_(sigmaX), initSigmaY_(sigmaY),
@@ -46,12 +46,12 @@ Palm::Palm(unsigned short* image, double* points, const unsigned long pointsList
 	planesToUseB_[8] = false;
 }
 
-long Palm::Processing()
+int Palm::Processing()
 {
 	int ret;
 	if ((ret = aTrousPub_.ATrousDecomposition2D(image_, height_, width_, planesToUseB_.data(), nbPlane_, false)) < 0) { return ret; }
 
-	for (long j = 0; j < size_; j++) {
+	for (size_t j = 0; j < size_; ++j) {
 		if (aTrousPub_.wDecomp_[waveletNo_][j] > thresholdVal_) {
 			outputPub_[j] = aTrousPub_.wDecomp_[waveletNo_][j];
 			segPub_[j] = 1;
@@ -64,8 +64,6 @@ long Palm::Processing()
 
 	if ((ret = segmentPub_.WatershedIntelligent(outputPub_, segPub_, 1e-8, watershedRatio_)) < 0) { return ret; }
 	if ((ret = segmentPub_.ComputeStatistics(outputPub_, segPub_, aTrousPub_.wDecomp_[waveletNo_], gaussFit_)) < 0) { return ret; }
-
-
 	if (volMin_ > 0. || intMin_ > 0.) { if ((ret = segmentPub_.FilterData(segPub_, structFiltParam_.data(), structFiltParamUse_.data())) < 0) { return ret; } }
 
 	const auto& P = segmentPub_.GetTabInfo();
@@ -123,7 +121,7 @@ long Palm::Processing()
 	std::fill_n(points_ + currentPoint_, N_SEGMENTS, -1);
 	currentPoint_ += N_SEGMENTS;
 
-	return static_cast<long>(currentPoint_);
+	return static_cast<int>(currentPoint_);
 }
 
 

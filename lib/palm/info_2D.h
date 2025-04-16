@@ -16,15 +16,15 @@ typedef struct
 typedef struct
 {
 	double maxPotentialWithNeighbor;
-	long structureInContact;
+	int structureInContact;
 	double minPotentialOnTheStructure;
 	double maxPotentialOnTheStructure;
-	long x;
-	long y;
+	int x;
+	int y;
 	bool kept;
 	bool locked;
-	long structureToBecaume;
-	long newIndex;
+	int structureToBecaume;
+	int newIndex;
 } wsFusion2D;
 
 
@@ -61,10 +61,10 @@ typedef struct
 	double angle;
 	size_t index;
 	size_t time;
-	long maxLength;
+	int maxLength;
 	size_t zOrderComputed;
 	box2D boundingBox;
-	unsigned short nbSubstructures;
+	size_t nbSubstructures;
 } InfoDataRich2D;
 
 
@@ -83,7 +83,7 @@ typedef struct
 	double angle;
 	size_t index;
 	size_t time;
-	long maxLength;
+	int maxLength;
 } InfoData2D;
 
 

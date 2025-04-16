@@ -150,8 +150,7 @@ size_t Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double
 
 	for (size_t indexFilter = 9; indexFilter <= 11; ++indexFilter) {
 		if (useParam[indexFilter] == 1 && nbInfoStruct_ > static_cast<size_t>(param[indexFilter]) && static_cast<int>(param[indexFilter]) > 0) {
-			//N first structure with the biggest surface (indexFilter=9), the biggest surface (indexFilter=10) or 
-			//the biggest total intensity (indexFilter=11)
+			//N first structure with the biggest surface (indexFilter=9), the biggest surface (indexFilter=10) or the biggest total intensity (indexFilter=11)
 			ptrOld = nullptr;
 			for (size_t i = 0; i < static_cast<size_t>(param[indexFilter]); ++i) {
 				if (ptrOld == nullptr) { ptr = headInfo_; }
@@ -347,7 +346,6 @@ int Segmentation2D::ComputeStatistics(const std::vector<double>& data, const std
 	for (size_t ind = 1; ind <= nbInfoStruct_; ind++) {
 		auto& currData = tabInfo_[ind]->data_;
 		if (currData.surf > 0) {
-			const double Dsurf = static_cast<double>(currData.surf);
 			if (gaussFit == 5) {
 				currData.moment.x = 0.;
 				currData.moment.y = 0.;
@@ -368,7 +366,7 @@ int Segmentation2D::ComputeStatistics(const std::vector<double>& data, const std
 
 				currData.moment.x /= mean;
 				currData.moment.y /= mean;
-				currData.mean /= Dsurf;
+				currData.mean /= currData.surf;
 				currData.intensity = currData.mean;
 
 				/***********************************/
@@ -377,8 +375,8 @@ int Segmentation2D::ComputeStatistics(const std::vector<double>& data, const std
 				currData.moment.x /= currData.mean;
 				currData.moment.y /= currData.mean;
 
-				currData.momentSurf.x /= Dsurf;
-				currData.momentSurf.y /= Dsurf;
+				currData.momentSurf.x /= currData.surf;
+				currData.momentSurf.y /= currData.surf;
 				currData.var.xx /= currData.mean;
 				currData.var.yy /= currData.mean;
 				currData.var.xy /= currData.mean;
@@ -387,8 +385,8 @@ int Segmentation2D::ComputeStatistics(const std::vector<double>& data, const std
 				currData.var.xy -= currData.moment.x * currData.moment.y;
 				currData.intensity = currData.mean;
 				currData.stdev -= currData.mean;
-				currData.mean /= Dsurf;
-				currData.stdev /= Dsurf;
+				currData.mean /= currData.surf;
+				currData.stdev /= currData.surf;
 				currData.stdev = sqrt(currData.stdev);
 			}
 		}
@@ -406,7 +404,7 @@ double thresholdRatio: value to distinguish if 2 strucutres in contact have to b
 int Segmentation2D::filterStructureWS(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double thresholdRatio)
 {
 	std::vector< wsFusion2D> ptrStr(nbInfoStruct_ + 1);
-	long label;
+	int label;
 	bool change = true;
 	while (change) {
 		const size_t OldNbInfoStruct = nbInfoStruct_;
@@ -502,7 +500,7 @@ std::vector<double> &image: input image
 std::vector<unsigned short> &localMax: local maximum
 double threshold: a point to be considered as a local maximum have to be > to threshold.
 ********************************************************************************************************************/
-int Segmentation2D::getLocalMax(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double threshold) const
+unsigned short Segmentation2D::getLocalMax(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double threshold) const
 {
 	std::ranges::fill(seg, 0);
 	unsigned short label = 1;
@@ -540,11 +538,10 @@ int Segmentation2D::getLocalMax(const std::vector<double>& potential, std::vecto
 			}
 		}
 	}
-
 	return label - 1;
 }
 
-using coord = std::pair<long, long>;
+using coord = std::pair<int, int>;
 
 struct Compare
 {
@@ -561,13 +558,13 @@ size_t Segmentation2D::watershed(const std::vector<double>& potential, std::vect
 			if (seg[idx] == 0) { continue; }
 
 			bool vois = false;
-			for (long dx = -1; dx <= 1 && !vois; ++dx) {
-				const long Nx = x + dx;
+			for (int dx = -1; dx <= 1 && !vois; ++dx) {
+				const int Nx = x + dx;
 				if (Nx < 0 || Nx >= height_) { continue; }
 				const size_t RowOffset = static_cast<size_t>(Nx) * width_;
 
-				for (long dy = -1; dy <= 1 && !vois; ++dy) {
-					const long Ny = y + dy;
+				for (int dy = -1; dy <= 1 && !vois; ++dy) {
+					const int Ny = y + dy;
 					if ((dx == 0 && dy == 0) || Ny < 0 || Ny >= width_) { continue; }
 
 					if (seg[RowOffset + Ny] == 0) { vois = true; }
@@ -587,12 +584,12 @@ size_t Segmentation2D::watershed(const std::vector<double>& potential, std::vect
 		heap.pop();
 		++it;
 
-		for (long dx = -1; dx <= 1; ++dx) {
-			long nx = p.first + dx;
+		for (int dx = -1; dx <= 1; ++dx) {
+			int nx = p.first + dx;
 			if (nx < 0 || nx >= height_) { continue; }
 
-			for (long dy = -1; dy <= 1; ++dy) {
-				long ny = p.second + dy;
+			for (int dy = -1; dy <= 1; ++dy) {
+				int ny = p.second + dy;
 				if ((dx == 0 && dy == 0) || ny < 0 || ny >= width_) { continue; }
 
 				const size_t Nid = nx * width_ + ny;

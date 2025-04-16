@@ -29,6 +29,6 @@ private:
 	void desalloc();
 
 	int filterStructureWS(const std::vector<double>& potential, std::vector<unsigned short>& seg, double thresholdRatio);
-	int getLocalMax(const std::vector<double>& potential, std::vector<unsigned short>& seg, double threshold) const;
+	unsigned short getLocalMax(const std::vector<double>& potential, std::vector<unsigned short>& seg, double threshold) const;
 	size_t watershed(const std::vector<double>& potential, std::vector<unsigned short>& seg, double threshold) const;
 };
