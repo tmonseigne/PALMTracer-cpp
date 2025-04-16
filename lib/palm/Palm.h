@@ -43,5 +43,5 @@ private:
 	double y_, x_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_;
 
 	void initGaussianFitParam(double x, double y, double sigmaX, double sigmaY, double theta);
-	void fillPointList(const InfoDataRich2D& data);
+	void fillPointList(const Info2D& data);
 };

@@ -2,33 +2,30 @@
 
 #include <vector>
 #include "info_2D.h"
-#include "Segmentation.h"
 
 
-class Segmentation2D final : public Segmentation
+class Segmentation2D
 {
 public:
-	Segmentation2D(const size_t height, const size_t width) : height_(height), width_(width), size_(height * width), headInfo_(nullptr) { nbInfoStruct_ = 0; }
+	Segmentation2D(const size_t height, const size_t width) : height_(height), width_(width), size_(height * width) { }
 
-	~Segmentation2D() override { desalloc(); }
+	~Segmentation2D() { desalloc(); }
 
-	int ComputeStatistics(const std::vector<double>& data, const std::vector<unsigned short>& seg, const std::vector<double>& waveData, size_t gaussFit,
-	                      bool doRealoc = true);
+	int ComputeStatistics(const std::vector<double>& data, const std::vector<unsigned short>& seg, const std::vector<double>& waveData, size_t gaussFit);
 
 	size_t FilterData(std::vector<unsigned short>& seg, const double* param, const unsigned short* useParam);
-	std::vector<InfoStruct2D*> GetTabInfo() const { return tabInfo_; }
+	std::vector<Info2D> GetInfos() const { return infos_; }
 
 	int WatershedIntelligent(const std::vector<double>& potential, std::vector<unsigned short>& seg, double threshold, double thresholdRatio);
 
 private:
 	size_t height_, width_, size_;
-	InfoStruct2D* headInfo_;
-	std::vector<InfoStruct2D*> tabInfo_;
+	std::vector<Info2D> infos_;
 
-	int alloc(size_t nbStruct);
+	void alloc(size_t nbStruct);
 	void desalloc();
 
 	int filterStructureWS(const std::vector<double>& potential, std::vector<unsigned short>& seg, double thresholdRatio);
-	unsigned short getLocalMax(const std::vector<double>& potential, std::vector<unsigned short>& seg, double threshold) const;
-	size_t watershed(const std::vector<double>& potential, std::vector<unsigned short>& seg, double threshold) const;
+	void getLocalMax(const std::vector<double>& potential, std::vector<unsigned short>& seg, double threshold);
+	void watershed(const std::vector<double>& potential, std::vector<unsigned short>& seg, double threshold) const;
 };

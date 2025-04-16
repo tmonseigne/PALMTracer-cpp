@@ -17,14 +17,10 @@ using wsFusion2D = struct
 {
 	double maxPotentialWithNeighbor;
 	int structureInContact;
-	double minPotentialOnTheStructure;
-	double maxPotentialOnTheStructure;
-	int x;
-	int y;
-	bool kept;
-	bool locked;
-	int structureToBecaume;
-	int newIndex;
+	double minPotentialOnTheStructure, maxPotentialOnTheStructure;
+	int x, y;
+	bool kept, locked;
+	int structureToBecaume, newIndex;
 };
 
 
@@ -39,43 +35,12 @@ using varianceStruct2D = struct
 	double xx, yy, xy;
 };
 
-using gaborCoefs = struct
-{
-	double max, mean, angleMax;
-};
-
-using InfoDataRich2D = struct
-{
-	size_t peri;
-	double surf;
-	maxStruct2D min;
-	maxStruct2D max;
-	double stdev;
-	double morpho;
-	val2D moment;
-	val2D momentSurf;
-	double mean;
-	double intensity;
-	varianceStruct2D var;
-	val2D sigma;
-	double angle;
-	size_t index;
-	size_t time;
-	int maxLength;
-	size_t zOrderComputed;
-	box2D boundingBox;
-	size_t nbSubstructures;
-};
-
-
 using InfoData2D = struct
 {
 	size_t peri;
 	size_t surf;
 	maxStruct2D max;
-	double morpho;
-	val2D moment;
-	val2D momentSurf;
+	val2D moment, momentSurf;
 	double mean;
 	double intensity;
 	varianceStruct2D var;
@@ -83,22 +48,49 @@ using InfoData2D = struct
 	double angle;
 	size_t index;
 	size_t time;
-	int maxLength;
 };
 
 
-class InfoStruct2D
+class Info2D
 {
 public:
-	explicit InfoStruct2D(const size_t index)
+	size_t peri_;
+	double surf_;
+	maxStruct2D min_, max_;
+	double stdev_;
+	val2D moment_, momentSurf_;
+	double mean_;
+	double intensity_;
+	varianceStruct2D var_;
+	val2D sigma_;
+	double angle_;
+	size_t index_;
+	box2D boundingBox_;
+
+
+	Info2D() = default;
+	~Info2D() = default;
+
+	// Copy / Move
+	Info2D(Info2D&&) noexcept = default;
+	Info2D& operator=(Info2D&&) noexcept = default;
+	Info2D(const Info2D&) = default;
+	Info2D& operator=(const Info2D&) = default;
+
+	void Reset(const size_t height = 0, const size_t width = 0)
 	{
-		data_.index = index;
-		data_.zOrderComputed = 0;
-		next_ = nullptr;
+		peri_ = 0;
+		surf_ = 0;
+		min_ = {.val = 0, .x = 0, .y = 0};
+		max_ = {.val = 0, .x = 0, .y = 0};
+		stdev_ = 0;
+		moment_ = {.x = 0, .y = 0};
+		momentSurf_ = {.x = 0, .y = 0};
+		mean_ = 0;
+		intensity_ = 0;
+		var_ = {.xx = 0, .yy = 0, .xy = 0};
+		sigma_ = {.x = 0, .y = 0};
+		angle_ = 0;
+		boundingBox_ = {.xMin = height, .xMax = 0, .yMin = width, .yMax = 0};
 	}
-
-	~InfoStruct2D() = default;
-	InfoStruct2D* next_;
-
-	InfoDataRich2D data_;
 };

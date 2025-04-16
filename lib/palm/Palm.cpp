@@ -66,10 +66,10 @@ int Palm::Processing()
 	if ((ret = segmentPub_.ComputeStatistics(outputPub_, segPub_, aTrousPub_.wDecomp_[waveletNo_], gaussFit_)) < 0) { return ret; }
 	if (volMin_ > 0. || intMin_ > 0.) { if ((ret = segmentPub_.FilterData(segPub_, structFiltParam_.data(), structFiltParamUse_.data())) < 0) { return ret; } }
 
-	const auto& P = segmentPub_.GetTabInfo();
+	const auto& P = segmentPub_.GetInfos();
 
-	for (size_t i = 1; i <= std::min<size_t>(ret, nPointsMaxPerPlane_ - 2); ++i) {
-		initGaussianFitParam(P[i]->data_.moment.y, P[i]->data_.moment.x, initSigmaX_, initSigmaY_, initTheta_);
+	for (size_t i = 0; i < std::min<size_t>(ret, nPointsMaxPerPlane_ - 1); ++i) {
+		initGaussianFitParam(P[i].moment_.y, P[i].moment_.x, initSigmaX_, initSigmaY_, initTheta_);
 		switch (gaussFit_) {
 			default: {
 				sigmaX_ = 0;
@@ -114,7 +114,7 @@ int Palm::Processing()
 				break;
 			}
 		}
-		fillPointList(P[i]->data_);
+		fillPointList(P[i]);
 	}
 
 	// Blank Line
@@ -137,7 +137,7 @@ void Palm::initGaussianFitParam(const double x, const double y, const double sig
 	rss_ = -1;
 }
 
-void Palm::fillPointList(const InfoDataRich2D& data)
+void Palm::fillPointList(const Info2D& data)
 {
 	points_[currentPoint_++] = sigmaX_;
 	points_[currentPoint_++] = sigmaY_;
@@ -147,8 +147,8 @@ void Palm::fillPointList(const InfoDataRich2D& data)
 	points_[currentPoint_++] = intensity_;
 	points_[currentPoint_++] = offset_;
 	points_[currentPoint_++] = rss_;
-	points_[currentPoint_++] = data.intensity;
-	points_[currentPoint_++] = data.surf;
+	points_[currentPoint_++] = data.intensity_;
+	points_[currentPoint_++] = data.surf_;
 	points_[currentPoint_++] = 0.; // Z coordinate
 	points_[currentPoint_++] = 0.; // Spectral or other
 	points_[currentPoint_++] = 0.; // Other

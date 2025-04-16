@@ -56,9 +56,6 @@
     <ClInclude Include="..\lib\palm\Palm.h">
       <Filter>Palm</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\Segmentation.h">
-      <Filter>Palm</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\palm\Segmentation2D.h">
       <Filter>Palm</Filter>
     </ClInclude>

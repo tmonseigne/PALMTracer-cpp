@@ -146,7 +146,6 @@
     <ClInclude Include="..\lib\palm\ATrous.h" />
     <ClInclude Include="..\lib\palm\Palm.h" />
     <ClInclude Include="..\lib\palm\info_2D.h" />
-    <ClInclude Include="..\lib\palm\Segmentation.h" />
     <ClInclude Include="..\lib\palm\Segmentation2D.h" />
     <ClInclude Include="..\lib\tools\NoError.h" />
     <ClInclude Include="main.h" />

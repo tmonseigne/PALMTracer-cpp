@@ -64,7 +64,6 @@ using InfoData3D = struct
 	unsigned long surfVol;
 	unsigned long volume;
 	maxStruct3D max;
-	double morpho;
 	val3D moment;
 	val3D momentSurf;
 	double mean;
