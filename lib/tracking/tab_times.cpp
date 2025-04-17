@@ -270,7 +270,6 @@ int TabTimes::readPointsList()
 
 			str->setIntensity(publicParameters->pointsList[index + node * publicParameters->NbSegParams + 8]);
 
-			str->setTime(time_ + 1);
 			str->setSurface((unsigned long)publicParameters->pointsList[index + node * publicParameters->NbSegParams + 9]);
 			str->setMean(publicParameters->pointsList[index + node * publicParameters->NbSegParams + 8] / (unsigned long)publicParameters->pointsList[index + node * publicParameters->NbSegParams + 9]);
 

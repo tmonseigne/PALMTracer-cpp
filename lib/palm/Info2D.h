@@ -3,69 +3,65 @@
 *******************************************************************************************************************/
 #pragma once
 
-using val2D = struct
+using val_2d = struct
 {
 	double x, y;
 };
 
-using box2D = struct
+using box_2d = struct
 {
 	size_t xMin, xMax, yMin, yMax;
 };
 
-using wsFusion2D = struct
+using ws_fusion_2d = struct
 {
-	double maxPotentialWithNeighbor;
-	int structureInContact;
-	double minPotentialOnTheStructure, maxPotentialOnTheStructure;
-	int x, y;
+	double maxPotentialWithNeighbor, minPotential, maxPotential;
+	int x, y, structInContact, structToBecome, newIndex;
 	bool kept, locked;
-	int structureToBecaume, newIndex;
 };
 
 
-using maxStruct2D = struct
+using max_2d = struct
 {
 	double val;
 	size_t x, y;
 };
 
-using varianceStruct2D = struct
+using variance_2d = struct
 {
 	double xx, yy, xy;
 };
 
-using InfoData2D = struct
+using info_2d = struct
 {
+	size_t index;
 	size_t peri;
-	size_t surf;
-	maxStruct2D max;
-	val2D moment, momentSurf;
+	double surf;
+	max_2d max;
+	val_2d moment, momentSurf;
 	double mean;
 	double intensity;
-	varianceStruct2D var;
-	val2D sigma;
+	variance_2d var;
+	val_2d sigma;
 	double angle;
-	size_t index;
-	size_t time;
 };
 
 
 class Info2D
 {
 public:
+	size_t index_;
 	size_t peri_;
 	double surf_;
-	maxStruct2D min_, max_;
+	max_2d min_, max_;
 	double stdev_;
-	val2D moment_, momentSurf_;
+	val_2d moment_, momentSurf_;
 	double mean_;
 	double intensity_;
-	varianceStruct2D var_;
-	val2D sigma_;
+	variance_2d var_;
+	val_2d sigma_;
 	double angle_;
-	size_t index_;
-	box2D boundingBox_;
+	box_2d boundingBox_;
 
 
 	Info2D() = default;

@@ -103,8 +103,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\lib\palm\info_2D.h" />
-    <ClInclude Include="..\lib\palm\info_3D.h" />
+    <ClInclude Include="..\lib\palm\Info2D.h" />
+    <ClInclude Include="..\lib\palm\Info3D.h" />
     <ClInclude Include="..\lib\tools\allDataLib.h" />
     <ClInclude Include="..\lib\tools\arrayType.h" />
     <ClInclude Include="..\lib\tools\FltArray.h" />

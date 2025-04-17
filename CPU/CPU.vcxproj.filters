@@ -50,7 +50,7 @@
     <ClInclude Include="..\lib\palm\ATrous.h">
       <Filter>Palm</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\info_2D.h">
+    <ClInclude Include="..\lib\palm\Info2D.h">
       <Filter>Palm</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\palm\Palm.h">

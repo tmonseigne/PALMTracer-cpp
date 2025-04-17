@@ -37,7 +37,6 @@ float InfoNode2D::distance(InfoNode* i1, InfoNode* i2)
 double InfoNode2D::getMean() { return info.mean; }
 double InfoNode2D::getIntensity() { return info.intensity; }
 unsigned long InfoNode2D::getIndex() { return info.index; }
-unsigned long InfoNode2D::getTime() { return info.time; }
 
 long InfoNode2D::getSurface() { return info.surf; }
 
@@ -61,7 +60,7 @@ double InfoNode2D::getColor() { return Color; }
 double InfoNode2D::getMolId() { return MolId; }
 //
 
-unsigned long InfoNode2D::sizeofInfoData() { return sizeof(InfoData2D); }
+unsigned long InfoNode2D::sizeofInfoData() { return sizeof(info_2d); }
 
 void* InfoNode2D::getPtrInfoData() { return &info; }
 
@@ -76,8 +75,6 @@ void InfoNode2D::setZ(const double z) { Z = z; }
 void InfoNode2D::setIntensity(const double I) { info.intensity = I; }
 
 void InfoNode2D::setIndex(const unsigned long i) { info.index = i; }
-
-void InfoNode2D::setTime(const unsigned long t) { info.time = t; }
 
 void InfoNode2D::setMean(const double m) { info.mean = m; }
 
@@ -110,9 +107,8 @@ double InfoNode3D::getMean() { return info.mean; }
 double InfoNode3D::getIntensity() { return info.intensity; }
 long InfoNode3D::getVolume() { return info.volume; }
 unsigned long InfoNode3D::getIndex() { return info.index; }
-unsigned long InfoNode3D::getTime() { return info.time; }
 
-unsigned long InfoNode3D::sizeofInfoData() { return sizeof(InfoData3D); }
+unsigned long InfoNode3D::sizeofInfoData() { return sizeof(info_3d); }
 
 void* InfoNode3D::getPtrInfoData() { return &info; }
 
@@ -133,7 +129,5 @@ void InfoNode3D::setZ(double z) { }
 void InfoNode3D::setIntensity(double I) { }
 
 void InfoNode3D::setIndex(unsigned long i) { }
-
-void InfoNode3D::setTime(unsigned long t) { }
 
 void InfoNode3D::setMean(double m) { }

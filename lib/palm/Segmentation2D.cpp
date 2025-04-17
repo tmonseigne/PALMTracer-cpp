@@ -36,7 +36,7 @@ size_t Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double
 	}
 
 	// Première passe : filtrage par critère
-	auto isFiltered = [&](const Info2D& info, size_t index)
+	auto isFiltered = [&](const Info2D& info, const size_t index)
 	{
 		const double Mean_Surf = info.mean_ * info.surf_;
 		const double Morph_Ratio = std::min(info.sigma_.x, info.sigma_.y) / std::max(info.sigma_.x, info.sigma_.y);
@@ -214,7 +214,7 @@ int Segmentation2D::filterStructureWS(const std::vector<double>& potential, std:
 	const size_t NbStruct = infos_.size();
 	if (NbStruct == 0) { return 0; }
 
-	std::vector<wsFusion2D> wsFusions(NbStruct);
+	std::vector<ws_fusion_2d> wsFusions(NbStruct);
 
 	bool change = true;
 	int label = 0;
@@ -225,12 +225,12 @@ int Segmentation2D::filterStructureWS(const std::vector<double>& potential, std:
 		for (size_t i = 0; i < NbStruct; ++i) {
 			auto& s = wsFusions[i];
 			s.maxPotentialWithNeighbor = -1e10;
-			s.minPotentialOnTheStructure = +1e10;
-			s.maxPotentialOnTheStructure = -1e10;
-			s.structureInContact = 0;
+			s.minPotential = +1e10;
+			s.maxPotential = -1e10;
+			s.structInContact = 0;
 			s.kept = true;
 			s.locked = false;
-			s.structureToBecaume = static_cast<int>(i);
+			s.structToBecome = static_cast<int>(i);
 			s.newIndex = 0;
 		}
 
@@ -241,10 +241,10 @@ int Segmentation2D::filterStructureWS(const std::vector<double>& potential, std:
 				if (Sid == 0) { continue; }
 				auto& s = wsFusions[Sid - 1];
 
-				s.minPotentialOnTheStructure = std::min(s.minPotentialOnTheStructure, potential[idx]);
+				s.minPotential = std::min(s.minPotential, potential[idx]);
 
-				if (potential[idx] > s.maxPotentialOnTheStructure) {
-					s.maxPotentialOnTheStructure = potential[idx];
+				if (potential[idx] > s.maxPotential) {
+					s.maxPotential = potential[idx];
 					s.x = static_cast<int>(i);
 					s.y = static_cast<int>(j);
 				}
@@ -258,7 +258,7 @@ int Segmentation2D::filterStructureWS(const std::vector<double>& potential, std:
 						if (NeighborSid != 0 && NeighborSid != Sid) {
 							if (potential[idx] > s.maxPotentialWithNeighbor) {
 								s.maxPotentialWithNeighbor = potential[idx];
-								s.structureInContact = NeighborSid - 1;
+								s.structInContact = NeighborSid - 1;
 							}
 						}
 					}
@@ -269,19 +269,19 @@ int Segmentation2D::filterStructureWS(const std::vector<double>& potential, std:
 		// Fusion des structures si conditions remplies
 		for (size_t i = 0; i < NbStruct; ++i) {
 			auto& s = wsFusions[i];
-			if (s.structureInContact <= 0) { continue; }
+			if (s.structInContact <= 0) { continue; }
 
-			const auto& Neighbor = wsFusions[s.structureInContact];
+			const auto& Neighbor = wsFusions[s.structInContact];
 
 			if (!s.locked && !Neighbor.locked) {
-				const double Delta = s.maxPotentialOnTheStructure - s.minPotentialOnTheStructure;
+				const double Delta = s.maxPotential - s.minPotential;
 				if (std::abs(Delta) <= DBL_EPSILON) { continue; }
 
-				const double Ratio = (s.maxPotentialOnTheStructure - s.maxPotentialWithNeighbor) / Delta;
+				const double Ratio = (s.maxPotential - s.maxPotentialWithNeighbor) / Delta;
 				if (Ratio < thresholdRatio) {
-					if (s.maxPotentialOnTheStructure < Neighbor.maxPotentialOnTheStructure) {
-						s.structureToBecaume = s.structureInContact;
-						wsFusions[s.structureInContact].locked = true;
+					if (s.maxPotential < Neighbor.maxPotential) {
+						s.structToBecome = s.structInContact;
+						wsFusions[s.structInContact].locked = true;
 						s.locked = true;
 						change = true;
 					}
@@ -291,12 +291,12 @@ int Segmentation2D::filterStructureWS(const std::vector<double>& potential, std:
 
 		// Réattribution des nouvelles étiquettes
 		label = 0;
-		for (int i = 0; i <= static_cast<int>(wsFusions.size()); ++i) { if (wsFusions[i].structureToBecaume == i) { wsFusions[i].newIndex = ++label; } }
+		for (int i = 0; i <= static_cast<int>(wsFusions.size()); ++i) { if (wsFusions[i].structToBecome == i) { wsFusions[i].newIndex = ++label; } }
 
 		for (unsigned short& s : seg) {
 			if (s != 0) {
 				const auto& Sid = wsFusions[s - 1];
-				s = static_cast<unsigned short>(wsFusions[Sid.structureToBecaume].newIndex);
+				s = static_cast<unsigned short>(wsFusions[Sid.structToBecome].newIndex);
 			}
 		}
 	}
@@ -316,7 +316,7 @@ int Segmentation2D::filterStructureWS(const std::vector<double>& potential, std:
 	// Marquage d’un seul point par structure pour Watershed final
 	std::ranges::fill(seg, 0);
 	for (int i = 0; i <= static_cast<int>(wsFusions.size()); ++i) {
-		if (wsFusions[i].structureToBecaume == i) { seg[wsFusions[i].x * width_ + wsFusions[i].y] = static_cast<unsigned short>(wsFusions[i].newIndex); }
+		if (wsFusions[i].structToBecome == i) { seg[wsFusions[i].x * width_ + wsFusions[i].y] = static_cast<unsigned short>(wsFusions[i].newIndex); }
 	}
 
 	return static_cast<int>(infos_.size());

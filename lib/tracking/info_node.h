@@ -5,8 +5,8 @@
 #pragma once
 
 #include "general.h"
-#include "palm/info_2D.h"
-#include "palm/info_3D.h"
+#include "palm/Info2D.h"
+#include "palm/Info3D.h"
 #include "tools/NoError.h"
 
 class InfoNode
@@ -26,7 +26,6 @@ public:
 	virtual double getZ() { return T_ERR_OOP; }
 	virtual double getIntensity() { return T_ERR_OOP; };
 	virtual unsigned long getIndex() { return T_ERR_OOP; };
-	virtual unsigned long getTime() { return T_ERR_OOP; };
 	virtual unsigned long sizeofInfoData() { return T_ERR_OOP; };
 	virtual void* getPtrInfoData() { return nullptr; };
 
@@ -36,7 +35,6 @@ public:
 	virtual void setZ(double z) { };
 	virtual void setIntensity(double I) { };
 	virtual void setIndex(unsigned long i) { };
-	virtual void setTime(unsigned long t) { };
 	virtual void setMean(double m) { };
 
 	// Added by Adel
@@ -52,7 +50,7 @@ public:
 	InfoNode2D(PublicParameters* _publicParameters): InfoNode(_publicParameters) { };
 	float distance(InfoNode* infoData) override;
 	float distance(InfoNode* i1, InfoNode* i2) override;
-	InfoData2D info;
+	info_2d info;
 	double getMean() override;
 	double getX() override;
 	double getY() override;
@@ -60,7 +58,6 @@ public:
 	double getIntensity() override;
 	long getSurface() override;
 	unsigned long getIndex() override;
-	unsigned long getTime() override;
 	unsigned long sizeofInfoData() override;
 	void* getPtrInfoData() override;
 
@@ -70,7 +67,6 @@ public:
 	void setZ(double z) override;
 	void setIntensity(double I) override;
 	void setIndex(unsigned long i) override;
-	void setTime(unsigned long t) override;
 	void setMean(double m) override;
 
 	// added by Adel
@@ -90,7 +86,7 @@ public:
 	InfoNode3D(PublicParameters* _publicParameters): InfoNode(_publicParameters) { };
 	float distance(InfoNode* infoData) override;
 	float distance(InfoNode* i1, InfoNode* i2) override;
-	InfoData3D info;
+	info_3d info;
 	double getMean() override;
 	double getX() override;
 	double getY() override;
@@ -98,7 +94,6 @@ public:
 	double getIntensity() override;
 	long getVolume() override;
 	unsigned long getIndex() override;
-	unsigned long getTime() override;
 	unsigned long sizeofInfoData() override;
 	void* getPtrInfoData() override;
 
@@ -108,6 +103,5 @@ public:
 	void setZ(double z) override;
 	void setIntensity(double I) override;
 	void setIndex(unsigned long i) override;
-	void setTime(unsigned long t) override;
 	void setMean(double m) override;
 };
