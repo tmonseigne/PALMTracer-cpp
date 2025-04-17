@@ -62,13 +62,13 @@ int Palm::Processing()
 		}
 	}
 
-	if ((ret = segmentPub_.WatershedIntelligent(outputPub_, segPub_, 1e-8, watershedRatio_)) < 0) { return ret; }
-	if ((ret = segmentPub_.ComputeStatistics(outputPub_, segPub_, aTrousPub_.wDecomp_[waveletNo_], gaussFit_)) < 0) { return ret; }
-	if (volMin_ > 0. || intMin_ > 0.) { if ((ret = segmentPub_.FilterData(segPub_, structFiltParam_.data(), structFiltParamUse_.data())) < 0) { return ret; } }
+	segmentPub_.WatershedIntelligent(outputPub_, segPub_, 1e-8, watershedRatio_);
+	segmentPub_.ComputeStatistics(outputPub_, segPub_, aTrousPub_.wDecomp_[waveletNo_], gaussFit_);
+	if (volMin_ > 0. || intMin_ > 0.) { segmentPub_.FilterData(segPub_, structFiltParam_.data(), structFiltParamUse_.data()); }
 
 	const auto& P = segmentPub_.GetInfos();
 
-	for (size_t i = 0; i < std::min<size_t>(ret, nPointsMaxPerPlane_ - 1); ++i) {
+	for (size_t i = 0; i < std::min<size_t>(P.size(), nPointsMaxPerPlane_ - 1); ++i) {
 		initGaussianFitParam(P[i].moment_.y, P[i].moment_.x, initSigmaX_, initSigmaY_, initTheta_);
 		switch (gaussFit_) {
 			default: {

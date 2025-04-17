@@ -10,15 +10,13 @@ void Segmentation2D::alloc(const size_t nbStruct)
 {
 	desalloc();
 	infos_.resize(nbStruct);
-	for (size_t i = 0; i < nbStruct; ++i) {
-		infos_[i].index_ = i;
-	}
+	for (size_t i = 0; i < nbStruct; ++i) { infos_[i].index_ = i; }
 }
 
 void Segmentation2D::desalloc() { infos_.clear(); }
 
 
-size_t Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double* param, const unsigned short* useParam)
+void Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double* param, const unsigned short* useParam)
 {
 	const size_t OldSize = infos_.size();
 
@@ -44,13 +42,13 @@ size_t Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double
 		return
 			(useParam[0] && info.surf_ <= param[0]) ||    // minSurf
 			(useParam[1] && info.surf_ >= param[1]) ||    // maxSurf
-			(useParam[2] && Mean_Surf <= param[2]) ||    // minInten
-			(useParam[3] && Mean_Surf >= param[3]) ||    // maxInten
+			(useParam[2] && Mean_Surf <= param[2]) ||     // minInten
+			(useParam[3] && Mean_Surf >= param[3]) ||     // maxInten
 			(useParam[4] && info.max_.val <= param[4]) || // minMaxi
 			(useParam[5] && info.max_.val >= param[5]) || // maxMaxi
-			(useParam[7] && Morph_Ratio >= param[7]) ||  // minMorphParam
-			(useParam[8] && Morph_Ratio <= param[8]) ||  // maxMorphParam
-			(useParam[12] && bounds[index]);             // no struct on boundaries
+			(useParam[7] && Morph_Ratio >= param[7]) ||   // minMorphParam
+			(useParam[8] && Morph_Ratio <= param[8]) ||   // maxMorphParam
+			(useParam[12] && bounds[index]);              // no struct on boundaries
 	};
 
 	std::vector<Info2D> filtered;
@@ -100,14 +98,13 @@ size_t Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double
 			seg[i] = oldToNew[OldIndex] > 0 ? static_cast<unsigned short>(oldToNew[OldIndex]) : 0;
 		}
 	}
-	return infos_.size();
 }
 
-int Segmentation2D::ComputeStatistics(const std::vector<double>& data, const std::vector<unsigned short>& seg, const std::vector<double>& waveData,
-                                      const size_t gaussFit)
+/********************************************************************************************************************/
+void Segmentation2D::ComputeStatistics(const std::vector<double>& data, const std::vector<unsigned short>& seg,
+                                       const std::vector<double>& waveData, const size_t gaussFit)
 {
 	double val;
-	size_t cptPoints = 0;
 
 	for (auto& info : infos_) { info.Reset(height_, width_); }
 
@@ -116,7 +113,6 @@ int Segmentation2D::ComputeStatistics(const std::vector<double>& data, const std
 		for (size_t j = 0; j < width_; ++j, ++idx) {
 			const unsigned short s = seg[idx];
 			if (s == 0) { continue; }
-			cptPoints++;
 			auto& info = infos_[s - 1];
 			val = data[idx];
 
@@ -170,7 +166,7 @@ int Segmentation2D::ComputeStatistics(const std::vector<double>& data, const std
 
 			for (int ii = -2; ii <= 2; ++ii) {
 				for (int jj = -2; jj <= 2; ++jj) {
-					const int X = info.max_.x + ii, Y = info.max_.y + jj;
+					const int X = static_cast<int>(info.max_.x) + ii, Y = static_cast<int>(info.max_.y) + jj;
 					if (X >= 0 && X < static_cast<int>(height_) && Y >= 0 && Y < static_cast<int>(width_)) {
 						val = waveData[X * width_ + Y];
 						info.moment_.x += val * X;
@@ -198,8 +194,6 @@ int Segmentation2D::ComputeStatistics(const std::vector<double>& data, const std
 			info.mean_ /= info.surf_;
 		}
 	}
-
-	return static_cast<int>(cptPoints);
 }
 
 /********************************************************************************************************************
@@ -209,10 +203,10 @@ std::vector<unsigned short> &localMax: local maximum
 double thresholdRatio: value to distinguish if 2 strucutres in contact have to be considered as a single structure (
 							oversegmentation)
 ********************************************************************************************************************/
-int Segmentation2D::filterStructureWS(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double thresholdRatio)
+void Segmentation2D::filterStructureWS(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double thresholdRatio)
 {
 	const size_t NbStruct = infos_.size();
-	if (NbStruct == 0) { return 0; }
+	if (NbStruct == 0) { return; }
 
 	std::vector<ws_fusion_2d> wsFusions(NbStruct);
 
@@ -318,13 +312,11 @@ int Segmentation2D::filterStructureWS(const std::vector<double>& potential, std:
 	for (int i = 0; i <= static_cast<int>(wsFusions.size()); ++i) {
 		if (wsFusions[i].structToBecome == i) { seg[wsFusions[i].x * width_ + wsFusions[i].y] = static_cast<unsigned short>(wsFusions[i].newIndex); }
 	}
-
-	return static_cast<int>(infos_.size());
 }
 
 
 /********************************************************************************************************************
-void Segmentation2D::getLocalMax(...) compute local maximum of the image an mark them in the image seg.
+void Segmentation2D::getLocalMax(...) compute local maximum of the image and mark them in the image seg.
 std::vector<double> &image: input image
 std::vector<unsigned short> &localMax: local maximum
 double threshold: a point to be considered as a local maximum have to be > to threshold.
@@ -370,17 +362,18 @@ void Segmentation2D::getLocalMax(const std::vector<double>& potential, std::vect
 	alloc(label - 1);
 }
 
-using coord = std::pair<int, int>;
+using coord_2d = std::pair<int, int>;
 
 struct Compare
 {
-	// min-heap (priorit� la plus faible d'abord)
-	bool operator()(const std::pair<double, coord>& a, const std::pair<double, coord>& b) const { return a.first > b.first; }
+	// min-heap (priorité la plus faible d'abord)
+	bool operator()(const std::pair<double, coord_2d>& a, const std::pair<double, coord_2d>& b) const { return a.first > b.first; }
 };
 
+/********************************************************************************************************************/
 void Segmentation2D::watershed(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double threshold) const
 {
-	std::priority_queue<std::pair<double, coord>, std::vector<std::pair<double, coord>>, Compare> heap;
+	std::priority_queue<std::pair<double, coord_2d>, std::vector<std::pair<double, coord_2d>>, Compare> heap;
 
 	for (size_t x = 0, idx = 0; x < height_; ++x) {
 		for (size_t y = 0; y < width_; ++y, ++idx) {
@@ -388,13 +381,13 @@ void Segmentation2D::watershed(const std::vector<double>& potential, std::vector
 
 			bool vois = false;
 			for (int dx = -1; dx <= 1 && !vois; ++dx) {
-				const int Nx = x + dx;
-				if (Nx < 0 || Nx >= height_) { continue; }
+				const int Nx = static_cast<int>(x) + dx;
+				if (Nx < 0 || Nx >= static_cast<int>(height_)) { continue; }
 				const size_t RowOffset = static_cast<size_t>(Nx) * width_;
 
 				for (int dy = -1; dy <= 1 && !vois; ++dy) {
-					const int Ny = y + dy;
-					if ((dx == 0 && dy == 0) || Ny < 0 || Ny >= width_) { continue; }
+					const int Ny = static_cast<int>(y) + dy;
+					if ((dx == 0 && dy == 0) || Ny < 0 || Ny >= static_cast<int>(width_)) { continue; }
 
 					if (seg[RowOffset + Ny] == 0) { vois = true; }
 				}
@@ -402,7 +395,7 @@ void Segmentation2D::watershed(const std::vector<double>& potential, std::vector
 
 			if (vois) {
 				double cle = -potential[idx];
-				heap.emplace(cle, coord{x, y});
+				heap.emplace(cle, coord_2d{x, y});
 			}
 		}
 	}
@@ -415,16 +408,16 @@ void Segmentation2D::watershed(const std::vector<double>& potential, std::vector
 
 		for (int dx = -1; dx <= 1; ++dx) {
 			int nx = p.first + dx;
-			if (nx < 0 || nx >= height_) { continue; }
+			if (nx < 0 || nx >= static_cast<int>(height_)) { continue; }
 
 			for (int dy = -1; dy <= 1; ++dy) {
 				int ny = p.second + dy;
-				if ((dx == 0 && dy == 0) || ny < 0 || ny >= width_) { continue; }
+				if ((dx == 0 && dy == 0) || ny < 0 || ny >= static_cast<int>(width_)) { continue; }
 
 				const size_t Nid = nx * width_ + ny;
 				if (potential[Nid] > threshold && seg[Nid] == 0) {
 					double newCle = -potential[Nid] + static_cast<double>(it) * EPSILON;
-					heap.emplace(newCle, coord{nx, ny});
+					heap.emplace(newCle, coord_2d{nx, ny});
 					seg[Nid] = seg[p.first * width_ + p.second];
 				}
 			}
@@ -443,21 +436,14 @@ double thresholdRatio: value 0<= X <=1. Makes a fusion to minimize the oversegme
 						if X=1 no watershed
 return value: number of detected structures
 ********************************************************************************************************************/
-int Segmentation2D::WatershedIntelligent(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double threshold,
-                                         const double thresholdRatio)
+void Segmentation2D::WatershedIntelligent(const std::vector<double>& potential, std::vector<unsigned short>& seg,
+                                          const double threshold, const double thresholdRatio)
 {
-	int ret;
-
 	getLocalMax(potential, seg, threshold); //first, find the local maximum to set the different germinates
 	watershed(potential, seg, threshold);   //first watershed
-
-	if (static_cast<int>(thresholdRatio) == 0) { return static_cast<int>(infos_.size()); }
-
-	//filter the germinates to minimize the oversegmentation
-	if ((ret = filterStructureWS(potential, seg, thresholdRatio)) < 0) { return ret; }
-
-	watershed(potential, seg, threshold); //second watershed
-	return static_cast<int>(infos_.size());
+	if (static_cast<int>(thresholdRatio) == 0) { return; }
+	filterStructureWS(potential, seg, thresholdRatio); //filter the germinates to minimize the oversegmentation
+	watershed(potential, seg, threshold);              //second watershed
 }
 
 #undef EPSILON

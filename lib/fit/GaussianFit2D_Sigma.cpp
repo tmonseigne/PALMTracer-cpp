@@ -89,7 +89,7 @@ void GaussianFit2D_Sigma::Run(const unsigned short* image, const size_t sizeX, c
 
 			// deltaY .* weight
 			std::ranges::transform(deltaY, weight, deltaY_w.begin(), std::multiplies<>());
-			const double X2_Try = std::transform_reduce(deltaY.begin(), deltaY.end(), deltaY_w.begin(), 0.0, std::plus<double>(), std::multiplies<double>());
+			const double X2_Try = std::transform_reduce(deltaY.begin(), deltaY.end(), deltaY_w.begin(), 0.0, std::plus(), std::multiplies());
 
 			// lambda * deltaP + beta
 			std::ranges::transform(deltaP, beta, beta_l_deltaP.begin(), [lambda](const double d, const double b) { return lambda * d + b; });
