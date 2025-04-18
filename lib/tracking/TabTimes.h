@@ -34,5 +34,5 @@ public:
 
 	int Initialisation();
 	virtual int RunModel() { return T_ERR_OOP; }
-	void CheckLinksHomogeneity(const wchar_t* st) const;
+	void CheckLinksHomogeneity() const;
 };

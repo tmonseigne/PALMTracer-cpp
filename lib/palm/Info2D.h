@@ -34,7 +34,6 @@ using variance_2d = struct
 
 using info_2d = struct
 {
-	size_t index;
 	size_t peri;
 	double surf;
 	max_2d max;

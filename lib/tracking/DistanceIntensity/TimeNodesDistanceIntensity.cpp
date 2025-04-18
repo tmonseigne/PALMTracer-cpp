@@ -5,8 +5,11 @@
 								Likeness depend on the distance and the intensity.
 *******************************************************************************************************************/
 
-#include "NodeDistanceIntensity.h"
 #include "TimeNodesDistanceIntensity.h"
+
+#include <cstdlib>
+
+#include "NodeDistanceIntensity.h"
 
 
 /********************************************************************************************************************
@@ -22,16 +25,15 @@ TimeNodesDistanceIntensity::TimeNodesDistanceIntensity(const int time, const int
 
 
 /********************************************************************************************************************
-void computeConstantSigmas(double &stdIntensityComputing, double &stdMeanComputing, 
-	double &stdDistanceComputing, long &countStd) compute the constant kMean and kIntensity
+void computeConstantSigmas(double &stdIntensity, double &stdMean, 
+	double &stdDistance, long &countStd) compute the constant kMean and kIntensity
 ********************************************************************************************************************/
-void TimeNodesDistanceIntensity::ComputeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean,
-                                                       double& stdDistanceComputing, long& countStdDist, const bool sigmaClipping, long* hist) const
+void TimeNodesDistanceIntensity::ComputeConstantSigmas(double& stdIntensity, long& countStdInt, double& stdMean, long& countStdMean,
+                                                       double& stdDistance, long& countStdDist, const bool sigmaClipping, long* hist) const
 {
 	for (int i = 0; i < nNodes_; i++) {
 		NodeDistanceIntensity* node = (NodeDistanceIntensity*)nodes_[i];
-		node->ComputeConstantSigmas(stdIntensityComputing, countStdInt, stdMeanComputing, countStdMean, stdDistanceComputing, countStdDist, sigmaClipping,
-		                            hist);
+		node->ComputeConstantSigmas(stdIntensity, countStdInt, stdMean, countStdMean, stdDistance, countStdDist, sigmaClipping, hist);
 	}
 }
 
@@ -45,8 +47,8 @@ double TimeNodesDistanceIntensity::MakeAllInitializationConnections() const
 {
 	double globalLikeness = 0.;
 	for (int i = 0; i < nNodes_; i++) {
-		NodeDistanceIntensity* node = (NodeDistanceIntensity*)nodes_[i];
-		globalLikeness += node->MakeInitializationConnection();
+		const auto Node = (NodeDistanceIntensity*)nodes_[i];
+		globalLikeness += Node->MakeInitializationConnection();
 	}
 	return globalLikeness;
 }
@@ -59,7 +61,7 @@ double TimeNodesDistanceIntensity::TryRandomChange(const double limit) const
 {
 	if (nNodes_ < 1) { return 0.; } //<=
 	if (nNodes_ == 1) { return ((NodeDistanceIntensity*)nodes_[0])->MakeChange(limit); }
-	return ((NodeDistanceIntensity*)nodes_[rand() % nNodes_/*-1*/])->MakeChange(limit);
+	return ((NodeDistanceIntensity*)nodes_[rand() % nNodes_])->MakeChange(limit);
 }
 
 /********************************************************************************************************************
@@ -69,8 +71,8 @@ double TimeNodesDistanceIntensity::GetLikenessTime(const long lastTime) const
 {
 	double globalLikeness = 0.;
 	for (int i = 0; i < nNodes_; i++) {
-		NodeDistanceIntensity* node = (NodeDistanceIntensity*)nodes_[i];
-		globalLikeness += node->GetLikenessOfLocalNode(lastTime);
+		const auto Node = (NodeDistanceIntensity*)nodes_[i];
+		globalLikeness += Node->GetLikenessOfLocalNode(lastTime);
 	}
 	return globalLikeness;
 }

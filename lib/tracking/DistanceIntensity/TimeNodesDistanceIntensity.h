@@ -9,14 +9,14 @@
 #include "tracking/TimeNodes.h"
 
 
-class TimeNodesDistanceIntensity : public TimeNodes
+class TimeNodesDistanceIntensity final : public TimeNodes
 {
 protected:
 	Node* allocNode() override;
 
 public:
 	TimeNodesDistanceIntensity(int time, int nNodes, Parameters* params);
-	void ComputeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean, double& stdDistanceComputing,
+	void ComputeConstantSigmas(double& stdIntensity, long& countStdInt, double& stdMean, long& countStdMean, double& stdDistance,
 	                           long& countStdDist, bool sigmaClipping, long* hist = nullptr) const;
 	double MakeAllInitializationConnections() const;
 	double TryRandomChange(double limit) const;

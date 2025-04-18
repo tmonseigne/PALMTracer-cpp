@@ -4,7 +4,7 @@
 *******************************************************************************************************************/
 
 /********************************************************************************************************************
-Class TimeNodes contains the Node objets for one time_.
+Class TimeNodes contains the Node objets for one time.
 ********************************************************************************************************************/
 
 #include "TimeNodes.h"
@@ -26,7 +26,7 @@ operator()(int i) to access to all Node objets.
 Node* TimeNodes::operator()(const int i) const { return nodes_[i]; }
 
 /********************************************************************************************************************
-linkNeighbors() build the chained list of all the neighbours of each nodes presents at this time_. 
+linkNeighbors() build the chained list of all the neighbours of each nodes presents at this time. 
 ********************************************************************************************************************/
 int TimeNodes::LinkNeighborsPresent() const
 {
@@ -103,4 +103,4 @@ int TimeNodes::SortByIntensityAllNeighbors() const
 /********************************************************************************************************************
 checkLinksHomogeneity() check all the connection to see the system homogeneity
 ********************************************************************************************************************/
-void TimeNodes::CheckLinksHomogeneity(const wchar_t* st) const { for (int i = 0; i < nNodes_; i++) { nodes_[i]->CheckLinksHomogeneity(st); } }
+void TimeNodes::CheckLinksHomogeneity() const { for (int i = 0; i < nNodes_; i++) { nodes_[i]->CheckLinksHomogeneity(); } }

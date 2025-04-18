@@ -12,6 +12,7 @@ public:
 	static constexpr size_t N_SEG_PARAMS = 13;
 	static constexpr size_t N_DIM = 2;
 	static constexpr size_t N_TEMPORAL_WINDOWS = 1;
+	static constexpr size_t MODEL = 2; //the number of the used model
 
 	// Allocation
 	int nNodeAllocated_;
@@ -29,7 +30,6 @@ public:
 	// Params
 	double maxSpeed_;
 	double dZdx_;
-	size_t model_; //the number of the used model
 	double decrease_;
 	size_t minLife_;
 	bool allowFusionAndFission_;

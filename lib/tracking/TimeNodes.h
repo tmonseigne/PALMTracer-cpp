@@ -18,7 +18,7 @@ public:
 	Parameters* parameters_;
 	Node** nodes_;
 	int nNodes_;
-	TimeNodes(const int time, const int nNodes, Parameters* params) : time_(time), parameters_(params), nNodes_(nNodes) { nodes_ = new Node * [nNodes_]; }
+	TimeNodes(const int time, const int nNodes, Parameters* params) : time_(time), parameters_(params), nNodes_(nNodes) { nodes_ = new Node*[nNodes_]; }
 	virtual ~TimeNodes();
 
 	Node* operator()(int i) const;
@@ -27,5 +27,5 @@ public:
 	int LinkNeighborsBlinkBeforeAndAfter(const TimeNodes& futures) const;
 	int SortByIntensityAllNeighbors() const;
 
-	void CheckLinksHomogeneity(const wchar_t* st) const;
+	void CheckLinksHomogeneity() const;
 };

@@ -8,13 +8,9 @@
 
 #include "TabTimesDistanceIntensity.h"
 #include "TimeNodesDistanceIntensity.h"
+#include <cstdlib>
 
 //extern Parameters *parameters_;
-
-/********************************************************************************************************************
-Constructuor() of TabTimesDistanceIntensity class.
-********************************************************************************************************************/
-TabTimesDistanceIntensity::TabTimesDistanceIntensity(Parameters* params): TabTimes(params) { parameters_ = params; }
 
 /********************************************************************************************************************
 allocTabTimes(int _nbTimes) alloc an array of _nbTimes long 
@@ -60,7 +56,7 @@ void TabTimesDistanceIntensity::computeConstantes() const
 
 		for (int t = 0; t < nbTimes_ - 1; ++t) {
 			((TimeNodesDistanceIntensity*)timeNodes_[t])->ComputeConstantSigmas(stdIntensityComputing, countStdInt, stdMeanComputing, countStdMean,
-			                                                                        stdDistanceComputing, coutStdDist, false); //, true);
+			                                                                    stdDistanceComputing, coutStdDist, false); //, true);
 		}
 
 		if (stdIntensityComputing > 1e-8 && countStdInt > 0) { parameters_->stdIntensity_ = stdIntensityComputing / countStdInt; } //*1.0275;//3.4352;
@@ -95,13 +91,13 @@ void TabTimesDistanceIntensity::updateConstantes() const
 			Node* node = local->nodes_[n];
 			if (node->future_ != nullptr) {
 				parameters_->stdDistance_ += node->Distance(node->future_) * node->Distance(node->future_);
-				parameters_->stdIntensity_ += (node->info_->GetIntensity() - node->future_->info_->GetIntensity()) * (
-					node->info_->GetIntensity() - node->future_->info_->GetIntensity());
-				parameters_->stdMean_ += (node->info_->GetMean() - node->future_->info_->GetMean()) * (
-					node->info_->GetMean() - node->future_->info_->GetMean());
+				parameters_->stdIntensity_ += (node->info_->GetIntensity() - node->future_->info_->GetIntensity())
+					* (node->info_->GetIntensity() - node->future_->info_->GetIntensity());
+				parameters_->stdMean_ += (node->info_->GetMean() - node->future_->info_->GetMean())
+					* (node->info_->GetMean() - node->future_->info_->GetMean());
 				covID += (node->info_->GetIntensity() - node->future_->info_->GetIntensity()) * node->Distance(node->future_);
-				parameters_->covMeanIntensity_ += (node->info_->GetIntensity() - node->future_->info_->GetIntensity()) * (
-					node->info_->GetMean() - node->future_->info_->GetMean());
+				parameters_->covMeanIntensity_ += (node->info_->GetIntensity() - node->future_->info_->GetIntensity())
+					* (node->info_->GetMean() - node->future_->info_->GetMean());
 				covDM += node->Distance(node->future_) * (node->info_->GetMean() - node->future_->info_->GetMean());
 				cpt++;
 			}
@@ -143,7 +139,7 @@ int TabTimesDistanceIntensity::RunModel()
 
 		int bcl = 0;
 		do {
-			if (iLearning == CountLearning - 1) { error *= 1. - (float)parameters_->decrease_ / 100.; }
+			if (iLearning == CountLearning - 1) { error *= 1. - parameters_->decrease_ / 100.; }
 
 			nbInt++;
 

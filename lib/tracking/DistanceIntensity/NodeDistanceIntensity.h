@@ -6,13 +6,11 @@
 *******************************************************************************************************************/
 #pragma once
 
-#include "tracking/Parameters.h"
 #include "tracking/Node.h"
+#include "tracking/Parameters.h"
 
 
-#define STD_NOISE	40
-
-class NodeDistanceIntensity : public Node
+class NodeDistanceIntensity final : public Node
 {
 private:
 	static double getLikeness(double difference, double sigma);

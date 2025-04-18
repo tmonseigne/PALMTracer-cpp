@@ -4,15 +4,15 @@
 *******************************************************************************************************************/
 
 /********************************************************************************************************************
-Class Node contains the caracteristic off the node, and the chain of the other nodes (time_ after and time_ before) 
+Class Node contains the caracteristic off the node, and the chain of the other nodes (time after and time before) 
 links to the current objet. 
 ********************************************************************************************************************/
 
 #include "Node.h"
 
-#include <cwchar>
-
-#define PI 3.1415926535897932384626433832795
+#include <algorithm>
+#include <cstdlib>
+#include <numbers>
 
 /*********************************************************************************************
 double distanceToBorder()
@@ -20,68 +20,39 @@ double distanceToBorder()
 *********************************************************************************************/
 double Node::DistanceToBorder() const
 {
-	double mini = info_->GetX();
-	mini = __min(mini, parameters_->maxX_-info_->GetX());
-	mini = __min(mini, info_->GetY());
-	mini = __min(mini, parameters_->maxY_-info_->GetY());
-	return mini;
+	const double X = info_->GetX(), Y = info_->GetY();
+	const double MaxX = parameters_->maxX_, MaxY = parameters_->maxY_;
+	return std::min({X, MaxX - X, Y, MaxY - Y});
 }
 
 /*********************************************************************************************
 double stericEffect()
   Compute the mean of radius of the node this
 *********************************************************************************************/
-double Node::StericEffect() const
+double Node::SphericEffect() const
 {
-	double ret;
-	double val;
-
-	if (Parameters::N_DIM == 3) {
-		val = info_->GetVolume();
-		//volume of a shere is 4/3 * PI *r^3
-		ret = pow(val * 3. / 4. / PI, 1. / 3.);
-	}
-	else {
-		val = info_->GetSurface();
-		//surface of a shere is PI * r^2
-		ret = sqrt(val / PI);
-	}
-	return ret;
+	return sqrt(info_->GetSurface() / std::numbers::pi);
+	//volume of a sphere is 4/3 * PI *r^3, surface is PI * r^2
+	//if constexpr (Parameters::N_DIM == 2) { return sqrt(info_->GetSurface() / std::numbers::pi); }
+	//else { return pow(info_->GetVolume() * 3.0 / 4.0 / std::numbers::pi, 1.0 / 3.0); }
 }
 
 /********************************************************************************************************************
 Constructuor(int time) of Node class.
-The current objets is at the time_ "time_".
+The current objets is at the time "time".
 ********************************************************************************************************************/
 Node::Node(const int time, Parameters* params)
+	: parameters_(params), time_(time),
+	  future_(nullptr), blinkFuture_(nullptr), past_(nullptr), blinkPast_(nullptr),
+	  fission1Future_(nullptr), fission2Future_(nullptr), fissionPast_(nullptr),
+	  fusion1Past_(nullptr), fusion2Past_(nullptr), fusionFuture_(nullptr),
+	  trackedIndex_(0), colorIndex_{},
+	  neighborsPresent_(nullptr), neighborsPast_(nullptr), neighborsFuture_(nullptr),
+	  neighborsPresentCount_(0), neighborsPastCount_(0), neighborsFutureCount_(0),
+	  neighborsBlinkPast_(nullptr), neighborsBlinkFuture_(nullptr),
+	  neighborsBlinkPastCount_(0), neighborsBlinkFutureCount_(0)
 {
-	parameters_ = params;
-
-	time_ = time;
-	neighborsPresent_ = nullptr;
-	neighborsPresentCount_ = 0;
-	neighborsPast_ = nullptr;
-	neighborsPastCount_ = 0;
-	neighborsFuture_ = nullptr;
-	neighborsFutureCount_ = 0;
-	neighborsBlinkPast_ = nullptr;
-	neighborsBlinkPastCount_ = 0;
-	neighborsBlinkFuture_ = nullptr;
-	neighborsBlinkFutureCount_ = 0;
-
-	future_ = nullptr;
-	past_ = nullptr;
-	blinkPast_ = nullptr;
-	blinkFuture_ = nullptr;
-	fission1Future_ = nullptr;
-	fission2Future_ = nullptr;
-	fissionPast_ = nullptr;
-	fusion1Past_ = nullptr;
-	fusion2Past_ = nullptr;
-	fusionFuture_ = nullptr;
-	if (Parameters::N_DIM == 2) { info_ = new InfoNode2D(parameters_); }
-	else { info_ = new InfoNode3D(parameters_); }
-
+	info_ = new InfoNode2D(parameters_);
 	parameters_->nNodeAllocated_++;
 }
 
@@ -117,15 +88,12 @@ Node::~Node()
 /********************************************************************************************************************
 distance(Node *node) gives the distance between "node" and the current objet. 
 ********************************************************************************************************************/
-float Node::Distance(const Node* node) const
-{ //Distance 1
-	return info_->Distance(node->info_);
-}
+double Node::Distance(const Node* node) const { return info_->Distance(node->info_); }
 
 /********************************************************************************************************************
 distance(Node *n1, Node *n2) gives the distance between the mass center of ( n1 and n2), to the current objet. 
 ********************************************************************************************************************/
-float Node::Distance(const Node* n1, const Node* n2) const { return info_->Distance(n1->info_, n2->info_); }
+double Node::Distance(const Node* n1, const Node* n2) const { return info_->Distance(n1->info_, n2->info_); }
 
 
 /********************************************************************************************************************
@@ -134,9 +102,9 @@ intensity.
 ********************************************************************************************************************/
 int Node::SortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 {
-	bool change;
 	if (*neighborsHead != nullptr) {
 		if ((*neighborsHead)->next_ != nullptr) {
+			bool change;
 			do {
 				change = false;
 				ChainNeighbor* l = *neighborsHead;
@@ -166,7 +134,7 @@ int Node::SortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 /********************************************************************************************************************
 checkLinksHomogeneity(const wchar_t* st) check all the connection to see the system homogeneity
 ********************************************************************************************************************/
-bool Node::CheckLinksHomogeneity(const wchar_t* st) const
+bool Node::CheckLinksHomogeneity() const
 {
 	bool err = false;
 	if (future_ != nullptr) {
@@ -193,8 +161,8 @@ bool Node::CheckLinksHomogeneity(const wchar_t* st) const
 	}
 
 	if (fusionFuture_ != nullptr) {
-		if ((fusionFuture_->fusion1Past_ != this && fusionFuture_->fusion2Past_ != this) || fusionFuture_->fusion1Past_ == nullptr || fusionFuture_->fusion2Past_
-		    == nullptr || fusionFuture_->fusion1Past_ == fusionFuture_->fusion2Past_) { err = true; }
+		if ((fusionFuture_->fusion1Past_ != this && fusionFuture_->fusion2Past_ != this) || fusionFuture_->fusion1Past_ == nullptr
+		    || fusionFuture_->fusion2Past_ == nullptr || fusionFuture_->fusion1Past_ == fusionFuture_->fusion2Past_) { err = true; }
 		if (fusionFuture_->past_ != nullptr) { err = true; }
 		if (fusionFuture_->blinkPast_ != nullptr) { err = true; }
 	}
@@ -204,16 +172,14 @@ bool Node::CheckLinksHomogeneity(const wchar_t* st) const
 		if (past_->fusionFuture_ != nullptr) { err = true; }
 		if (past_->fission1Future_ != nullptr) { err = true; }
 		if (past_->fission2Future_ != nullptr) { err = true; }
-
 		if (past_->fusionFuture_ != nullptr) { err = true; }
 	}
 
 	if (fissionPast_ != nullptr) {
-		if ((fissionPast_->fission1Future_ != this && fissionPast_->fission2Future_ != this) || fissionPast_->fission1Future_ == nullptr || fissionPast_->
-		    fission2Future_ == nullptr || fissionPast_->fission1Future_ == fissionPast_->fission2Future_) { err = true; }
+		if ((fissionPast_->fission1Future_ != this && fissionPast_->fission2Future_ != this) || fissionPast_->fission1Future_ == nullptr
+		    || fissionPast_->fission2Future_ == nullptr || fissionPast_->fission1Future_ == fissionPast_->fission2Future_) { err = true; }
 		if (fissionPast_->fusionFuture_ != nullptr) { err = true; }
 		if (fissionPast_->future_ != nullptr) { err = true; }
-
 		if (fissionPast_->blinkFuture_ != nullptr) { err = true; }
 	}
 

@@ -8,7 +8,7 @@
 
 #include "tracking/TabTimes.h"
 
-class TabTimesDistanceIntensity : public TabTimes
+class TabTimesDistanceIntensity final : public TabTimes
 {
 protected:
 	TimeNodes* allocTimeNodes(long time, long nNodes) override;
@@ -16,7 +16,7 @@ protected:
 	void computeConstantes() const;
 
 public:
-	TabTimesDistanceIntensity(Parameters* params);
+	TabTimesDistanceIntensity(Parameters* params) : TabTimes(params) { }
 	double GetLikenessGlobal() const;
 	int RunModel() override;
 };

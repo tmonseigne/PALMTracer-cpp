@@ -107,27 +107,21 @@
     <ClInclude Include="..\lib\palm\Info2D.h" />
     <ClInclude Include="..\lib\palm\Info3D.h" />
     <ClInclude Include="..\lib\tracking\ChainNeighbor.h" />
-    <ClInclude Include="..\lib\tracking\closerNeighbors\NodeCloserNeighbors.h" />
-    <ClInclude Include="..\lib\tracking\closerNeighbors\TabTimesCloserNeighbors.h" />
-    <ClInclude Include="..\lib\tracking\closerNeighbors\TimeNodesCloserNeighbors.h" />
     <ClInclude Include="..\lib\tracking\Parameters.h" />
     <ClInclude Include="..\lib\tracking\InfoNode.h" />
-    <ClInclude Include="..\lib\tracking\likenessDistInten\NodeDistanceIntensity.h" />
-    <ClInclude Include="..\lib\tracking\likenessDistInten\TabTimesDistanceIntensity.h" />
-    <ClInclude Include="..\lib\tracking\likenessDistInten\TimeNodesDistanceIntensity.h" />
+    <ClInclude Include="..\lib\tracking\DistanceIntensity\NodeDistanceIntensity.h" />
+    <ClInclude Include="..\lib\tracking\DistanceIntensity\TabTimesDistanceIntensity.h" />
+    <ClInclude Include="..\lib\tracking\DistanceIntensity\TimeNodesDistanceIntensity.h" />
     <ClInclude Include="..\lib\tracking\Node.h" />
     <ClInclude Include="..\lib\tracking\TabTimes.h" />
     <ClInclude Include="..\lib\tracking\TimeNodes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\lib\tracking\ChainNeighbor.cpp" />
-    <ClCompile Include="..\lib\tracking\closerNeighbors\NodeCloserNeighbors.cpp" />
-    <ClCompile Include="..\lib\tracking\closerNeighbors\TabTimesCloserNeighbors.cpp" />
-    <ClCompile Include="..\lib\tracking\closerNeighbors\TimeNodesCloserNeighbors.cpp" />
     <ClCompile Include="..\lib\tracking\InfoNode.cpp" />
-    <ClCompile Include="..\lib\tracking\likenessDistInten\NodeDistanceIntensity.cpp" />
-    <ClCompile Include="..\lib\tracking\likenessDistInten\TabTimesDistanceIntensity.cpp" />
-    <ClCompile Include="..\lib\tracking\likenessDistInten\TimeNodesDistanceIntensity.cpp" />
+    <ClCompile Include="..\lib\tracking\DistanceIntensity\NodeDistanceIntensity.cpp" />
+    <ClCompile Include="..\lib\tracking\DistanceIntensity\TabTimesDistanceIntensity.cpp" />
+    <ClCompile Include="..\lib\tracking\DistanceIntensity\TimeNodesDistanceIntensity.cpp" />
     <ClCompile Include="..\lib\tracking\Node.cpp" />
     <ClCompile Include="..\lib\tracking\TabTimes.cpp" />
     <ClCompile Include="..\lib\tracking\TimeNodes.cpp" />

@@ -1,17 +1,13 @@
 // Tracking.cpp : Defines the exported functions for the DLL application.
 #include <filesystem>
-#include <string>
-#include "Constants.hpp"
 #include "tracking/Parameters.h"
 #include "tracking/TabTimes.h"
-#include "tracking/closerNeighbors/TabTimesCloserNeighbors.h"
-#include "tracking/likenessDistInten/TabTimesDistanceIntensity.h"
+#include "tracking/DistanceIntensity/TabTimesDistanceIntensity.h"
 
 
 _declspec(dllexport) long _stdcall Process(double* pointsList, const unsigned long pointsListSize, double* trc, const unsigned long trcSize,
                                            const double maxSpeed, const double dZdX, const unsigned long minLife, const double decrease,
-                                           const unsigned long allowFusiondisso, const double costBirth, const unsigned long model,
-                                           const unsigned long nbTimes)
+                                           const unsigned long allowFusiondisso, const double costBirth, const unsigned long nbTimes)
 {
 	const auto Param = new Parameters();
 
@@ -25,28 +21,19 @@ _declspec(dllexport) long _stdcall Process(double* pointsList, const unsigned lo
 	Param->decrease_ = decrease;
 	Param->allowFusionAndFission_ = allowFusiondisso;
 	Param->costBirthDeath_ = costBirth;
-	Param->model_ = model;
 
 	Param->nTimes_ = nbTimes;
 	Param->nTraj_ = 0;
 
-	TabTimes* tabTimes;
-	switch (Param->model_) {
-		case 1: tabTimes = new TabTimesCloserNeighbors(Param);
-			break;
-		case 2: tabTimes = new TabTimesDistanceIntensity(Param);
-			break;
-		default: return T_ERR_BAD_MODEL;
-	}
+	TabTimesDistanceIntensity tabTimes(Param);
 
 	int ret;
-	if ((ret = tabTimes->Initialisation()) < 0) { return ret; }
-	if ((ret = tabTimes->RunModel()) < 0) { return ret; }
-	if ((ret = tabTimes->GiveResult()) < 0) { return ret; }
+	if ((ret = tabTimes.Initialisation()) < 0) { return ret; }
+	if ((ret = tabTimes.RunModel()) < 0) { return ret; }
+	if ((ret = tabTimes.GiveResult()) < 0) { return ret; }
 
 	const long N = static_cast<long>(Param->nTraj_);
 	delete Param;
-	delete tabTimes;
 
 	return N;
 }
@@ -57,5 +44,6 @@ _declspec(dllexport) long _stdcall Tracking(double* pointsList, const unsigned l
                                             const unsigned long allowFusiondisso, const double costBirth, unsigned long nbDim, const unsigned long model,
                                             const unsigned long nbTimes)
 {
-	return Process(pointsList, pointsListSize, trc, trcSize, maxSpeed, dZdX, minLife, decrease, allowFusiondisso, costBirth, model, nbTimes);
+	return Process(pointsList, pointsListSize, trc, trcSize, maxSpeed, dZdX, static_cast<unsigned long>(minLife),
+	               decrease, allowFusiondisso, costBirth, nbTimes);
 }

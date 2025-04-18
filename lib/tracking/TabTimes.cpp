@@ -4,7 +4,7 @@
 *******************************************************************************************************************/
 
 /********************************************************************************************************************
-Class TabTimes contains several TabTimes objets for each time_ (nbTimes).
+Class TabTimes contains several TabTimes objets for each time (nbTimes).
 ********************************************************************************************************************/
 
 
@@ -56,7 +56,7 @@ int TabTimes::Initialisation()
 
 	if constexpr (Parameters::N_TEMPORAL_WINDOWS > 1) { if ((ret = linkNeighborsBlinkBeforeAndAfter()) < 0) { return ret; } }
 
-	CheckLinksHomogeneity(L"initalisation");
+	CheckLinksHomogeneity();
 	srand(42);
 	return RET_OK;
 }
@@ -150,8 +150,6 @@ int TabTimes::readPointsList()
 			str->SetColor(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 11]);
 			str->SetMolId(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 12]);
 
-			str->SetIndex(node + 1);
-
 			str->SetIntensity(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 8]);
 
 			str->SetSurface((unsigned long)parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 9]);
@@ -163,7 +161,7 @@ int TabTimes::readPointsList()
 			if (Parameters::N_DIM == 3) { parameters_->maxZ_ = std::max(parameters_->maxZ_, (*localTimeNodes)(node)->info_->GetZ()); }
 		}
 
-		//Sorting the nodes by the intensity for one time_
+		//Sorting the nodes by the intensity for one time
 		int indexMax;
 		for (i = 0; i < timeNodes_[time]->nNodes_ - 1; i++) {
 			double maxIntensity = -1.;
@@ -230,7 +228,7 @@ int TabTimes::linkNeighborsBlinkBeforeAndAfter() const
 }
 
 /********************************************************************************************************************
-int sortByIntensityAllNeighbors() sort by intensity of the node neighbors of each time_ 
+int sortByIntensityAllNeighbors() sort by intensity of the node neighbors of each time 
 ********************************************************************************************************************/
 int TabTimes::sortByIntensityAllNeighbors() const
 {
@@ -400,4 +398,4 @@ int TabTimes::GiveResult()
 /********************************************************************************************************************
 void checkLinksHomogeneity() just call the function to display the result
 ********************************************************************************************************************/
-void TabTimes::CheckLinksHomogeneity(const wchar_t* st) const { for (int t = 0; t < nbTimes_; ++t) { timeNodes_[t]->CheckLinksHomogeneity(st); } }
+void TabTimes::CheckLinksHomogeneity() const { for (int t = 0; t < nbTimes_; ++t) { timeNodes_[t]->CheckLinksHomogeneity(); } }

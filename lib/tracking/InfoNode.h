@@ -7,13 +7,12 @@
 #include "Constants.hpp"
 #include "Parameters.h"
 #include "palm/Info2D.h"
-#include "palm/Info3D.h"
 
 class InfoNode
 {
 public:
 	explicit InfoNode(Parameters* params): parameters_(params){ }
-	~InfoNode() = default;
+	virtual ~InfoNode() = default;
 
 	Parameters* parameters_;
 	virtual double Distance(InfoNode* node) { return T_ERR_OOP; }
@@ -31,7 +30,6 @@ public:
 	virtual void SetY(double y) { }
 	virtual void SetZ(double z) { }
 	virtual void SetIntensity(double i) { }
-	virtual void SetIndex(unsigned long i) { }
 	virtual void SetMean(double m) { }
 
 	// Added by Adel
@@ -44,10 +42,12 @@ public:
 class InfoNode2D : public InfoNode
 {
 public:
+	info_2d info_;
+	double z_, color_, molId_;
+
 	InfoNode2D(Parameters* params): InfoNode(params) { }
 	double Distance(InfoNode* node) override;
 	double Distance(InfoNode* n1, InfoNode* n2) override;
-	info_2d info_;
 	double GetMean() override;
 	double GetX() override;
 	double GetY() override;
@@ -60,39 +60,10 @@ public:
 	void SetY(double y) override;
 	void SetZ(double z) override;
 	void SetIntensity(double i) override;
-	void SetIndex(unsigned long i) override;
 	void SetMean(double m) override;
 
-	// added by Adel
-	double z_;
-	double color_;
-	double molId_;
 	void SetColor(double color) override;
 	void SetMolId(double molId) override;
 	double GetColor() override;
 	double GetMolId() override;
-};
-
-
-class InfoNode3D : public InfoNode
-{
-public:
-	InfoNode3D(Parameters* params): InfoNode(params) { }
-	double Distance(InfoNode* node) override;
-	double Distance(InfoNode* i1, InfoNode* i2) override;
-	info_3d info_;
-	double GetMean() override;
-	double GetX() override;
-	double GetY() override;
-	double GetZ() override;
-	double GetIntensity() override;
-	long GetVolume() override;
-
-	void SetSurface(long s) override;
-	void SetX(double x) override;
-	void SetY(double y) override;
-	void SetZ(double z) override;
-	void SetIntensity(double i) override;
-	void SetIndex(unsigned long i) override;
-	void SetMean(double m) override;
 };
