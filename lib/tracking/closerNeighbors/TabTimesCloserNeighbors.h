@@ -1,18 +1,18 @@
 /*******************************************************************************************************************
-									Nodes closer neighbors Class
-									It is derived from the class Nodes
+									TabTimesCloserNeighbors Class
+									It is derived from the class TabTimes
 								This class find the closer neighbors for each structure.
 *******************************************************************************************************************/
 #pragma once
+#include "tracking/TabTimes.h"
 
-#include "tracking/nodes.h"
-
-
-class NodeCloserNeighbors : public Node
+class TabTimesCloserNeighbors : public TabTimes
 {
+protected:
+	TimeNodes* allocTimeNodes(long time, long nbNodes) override;
+
 public:
-	NodeCloserNeighbors(int _time, Parameters* _publicParameters);
+	TabTimesCloserNeighbors(Parameters* publicParameters);
 
-	void makeConnection();
+	int RunModel() override;
 };
-

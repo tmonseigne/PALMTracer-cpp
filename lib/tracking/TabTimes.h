@@ -4,17 +4,14 @@
 *******************************************************************************************************************/
 #pragma once
 
-#include <stdlib.h>
+#include "Constants.hpp"
 #include "Parameters.h"
-#include "time_nodes.h"
-#include "tools/allDataLib.h"
-//#include "tracking_2D.h"
-using namespace std;
+#include "TimeNodes.h"
 
 class TabTimes
 {
 protected:
-	TimeNodes** timeNodes;
+	TimeNodes** timeNodes_;
 	int linkNeighborsPresent() const;
 	int linkNeighborsBeforeAndAfter() const;
 	int linkNeighborsBlinkBeforeAndAfter() const;
@@ -23,20 +20,19 @@ protected:
 	int printConnectionsASCII_trc() const;
 	void setColorToTrackedStructures() const;
 	void setIndexToTrackedStructures() const;
-	static void drawSegment(USrtArray& image, long time, Node* node1, Node* node2);
-	virtual TimeNodes* allocTimeNodes(long time, long nbNodes) { return NULL; };
+	virtual TimeNodes* allocTimeNodes(long time, long nbNodes) { return nullptr; }
 	void allocTabTimes();
 
 public:
-	int giveResult();
-	TabTimes(Parameters* publicParameters);
+	int GiveResult();
+	explicit TabTimes(Parameters* publicParameters);
 	virtual ~TabTimes();
 	TimeNodes* operator()(int i) const;
 	TimeNodes** operator[](int i) const;
-	int nbTimes;
-	Parameters* publicParameters;
+	int nbTimes_;
+	Parameters* parameters_;
 
-	int initialisation();
-	virtual int runModel() { return T_ERR_OOP; };
-	void checkLinksHomogeneity(const wchar_t* st) const;
+	int Initialisation();
+	virtual int RunModel() { return T_ERR_OOP; }
+	void CheckLinksHomogeneity(const wchar_t* st) const;
 };

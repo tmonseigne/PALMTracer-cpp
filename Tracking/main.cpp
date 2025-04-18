@@ -3,9 +3,9 @@
 #include <string>
 #include "Constants.hpp"
 #include "tracking/Parameters.h"
-#include "tracking/tab_times.h"
-#include "tracking/closerNeighbors/tab_times_closer_neighbors.h"
-#include "tracking/likenessDistInten/tab_times_dist_inten.h"
+#include "tracking/TabTimes.h"
+#include "tracking/closerNeighbors/TabTimesCloserNeighbors.h"
+#include "tracking/likenessDistInten/TabTimesDistanceIntensity.h"
 
 
 _declspec(dllexport) long _stdcall Process(double* pointsList, const unsigned long pointsListSize, double* trc, const unsigned long trcSize,
@@ -40,9 +40,9 @@ _declspec(dllexport) long _stdcall Process(double* pointsList, const unsigned lo
 	}
 
 	int ret;
-	if ((ret = tabTimes->initialisation()) < 0) { return ret; }
-	if ((ret = tabTimes->runModel()) < 0) { return ret; }
-	if ((ret = tabTimes->giveResult()) < 0) { return ret; }
+	if ((ret = tabTimes->Initialisation()) < 0) { return ret; }
+	if ((ret = tabTimes->RunModel()) < 0) { return ret; }
+	if ((ret = tabTimes->GiveResult()) < 0) { return ret; }
 
 	const long N = static_cast<long>(Param->nTraj_);
 	delete Param;

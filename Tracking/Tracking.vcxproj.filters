@@ -14,37 +14,37 @@
     <ClCompile Include="..\lib\tools\USrtArray.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tracking\chain_neighbor.cpp">
+    <ClCompile Include="..\lib\tracking\ChainNeighbor.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tracking\info_node.cpp">
+    <ClCompile Include="..\lib\tracking\InfoNode.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tracking\nodes.cpp">
+    <ClCompile Include="..\lib\tracking\Node.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tracking\tab_times.cpp">
+    <ClCompile Include="..\lib\tracking\TabTimes.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tracking\time_nodes.cpp">
+    <ClCompile Include="..\lib\tracking\TimeNodes.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tracking\closerNeighbors\nodes_closer_neighbors.cpp">
+    <ClCompile Include="..\lib\tracking\closerNeighbors\NodeCloserNeighbors.cpp">
       <Filter>Tracking\closer Neighbors</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tracking\closerNeighbors\tab_times_closer_neighbors.cpp">
+    <ClCompile Include="..\lib\tracking\closerNeighbors\TabTimesCloserNeighbors.cpp">
       <Filter>Tracking\closer Neighbors</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tracking\closerNeighbors\time_nodes_closer_neighbors.cpp">
+    <ClCompile Include="..\lib\tracking\closerNeighbors\TimeNodesCloserNeighbors.cpp">
       <Filter>Tracking\closer Neighbors</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tracking\likenessDistInten\tab_times_dist_Inten.cpp">
+    <ClCompile Include="..\lib\tracking\likenessDistInten\TabTimesDistanceIntensity.cpp">
       <Filter>Tracking\likeness DistInten</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tracking\likenessDistInten\nodes_dist_Inten.cpp">
+    <ClCompile Include="..\lib\tracking\likenessDistInten\NodeDistanceIntensity.cpp">
       <Filter>Tracking\likeness DistInten</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tracking\likenessDistInten\time_nodes_dist_Inten.cpp">
+    <ClCompile Include="..\lib\tracking\likenessDistInten\TimeNodesDistanceIntensity.cpp">
       <Filter>Tracking\likeness DistInten</Filter>
     </ClCompile>
   </ItemGroup>
@@ -61,40 +61,40 @@
     <ClInclude Include="..\lib\tools\USrtArray.h">
       <Filter>Tools</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\chain_neighbor.h">
+    <ClInclude Include="..\lib\tracking\ChainNeighbor.h">
       <Filter>Tracking</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\Parameters.h">
       <Filter>Tracking</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\info_node.h">
+    <ClInclude Include="..\lib\tracking\InfoNode.h">
       <Filter>Tracking</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\nodes.h">
+    <ClInclude Include="..\lib\tracking\Node.h">
       <Filter>Tracking</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\tab_times.h">
+    <ClInclude Include="..\lib\tracking\TabTimes.h">
       <Filter>Tracking</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\time_nodes.h">
+    <ClInclude Include="..\lib\tracking\TimeNodes.h">
       <Filter>Tracking</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\closerNeighbors\nodes_closer_neighbors.h">
+    <ClInclude Include="..\lib\tracking\closerNeighbors\NodeCloserNeighbors.h">
       <Filter>Tracking\closer Neighbors</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\closerNeighbors\tab_times_closer_neighbors.h">
+    <ClInclude Include="..\lib\tracking\closerNeighbors\TabTimesCloserNeighbors.h">
       <Filter>Tracking\closer Neighbors</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\closerNeighbors\time_nodes_closer_neighbors.h">
+    <ClInclude Include="..\lib\tracking\closerNeighbors\TimeNodesCloserNeighbors.h">
       <Filter>Tracking\closer Neighbors</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\likenessDistInten\tab_times_dist_Inten.h">
+    <ClInclude Include="..\lib\tracking\likenessDistInten\TabTimesDistanceIntensity.h">
       <Filter>Tracking\likeness DistInten</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\likenessDistInten\nodes_dist_Inten.h">
+    <ClInclude Include="..\lib\tracking\likenessDistInten\NodeDistanceIntensity.h">
       <Filter>Tracking\likeness DistInten</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\likenessDistInten\time_nodes_dist_Inten.h">
+    <ClInclude Include="..\lib\tracking\likenessDistInten\TimeNodesDistanceIntensity.h">
       <Filter>Tracking\likeness DistInten</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\palm\Info3D.h">

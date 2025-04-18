@@ -50,7 +50,7 @@ int TimeNodes::linkNeighborsPresent() const
 	for (long i = 0; i < nbNodes; i++) {
 		for (long j = 0; j < nbNodes; j++) {
 			if (i != j) {
-				if (tabNodes[i]->distance(tabNodes[j]) < publicParameters->DIST_MAX) {
+				if (tabNodes[i]->distance(tabNodes[j]) < Parameters::DIST_MAX) {
 					tabNodes[i]->neighborsPresent = new ChainNeighbor(tabNodes[j], tabNodes[i]->neighborsPresent, publicParameters);
 					tabNodes[i]->neighborsPresentCount++;
 				}
@@ -109,9 +109,9 @@ int TimeNodes::sortByIntensityAllNeighbors() const
 {
 	int ret;
 	for (int i = 0; i < nbNodes; i++) {
-		if ((ret = tabNodes[i]->sortByIntersityNeighbors(&tabNodes[i]->neighborsPast)) < 0) { return ret; }
-		if ((ret = tabNodes[i]->sortByIntersityNeighbors(&tabNodes[i]->neighborsPresent)) < 0) { return ret; }
-		if ((ret = tabNodes[i]->sortByIntersityNeighbors(&tabNodes[i]->neighborsFuture)) < 0) { return ret; }
+		if ((ret = Node::sortByIntersityNeighbors(&tabNodes[i]->neighborsPast)) < 0) { return ret; }
+		if ((ret = Node::sortByIntersityNeighbors(&tabNodes[i]->neighborsPresent)) < 0) { return ret; }
+		if ((ret = Node::sortByIntersityNeighbors(&tabNodes[i]->neighborsFuture)) < 0) { return ret; }
 	}
 	return RET_OK;
 }

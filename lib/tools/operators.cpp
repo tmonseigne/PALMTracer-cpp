@@ -10,7 +10,7 @@
 ArrayType& ArrayType::operator=(const ArrayType2& arrayType)
 {
 	if (nbPoints != arrayType.nbPoints) { exit(SIZE_ERR); }
-	if (type() == arrayType.type()) { memcpy(data, arrayType.data, sizeof(DataType) * nbPoints); }
+	if (type() == USrtArray::type()) { memcpy(data, arrayType.data, sizeof(DataType) * nbPoints); }
 	else {
 		for (unsigned long i = 0; i < nbPoints; i++) {
 #ifdef BOOL_TYPE

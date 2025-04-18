@@ -4,7 +4,7 @@
 *******************************************************************************************************************/
 
 
-#include "chain_neighbor.h"
+#include "ChainNeighbor.h"
 
 //extern Parameters *publicParameters;
 

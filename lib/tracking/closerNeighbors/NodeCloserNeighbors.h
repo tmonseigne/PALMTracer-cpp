@@ -1,19 +1,18 @@
 /*******************************************************************************************************************
-									TimeNodesCloserNeighbors Class
-									It is derived from the class TimeNodes
+									Nodes closer neighbors Class
+									It is derived from the class Nodes
 								This class find the closer neighbors for each structure.
 *******************************************************************************************************************/
 #pragma once
 
-#include "tracking/time_nodes.h"
+#include "tracking/Node.h"
 
 
-class TimeNodesCloserNeighbors : public TimeNodes
+class NodeCloserNeighbors : public Node
 {
-protected:
-	Node* allocNode() override;
-
 public:
-	TimeNodesCloserNeighbors(int _time, int _nbNodes, Parameters* _publicParameters);
-	int makeAllConnections() const;
+	NodeCloserNeighbors(int _time, Parameters* _publicParameters);
+
+	void makeConnection();
 };
+

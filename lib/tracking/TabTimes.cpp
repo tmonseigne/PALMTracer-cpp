@@ -8,7 +8,7 @@ Class TabTimes contains several TabTimes objets for each time (nbTimes).
 ********************************************************************************************************************/
 
 
-#include "tab_times.h"
+#include "TabTimes.h"
 
 /********************************************************************************************************************
 Constructuor(int _nbTimes) of TabTimes class. 
@@ -16,13 +16,13 @@ Create nbTimes objets TimeNodes.
 ********************************************************************************************************************/
 TabTimes::TabTimes(Parameters* _publicParameters)
 {
-	publicParameters = _publicParameters;
-	publicParameters->nNodeAllocated_ = 0;
-	publicParameters->nNodeDeallocated_ = 0;
-	publicParameters->nChainNeighborDeallocated_ = 0;
-	publicParameters->nChainNeighborAllocated_ = 0;
-	timeNodes = NULL;
-	nbTimes = 0;
+	parameters_ = _publicParameters;
+	parameters_->nNodeAllocated_ = 0;
+	parameters_->nNodeDeallocated_ = 0;
+	parameters_->nChainNeighborDeallocated_ = 0;
+	parameters_->nChainNeighborAllocated_ = 0;
+	timeNodes_ = NULL;
+	nbTimes_ = 0;
 }
 
 
@@ -32,21 +32,21 @@ Delete all objets TimeNodes.
 ********************************************************************************************************************/
 TabTimes::~TabTimes()
 {
-	for (int i = 0; i < nbTimes; i++) { delete timeNodes[i]; }
-	delete [] timeNodes;
+	for (int i = 0; i < nbTimes_; i++) { delete timeNodes_[i]; }
+	delete [] timeNodes_;
 }
 
 
 /********************************************************************************************************************
 allocTabTimes() alloc the timeNodes array of nbTimes long 
 ********************************************************************************************************************/
-void TabTimes::allocTabTimes() { timeNodes = new TimeNodes*[nbTimes]; }
+void TabTimes::allocTabTimes() { timeNodes_ = new TimeNodes*[nbTimes_]; }
 
 
 /********************************************************************************************************************
 initialisation() initialisation of the data in memory
 ********************************************************************************************************************/
-int TabTimes::initialisation()
+int TabTimes::Initialisation()
 {
 	int ret;
 	if ((ret = readPointsList()) < 0) { return ret; }
@@ -55,10 +55,10 @@ int TabTimes::initialisation()
 	if ((ret = linkNeighborsBeforeAndAfter()) < 0) { return ret; }
 	if ((ret = sortByIntensityAllNeighbors()) < 0) { return ret; }
 
-	if (publicParameters->N_TEMPORAL_WINDOWS > 1) { if ((ret = linkNeighborsBlinkBeforeAndAfter()) < 0) { return ret; } }
+	if constexpr (Parameters::N_TEMPORAL_WINDOWS > 1) { if ((ret = linkNeighborsBlinkBeforeAndAfter()) < 0) { return ret; } }
 
-	checkLinksHomogeneity(L"initalisation");
-	srand((unsigned)time(NULL));
+	CheckLinksHomogeneity(L"initalisation");
+	srand(42);
 	return RET_OK;
 }
 
@@ -75,31 +75,31 @@ Colonne 6 ou 7         intensité intégrée
 int TabTimes::printConnectionsASCII_trc() const
 {
 	unsigned long index = 0;
-	for (int t = 0; t < nbTimes; t++) { const TimeNodes* _localTimeNodes = timeNodes[t];
+	for (int t = 0; t < nbTimes_; t++) { const TimeNodes* _localTimeNodes = timeNodes_[t];
 		for (int n = 0; n < _localTimeNodes->nbNodes; n++) {
 			Node* node = _localTimeNodes->tabNodes[n];
 			if (node->connectionPast == NULL && node->trackedStructureIndex > 0) {
 				for (const Node* nodeConnection = node; nodeConnection != NULL; nodeConnection = nodeConnection->connectionFuture) {
-					publicParameters->tracks_[index++] = node->trackedStructureIndex;
-					publicParameters->tracks_[index++] = nodeConnection->time + 1;
-					publicParameters->tracks_[index++] = nodeConnection->info->getX();
-					publicParameters->tracks_[index++] = nodeConnection->info->getY();
+					parameters_->tracks_[index++] = node->trackedStructureIndex;
+					parameters_->tracks_[index++] = nodeConnection->time + 1;
+					parameters_->tracks_[index++] = nodeConnection->info->getX();
+					parameters_->tracks_[index++] = nodeConnection->info->getY();
 
-					if (publicParameters->N_DIM == 3) {
-						publicParameters->tracks_[index++] = nodeConnection->info->getZ();
-						publicParameters->tracks_[index++] = nodeConnection->info->getVolume();
+					if (Parameters::N_DIM == 3) {
+						parameters_->tracks_[index++] = nodeConnection->info->getZ();
+						parameters_->tracks_[index++] = nodeConnection->info->getVolume();
 					}
-					else { publicParameters->tracks_[index++] = nodeConnection->info->getSurface(); }
+					else { parameters_->tracks_[index++] = nodeConnection->info->getSurface(); }
 
-					publicParameters->tracks_[index++] = nodeConnection->info->getIntensity();
+					parameters_->tracks_[index++] = nodeConnection->info->getIntensity();
 
-					publicParameters->tracks_[index++] = nodeConnection->info->getZ();
+					parameters_->tracks_[index++] = nodeConnection->info->getZ();
 
-					publicParameters->tracks_[index++] = nodeConnection->info->getColor();
-					publicParameters->tracks_[index++] = nodeConnection->info->getMolId();
+					parameters_->tracks_[index++] = nodeConnection->info->getColor();
+					parameters_->tracks_[index++] = nodeConnection->info->getMolId();
 
 					// The number of trajectory
-					publicParameters->nTraj_ = node->trackedStructureIndex;
+					parameters_->nTraj_ = node->trackedStructureIndex;
 				}
 			}
 		}
@@ -108,7 +108,7 @@ int TabTimes::printConnectionsASCII_trc() const
 }
 
 /********************************************************************************************************************
-readPointsList() reads the 'pointsList' specified in publicParameters and allocates the corresponding TimeNodes
+readPointsList() reads the 'pointsList' specified in parameters_ and allocates the corresponding TimeNodes
 ********************************************************************************************************************/
 int TabTimes::readPointsList()
 {
@@ -116,25 +116,25 @@ int TabTimes::readPointsList()
 	unsigned long index = 0;
 	int i;
 
-	nbTimes = publicParameters->nTimes_;
+	nbTimes_ = parameters_->nTimes_;
 
 	allocTabTimes(); //Allocation of tabTimes
 
-	publicParameters->maxX_ = 0;
-	publicParameters->maxY_ = 0;
-	publicParameters->maxZ_ = 0;
+	parameters_->maxX_ = 0;
+	parameters_->maxY_ = 0;
+	parameters_->maxZ_ = 0;
 
-	for (int time_ = 0; time_ < (long)nbTimes; time_++) {
+	for (int time_ = 0; time_ < (long)nbTimes_; time_++) {
 		// Computing the number of nodes by frame
 		unsigned long nbNodes = 0;
-		for (i = index; ; /*i+=4*/ i += publicParameters->N_SEG_PARAMS) {
-			if ((int)publicParameters->points_[i + 9] != -1 && (int)publicParameters->points_[i + 9] != 0) { nbNodes++; } // surface
+		for (i = index; ; /*i+=4*/ i += Parameters::N_SEG_PARAMS) {
+			if ((int)parameters_->points_[i + 9] != -1 && (int)parameters_->points_[i + 9] != 0) { nbNodes++; } // surface
 			else { break; }
 		}
 
 
-		timeNodes[time_] = allocTimeNodes(time_, (int)nbNodes); //Allocation of timeNodes
-		TimeNodes* localTimeNodes = timeNodes[time_];
+		timeNodes_[time_] = allocTimeNodes(time_, (int)nbNodes); //Allocation of timeNodes
+		TimeNodes* localTimeNodes = timeNodes_[time_];
 
 		if (localTimeNodes == NULL) { return T_ERR_ALLOC; }
 
@@ -143,28 +143,29 @@ int TabTimes::readPointsList()
 			// Just for the case of '2D'
 			InfoNode* str = (*localTimeNodes)(node)->info;
 			// version correcte
-			str->setX(publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 3]);
-			str->setY(publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 4]);
-			str->setZ(publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 10]);
+			str->setX(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 3]);
+			str->setY(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 4]);
+			str->setZ(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 10]);
 
-			str->setColor(publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 11]);
-			str->setMolId(publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 12]);
+			str->setColor(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 11]);
+			str->setMolId(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 12]);
 
 			str->setIndex(node + 1);
 
-			str->setIntensity(publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 8]);
+			str->setIntensity(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 8]);
 
-			str->setSurface((unsigned long)publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 9]);
-			str->setMean(publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 8] / (unsigned long)publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 9]);
+			str->setSurface((unsigned long)parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 9]);
+			str->setMean(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 8] / (unsigned long)parameters_->points_[index + node *
+				             Parameters::N_SEG_PARAMS + 9]);
 
-			if (publicParameters->maxX_ < (*localTimeNodes)(node)->info->getX()) { publicParameters->maxX_ = (*localTimeNodes)(node)->info->getX(); }
-			if (publicParameters->maxY_ < (*localTimeNodes)(node)->info->getY()) { publicParameters->maxY_ = (*localTimeNodes)(node)->info->getY(); }
-			if (publicParameters->N_DIM == 3) { if (publicParameters->maxZ_ < (*localTimeNodes)(node)->info->getZ()) { publicParameters->maxZ_ = (*localTimeNodes)(node)->info->getZ(); } }
+			if (parameters_->maxX_ < (*localTimeNodes)(node)->info->getX()) { parameters_->maxX_ = (*localTimeNodes)(node)->info->getX(); }
+			if (parameters_->maxY_ < (*localTimeNodes)(node)->info->getY()) { parameters_->maxY_ = (*localTimeNodes)(node)->info->getY(); }
+			if (Parameters::N_DIM == 3) { if (parameters_->maxZ_ < (*localTimeNodes)(node)->info->getZ()) { parameters_->maxZ_ = (*localTimeNodes)(node)->info->getZ(); } }
 		}
 
 		//Sorting the nodes by the intensity for one time
 		int indexMax;
-		for (i = 0; i < timeNodes[time_]->nbNodes - 1; i++) {
+		for (i = 0; i < timeNodes_[time_]->nbNodes - 1; i++) {
 			double maxIntensity = -1.;
 			for (int j = i; j < localTimeNodes->nbNodes; j++) {
 				if (maxIntensity < (*localTimeNodes)(j)->info->getIntensity()) {
@@ -177,7 +178,7 @@ int TabTimes::readPointsList()
 			localTimeNodes->tabNodes[i] = nodeMax;
 		}
 
-		index += (nbNodes + 1) * publicParameters->N_SEG_PARAMS; //(A vérifier)
+		index += (nbNodes + 1) * Parameters::N_SEG_PARAMS; //(A vérifier)
 	}
 	return RET_OK;
 }
@@ -185,12 +186,12 @@ int TabTimes::readPointsList()
 /********************************************************************************************************************
 operator()(int i) to access to all TimeNodes objets. 
 ********************************************************************************************************************/
-TimeNodes* TabTimes::operator()(const int i) const { return timeNodes[i]; }
+TimeNodes* TabTimes::operator()(const int i) const { return timeNodes_[i]; }
 
 /********************************************************************************************************************
 operator[](int i) to access to pointors to all TimeNodes objets. 
 ********************************************************************************************************************/
-TimeNodes** TabTimes::operator[](const int i) const { return timeNodes + i; }
+TimeNodes** TabTimes::operator[](const int i) const { return timeNodes_ + i; }
 
 /********************************************************************************************************************
 int linkNeighborsPresent() to link of the neighbors in the presents of all nodes of all times
@@ -198,7 +199,7 @@ int linkNeighborsPresent() to link of the neighbors in the presents of all nodes
 int TabTimes::linkNeighborsPresent() const
 {
 	int ret;
-	for (long time_ = 0; time_ < nbTimes; time_++) { if ((ret = timeNodes[time_]->linkNeighborsPresent()) < 0) { return ret; } }
+	for (long time_ = 0; time_ < nbTimes_; time_++) { if ((ret = timeNodes_[time_]->linkNeighborsPresent()) < 0) { return ret; } }
 	return RET_OK;
 }
 
@@ -209,7 +210,7 @@ int linkNeighborsBeforeAndAfter() to link of the neighbors in the past and in th
 int TabTimes::linkNeighborsBeforeAndAfter() const
 {
 	int ret;
-	for (long time_ = 0; time_ < nbTimes - 1; time_++) { if ((ret = timeNodes[time_]->linkNeighborsBeforeAndAfter(*timeNodes[time_ + 1])) < 0) { return ret; } }
+	for (long time_ = 0; time_ < nbTimes_ - 1; time_++) { if ((ret = timeNodes_[time_]->linkNeighborsBeforeAndAfter(*timeNodes_[time_ + 1])) < 0) { return ret; } }
 	return RET_OK;
 }
 
@@ -220,7 +221,7 @@ all times for blinking purpose
 int TabTimes::linkNeighborsBlinkBeforeAndAfter() const
 {
 	int ret;
-	for (long time_ = 0; time_ < nbTimes; time_++) { for (long dt = 2; dt <= publicParameters->N_TEMPORAL_WINDOWS; dt++) { if (time_ + dt < nbTimes) { if ((ret = timeNodes[time_]->linkNeighborsBlinkBeforeAndAfter(*timeNodes[time_ + dt])) < 0) { return ret; } } } }
+	for (long time_ = 0; time_ < nbTimes_; time_++) { for (long dt = 2; dt <= Parameters::N_TEMPORAL_WINDOWS; dt++) { if (time_ + dt < nbTimes_) { if ((ret = timeNodes_[time_]->linkNeighborsBlinkBeforeAndAfter(*timeNodes_[time_ + dt])) < 0) { return ret; } } } }
 	return RET_OK;
 }
 
@@ -230,7 +231,7 @@ int sortByIntensityAllNeighbors() sort by intensity of the node neighbors of eac
 int TabTimes::sortByIntensityAllNeighbors() const
 {
 	int ret;
-	for (long time_ = 0; time_ < nbTimes; time_++) { if ((ret = timeNodes[time_]->sortByIntensityAllNeighbors()) < 0) { return ret; } }
+	for (long time_ = 0; time_ < nbTimes_; time_++) { if ((ret = timeNodes_[time_]->sortByIntensityAllNeighbors()) < 0) { return ret; } }
 	return RET_OK;
 }
 
@@ -243,9 +244,9 @@ void TabTimes::setColorToTrackedStructures() const
 	Node* nodePastFission;
 	Node* nodePastFission2;
 	int newIndex = 1;
-	for (long time_ = 0; time_ < nbTimes; time_++) {
-		for (long indexNode = 0; indexNode < timeNodes[time_]->nbNodes; indexNode++) {
-			Node* node = timeNodes[time_]->tabNodes[indexNode];
+	for (long time_ = 0; time_ < nbTimes_; time_++) {
+		for (long indexNode = 0; indexNode < timeNodes_[time_]->nbNodes; indexNode++) {
+			Node* node = timeNodes_[time_]->tabNodes[indexNode];
 			if (node->trackedStructureIndex != 0) {
 				if (node->connectionPast == NULL) {
 					if (node->connectionBlinkPast == NULL) {
@@ -340,21 +341,21 @@ void TabTimes::setIndexToTrackedStructures() const
 	long nbSuccessiveNodes;
 	Node* node;
 	Node* oldNode;
-	for (long time_ = 0; time_ < nbTimes; time_++) {
-		for (long indexNode = 0; indexNode < timeNodes[time_]->nbNodes; indexNode++) {
-			if (timeNodes[time_]->tabNodes[indexNode]->connectionPast == NULL) {
-				for (node = timeNodes[time_]->tabNodes[indexNode], oldNode = NULL, nbSuccessiveNodes = 0; node != NULL && nbSuccessiveNodes < publicParameters->minLife_; node = node->connectionFuture, nbSuccessiveNodes++) {
+	for (long time_ = 0; time_ < nbTimes_; time_++) {
+		for (long indexNode = 0; indexNode < timeNodes_[time_]->nbNodes; indexNode++) {
+			if (timeNodes_[time_]->tabNodes[indexNode]->connectionPast == NULL) {
+				for (node = timeNodes_[time_]->tabNodes[indexNode], oldNode = NULL, nbSuccessiveNodes = 0; node != NULL && nbSuccessiveNodes < parameters_->minLife_; node = node->connectionFuture, nbSuccessiveNodes++) {
 					oldNode = node;
 					node->trackedStructureIndex = 0;
 				}
 				bool isNewIndex = false;
-				if (nbSuccessiveNodes >= publicParameters->minLife_) //it was == 
+				if (nbSuccessiveNodes >= parameters_->minLife_) //it was == 
 				{
 					isNewIndex = true;
 				}
-				if (timeNodes[time_]->tabNodes[indexNode]->connectionFissionPast != NULL) { isNewIndex = true; }
-				if (timeNodes[time_]->tabNodes[indexNode]->connectionFusion1Past != NULL) { isNewIndex = true; }
-				if (timeNodes[time_]->tabNodes[indexNode]->connectionBlinkPast != NULL) { isNewIndex = true; }
+				if (timeNodes_[time_]->tabNodes[indexNode]->connectionFissionPast != NULL) { isNewIndex = true; }
+				if (timeNodes_[time_]->tabNodes[indexNode]->connectionFusion1Past != NULL) { isNewIndex = true; }
+				if (timeNodes_[time_]->tabNodes[indexNode]->connectionBlinkPast != NULL) { isNewIndex = true; }
 				if (oldNode != NULL) {
 					if (oldNode->connectionFission1Future != NULL) { isNewIndex = true; }
 					if (oldNode->connectionFusionFuture != NULL) { isNewIndex = true; }
@@ -362,41 +363,24 @@ void TabTimes::setIndexToTrackedStructures() const
 				}
 
 				if (isNewIndex) {
-					timeNodes[time_]->tabNodes[indexNode]->trackedStructureIndex = newIndex;
+					timeNodes_[time_]->tabNodes[indexNode]->trackedStructureIndex = newIndex;
 					newIndex++;
 				}
 			}
-			else { timeNodes[time_]->tabNodes[indexNode]->trackedStructureIndex = timeNodes[time_]->tabNodes[indexNode]->connectionPast->trackedStructureIndex; }
+			else { timeNodes_[time_]->tabNodes[indexNode]->trackedStructureIndex = timeNodes_[time_]->tabNodes[indexNode]->connectionPast->trackedStructureIndex; }
 		}
 	}
 }
-
-/********************************************************************************************************************
-void drawSegment(UStrArray &image, long time, Node* node1, Node*node2)  In the 2D image "image" at the time "time", 
-draw a segment between the nodes "node1" and "node2"
-********************************************************************************************************************/
-void TabTimes::drawSegment(USrtArray& image, const long time_, Node* node1, Node* node2)
-{
-	const double dist = node1->distance(node2);
-	if (dist > 1e-8) {
-		for (double t = 0; t < dist; t++) { const long x = (long)(node2->info->getX() * (dist - t) / dist + node1->info->getX() * t / dist);
-			const long y = (long)(node2->info->getY() * (dist - t) / dist + node1->info->getY() * t / dist);
-			image.data[time_ * image.size(1) * image.size(2) + image.size(1) * y + x] = (unsigned short)node1->colorIndex[0];
-		}
-	}
-}
-
 
 /********************************************************************************************************************
 int giveResult() just call the function to display the result
 ********************************************************************************************************************/
-int TabTimes::giveResult()
+int TabTimes::GiveResult()
 {
 	int ret;
 
 	setIndexToTrackedStructures();
 	setColorToTrackedStructures();
-
 
 	if ((ret = printConnectionsASCII_trc()) < 0) { return ret; }
 
@@ -406,4 +390,4 @@ int TabTimes::giveResult()
 /********************************************************************************************************************
 void checkLinksHomogeneity() just call the function to display the result
 ********************************************************************************************************************/
-void TabTimes::checkLinksHomogeneity(const wchar_t* st) const { for (long time_ = 0; time_ < nbTimes; time_++) { timeNodes[time_]->checkLinksHomogeneity(st); } }
+void TabTimes::CheckLinksHomogeneity(const wchar_t* st) const { for (long time_ = 0; time_ < nbTimes_; time_++) { timeNodes_[time_]->checkLinksHomogeneity(st); } }

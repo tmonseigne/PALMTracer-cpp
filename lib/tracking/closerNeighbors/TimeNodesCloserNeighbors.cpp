@@ -4,8 +4,8 @@
 								This class find the closer neighbors for each structure.
 *******************************************************************************************************************/
 
-#include "time_nodes_closer_neighbors.h"
-#include "nodes_closer_neighbors.h"
+#include "TimeNodesCloserNeighbors.h"
+#include "NodeCloserNeighbors.h"
 
 
 /********************************************************************************************************************

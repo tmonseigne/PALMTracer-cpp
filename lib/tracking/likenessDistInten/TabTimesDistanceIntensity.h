@@ -6,7 +6,7 @@
 *******************************************************************************************************************/
 #pragma once
 
-#include "tracking/tab_times.h"
+#include "tracking/TabTimes.h"
 
 class TabTimesDistanceIntensity : public TabTimes
 {
@@ -18,5 +18,5 @@ protected:
 public:
 	TabTimesDistanceIntensity(Parameters* publicParameters);
 	double getLikenessGlobal() const;
-	int runModel() override;
+	int RunModel() override;
 };

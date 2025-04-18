@@ -8,7 +8,7 @@
 
 #include <cstdio>
 
-#include "nodes_dist_inten.h"
+#include "NodeDistanceIntensity.h"
 //extern Parameters *publicParameters;
 extern FILE* outputStream;
 
@@ -106,7 +106,7 @@ double NodeDistanceIntensity::likenessMeanIntensityFusion(Node* n1, Node* n2)
 {
 	if (n1 == NULL) { return 0.; } //Error ???
 	if (n2 == NULL) { return 0.; } //Error ???
-	if (publicParameters->N_DIM == 2) { return getLikeness(info->getMean() - (n1->info->getIntensity() + n2->info->getIntensity()) / (n1->info->getSurface() + n2->info->getSurface()), publicParameters->stdMean_); }
+	if (Parameters::N_DIM == 2) { return getLikeness(info->getMean() - (n1->info->getIntensity() + n2->info->getIntensity()) / (n1->info->getSurface() + n2->info->getSurface()), publicParameters->stdMean_); }
 	else { return getLikeness(info->getMean() - (n1->info->getIntensity() + n2->info->getIntensity()) / (n1->info->getVolume() + n2->info->getVolume()), publicParameters->stdMean_); }
 }
 
@@ -317,17 +317,17 @@ double NodeDistanceIntensity::makeChange(const double limitLoss)
 			}
 		}
 
-		if (publicParameters->N_TEMPORAL_WINDOWS > 1 && connectionBlinkFuture != NULL) { return makeChangeBlinkLinkage(limitLoss); }
+		if (Parameters::N_TEMPORAL_WINDOWS > 1 && connectionBlinkFuture != NULL) { return makeChangeBlinkLinkage(limitLoss); }
 		if (connectionFission1Future != NULL) { return makeChangeFission(limitLoss); }
 		if (connectionFusionFuture != NULL) { return makeChangeFusion(limitLoss); }
-		if (publicParameters->N_TEMPORAL_WINDOWS > 1 && rand() % 2 == 0) { return makeChangeBlinkLinkage(limitLoss); }
+		if (Parameters::N_TEMPORAL_WINDOWS > 1 && rand() % 2 == 0) { return makeChangeBlinkLinkage(limitLoss); }
 
 		return makeChangeSimpleLinkage(limitLoss);
 	}
 
 	if (connectionFuture != NULL) { return makeChangeSimpleLinkage(limitLoss); }
 	if (connectionBlinkFuture != NULL) { return makeChangeBlinkLinkage(limitLoss); }
-	if (publicParameters->N_TEMPORAL_WINDOWS > 2 && rand() % 2 == 0) { return makeChangeBlinkLinkage(limitLoss); }
+	if (Parameters::N_TEMPORAL_WINDOWS > 2 && rand() % 2 == 0) { return makeChangeBlinkLinkage(limitLoss); }
 
 	return makeChangeSimpleLinkage(limitLoss);
 }
@@ -1566,7 +1566,7 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage0(const double limitLoss)
 	//	t			t+1		t+2
 	//	1(this)-------------2(connectionBlinkFuture)
 
-	const long dt = rand() % (publicParameters->N_TEMPORAL_WINDOWS - 1) + 2;
+	const long dt = rand() % (Parameters::N_TEMPORAL_WINDOWS - 1) + 2;
 	long nbNodeAtGoodTime = 0;
 	ChainNeighbor* cRand;
 

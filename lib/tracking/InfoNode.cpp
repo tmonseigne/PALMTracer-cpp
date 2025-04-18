@@ -6,7 +6,7 @@
 
 #include <cmath>
 
-#include "Info_Node.h"
+#include "InfoNode.h"
 
 //extern Parameters *publicParameters;
 

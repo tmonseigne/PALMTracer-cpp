@@ -5,8 +5,8 @@
 								Likeness depend on the distance and the intensity.
 *******************************************************************************************************************/
 
-#include "nodes_dist_Inten.h"
-#include "time_nodes_dist_inten.h"
+#include "NodeDistanceIntensity.h"
+#include "TimeNodesDistanceIntensity.h"
 
 
 /********************************************************************************************************************

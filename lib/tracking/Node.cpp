@@ -8,7 +8,7 @@ Class Node contains the caracteristic off the node, and the chain of the other n
 links to the current objet. 
 ********************************************************************************************************************/
 
-#include "nodes.h"
+#include "Node.h"
 
 #include <cwchar>
 
@@ -37,7 +37,7 @@ double Node::stericEffect() const
 	double ret;
 	double val;
 
-	if (publicParameters->N_DIM == 3) {
+	if (Parameters::N_DIM == 3) {
 		val = info->getVolume();
 		//volume of a shere is 4/3 * PI *r^3
 		ret = pow(val * 3. / 4. / PI, 1. / 3.);
@@ -82,7 +82,7 @@ Node::Node(const int _time, Parameters* _publicParameters)
 	connectionFusionFuture = NULL;
 	trackedStructureAmiraIndex = -1;
 	mSD = -1;
-	if (publicParameters->N_DIM == 2) { info = new InfoNode2D(publicParameters); }
+	if (Parameters::N_DIM == 2) { info = new InfoNode2D(publicParameters); }
 	else { info = new InfoNode3D(publicParameters); }
 
 	publicParameters->nNodeAllocated_++;

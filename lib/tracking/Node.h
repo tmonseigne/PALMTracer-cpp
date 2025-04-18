@@ -6,9 +6,9 @@
 
 #include <cstdlib>
 #include <string.h>
-#include "chain_neighbor.h"
+#include "ChainNeighbor.h"
 #include "Parameters.h"
-#include "info_node.h"
+#include "InfoNode.h"
 
 
 #define DIST_SIGNIFICANT	10.
