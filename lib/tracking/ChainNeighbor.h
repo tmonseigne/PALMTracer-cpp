@@ -12,7 +12,7 @@ class Node;
 class ChainNeighbor
 {
 public:
-	ChainNeighbor(Node* _neighbor, ChainNeighbor* _next, Parameters* params);
+	ChainNeighbor(Node* neighbor, ChainNeighbor* next, Parameters* params);
 	~ChainNeighbor();
 
 	Parameters* parameters_;

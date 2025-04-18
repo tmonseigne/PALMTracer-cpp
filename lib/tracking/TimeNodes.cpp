@@ -4,26 +4,24 @@
 *******************************************************************************************************************/
 
 /********************************************************************************************************************
-Class TimeNodes contains the Node objets for one time.
+Class TimeNodes contains the Node objets for one time_.
 ********************************************************************************************************************/
 
 #include "TimeNodes.h"
 #include <cstdio>
 
-extern FILE* outputStream;
-//extern Parameters *publicParameters;
 /********************************************************************************************************************
 Constructuor(int _time, int _nbNodes) of TimeNodes class.
-The current objets is at the time "time".
-Create nbNodes objets Node.
+The current objets is at the time_ "time_".
+Create nNodes_ objets Node.
 ********************************************************************************************************************/
-TimeNodes::TimeNodes(const int _time, const int _nbNodes, Parameters* _publicParameters)
+TimeNodes::TimeNodes(const int time, const int nNodes, Parameters* params)
 {
-	publicParameters = _publicParameters;
+	parameters_ = params;
 
-	nbNodes = _nbNodes;
-	time = _time;
-	tabNodes = new Node*[nbNodes];
+	nNodes_ = nNodes;
+	time_ = time;
+	nodes_ = new Node*[nNodes_];
 }
 
 
@@ -33,26 +31,26 @@ Delete all objets Node.
 ********************************************************************************************************************/
 TimeNodes::~TimeNodes()
 {
-	for (int i = 0; i < nbNodes; i++) { delete tabNodes[i]; }
-	delete [] tabNodes;
+	for (int i = 0; i < nNodes_; i++) { delete nodes_[i]; }
+	delete [] nodes_;
 }
 
 /********************************************************************************************************************
 operator()(int i) to access to all Node objets. 
 ********************************************************************************************************************/
-Node* TimeNodes::operator()(const int i) const { return tabNodes[i]; }
+Node* TimeNodes::operator()(const int i) const { return nodes_[i]; }
 
 /********************************************************************************************************************
-linkNeighbors() build the chained list of all the neighbours of each nodes presents at this time. 
+linkNeighbors() build the chained list of all the neighbours of each nodes presents at this time_. 
 ********************************************************************************************************************/
-int TimeNodes::linkNeighborsPresent() const
+int TimeNodes::LinkNeighborsPresent() const
 {
-	for (long i = 0; i < nbNodes; i++) {
-		for (long j = 0; j < nbNodes; j++) {
+	for (long i = 0; i < nNodes_; i++) {
+		for (long j = 0; j < nNodes_; j++) {
 			if (i != j) {
-				if (tabNodes[i]->distance(tabNodes[j]) < Parameters::DIST_MAX) {
-					tabNodes[i]->neighborsPresent = new ChainNeighbor(tabNodes[j], tabNodes[i]->neighborsPresent, publicParameters);
-					tabNodes[i]->neighborsPresentCount++;
+				if (nodes_[i]->Distance(nodes_[j]) < Parameters::DIST_MAX) {
+					nodes_[i]->neighborsPresent_ = new ChainNeighbor(nodes_[j], nodes_[i]->neighborsPresent_, parameters_);
+					nodes_[i]->neighborsPresentCount_++;
 				}
 			}
 		}
@@ -63,18 +61,20 @@ int TimeNodes::linkNeighborsPresent() const
 
 
 /********************************************************************************************************************
-linkBeforeAndAfter() for each structure at the time t, it builds the chained list of all the structures of the next 
-time (t+1) close to it. 
+linkBeforeAndAfter() for each structure at the time_ t, it builds the chained list of all the structures of the next 
+time_ (t+1) close to it. 
 ********************************************************************************************************************/
-int TimeNodes::linkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes) const
+int TimeNodes::LinkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes) const
 {
-	for (long presentNode = 0; presentNode < nbNodes; presentNode++) {
-		for (long futureNode = 0; futureNode < futureTimeNodes.nbNodes; futureNode++) {
-			if (tabNodes[presentNode]->distance(futureTimeNodes.tabNodes[futureNode]) < publicParameters->maxSpeed_) {
-				tabNodes[presentNode]->neighborsFuture = new ChainNeighbor(futureTimeNodes.tabNodes[futureNode], tabNodes[presentNode]->neighborsFuture, publicParameters);
-				tabNodes[presentNode]->neighborsFutureCount++;
-				futureTimeNodes.tabNodes[futureNode]->neighborsPast = new ChainNeighbor(tabNodes[presentNode], futureTimeNodes.tabNodes[futureNode]->neighborsPast, publicParameters);
-				futureTimeNodes.tabNodes[futureNode]->neighborsPastCount++;
+	for (long presentNode = 0; presentNode < nNodes_; presentNode++) {
+		for (long futureNode = 0; futureNode < futureTimeNodes.nNodes_; futureNode++) {
+			if (nodes_[presentNode]->Distance(futureTimeNodes.nodes_[futureNode]) < parameters_->maxSpeed_) {
+				nodes_[presentNode]->neighborsFuture_ = new ChainNeighbor(futureTimeNodes.nodes_[futureNode], nodes_[presentNode]->neighborsFuture_,
+				                                                          parameters_);
+				nodes_[presentNode]->neighborsFutureCount_++;
+				futureTimeNodes.nodes_[futureNode]->neighborsPast_ = new ChainNeighbor(nodes_[presentNode], futureTimeNodes.nodes_[futureNode]->neighborsPast_,
+				                                                                       parameters_);
+				futureTimeNodes.nodes_[futureNode]->neighborsPastCount_++;
 			}
 		}
 	}
@@ -83,18 +83,21 @@ int TimeNodes::linkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes) const
 }
 
 /********************************************************************************************************************
-linkBlinkBeforeAndAfter() for each structure at the time t, it builds the chained list of all the structures of the next 
-time (t+dt) close to it. 
+linkBlinkBeforeAndAfter() for each structure at the time_ t, it builds the chained list of all the structures of the next 
+time_ (t+dt) close to it. 
 ********************************************************************************************************************/
-int TimeNodes::linkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes) const
+int TimeNodes::LinkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes) const
 {
-	for (long presentNode = 0; presentNode < nbNodes; presentNode++) {
-		for (long futureNode = 0; futureNode < futureTimeNodes.nbNodes; futureNode++) {
-			if (tabNodes[presentNode]->distance(futureTimeNodes.tabNodes[futureNode]) < publicParameters->maxSpeed_) {
-				tabNodes[presentNode]->neighborsBlinkFuture = new ChainNeighbor(futureTimeNodes.tabNodes[futureNode], tabNodes[presentNode]->neighborsBlinkFuture, publicParameters);
-				tabNodes[presentNode]->neighborsBlinkFutureCount++;
-				futureTimeNodes.tabNodes[futureNode]->neighborsBlinkPast = new ChainNeighbor(tabNodes[presentNode], futureTimeNodes.tabNodes[futureNode]->neighborsBlinkPast, publicParameters);
-				futureTimeNodes.tabNodes[futureNode]->neighborsBlinkPastCount++;
+	for (long presentNode = 0; presentNode < nNodes_; presentNode++) {
+		for (long futureNode = 0; futureNode < futureTimeNodes.nNodes_; futureNode++) {
+			if (nodes_[presentNode]->Distance(futureTimeNodes.nodes_[futureNode]) < parameters_->maxSpeed_) {
+				nodes_[presentNode]->neighborsBlinkFuture_ = new ChainNeighbor(futureTimeNodes.nodes_[futureNode], nodes_[presentNode]->neighborsBlinkFuture_,
+				                                                               parameters_);
+				nodes_[presentNode]->neighborsBlinkFutureCount_++;
+				futureTimeNodes.nodes_[futureNode]->neighborsBlinkPast_ = new ChainNeighbor(nodes_[presentNode],
+				                                                                            futureTimeNodes.nodes_[futureNode]->neighborsBlinkPast_,
+				                                                                            parameters_);
+				futureTimeNodes.nodes_[futureNode]->neighborsBlinkPastCount_++;
 			}
 		}
 	}
@@ -105,13 +108,13 @@ int TimeNodes::linkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes) cons
 /********************************************************************************************************************
 sortByIntensityAllNeighbors() Sort by intersity all the neighbors of each nodes.
 ********************************************************************************************************************/
-int TimeNodes::sortByIntensityAllNeighbors() const
+int TimeNodes::SortByIntensityAllNeighbors() const
 {
 	int ret;
-	for (int i = 0; i < nbNodes; i++) {
-		if ((ret = Node::sortByIntersityNeighbors(&tabNodes[i]->neighborsPast)) < 0) { return ret; }
-		if ((ret = Node::sortByIntersityNeighbors(&tabNodes[i]->neighborsPresent)) < 0) { return ret; }
-		if ((ret = Node::sortByIntersityNeighbors(&tabNodes[i]->neighborsFuture)) < 0) { return ret; }
+	for (int i = 0; i < nNodes_; i++) {
+		if ((ret = Node::SortByIntersityNeighbors(&nodes_[i]->neighborsPast_)) < 0) { return ret; }
+		if ((ret = Node::SortByIntersityNeighbors(&nodes_[i]->neighborsPresent_)) < 0) { return ret; }
+		if ((ret = Node::SortByIntersityNeighbors(&nodes_[i]->neighborsFuture_)) < 0) { return ret; }
 	}
 	return RET_OK;
 }
@@ -120,4 +123,4 @@ int TimeNodes::sortByIntensityAllNeighbors() const
 /********************************************************************************************************************
 checkLinksHomogeneity() check all the connection to see the system homogeneity
 ********************************************************************************************************************/
-void TimeNodes::checkLinksHomogeneity(const wchar_t* st) const { for (int i = 0; i < nbNodes; i++) { tabNodes[i]->checkLinksHomogeneity(st); } }
+void TimeNodes::CheckLinksHomogeneity(const wchar_t* st) const { for (int i = 0; i < nNodes_; i++) { nodes_[i]->CheckLinksHomogeneity(st); } }

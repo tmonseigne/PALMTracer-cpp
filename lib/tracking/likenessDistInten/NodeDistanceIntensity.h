@@ -16,14 +16,14 @@ class NodeDistanceIntensity : public Node
 {
 private:
 	static double getLikeness(double difference, double sigma);
-	double likenessDistance(Node* n) override;
-	double likenessDistanceFusion(Node* n1, Node* n2) override;
-	double likenessFusion(Node* n1, Node* n2) override;
-	double likenessFission(Node* n1, Node* n2) override;
-	double likenessIntensity(Node* n) override;
-	double likenessIntensityFusion(Node* n1, Node* n2) override;
-	double likenessMeanIntensity(Node* n) override;
-	double likenessMeanIntensityFusion(Node* n1, Node* n2) override;
+	double LikenessDistance(Node* n) override;
+	double LikenessDistanceFusion(Node* n1, Node* n2) override;
+	double LikenessFusion(Node* n1, Node* n2) override;
+	double LikenessFission(Node* n1, Node* n2) override;
+	double LikenessIntensity(Node* n) override;
+	double LikenessIntensityFusion(Node* n1, Node* n2) override;
+	double LikenessMeanIntensity(Node* n) override;
+	double LikenessMeanIntensityFusion(Node* n1, Node* n2) override;
 	double makeChangeSimpleLinkage(double limit);
 	double makeChangeSimpleLinkage0(double limit);
 	double makeChangeSimpleLinkage1(double limit, ChainNeighbor* cRand);
@@ -64,11 +64,12 @@ private:
 	static bool metropolis(double deltaE, double temperature);
 
 public:
-	void computeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean, double& stdDistanceComputing, long& countStdDist, bool sigmaClipping, long* hist);
-	double getLikenessOfLocalNode(int lastTime);
-	double makeChange(double limit);
-	double likeness(Node* n) override;
-	double likenessBlink(Node* n) override;
-	NodeDistanceIntensity(int _time, Parameters* _publicParameters);
-	double makeInitializationConnection();
+	void ComputeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean, double& stdDistanceComputing,
+	                           long& countStdDist, bool sigmaClipping, long* hist);
+	double GetLikenessOfLocalNode(int lastTime);
+	double MakeChange(double limit);
+	double Likeness(Node* n) override;
+	double LikenessBlink(Node* n) override;
+	NodeDistanceIntensity(int time, Parameters* params);
+	double MakeInitializationConnection();
 };

@@ -14,6 +14,6 @@ protected:
 	Node* allocNode() override;
 
 public:
-	TimeNodesCloserNeighbors(int _time, int _nbNodes, Parameters* _publicParameters);
-	int makeAllConnections() const;
+	TimeNodesCloserNeighbors(int time, int nbNodes, Parameters* params);
+	int MakeAllConnections() const;
 };

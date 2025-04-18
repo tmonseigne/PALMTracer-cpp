@@ -12,96 +12,96 @@
 class InfoNode
 {
 public:
-	InfoNode(Parameters* _publicParameters);
-	~InfoNode() { }
+	InfoNode(Parameters* params);
+	~InfoNode() = default;
 
-	Parameters* publicParameters;
-	virtual float distance(InfoNode* infoData) { return T_ERR_OOP; }
-	virtual float distance(InfoNode* i1, InfoNode* i2) { return T_ERR_OOP; }
-	virtual double getMean() { return T_ERR_OOP; }
-	virtual long getVolume() { return T_ERR_OOP; }
-	virtual long getSurface() { return T_ERR_OOP; }
-	virtual double getX() { return T_ERR_OOP; }
-	virtual double getY() { return T_ERR_OOP; }
-	virtual double getZ() { return T_ERR_OOP; }
-	virtual double getIntensity() { return T_ERR_OOP; }
-	virtual unsigned long getIndex() { return T_ERR_OOP; }
-	virtual unsigned long sizeofInfoData() { return T_ERR_OOP; }
-	virtual void* getPtrInfoData() { return nullptr; }
+	Parameters* parameters_;
+	virtual double Distance(InfoNode* node) { return T_ERR_OOP; }
+	virtual double Distance(InfoNode* i1, InfoNode* i2) { return T_ERR_OOP; }
+	virtual double GetMean() { return T_ERR_OOP; }
+	virtual long GetVolume() { return T_ERR_OOP; }
+	virtual long GetSurface() { return T_ERR_OOP; }
+	virtual double GetX() { return T_ERR_OOP; }
+	virtual double GetY() { return T_ERR_OOP; }
+	virtual double GetZ() { return T_ERR_OOP; }
+	virtual double GetIntensity() { return T_ERR_OOP; }
+	virtual unsigned long GetIndex() { return T_ERR_OOP; }
+	virtual unsigned long SizeofInfoData() { return T_ERR_OOP; }
+	virtual void* GetPtrInfoData() { return nullptr; }
 
-	virtual void setSurface(long s) { }
-	virtual void setX(double x) { }
-	virtual void setY(double y) { }
-	virtual void setZ(double z) { }
-	virtual void setIntensity(double I) { }
-	virtual void setIndex(unsigned long i) { }
-	virtual void setMean(double m) { }
+	virtual void SetSurface(long s) { }
+	virtual void SetX(double x) { }
+	virtual void SetY(double y) { }
+	virtual void SetZ(double z) { }
+	virtual void SetIntensity(double i) { }
+	virtual void SetIndex(unsigned long i) { }
+	virtual void SetMean(double m) { }
 
 	// Added by Adel
-	virtual void setColor(double z) { }
-	virtual void setMolId(double molId) { }
-	virtual double getColor() { return 0; }
-	virtual double getMolId() { return 0; }
+	virtual void SetColor(double z) { }
+	virtual void SetMolId(double molId) { }
+	virtual double GetColor() { return 0; }
+	virtual double GetMolId() { return 0; }
 };
 
 class InfoNode2D : public InfoNode
 {
 public:
-	InfoNode2D(Parameters* _publicParameters): InfoNode(_publicParameters) { }
-	float distance(InfoNode* infoData) override;
-	float distance(InfoNode* i1, InfoNode* i2) override;
-	info_2d info;
-	double getMean() override;
-	double getX() override;
-	double getY() override;
-	double getZ() override;
-	double getIntensity() override;
-	long getSurface() override;
-	unsigned long getIndex() override;
-	unsigned long sizeofInfoData() override;
-	void* getPtrInfoData() override;
+	InfoNode2D(Parameters* params): InfoNode(params) { }
+	double Distance(InfoNode* node) override;
+	double Distance(InfoNode* i1, InfoNode* i2) override;
+	info_2d info_;
+	double GetMean() override;
+	double GetX() override;
+	double GetY() override;
+	double GetZ() override;
+	double GetIntensity() override;
+	long GetSurface() override;
+	unsigned long GetIndex() override;
+	unsigned long SizeofInfoData() override;
+	void* GetPtrInfoData() override;
 
-	void setSurface(long s) override;
-	void setX(double x) override;
-	void setY(double y) override;
-	void setZ(double z) override;
-	void setIntensity(double I) override;
-	void setIndex(unsigned long i) override;
-	void setMean(double m) override;
+	void SetSurface(long s) override;
+	void SetX(double x) override;
+	void SetY(double y) override;
+	void SetZ(double z) override;
+	void SetIntensity(double i) override;
+	void SetIndex(unsigned long i) override;
+	void SetMean(double m) override;
 
 	// added by Adel
-	double Z;
-	double Color;
-	double MolId;
-	void setColor(double z) override;
-	void setMolId(double molId) override;
-	double getColor() override;
-	double getMolId() override;
+	double z_;
+	double color_;
+	double molId_;
+	void SetColor(double color) override;
+	void SetMolId(double molId) override;
+	double GetColor() override;
+	double GetMolId() override;
 };
 
 
 class InfoNode3D : public InfoNode
 {
 public:
-	InfoNode3D(Parameters* _publicParameters): InfoNode(_publicParameters) { }
-	float distance(InfoNode* infoData) override;
-	float distance(InfoNode* i1, InfoNode* i2) override;
-	info_3d info;
-	double getMean() override;
-	double getX() override;
-	double getY() override;
-	double getZ() override;
-	double getIntensity() override;
-	long getVolume() override;
-	unsigned long getIndex() override;
-	unsigned long sizeofInfoData() override;
-	void* getPtrInfoData() override;
+	InfoNode3D(Parameters* params): InfoNode(params) { }
+	double Distance(InfoNode* node) override;
+	double Distance(InfoNode* i1, InfoNode* i2) override;
+	info_3d info_;
+	double GetMean() override;
+	double GetX() override;
+	double GetY() override;
+	double GetZ() override;
+	double GetIntensity() override;
+	long GetVolume() override;
+	unsigned long GetIndex() override;
+	unsigned long SizeofInfoData() override;
+	void* GetPtrInfoData() override;
 
-	void setSurface(long s) override;
-	void setX(double x) override;
-	void setY(double y) override;
-	void setZ(double z) override;
-	void setIntensity(double I) override;
-	void setIndex(unsigned long i) override;
-	void setMean(double m) override;
+	void SetSurface(long s) override;
+	void SetX(double x) override;
+	void SetY(double y) override;
+	void SetZ(double z) override;
+	void SetIntensity(double i) override;
+	void SetIndex(unsigned long i) override;
+	void SetMean(double m) override;
 };

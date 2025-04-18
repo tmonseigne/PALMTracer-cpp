@@ -4,7 +4,7 @@
 *******************************************************************************************************************/
 
 /********************************************************************************************************************
-Class Node contains the caracteristic off the node, and the chain of the other nodes (time after and time before) 
+Class Node contains the caracteristic off the node, and the chain of the other nodes (time_ after and time_ before) 
 links to the current objet. 
 ********************************************************************************************************************/
 
@@ -12,19 +12,18 @@ links to the current objet.
 
 #include <cwchar>
 
-float globalDistMax;
 #define PI 3.1415926535897932384626433832795
 
 /*********************************************************************************************
 double distanceToBorder()
   get the distance from this to the closer border
 *********************************************************************************************/
-double Node::distanceToBorder() const
+double Node::DistanceToBorder() const
 {
-	double mini = info->getX();
-	mini = __min(mini, publicParameters->maxX_-info->getX());
-	mini = __min(mini, info->getY());
-	mini = __min(mini, publicParameters->maxY_-info->getY());
+	double mini = info_->GetX();
+	mini = __min(mini, parameters_->maxX_-info_->GetX());
+	mini = __min(mini, info_->GetY());
+	mini = __min(mini, parameters_->maxY_-info_->GetY());
 	return mini;
 }
 
@@ -32,18 +31,18 @@ double Node::distanceToBorder() const
 double stericEffect()
   Compute the mean of radius of the node this
 *********************************************************************************************/
-double Node::stericEffect() const
+double Node::StericEffect() const
 {
 	double ret;
 	double val;
 
 	if (Parameters::N_DIM == 3) {
-		val = info->getVolume();
+		val = info_->GetVolume();
 		//volume of a shere is 4/3 * PI *r^3
 		ret = pow(val * 3. / 4. / PI, 1. / 3.);
 	}
 	else {
-		val = info->getSurface();
+		val = info_->GetSurface();
 		//surface of a shere is PI * r^2
 		ret = sqrt(val / PI);
 	}
@@ -51,41 +50,41 @@ double Node::stericEffect() const
 }
 
 /********************************************************************************************************************
-Constructuor(int _time) of Node class.
-The current objets is at the time "time".
+Constructuor(int time) of Node class.
+The current objets is at the time_ "time_".
 ********************************************************************************************************************/
-Node::Node(const int _time, Parameters* _publicParameters)
+Node::Node(const int time, Parameters* params)
 {
-	publicParameters = _publicParameters;
+	parameters_ = params;
 
-	time = _time;
-	neighborsPresent = NULL;
-	neighborsPresentCount = 0;
-	neighborsPast = NULL;
-	neighborsPastCount = 0;
-	neighborsFuture = NULL;
-	neighborsFutureCount = 0;
-	neighborsBlinkPast = NULL;
-	neighborsBlinkPastCount = 0;
-	neighborsBlinkFuture = NULL;
-	neighborsBlinkFutureCount = 0;
+	time_ = time;
+	neighborsPresent_ = NULL;
+	neighborsPresentCount_ = 0;
+	neighborsPast_ = NULL;
+	neighborsPastCount_ = 0;
+	neighborsFuture_ = NULL;
+	neighborsFutureCount_ = 0;
+	neighborsBlinkPast_ = NULL;
+	neighborsBlinkPastCount_ = 0;
+	neighborsBlinkFuture_ = NULL;
+	neighborsBlinkFutureCount_ = 0;
 
-	connectionFuture = NULL;
-	connectionPast = NULL;
-	connectionBlinkPast = NULL;
-	connectionBlinkFuture = NULL;
-	connectionFission1Future = NULL;
-	connectionFission2Future = NULL;
-	connectionFissionPast = NULL;
-	connectionFusion1Past = NULL;
-	connectionFusion2Past = NULL;
-	connectionFusionFuture = NULL;
-	trackedStructureAmiraIndex = -1;
-	mSD = -1;
-	if (Parameters::N_DIM == 2) { info = new InfoNode2D(publicParameters); }
-	else { info = new InfoNode3D(publicParameters); }
+	future_ = NULL;
+	past_ = NULL;
+	blinkPast_ = NULL;
+	blinkFuture_ = NULL;
+	fission1Future_ = NULL;
+	fission2Future_ = NULL;
+	fissionPast_ = NULL;
+	fusion1Past_ = NULL;
+	fusion2Past_ = NULL;
+	fusionFuture_ = NULL;
+	trackedAmiraIndex_ = -1;
+	mSd_ = -1;
+	if (Parameters::N_DIM == 2) { info_ = new InfoNode2D(parameters_); }
+	else { info_ = new InfoNode3D(parameters_); }
 
-	publicParameters->nNodeAllocated_++;
+	parameters_->nNodeAllocated_++;
 }
 
 /********************************************************************************************************************
@@ -95,47 +94,47 @@ Delete all the linkage objets.
 Node::~Node()
 {
 	ChainNeighbor* l;
-	while (neighborsFuture != NULL) {
-		l = neighborsFuture->next_;
-		delete neighborsFuture;
-		neighborsFuture = l;
+	while (neighborsFuture_ != NULL) {
+		l = neighborsFuture_->next_;
+		delete neighborsFuture_;
+		neighborsFuture_ = l;
 	}
 
-	while (neighborsPast != NULL) {
-		l = neighborsPast->next_;
-		delete neighborsPast;
-		neighborsPast = l;
+	while (neighborsPast_ != NULL) {
+		l = neighborsPast_->next_;
+		delete neighborsPast_;
+		neighborsPast_ = l;
 	}
 
-	while (neighborsPresent != NULL) {
-		l = neighborsPresent->next_;
-		delete neighborsPresent;
-		neighborsPresent = l;
+	while (neighborsPresent_ != NULL) {
+		l = neighborsPresent_->next_;
+		delete neighborsPresent_;
+		neighborsPresent_ = l;
 	}
-	delete info;
-	publicParameters->nNodeDeallocated_++;
-	trackedStructureIndex = 0;
+	delete info_;
+	parameters_->nNodeDeallocated_++;
+	trackedIndex_ = 0;
 }
 
 /********************************************************************************************************************
 distance(Node *node) gives the distance between "node" and the current objet. 
 ********************************************************************************************************************/
-float Node::distance(Node* node) const
+float Node::Distance(Node* node) const
 { //Distance 1
-	return info->distance(node->info);
+	return info_->Distance(node->info_);
 }
 
 /********************************************************************************************************************
 distance(Node *n1, Node *n2) gives the distance between the mass center of ( n1 and n2), to the current objet. 
 ********************************************************************************************************************/
-float Node::distance(Node* n1, Node* n2) const { return info->distance(n1->info, n2->info); }
+float Node::Distance(Node* n1, Node* n2) const { return info_->Distance(n1->info_, n2->info_); }
 
 
 /********************************************************************************************************************
 sortByIntersityNeighbors(ChainNeighbor* neighborsHead) sort the chained list begining at neighborsHead by the 
 intensity. 
 ********************************************************************************************************************/
-int Node::sortByIntersityNeighbors(ChainNeighbor** neighborsHead)
+int Node::SortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 {
 	bool change;
 	if (*neighborsHead != NULL) {
@@ -145,7 +144,7 @@ int Node::sortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 				ChainNeighbor* l = *neighborsHead;
 				ChainNeighbor* lOld = NULL;
 				while (l->next_ != NULL) {
-					if (l->next_->neighbor_->info->getIntensity() > l->neighbor_->info->getIntensity()) {
+					if (l->next_->neighbor_->info_->GetIntensity() > l->neighbor_->info_->GetIntensity()) {
 						ChainNeighbor* l2 = l->next_;
 						if (lOld == NULL) { *neighborsHead = l2; }
 						else { lOld->next_ = l2; }
@@ -170,82 +169,82 @@ int Node::sortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 checkLinksHomogeneityInVicinity(wchar_t* st) check all the connection to verify the system homogeneity in the vicinity
 return true if error
 ********************************************************************************************************************/
-bool Node::checkLinksHomogeneityInVicinity(wchar_t* st)
+bool Node::CheckLinksHomogeneityInVicinity(wchar_t* st)
 {
 	wchar_t st2[200];
 	bool err = false;
 	swprintf(st2, L"%ls this ", st);
-	checkLinksHomogeneity(st2);
-	if (connectionFuture != NULL) {
-		swprintf(st2, L"%ls connectionFuture ", st);
-		err = connectionFuture->checkLinksHomogeneity(st2);
+	CheckLinksHomogeneity(st2);
+	if (future_ != NULL) {
+		swprintf(st2, L"%ls future_ ", st);
+		err = future_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && connectionFission1Future != NULL) {
-		swprintf(st2, L"%ls connectionFission1Future ", st);
-		err = connectionFission1Future->checkLinksHomogeneity(st2);
+	if (!err && fission1Future_ != NULL) {
+		swprintf(st2, L"%ls fission1Future_ ", st);
+		err = fission1Future_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && connectionFission2Future != NULL) {
-		swprintf(st2, L"%ls connectionFission2Future ", st);
-		err = connectionFission2Future->checkLinksHomogeneity(st2);
+	if (!err && fission2Future_ != NULL) {
+		swprintf(st2, L"%ls fission2Future_ ", st);
+		err = fission2Future_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && connectionFusionFuture != NULL) {
-		swprintf(st2, L"%ls connectionFusionFuture ", st);
-		err = connectionFusionFuture->checkLinksHomogeneity(st2);
+	if (!err && fusionFuture_ != NULL) {
+		swprintf(st2, L"%ls fusionFuture_ ", st);
+		err = fusionFuture_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && connectionBlinkFuture != NULL) {
-		swprintf(st2, L"%ls connectionBlinkFuture ", st);
-		err = connectionBlinkFuture->checkLinksHomogeneity(st2);
+	if (!err && blinkFuture_ != NULL) {
+		swprintf(st2, L"%ls blinkFuture_ ", st);
+		err = blinkFuture_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && connectionPast != NULL) {
-		swprintf(st2, L"%ls connectionPast ", st);
-		err = connectionPast->checkLinksHomogeneity(st2);
+	if (!err && past_ != NULL) {
+		swprintf(st2, L"%ls past_ ", st);
+		err = past_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && connectionFusion1Past != NULL) {
-		swprintf(st2, L"%ls connectionFusion1Past ", st);
-		err = connectionFusion1Past->checkLinksHomogeneity(st2);
+	if (!err && fusion1Past_ != NULL) {
+		swprintf(st2, L"%ls fusion1Past_ ", st);
+		err = fusion1Past_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && connectionFusion2Past != NULL) {
-		swprintf(st2, L"%ls connectionFusion2Past ", st);
-		err = connectionFusion2Past->checkLinksHomogeneity(st2);
+	if (!err && fusion2Past_ != NULL) {
+		swprintf(st2, L"%ls fusion2Past_ ", st);
+		err = fusion2Past_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && connectionFissionPast != NULL) {
-		swprintf(st2, L"%ls connectionFissionPast ", st);
-		err = connectionFissionPast->checkLinksHomogeneity(st2);
+	if (!err && fissionPast_ != NULL) {
+		swprintf(st2, L"%ls fissionPast_ ", st);
+		err = fissionPast_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && connectionBlinkPast != NULL) {
-		swprintf(st2, L"%ls connectionBlinkPast ", st);
-		err = connectionBlinkPast->checkLinksHomogeneity(st2);
+	if (!err && blinkPast_ != NULL) {
+		swprintf(st2, L"%ls blinkPast_ ", st);
+		err = blinkPast_->CheckLinksHomogeneity(st2);
 	}
 	return err;
 }
 
-bool Node::checkLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2, Node* p3, Node* p4, Node* p5, Node* p6)
+bool Node::CheckLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2, Node* p3, Node* p4, Node* p5, Node* p6)
 {
 	wchar_t st2[256];
 	bool err = false;
 	if (p1 != NULL) {
 		swprintf(st2, L"%ls 1 ", st);
-		err = p1->checkLinksHomogeneityInVicinity(st2);
+		err = p1->CheckLinksHomogeneityInVicinity(st2);
 	}
 	if (p2 != NULL) {
 		swprintf(st2, L"%ls 2 ", st);
-		err = err || p2->checkLinksHomogeneityInVicinity(st2);
+		err = err || p2->CheckLinksHomogeneityInVicinity(st2);
 	}
 	if (p3 != NULL) {
 		swprintf(st2, L"%ls 3 ", st);
-		err = err || p3->checkLinksHomogeneityInVicinity(st2);
+		err = err || p3->CheckLinksHomogeneityInVicinity(st2);
 	}
 	if (p4 != NULL) {
 		swprintf(st2, L"%ls 4 ", st);
-		err = err || p4->checkLinksHomogeneityInVicinity(st2);
+		err = err || p4->CheckLinksHomogeneityInVicinity(st2);
 	}
 	if (p5 != NULL) {
 		swprintf(st2, L"%ls 5 ", st);
-		err = err || p5->checkLinksHomogeneityInVicinity(st2);
+		err = err || p5->CheckLinksHomogeneityInVicinity(st2);
 	}
 	if (p6 != NULL) {
 		swprintf(st2, L"%ls 6 ", st);
-		err = err || p6->checkLinksHomogeneityInVicinity(st2);
+		err = err || p6->CheckLinksHomogeneityInVicinity(st2);
 	}
 	return err;
 }
@@ -253,88 +252,90 @@ bool Node::checkLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2, Node
 /********************************************************************************************************************
 checkLinksHomogeneity(const wchar_t* st) check all the connection to see the system homogeneity
 ********************************************************************************************************************/
-bool Node::checkLinksHomogeneity(const wchar_t* st) const
+bool Node::CheckLinksHomogeneity(const wchar_t* st) const
 {
 	bool err = false;
-	if (connectionFuture != NULL) {
-		if (connectionFuture->connectionPast != this) { err = true; }
-		if (connectionFuture->connectionFusion1Past != NULL) { err = true; }
-		if (connectionFuture->connectionFusion2Past != NULL) { err = true; }
-		if (connectionFuture->connectionBlinkPast != NULL) { err = true; }
+	if (future_ != NULL) {
+		if (future_->past_ != this) { err = true; }
+		if (future_->fusion1Past_ != NULL) { err = true; }
+		if (future_->fusion2Past_ != NULL) { err = true; }
+		if (future_->blinkPast_ != NULL) { err = true; }
 	}
 
-	if (connectionFission1Future != NULL) {
-		if (connectionFission1Future->connectionFissionPast != this) { err = true; }
-		if (connectionFission1Future->connectionPast != NULL) { err = true; }
-		if (connectionFission1Future->connectionFusion2Past != NULL) { err = true; }
-		if (connectionFission1Future->connectionFusion1Past != NULL) { err = true; }
-		if (connectionFission1Future->connectionBlinkPast != NULL) { err = true; }
+	if (fission1Future_ != NULL) {
+		if (fission1Future_->fissionPast_ != this) { err = true; }
+		if (fission1Future_->past_ != NULL) { err = true; }
+		if (fission1Future_->fusion2Past_ != NULL) { err = true; }
+		if (fission1Future_->fusion1Past_ != NULL) { err = true; }
+		if (fission1Future_->blinkPast_ != NULL) { err = true; }
 	}
 
-	if (connectionFission2Future != NULL) {
-		if (connectionFission2Future->connectionFissionPast != this) { err = true; }
-		if (connectionFission2Future->connectionPast != NULL) { err = true; }
-		if (connectionFission2Future->connectionFusion2Past != NULL) { err = true; }
-		if (connectionFission2Future->connectionFusion1Past != NULL) { err = true; }
-		if (connectionFission2Future->connectionPast != NULL) { err = true; }
+	if (fission2Future_ != NULL) {
+		if (fission2Future_->fissionPast_ != this) { err = true; }
+		if (fission2Future_->past_ != NULL) { err = true; }
+		if (fission2Future_->fusion2Past_ != NULL) { err = true; }
+		if (fission2Future_->fusion1Past_ != NULL) { err = true; }
+		if (fission2Future_->past_ != NULL) { err = true; }
 	}
 
-	if (connectionFusionFuture != NULL) {
-		if ((connectionFusionFuture->connectionFusion1Past != this && connectionFusionFuture->connectionFusion2Past != this) || connectionFusionFuture->connectionFusion1Past == NULL || connectionFusionFuture->connectionFusion2Past == NULL || connectionFusionFuture->connectionFusion1Past == connectionFusionFuture->connectionFusion2Past) { err = true; }
-		if (connectionFusionFuture->connectionPast != NULL) { err = true; }
-		if (connectionFusionFuture->connectionBlinkPast != NULL) { err = true; }
+	if (fusionFuture_ != NULL) {
+		if ((fusionFuture_->fusion1Past_ != this && fusionFuture_->fusion2Past_ != this) || fusionFuture_->fusion1Past_ == NULL || fusionFuture_->fusion2Past_
+		    == NULL || fusionFuture_->fusion1Past_ == fusionFuture_->fusion2Past_) { err = true; }
+		if (fusionFuture_->past_ != NULL) { err = true; }
+		if (fusionFuture_->blinkPast_ != NULL) { err = true; }
 	}
 
-	if (connectionPast != NULL) {
-		if (connectionPast->connectionFuture != this) { err = true; }
-		if (connectionPast->connectionFusionFuture != NULL) { err = true; }
-		if (connectionPast->connectionFission1Future != NULL) { err = true; }
-		if (connectionPast->connectionFission2Future != NULL) { err = true; }
+	if (past_ != NULL) {
+		if (past_->future_ != this) { err = true; }
+		if (past_->fusionFuture_ != NULL) { err = true; }
+		if (past_->fission1Future_ != NULL) { err = true; }
+		if (past_->fission2Future_ != NULL) { err = true; }
 
-		if (connectionPast->connectionFusionFuture != NULL) { err = true; }
+		if (past_->fusionFuture_ != NULL) { err = true; }
 	}
 
-	if (connectionFissionPast != NULL) {
-		if ((connectionFissionPast->connectionFission1Future != this && connectionFissionPast->connectionFission2Future != this) || connectionFissionPast->connectionFission1Future == NULL || connectionFissionPast->connectionFission2Future == NULL || connectionFissionPast->connectionFission1Future == connectionFissionPast->connectionFission2Future) { err = true; }
-		if (connectionFissionPast->connectionFusionFuture != NULL) { err = true; }
-		if (connectionFissionPast->connectionFuture != NULL) { err = true; }
+	if (fissionPast_ != NULL) {
+		if ((fissionPast_->fission1Future_ != this && fissionPast_->fission2Future_ != this) || fissionPast_->fission1Future_ == NULL || fissionPast_->
+		    fission2Future_ == NULL || fissionPast_->fission1Future_ == fissionPast_->fission2Future_) { err = true; }
+		if (fissionPast_->fusionFuture_ != NULL) { err = true; }
+		if (fissionPast_->future_ != NULL) { err = true; }
 
-		if (connectionFissionPast->connectionBlinkFuture != NULL) { err = true; }
+		if (fissionPast_->blinkFuture_ != NULL) { err = true; }
 	}
 
 
-	if (connectionFusion1Past != NULL) {
-		if (connectionFusion1Past->connectionFusionFuture != this) { err = true; }
-		if (connectionFusion1Past->connectionFission1Future != NULL) { err = true; }
-		if (connectionFusion1Past->connectionFission2Future != NULL) { err = true; }
-		if (connectionFusion1Past->connectionFuture != NULL) { err = true; }
+	if (fusion1Past_ != NULL) {
+		if (fusion1Past_->fusionFuture_ != this) { err = true; }
+		if (fusion1Past_->fission1Future_ != NULL) { err = true; }
+		if (fusion1Past_->fission2Future_ != NULL) { err = true; }
+		if (fusion1Past_->future_ != NULL) { err = true; }
 
-		if (connectionFusion1Past->connectionBlinkFuture != NULL) { err = true; }
+		if (fusion1Past_->blinkFuture_ != NULL) { err = true; }
 	}
 
-	if (connectionFusion2Past != NULL) {
-		if (connectionFusion2Past->connectionFusionFuture != this) { err = true; }
-		if (connectionFusion2Past->connectionFission1Future != NULL) { err = true; }
-		if (connectionFusion2Past->connectionFission2Future != NULL) { err = true; }
-		if (connectionFusion2Past->connectionFuture != NULL) { err = true; }
+	if (fusion2Past_ != NULL) {
+		if (fusion2Past_->fusionFuture_ != this) { err = true; }
+		if (fusion2Past_->fission1Future_ != NULL) { err = true; }
+		if (fusion2Past_->fission2Future_ != NULL) { err = true; }
+		if (fusion2Past_->future_ != NULL) { err = true; }
 
-		if (connectionFusion2Past->connectionBlinkFuture != NULL) { err = true; }
+		if (fusion2Past_->blinkFuture_ != NULL) { err = true; }
 	}
 
-	if (connectionBlinkPast != NULL) {
-		if (connectionBlinkPast->connectionBlinkFuture != this) { err = true; }
-		if (connectionBlinkPast->connectionFission1Future != NULL) { err = true; }
-		if (connectionBlinkPast->connectionFission2Future != NULL) { err = true; }
-		if (connectionBlinkPast->connectionFuture != NULL) { err = true; }
-		if (connectionBlinkPast->connectionFusionFuture != NULL) { err = true; }
+	if (blinkPast_ != NULL) {
+		if (blinkPast_->blinkFuture_ != this) { err = true; }
+		if (blinkPast_->fission1Future_ != NULL) { err = true; }
+		if (blinkPast_->fission2Future_ != NULL) { err = true; }
+		if (blinkPast_->future_ != NULL) { err = true; }
+		if (blinkPast_->fusionFuture_ != NULL) { err = true; }
 	}
 
-	if (connectionBlinkFuture != NULL) {
-		if (connectionBlinkFuture->connectionBlinkPast != this) { err = true; }
-		if (connectionBlinkFuture->connectionFusion1Past != NULL) { err = true; }
-		if (connectionBlinkFuture->connectionFusion2Past != NULL) { err = true; }
-		if (connectionBlinkFuture->connectionPast != NULL) { err = true; }
-		if (connectionBlinkFuture->connectionFissionPast != NULL) { err = true; }
+	if (blinkFuture_ != NULL) {
+		if (blinkFuture_->blinkPast_ != this) { err = true; }
+		if (blinkFuture_->fusion1Past_ != NULL) { err = true; }
+		if (blinkFuture_->fusion2Past_ != NULL) { err = true; }
+		if (blinkFuture_->past_ != NULL) { err = true; }
+		if (blinkFuture_->fissionPast_ != NULL) { err = true; }
 	}
 
 	return err;

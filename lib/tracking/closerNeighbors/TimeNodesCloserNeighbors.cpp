@@ -11,22 +11,22 @@
 /********************************************************************************************************************
 allocNode() allocation of one node in the class NodeCloserNeighbors
 ********************************************************************************************************************/
-Node* TimeNodesCloserNeighbors::allocNode() { return new NodeCloserNeighbors(time, publicParameters); }
+Node* TimeNodesCloserNeighbors::allocNode() { return new NodeCloserNeighbors(time_, parameters_); }
 
 /********************************************************************************************************************
 Constructor(int _time, int _nbNodes) is run after the base constructor TimeNodes::TimeNodes
 ********************************************************************************************************************/
-TimeNodesCloserNeighbors::TimeNodesCloserNeighbors(const int _time, const int _nbNodes, Parameters* _publicParameters): TimeNodes(_time, _nbNodes, _publicParameters) { for (int i = 0; i < nbNodes; i++) { tabNodes[i] = allocNode(); } }
+TimeNodesCloserNeighbors::TimeNodesCloserNeighbors(const int time, const int nbNodes, Parameters* params)
+	: TimeNodes(time, nbNodes, params) { for (int i = 0; i < nbNodes; i++) { nodes_[i] = allocNode(); } }
 
 /********************************************************************************************************************
-makeAllConnections() finds connections from the nodes of this time to the nodes of the time after according the 
-selected model
+makeAllConnections() finds connections from the nodes of this time_ to the nodes of the time_ after according the selected model
 ********************************************************************************************************************/
-int TimeNodesCloserNeighbors::makeAllConnections() const
+int TimeNodesCloserNeighbors::MakeAllConnections() const
 {
-	for (int i = 0; i < nbNodes; i++) {
-		NodeCloserNeighbors* node = (NodeCloserNeighbors*)tabNodes[i];
-		node->makeConnection();
+	for (int i = 0; i < nNodes_; i++) {
+		NodeCloserNeighbors* node = (NodeCloserNeighbors*)nodes_[i];
+		node->MakeConnection();
 	}
 	return RET_OK;
 }

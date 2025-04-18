@@ -13,6 +13,5 @@ class NodeCloserNeighbors : public Node
 public:
 	NodeCloserNeighbors(int time, Parameters* params);
 
-	void makeConnection();
+	void MakeConnection();
 };
-

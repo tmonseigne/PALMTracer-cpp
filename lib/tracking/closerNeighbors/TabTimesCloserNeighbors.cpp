@@ -11,13 +11,13 @@
 /********************************************************************************************************************
 Constructuor() of TabTimesCloserNeighbors class.
 ********************************************************************************************************************/
-TabTimesCloserNeighbors::TabTimesCloserNeighbors(Parameters* _publicParameters): TabTimes(_publicParameters) { parameters_ = _publicParameters; }
+TabTimesCloserNeighbors::TabTimesCloserNeighbors(Parameters* params): TabTimes(params) { parameters_ = params; }
 
 
 /********************************************************************************************************************
 allocTabTimes(int _nbTimes) alloc an array of _nbTimes long 
 ********************************************************************************************************************/
-TimeNodes* TabTimesCloserNeighbors::allocTimeNodes(const long _time, const long _nbNodes) { return new TimeNodesCloserNeighbors(_time, _nbNodes, parameters_); }
+TimeNodes* TabTimesCloserNeighbors::allocTimeNodes(const long time, const long nbNodes) { return new TimeNodesCloserNeighbors(time, nbNodes, parameters_); }
 
 /********************************************************************************************************************
 runModel() is the core of the application, it links the structures according the selected model
@@ -25,6 +25,6 @@ runModel() is the core of the application, it links the structures according the
 int TabTimesCloserNeighbors::RunModel()
 {
 	int ret;
-	for (int _time = 0; _time < nbTimes_ - 1; _time++) { if ((ret = ((TimeNodesCloserNeighbors*)timeNodes_[_time])->makeAllConnections()) < 0) { return ret; } }
+	for (int time = 0; time < nbTimes_ - 1; time++) { if ((ret = ((TimeNodesCloserNeighbors*)timeNodes_[time])->MakeAllConnections()) < 0) { return ret; } }
 	return RET_OK;
 }

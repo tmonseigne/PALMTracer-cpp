@@ -40,10 +40,10 @@ public:
 	unsigned long nbPoints;
 	//static unsigned long type;
 	DataType* data;
-#ifdef INTEGER
+	#ifdef INTEGER
 	signed long minVal;
 	signed long maxVal;
-#endif
+	#endif
 
 private:
 	static int getDim(long i, long j, long k, long l);
@@ -74,7 +74,7 @@ public:
 
 
 	//**************		+=		*********************=
-#ifndef BOOL_TYPE
+	#ifndef BOOL_TYPE
 	ArrayType& operator+=(char val);
 	ArrayType& operator+=(unsigned char val);
 	ArrayType& operator+=(short val);
@@ -85,11 +85,11 @@ public:
 	ArrayType& operator+=(double val);
 	ArrayType& operator+=(const USrtArray& arrayType);
 	ArrayType& operator+=(const FltArray& arrayType);
-#endif
+	#endif
 
 
 	//**************		-=		*********************=
-#ifndef BOOL_TYPE
+	#ifndef BOOL_TYPE
 	ArrayType& operator-=(char val);
 	ArrayType& operator-=(unsigned char val);
 	ArrayType& operator-=(short val);
@@ -100,10 +100,10 @@ public:
 	ArrayType& operator-=(double val);
 	ArrayType& operator-=(const USrtArray& arrayType);
 	ArrayType& operator-=(const FltArray& arrayType);
-#endif
+	#endif
 
 	//**************		*=		*********************=
-#ifndef BOOL_TYPE
+	#ifndef BOOL_TYPE
 	ArrayType& operator*=(char val);
 	ArrayType& operator*=(unsigned char val);
 	ArrayType& operator*=(short val);
@@ -114,10 +114,10 @@ public:
 	ArrayType& operator*=(double val);
 	ArrayType& operator*=(const USrtArray& arrayType);
 	ArrayType& operator*=(const FltArray& arrayType);
-#endif
+	#endif
 
 	//**************		/=		*********************=
-#ifndef BOOL_TYPE
+	#ifndef BOOL_TYPE
 	ArrayType& operator/=(char val);
 	ArrayType& operator/=(unsigned char val);
 	ArrayType& operator/=(short val);
@@ -128,7 +128,7 @@ public:
 	ArrayType& operator/=(double val);
 	ArrayType& operator/=(const USrtArray& arrayType);
 	ArrayType& operator/=(const FltArray& arrayType);
-#endif
+	#endif
 
 	//**************		=		*********************=
 	ArrayType& operator=(char val);
@@ -142,34 +142,33 @@ public:
 	ArrayType& operator=(const USrtArray& arrayType);
 	ArrayType& operator=(const FltArray& arrayType);
 
-#ifndef BOOL_TYPE
+	#ifndef BOOL_TYPE
 	ArrayType& operator++();
 	ArrayType& operator--();
-#endif
+	#endif
 	bool isThereData();
 
-#ifndef BOOL_TYPE
-#ifdef min
+	#ifndef BOOL_TYPE
+	#ifdef min
 #undef min
-#endif
-#ifdef max
+	#endif
+	#ifdef max
 #undef max
-#endif
+	#endif
 	DataType min();
 	DataType max();
-#endif
+	#endif
 
 
-#ifndef BOOL_TYPE
+	#ifndef BOOL_TYPE
 	double sigma();
 	double power();
-#endif
+	#endif
 
-#ifndef BOOL_TYPE
+	#ifndef BOOL_TYPE
 	double mean();
 	double sum();
-#endif
-
+	#endif
 };
 
 

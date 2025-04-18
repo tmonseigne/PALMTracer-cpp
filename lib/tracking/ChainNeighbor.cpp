@@ -11,12 +11,12 @@
 /********************************************************************************************************************
 ChainNeighbor(Node*	_neighbor, ChainNeighbor* _next) of ChainNeighbor class.
 ********************************************************************************************************************/
-ChainNeighbor::ChainNeighbor(Node* _neighbor, ChainNeighbor* _next, Parameters* params)
+ChainNeighbor::ChainNeighbor(Node* neighbor, ChainNeighbor* next, Parameters* params)
 {
 	parameters_ = params;
 
-	neighbor_ = _neighbor;
-	next_ = _next;
+	neighbor_ = neighbor;
+	next_ = next;
 	parameters_->nChainNeighborAllocated_++;
 }
 

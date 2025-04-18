@@ -13,24 +13,24 @@ Constructuor(int _time) of NodeCloserNeighbors class.
 ********************************************************************************************************************/
 NodeCloserNeighbors::NodeCloserNeighbors(const int time, Parameters* params): Node(time, params) { }
 
-void NodeCloserNeighbors::makeConnection()
+void NodeCloserNeighbors::MakeConnection()
 {
 	Node* nMin = NULL;
 	double distMin = -1.;
-	for (const ChainNeighbor* c = neighborsFuture; c != NULL; c = c->next_) {
-		if (c->neighbor_->connectionPast == NULL) {
+	for (const ChainNeighbor* c = neighborsFuture_; c != NULL; c = c->next_) {
+		if (c->neighbor_->past_ == NULL) {
 			if (distMin < 0.) {
-				distMin = distance(c->neighbor_);
+				distMin = Distance(c->neighbor_);
 				nMin = c->neighbor_;
 			}
-			else if (distance(c->neighbor_) < distMin) {
-				distMin = distance(c->neighbor_);
+			else if (Distance(c->neighbor_) < distMin) {
+				distMin = Distance(c->neighbor_);
 				nMin = c->neighbor_;
 			}
 		}
 	}
 	if (nMin != NULL) {
-		nMin->connectionPast = this;
-		connectionFuture = nMin;
+		nMin->past_ = this;
+		future_ = nMin;
 	}
 }

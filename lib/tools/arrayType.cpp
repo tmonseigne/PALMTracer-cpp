@@ -15,10 +15,10 @@ ArrayType::ArrayType()
 	nbPoints = 0;
 	sizeAllocated = 0;
 	//type=NB_TYPE;
-#ifdef INTEGER
+	#ifdef INTEGER
 	minVal = MINVAL;
 	maxVal = MAXVAL;
-#endif
+	#endif
 	dataAllocatedByConstructor = false;
 }
 
@@ -111,10 +111,10 @@ int ArrayType::alloc(const long i, const long j, const long k, const long l)
 			sizeData[3] = l;
 			dataAllocatedByConstructor = true;
 			//type=NB_TYPE;
-#ifdef INTEGER
+			#ifdef INTEGER
 			minVal = MINVAL;
 			maxVal = MAXVAL;
-#endif
+			#endif
 		}
 	}
 	return RET_OK;
@@ -155,10 +155,10 @@ int ArrayType::alloc(DataType* _data, const long i, const long j, const long k, 
 		sizeData[2] = k;
 		sizeData[3] = l;
 
-#ifdef INTEGER
+		#ifdef INTEGER
 		minVal = MINVAL;
 		maxVal = MAXVAL;
-#endif
+		#endif
 	}
 	return RET_OK;
 }

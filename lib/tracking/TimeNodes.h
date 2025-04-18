@@ -11,21 +11,21 @@
 class TimeNodes
 {
 protected:
-	int time;
+	int time_;
 	virtual Node* allocNode() =0;
 
 public:
-	Node** tabNodes;
-	TimeNodes(int _time, int _nbNodes, Parameters* _publicParameters);
+	Parameters* parameters_;
+	Node** nodes_;
+	int nNodes_;
+	TimeNodes(int time, int nNodes, Parameters* params);
 	~TimeNodes();
 
-	Parameters* publicParameters;
 	Node* operator()(int i) const;
-	int nbNodes;
-	int linkNeighborsPresent() const;
-	int linkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes) const;
-	int linkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes) const;
-	int sortByIntensityAllNeighbors() const;
+	int LinkNeighborsPresent() const;
+	int LinkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes) const;
+	int LinkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes) const;
+	int SortByIntensityAllNeighbors() const;
 
-	void checkLinksHomogeneity(const wchar_t* st) const;
+	void CheckLinksHomogeneity(const wchar_t* st) const;
 };

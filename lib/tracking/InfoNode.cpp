@@ -8,126 +8,91 @@
 
 #include "InfoNode.h"
 
-//extern Parameters *publicParameters;
+//extern Parameters *parameters_;
 
-InfoNode::InfoNode(Parameters* _publicParameters) { publicParameters = _publicParameters; }
+InfoNode::InfoNode(Parameters* params) { parameters_ = params; }
 
-float InfoNode2D::distance(InfoNode* infoNode)
+double InfoNode2D::Distance(InfoNode* node)
 {
-	const double dX = getX() - infoNode->getX();
-	const double dY = getY() - infoNode->getY();
-	const float res = (float)sqrt(dX * dX + dY * dY);
-	if (res < 0.) { return 0.; }
-	return res;
+	const double Dx = GetX() - node->GetX();
+	const double Dy = GetY() - node->GetY();
+	const double Res = sqrt(Dx * Dx + Dy * Dy);
+	if (Res < 0.) { return 0.; }
+	return Res;
 }
 
-float InfoNode2D::distance(InfoNode* i1, InfoNode* i2)
+double InfoNode2D::Distance(InfoNode* i1, InfoNode* i2)
 {
-	const double n1n2X = (i1->getX() * i1->getIntensity() + i2->getX() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
-	const double n1n2Y = (i1->getY() * i1->getIntensity() + i2->getY() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
-	const double dX = getX() - n1n2X;
-	const double dY = getY() - n1n2Y;
-	float res = (float)sqrt(dX * dX + dY * dY);
+	const double N1N2X = (i1->GetX() * i1->GetIntensity() + i2->GetX() * i2->GetIntensity()) / (i1->GetIntensity() + i2->GetIntensity());
+	const double N1N2Y = (i1->GetY() * i1->GetIntensity() + i2->GetY() * i2->GetIntensity()) / (i1->GetIntensity() + i2->GetIntensity());
+	const double Dx = GetX() - N1N2X;
+	const double Dy = GetY() - N1N2Y;
+	double res = sqrt(Dx * Dx + Dy * Dy);
 	if (res < 0.) { return 0.; }
 	if (res < 1e-9) { res += 0; }
 	return res;
 }
 
 
-double InfoNode2D::getMean() { return info.mean; }
-double InfoNode2D::getIntensity() { return info.intensity; }
-unsigned long InfoNode2D::getIndex() { return info.index; }
-
-long InfoNode2D::getSurface() { return info.surf; }
-
-double InfoNode2D::getX() { return info.moment.y; }
-
-double InfoNode2D::getY() { return info.moment.x; }
-
-double InfoNode2D::getZ()
-{
-	// modified by Adel
-	//return(T_ERR_OOP);
-	return Z;
-}
-
-// Added by Adel
-void InfoNode2D::setColor(const double color) { Color = color; }
-
-void InfoNode2D::setMolId(const double molId) { MolId = molId; }
-
-double InfoNode2D::getColor() { return Color; }
-double InfoNode2D::getMolId() { return MolId; }
-//
-
-unsigned long InfoNode2D::sizeofInfoData() { return sizeof(info_2d); }
-
-void* InfoNode2D::getPtrInfoData() { return &info; }
-
-void InfoNode2D::setSurface(const long s) { info.surf = s; }
-
-void InfoNode2D::setX(const double x) { info.moment.y = x; }
-
-void InfoNode2D::setY(const double y) { info.moment.x = y; }
-
-void InfoNode2D::setZ(const double z) { Z = z; }
-
-void InfoNode2D::setIntensity(const double I) { info.intensity = I; }
-
-void InfoNode2D::setIndex(const unsigned long i) { info.index = i; }
-
-void InfoNode2D::setMean(const double m) { info.mean = m; }
+double InfoNode2D::GetMean() { return info_.mean; }
+double InfoNode2D::GetIntensity() { return info_.intensity; }
+unsigned long InfoNode2D::GetIndex() { return info_.index; }
+long InfoNode2D::GetSurface() { return info_.surf; }
+double InfoNode2D::GetX() { return info_.moment.y; }
+double InfoNode2D::GetY() { return info_.moment.x; }
+double InfoNode2D::GetZ() { return z_; }
+void InfoNode2D::SetColor(const double color) { color_ = color; }
+void InfoNode2D::SetMolId(const double molId) { molId_ = molId; }
+double InfoNode2D::GetColor() { return color_; }
+double InfoNode2D::GetMolId() { return molId_; }
+unsigned long InfoNode2D::SizeofInfoData() { return sizeof(info_2d); }
+void* InfoNode2D::GetPtrInfoData() { return &info_; }
+void InfoNode2D::SetSurface(const long s) { info_.surf = s; }
+void InfoNode2D::SetX(const double x) { info_.moment.y = x; }
+void InfoNode2D::SetY(const double y) { info_.moment.x = y; }
+void InfoNode2D::SetZ(const double z) { z_ = z; }
+void InfoNode2D::SetIntensity(const double i) { info_.intensity = i; }
+void InfoNode2D::SetIndex(const unsigned long i) { info_.index = i; }
+void InfoNode2D::SetMean(const double m) { info_.mean = m; }
 
 //!!!!! invertion of coordinates !!! to restect Amira and UIC convenitons
-float InfoNode3D::distance(InfoNode* infoNode)
+double InfoNode3D::Distance(InfoNode* node)
 {
-	const double dX = getX() - infoNode->getX();
-	const double dY = getY() - infoNode->getY();
-	const double dZ = getZ() - infoNode->getZ();
-	const float res = (float)sqrt(dX * dX + dY * dY + dZ * dZ);
-	if (res < 0.) { return 0.; }
-	return res;
+	const double Dx = GetX() - node->GetX();
+	const double Dy = GetY() - node->GetY();
+	const double Dz = GetZ() - node->GetZ();
+	const double Res = sqrt(Dx * Dx + Dy * Dy + Dz * Dz);
+	if (Res < 0.) { return 0.; }
+	return Res;
 }
 
-float InfoNode3D::distance(InfoNode* i1, InfoNode* i2)
+double InfoNode3D::Distance(InfoNode* i1, InfoNode* i2)
 {
-	const double n1n2X = (i1->getX() * i1->getIntensity() + i2->getX() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
-	const double n1n2Y = (i1->getY() * i1->getIntensity() + i2->getY() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
-	const double n1n2Z = (i1->getZ() * i1->getIntensity() + i2->getZ() * i2->getIntensity()) / (i1->getIntensity() + i2->getIntensity());
-	const double dX = getX() - n1n2X;
-	const double dY = getY() - n1n2Y;
-	const double dZ = getZ() - n1n2Z;
-	const float res = (float)sqrt(dX * dX + dY * dY + dZ * dZ);
-	if (res < 0.) { return 0.; }
-	return res;
+	const double N1N2X = (i1->GetX() * i1->GetIntensity() + i2->GetX() * i2->GetIntensity()) / (i1->GetIntensity() + i2->GetIntensity());
+	const double N1N2Y = (i1->GetY() * i1->GetIntensity() + i2->GetY() * i2->GetIntensity()) / (i1->GetIntensity() + i2->GetIntensity());
+	const double N1N2Z = (i1->GetZ() * i1->GetIntensity() + i2->GetZ() * i2->GetIntensity()) / (i1->GetIntensity() + i2->GetIntensity());
+	const double Dx = GetX() - N1N2X;
+	const double Dy = GetY() - N1N2Y;
+	const double Dz = GetZ() - N1N2Z;
+	const double Res = sqrt(Dx * Dx + Dy * Dy + Dz * Dz);
+	if (Res < 0.) { return 0.; }
+	return Res;
 }
 
 
-double InfoNode3D::getMean() { return info.mean; }
-double InfoNode3D::getIntensity() { return info.intensity; }
-long InfoNode3D::getVolume() { return info.volume; }
-unsigned long InfoNode3D::getIndex() { return info.index; }
-
-unsigned long InfoNode3D::sizeofInfoData() { return sizeof(info_3d); }
-
-void* InfoNode3D::getPtrInfoData() { return &info; }
-
-
-//!!!!! invertion of coordinates !!! to respect Amira and UIC convenitons
-double InfoNode3D::getX() { return info.moment.z; }
-double InfoNode3D::getY() { return info.moment.y; }
-double InfoNode3D::getZ() { return info.moment.x * publicParameters->dZdx_; }
-
-void InfoNode3D::setSurface(long s) { }
-
-void InfoNode3D::setX(double x) { }
-
-void InfoNode3D::setY(double y) { }
-
-void InfoNode3D::setZ(double z) { }
-
-void InfoNode3D::setIntensity(double I) { }
-
-void InfoNode3D::setIndex(unsigned long i) { }
-
-void InfoNode3D::setMean(double m) { }
+double InfoNode3D::GetMean() { return info_.mean; }
+double InfoNode3D::GetIntensity() { return info_.intensity; }
+long InfoNode3D::GetVolume() { return info_.volume; }
+unsigned long InfoNode3D::GetIndex() { return info_.index; }
+unsigned long InfoNode3D::SizeofInfoData() { return sizeof(info_3d); }
+void* InfoNode3D::GetPtrInfoData() { return &info_; }
+double InfoNode3D::GetX() { return info_.moment.z; }
+double InfoNode3D::GetY() { return info_.moment.y; }
+double InfoNode3D::GetZ() { return info_.moment.x * parameters_->dZdx_; }
+void InfoNode3D::SetSurface(long s) { }
+void InfoNode3D::SetX(double x) { }
+void InfoNode3D::SetY(double y) { }
+void InfoNode3D::SetZ(double z) { }
+void InfoNode3D::SetIntensity(double i) { }
+void InfoNode3D::SetIndex(unsigned long i) { }
+void InfoNode3D::SetMean(double m) { }

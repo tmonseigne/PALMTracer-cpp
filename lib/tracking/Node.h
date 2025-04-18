@@ -7,8 +7,8 @@
 #include <cstdlib>
 #include <string.h>
 #include "ChainNeighbor.h"
-#include "Parameters.h"
 #include "InfoNode.h"
+#include "Parameters.h"
 
 
 #define DIST_SIGNIFICANT	10.
@@ -18,64 +18,63 @@
 class Node
 {
 public:
-	InfoNode* info;
-	//int n;
+	InfoNode* info_;
 
-	Node(int _time, Parameters* _publicParameters);
+	Node(int time, Parameters* params);
 	~Node();
 
-	float distance(Node* node) const;
-	float distance(Node* n1, Node* n2) const;
+	float Distance(Node* node) const;
+	float Distance(Node* n1, Node* n2) const;
 
-	Parameters* publicParameters;
-	//InfoData2D	info;
+	Parameters* parameters_;
+	//InfoData2D	info_;
 
-	bool checkLinksHomogeneity(const wchar_t* st) const;
-	bool checkLinksHomogeneityInVicinity(wchar_t* st);
-	static bool checkLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2 = NULL, Node* p3 = NULL, Node* p4 = NULL, Node* p5 = NULL, Node* p6 = NULL);
-	int time;
-	Node* connectionFuture;
-	Node* connectionBlinkFuture;
-	Node* connectionPast;
-	Node* connectionBlinkPast;
-	Node* connectionFission1Future;
-	Node* connectionFission2Future;
-	Node* connectionFissionPast;
-	Node* connectionFusion1Past;
-	Node* connectionFusion2Past;
-	Node* connectionFusionFuture;
-	unsigned long trackedStructureIndex;
-	unsigned long trackedStructureAmiraIndex;
-	unsigned short colorIndex[2];
-	double mSD;
+	bool CheckLinksHomogeneity(const wchar_t* st) const;
+	bool CheckLinksHomogeneityInVicinity(wchar_t* st);
+	static bool CheckLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2 = NULL, Node* p3 = NULL, Node* p4 = NULL, Node* p5 = NULL, Node* p6 = NULL);
+	int time_;
+	Node* future_;
+	Node* blinkFuture_;
+	Node* past_;
+	Node* blinkPast_;
+	Node* fission1Future_;
+	Node* fission2Future_;
+	Node* fissionPast_;
+	Node* fusion1Past_;
+	Node* fusion2Past_;
+	Node* fusionFuture_;
+	unsigned long trackedIndex_;
+	unsigned long trackedAmiraIndex_;
+	unsigned short colorIndex_[2];
+	double mSd_;
 
-	ChainNeighbor* neighborsPresent;
-	long neighborsPresentCount;
-	ChainNeighbor* neighborsPast;
-	long neighborsPastCount;
-	ChainNeighbor* neighborsFuture;
-	long neighborsFutureCount;
+	ChainNeighbor* neighborsPresent_;
+	long neighborsPresentCount_;
+	ChainNeighbor* neighborsPast_;
+	long neighborsPastCount_;
+	ChainNeighbor* neighborsFuture_;
+	long neighborsFutureCount_;
 
-	ChainNeighbor* neighborsBlinkPast;
-	long neighborsBlinkPastCount;
-	ChainNeighbor* neighborsBlinkFuture;
-	long neighborsBlinkFutureCount;
-
-
-	static int sortByIntersityNeighbors(ChainNeighbor** neighborsHead);
-
-	virtual double likeness(Node* n) { exit(T_ERR_OOP); }
-	virtual double likenessMeanIntensity(Node* n) { exit(T_ERR_OOP); }
-	virtual double likenessIntensity(Node* n) { exit(T_ERR_OOP); }
-	virtual double likenessDistance(Node* n) { exit(T_ERR_OOP); }
-	virtual double likenessFusion(Node* n1, Node* n2) { exit(T_ERR_OOP); }
-	virtual double likenessIntensityFusion(Node* n1, Node* n2) { exit(T_ERR_OOP); }
-	virtual double likenessMeanIntensityFusion(Node* n1, Node* n2) { exit(T_ERR_OOP); }
-	virtual double likenessDistanceFusion(Node* n1, Node* n2) { exit(T_ERR_OOP); }
-	virtual double likenessFission(Node* n1, Node* n2) { exit(T_ERR_OOP); }
-	virtual double likenessBlink(Node* n) { exit(T_ERR_OOP); }
+	ChainNeighbor* neighborsBlinkPast_;
+	long neighborsBlinkPastCount_;
+	ChainNeighbor* neighborsBlinkFuture_;
+	long neighborsBlinkFutureCount_;
 
 
-	double distanceToBorder() const;
-	double stericEffect() const;
+	static int SortByIntersityNeighbors(ChainNeighbor** neighborsHead);
+
+	virtual double Likeness(Node* n) { exit(T_ERR_OOP); }
+	virtual double LikenessMeanIntensity(Node* n) { exit(T_ERR_OOP); }
+	virtual double LikenessIntensity(Node* n) { exit(T_ERR_OOP); }
+	virtual double LikenessDistance(Node* n) { exit(T_ERR_OOP); }
+	virtual double LikenessFusion(Node* n1, Node* n2) { exit(T_ERR_OOP); }
+	virtual double LikenessIntensityFusion(Node* n1, Node* n2) { exit(T_ERR_OOP); }
+	virtual double LikenessMeanIntensityFusion(Node* n1, Node* n2) { exit(T_ERR_OOP); }
+	virtual double LikenessDistanceFusion(Node* n1, Node* n2) { exit(T_ERR_OOP); }
+	virtual double LikenessFission(Node* n1, Node* n2) { exit(T_ERR_OOP); }
+	virtual double LikenessBlink(Node* n) { exit(T_ERR_OOP); }
+
+
+	double DistanceToBorder() const;
+	double StericEffect() const;
 };

@@ -15,10 +15,11 @@ protected:
 	Node* allocNode() override;
 
 public:
-	TimeNodesDistanceIntensity(int _time, int _nbNodes, Parameters* _publicParameters);
-	void computeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean, double& stdDistanceComputing, long& countStdDist, bool sigmaClipping, long* hist = NULL) const;
-	double makeAllInitializationConnections() const;
-	double tryRandomChange(double limit) const;
+	TimeNodesDistanceIntensity(int time, int nNodes, Parameters* params);
+	void ComputeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean, double& stdDistanceComputing,
+	                           long& countStdDist, bool sigmaClipping, long* hist = NULL) const;
+	double MakeAllInitializationConnections() const;
+	double TryRandomChange(double limit) const;
 
-	double getLikenessTime(long lastTime) const;
+	double GetLikenessTime(long lastTime) const;
 };

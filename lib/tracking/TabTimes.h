@@ -25,7 +25,7 @@ protected:
 
 public:
 	int GiveResult();
-	explicit TabTimes(Parameters* publicParameters);
+	explicit TabTimes(Parameters* params);
 	virtual ~TabTimes();
 	TimeNodes* operator()(int i) const;
 	TimeNodes** operator[](int i) const;
