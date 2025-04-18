@@ -15,37 +15,37 @@
       <Filter>Tools</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\tracking\chain_neighbor.cpp">
-      <Filter>Kernel</Filter>
+      <Filter>Tracking</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\tracking\info_node.cpp">
-      <Filter>Kernel</Filter>
+      <Filter>Tracking</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\tracking\nodes.cpp">
-      <Filter>Kernel</Filter>
+      <Filter>Tracking</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\tracking\tab_times.cpp">
-      <Filter>Kernel</Filter>
+      <Filter>Tracking</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\tracking\time_nodes.cpp">
-      <Filter>Kernel</Filter>
+      <Filter>Tracking</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\tracking\closerNeighbors\nodes_closer_neighbors.cpp">
-      <Filter>Kernel\closer Neighbors</Filter>
+      <Filter>Tracking\closer Neighbors</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\tracking\closerNeighbors\tab_times_closer_neighbors.cpp">
-      <Filter>Kernel\closer Neighbors</Filter>
+      <Filter>Tracking\closer Neighbors</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\tracking\closerNeighbors\time_nodes_closer_neighbors.cpp">
-      <Filter>Kernel\closer Neighbors</Filter>
+      <Filter>Tracking\closer Neighbors</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\tracking\likenessDistInten\tab_times_dist_Inten.cpp">
-      <Filter>Kernel\likeness DistInten</Filter>
+      <Filter>Tracking\likeness DistInten</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\tracking\likenessDistInten\nodes_dist_Inten.cpp">
-      <Filter>Kernel\likeness DistInten</Filter>
+      <Filter>Tracking\likeness DistInten</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\tracking\likenessDistInten\time_nodes_dist_Inten.cpp">
-      <Filter>Kernel\likeness DistInten</Filter>
+      <Filter>Tracking\likeness DistInten</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -63,43 +63,43 @@
       <Filter>Tools</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\chain_neighbor.h">
-      <Filter>Kernel</Filter>
+      <Filter>Tracking</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\general.h">
-      <Filter>Kernel</Filter>
+      <Filter>Tracking</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\info_node.h">
-      <Filter>Kernel</Filter>
+      <Filter>Tracking</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\nodes.h">
-      <Filter>Kernel</Filter>
+      <Filter>Tracking</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\tab_times.h">
-      <Filter>Kernel</Filter>
+      <Filter>Tracking</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\time_nodes.h">
-      <Filter>Kernel</Filter>
+      <Filter>Tracking</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\tracking.h">
-      <Filter>Kernel</Filter>
+      <Filter>Tracking</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\closerNeighbors\nodes_closer_neighbors.h">
-      <Filter>Kernel\closer Neighbors</Filter>
+      <Filter>Tracking\closer Neighbors</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\closerNeighbors\tab_times_closer_neighbors.h">
-      <Filter>Kernel\closer Neighbors</Filter>
+      <Filter>Tracking\closer Neighbors</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\closerNeighbors\time_nodes_closer_neighbors.h">
-      <Filter>Kernel\closer Neighbors</Filter>
+      <Filter>Tracking\closer Neighbors</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\likenessDistInten\tab_times_dist_Inten.h">
-      <Filter>Kernel\likeness DistInten</Filter>
+      <Filter>Tracking\likeness DistInten</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\likenessDistInten\nodes_dist_Inten.h">
-      <Filter>Kernel\likeness DistInten</Filter>
+      <Filter>Tracking\likeness DistInten</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\likenessDistInten\time_nodes_dist_Inten.h">
-      <Filter>Kernel\likeness DistInten</Filter>
+      <Filter>Tracking\likeness DistInten</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\palm\Info3D.h">
       <Filter>Palm</Filter>
@@ -116,17 +116,17 @@
     <Filter Include="Tools">
       <UniqueIdentifier>{120fba11-7e8f-4026-86ec-d878e6706104}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Kernel">
-      <UniqueIdentifier>{73f1bf69-8d62-4707-a081-af253e212f9e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Kernel\likeness DistInten">
-      <UniqueIdentifier>{da0a62ac-1f6f-408d-a391-32c4bf00b49e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Kernel\closer Neighbors">
-      <UniqueIdentifier>{7afa8965-9f28-4bf7-9d80-b9e278ceeb71}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Palm">
       <UniqueIdentifier>{0fe7f492-b518-409e-9b4f-143953d0e47f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracking">
+      <UniqueIdentifier>{73f1bf69-8d62-4707-a081-af253e212f9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracking\likeness DistInten">
+      <UniqueIdentifier>{da0a62ac-1f6f-408d-a391-32c4bf00b49e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracking\closer Neighbors">
+      <UniqueIdentifier>{7afa8965-9f28-4bf7-9d80-b9e278ceeb71}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

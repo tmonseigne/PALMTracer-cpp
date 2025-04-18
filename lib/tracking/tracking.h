@@ -8,7 +8,7 @@
 #pragma once
 
 #include <cstdio>
-#include "kernel/general.h"
-#include "kernel/tab_times.h"
 #include "closerNeighbors/tab_times_closer_neighbors.h"
 #include "likenessdistInten/tab_times_dist_inten.h"
+#include "tracking/general.h"
+#include "tracking/tab_times.h"

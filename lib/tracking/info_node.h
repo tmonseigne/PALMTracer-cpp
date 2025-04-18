@@ -4,10 +4,10 @@
 *******************************************************************************************************************/
 #pragma once
 
+#include "Constants.hpp"
 #include "general.h"
 #include "palm/Info2D.h"
 #include "palm/Info3D.h"
-#include "Constants.hpp"
 
 class InfoNode
 {
