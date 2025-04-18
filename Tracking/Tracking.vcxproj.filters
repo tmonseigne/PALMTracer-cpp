@@ -55,21 +55,12 @@
     <ClInclude Include="..\lib\tracking\DistanceIntensity\TimeNodesDistanceIntensity.h">
       <Filter>Tracking\Distance Intensity</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\Info3D.h">
-      <Filter>Palm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\palm\Info2D.h">
-      <Filter>Palm</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\Constants.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Tracking_PALM.def" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Palm">
-      <UniqueIdentifier>{0fe7f492-b518-409e-9b4f-143953d0e47f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Tracking">
       <UniqueIdentifier>{73f1bf69-8d62-4707-a081-af253e212f9e}</UniqueIdentifier>
     </Filter>

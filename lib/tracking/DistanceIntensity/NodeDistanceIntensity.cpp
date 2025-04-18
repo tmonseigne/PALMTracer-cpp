@@ -88,9 +88,9 @@ double NodeDistanceIntensity::likenessMeanIntensity(Node* n)
 *********************************************************************************************/
 double NodeDistanceIntensity::LikenessMeanIntensity(Node* n)
 {
-	if (n == nullptr) { return getLikeness(info_->GetMean(), parameters_->stdMean_ * __max(1., 3.*parameters_->stdDistance_/this->DistanceToBorder())); }
+	if (n == nullptr) { return getLikeness(info_->mean_, parameters_->stdMean_ * __max(1., 3.*parameters_->stdDistance_/this->DistanceToBorder())); }
 
-	else { return getLikeness(info_->GetMean() - n->info_->GetMean(), parameters_->stdMean_); }
+	else { return getLikeness(info_->mean_ - n->info_->mean_, parameters_->stdMean_); }
 }
 
 /*********************************************************************************************
@@ -101,16 +101,11 @@ double NodeDistanceIntensity::likenessMeanIntensityFusion(Node* n1, Node* n2)
 *********************************************************************************************/
 double NodeDistanceIntensity::LikenessMeanIntensityFusion(Node* n1, Node* n2)
 {
-	if (n1 == nullptr) { return 0.; } //Error ???
-	if (n2 == nullptr) { return 0.; } //Error ???
-	if (Parameters::N_DIM == 2) {
-		return getLikeness(info_->GetMean() - (n1->info_->GetIntensity() + n2->info_->GetIntensity()) / (n1->info_->GetSurface() + n2->info_->GetSurface()),
-		                   parameters_->stdMean_);
-	}
-	else {
-		return getLikeness(info_->GetMean() - (n1->info_->GetIntensity() + n2->info_->GetIntensity()) / (n1->info_->GetVolume() + n2->info_->GetVolume()),
-		                   parameters_->stdMean_);
-	}
+	if (n1 == nullptr || n2 == nullptr) { return 0.; } //Error ???
+	return getLikeness(info_->mean_ - (n1->info_->intensity_ + n2->info_->intensity_)
+	                   / (n1->info_->surf_ + n2->info_->surf_), parameters_->stdMean_);
+	//if (Parameters::N_DIM == 2) { return getLikeness(info_->mean_ - (n1->info_->intensity_ + n2->info_->intensity_) / (n1->info_->surf_ + n2->info_->surf_), parameters_->stdMean_);}
+	//else { return getLikeness(info_->mean_ - (n1->info_->intensity_ + n2->info_->intensity_) / (n1->info_->GetVolume() + n2->info_->GetVolume()), parameters_->stdMean_);}
 }
 
 
@@ -125,9 +120,9 @@ double NodeDistanceIntensity::LikenessIntensity(Node* n)
 {
 	//__max(1., 3.*parameters_->stdDistance/this->distanceToBorder())));
 	if (n == nullptr) {
-		return getLikeness(info_->GetIntensity(), parameters_->stdIntensity_ * __max(1., 3.*parameters_->stdDistance_/this->DistanceToBorder()));
+		return getLikeness(info_->intensity_, parameters_->stdIntensity_ * __max(1., 3.*parameters_->stdDistance_/this->DistanceToBorder()));
 	}
-	else { return getLikeness(info_->GetIntensity() - n->info_->GetIntensity(), parameters_->stdIntensity_); }
+	else { return getLikeness(info_->intensity_ - n->info_->intensity_, parameters_->stdIntensity_); }
 }
 
 
@@ -142,7 +137,7 @@ double NodeDistanceIntensity::LikenessIntensityFusion(Node* n1, Node* n2)
 {
 	if (n1 == nullptr) { return 0.; } //inutil
 	if (n2 == nullptr) { return 0.; } //inutil
-	return getLikeness(info_->GetIntensity() - n1->info_->GetIntensity() - n2->info_->GetIntensity(), parameters_->stdIntensity_);
+	return getLikeness(info_->intensity_ - n1->info_->intensity_ - n2->info_->intensity_, parameters_->stdIntensity_);
 }
 
 
@@ -226,12 +221,12 @@ void NodeDistanceIntensity::ComputeConstantSigmas(double& stdIntensityComputing,
 		if (hist != nullptr) { hist[(long)Distance(nMax)]++; }
 		else {
 			if (sigmaClipping) {
-				if (fabs(info_->GetIntensity() - nMax->info_->GetIntensity()) < 3. * parameters_->stdIntensity_) {
-					stdIntensityComputing += (info_->GetIntensity() - nMax->info_->GetIntensity()) * (info_->GetIntensity() - nMax->info_->GetIntensity());
+				if (fabs(info_->intensity_ - nMax->info_->intensity_) < 3. * parameters_->stdIntensity_) {
+					stdIntensityComputing += (info_->intensity_ - nMax->info_->intensity_) * (info_->intensity_ - nMax->info_->intensity_);
 					countStdInt++;
 				}
-				if (fabs(info_->GetMean() - nMax->info_->GetMean()) < 3. * parameters_->stdMean_) {
-					stdMeanComputing += (info_->GetMean() - nMax->info_->GetMean()) * (info_->GetMean() - nMax->info_->GetMean());
+				if (fabs(info_->mean_ - nMax->info_->mean_) < 3. * parameters_->stdMean_) {
+					stdMeanComputing += (info_->mean_ - nMax->info_->mean_) * (info_->mean_ - nMax->info_->mean_);
 					countStdMean++;
 				}
 
@@ -241,8 +236,8 @@ void NodeDistanceIntensity::ComputeConstantSigmas(double& stdIntensityComputing,
 				}
 			}
 			else {
-				stdIntensityComputing += (info_->GetIntensity() - nMax->info_->GetIntensity()) * (info_->GetIntensity() - nMax->info_->GetIntensity());
-				stdMeanComputing += (info_->GetMean() - nMax->info_->GetMean()) * (info_->GetMean() - nMax->info_->GetMean());
+				stdIntensityComputing += (info_->intensity_ - nMax->info_->intensity_) * (info_->intensity_ - nMax->info_->intensity_);
+				stdMeanComputing += (info_->mean_ - nMax->info_->mean_) * (info_->mean_ - nMax->info_->mean_);
 				stdDistanceComputing += Distance(nMax) * Distance(nMax);
 				countStdInt++;
 				countStdMean++;

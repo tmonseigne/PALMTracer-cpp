@@ -104,8 +104,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\Constants.hpp" />
-    <ClInclude Include="..\lib\palm\Info2D.h" />
-    <ClInclude Include="..\lib\palm\Info3D.h" />
     <ClInclude Include="..\lib\tracking\ChainNeighbor.h" />
     <ClInclude Include="..\lib\tracking\Parameters.h" />
     <ClInclude Include="..\lib\tracking\InfoNode.h" />

@@ -82,21 +82,13 @@ int TabTimes::printConnectionsASCII_trc() const
 				for (const Node* nodeConnection = node; nodeConnection != nullptr; nodeConnection = nodeConnection->future_) {
 					parameters_->tracks_[index++] = node->trackedIndex_;
 					parameters_->tracks_[index++] = nodeConnection->time_ + 1;
-					parameters_->tracks_[index++] = nodeConnection->info_->GetX();
-					parameters_->tracks_[index++] = nodeConnection->info_->GetY();
-
-					if (Parameters::N_DIM == 3) {
-						parameters_->tracks_[index++] = nodeConnection->info_->GetZ();
-						parameters_->tracks_[index++] = nodeConnection->info_->GetVolume();
-					}
-					else { parameters_->tracks_[index++] = nodeConnection->info_->GetSurface(); }
-
-					parameters_->tracks_[index++] = nodeConnection->info_->GetIntensity();
-
-					parameters_->tracks_[index++] = nodeConnection->info_->GetZ();
-
-					parameters_->tracks_[index++] = nodeConnection->info_->GetColor();
-					parameters_->tracks_[index++] = nodeConnection->info_->GetMolId();
+					parameters_->tracks_[index++] = nodeConnection->info_->x_;
+					parameters_->tracks_[index++] = nodeConnection->info_->y_;
+					parameters_->tracks_[index++] = nodeConnection->info_->surf_;
+					parameters_->tracks_[index++] = nodeConnection->info_->intensity_;
+					parameters_->tracks_[index++] = nodeConnection->info_->z_;
+					parameters_->tracks_[index++] = nodeConnection->info_->color_;
+					parameters_->tracks_[index++] = nodeConnection->info_->molId_;
 
 					// The number of trajectory
 					parameters_->nTraj_ = node->trackedIndex_;
@@ -124,17 +116,17 @@ int TabTimes::readPointsList()
 	parameters_->maxY_ = 0;
 	parameters_->maxZ_ = 0;
 
-	for (int time = 0; time < (long)nbTimes_; time++) {
+	for (int t = 0; t < nbTimes_; t++) {
 		// Computing the number of nodes by frame
 		unsigned long nbNodes = 0;
 		for (i = index; ; /*i+=4*/ i += Parameters::N_SEG_PARAMS) {
-			if ((int)parameters_->points_[i + 9] != -1 && (int)parameters_->points_[i + 9] != 0) { nbNodes++; } // surface
+			if (static_cast<int>(parameters_->points_[i + 9]) != -1 && static_cast<int>(parameters_->points_[i + 9]) != 0) { nbNodes++; } // surface
 			else { break; }
 		}
 
 
-		timeNodes_[time] = allocTimeNodes(time, (int)nbNodes); //Allocation of timeNodes
-		TimeNodes* localTimeNodes = timeNodes_[time];
+		timeNodes_[t] = allocTimeNodes(t, (int)nbNodes); //Allocation of timeNodes
+		TimeNodes* localTimeNodes = timeNodes_[t];
 
 		if (localTimeNodes == nullptr) { return T_ERR_ALLOC; }
 
@@ -143,31 +135,29 @@ int TabTimes::readPointsList()
 			// Just for the case of '2D'
 			InfoNode* str = (*localTimeNodes)(node)->info_;
 			// version correcte
-			str->SetX(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 3]);
-			str->SetY(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 4]);
-			str->SetZ(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 10]);
+			str->x_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 3];
+			str->y_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 4];
+			str->z_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 10];
 
-			str->SetColor(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 11]);
-			str->SetMolId(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 12]);
+			str->color_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 11];
+			str->molId_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 12];
 
-			str->SetIntensity(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 8]);
+			str->intensity_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 8];
 
-			str->SetSurface((unsigned long)parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 9]);
-			str->SetMean(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 8] / (unsigned long)parameters_->points_[index + node *
-				             Parameters::N_SEG_PARAMS + 9]);
+			str->surf_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 9];
+			str->mean_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 8] / parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 9];
 
-			parameters_->maxX_ = std::max(parameters_->maxX_, (*localTimeNodes)(node)->info_->GetX());
-			parameters_->maxY_ = std::max(parameters_->maxY_, (*localTimeNodes)(node)->info_->GetY());
-			if (Parameters::N_DIM == 3) { parameters_->maxZ_ = std::max(parameters_->maxZ_, (*localTimeNodes)(node)->info_->GetZ()); }
+			parameters_->maxX_ = std::max(parameters_->maxX_, (*localTimeNodes)(node)->info_->x_);
+			parameters_->maxY_ = std::max(parameters_->maxY_, (*localTimeNodes)(node)->info_->y_);
 		}
 
 		//Sorting the nodes by the intensity for one time
 		int indexMax;
-		for (i = 0; i < timeNodes_[time]->nNodes_ - 1; i++) {
+		for (i = 0; i < timeNodes_[t]->nNodes_ - 1; i++) {
 			double maxIntensity = -1.;
 			for (int j = i; j < localTimeNodes->nNodes_; j++) {
-				if (maxIntensity < (*localTimeNodes)(j)->info_->GetIntensity()) {
-					maxIntensity = (*localTimeNodes)(j)->info_->GetIntensity();
+				if (maxIntensity < (*localTimeNodes)(j)->info_->intensity_) {
+					maxIntensity = (*localTimeNodes)(j)->info_->intensity_;
 					indexMax = j;
 				}
 			}

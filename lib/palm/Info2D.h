@@ -32,20 +32,6 @@ using variance_2d = struct
 	double xx, yy, xy;
 };
 
-using info_2d = struct
-{
-	size_t peri;
-	double surf;
-	max_2d max;
-	val_2d moment, momentSurf;
-	double mean;
-	double intensity;
-	variance_2d var;
-	val_2d sigma;
-	double angle;
-};
-
-
 class Info2D
 {
 public:

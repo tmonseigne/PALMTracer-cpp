@@ -10,6 +10,8 @@ Class TimeNodes contains the Node objets for one time.
 #include "TimeNodes.h"
 #include <cstdio>
 
+#include "Constants.hpp"
+
 /********************************************************************************************************************
 Destructuor() of TimeNodes class. 
 Delete all objets Node.

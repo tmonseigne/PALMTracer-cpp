@@ -14,13 +14,15 @@ links to the current objet.
 #include <cstdlib>
 #include <numbers>
 
+#include "Constants.hpp"
+
 /*********************************************************************************************
 double distanceToBorder()
   get the distance from this to the closer border
 *********************************************************************************************/
 double Node::DistanceToBorder() const
 {
-	const double X = info_->GetX(), Y = info_->GetY();
+	const double X = info_->x_, Y = info_->y_;
 	const double MaxX = parameters_->maxX_, MaxY = parameters_->maxY_;
 	return std::min({X, MaxX - X, Y, MaxY - Y});
 }
@@ -31,9 +33,9 @@ double stericEffect()
 *********************************************************************************************/
 double Node::SphericEffect() const
 {
-	return sqrt(info_->GetSurface() / std::numbers::pi);
+	return sqrt(info_->surf_ / std::numbers::pi);
 	//volume of a sphere is 4/3 * PI *r^3, surface is PI * r^2
-	//if constexpr (Parameters::N_DIM == 2) { return sqrt(info_->GetSurface() / std::numbers::pi); }
+	//if constexpr (Parameters::N_DIM == 2) { return sqrt(info_->surf_ / std::numbers::pi); }
 	//else { return pow(info_->GetVolume() * 3.0 / 4.0 / std::numbers::pi, 1.0 / 3.0); }
 }
 
@@ -52,7 +54,7 @@ Node::Node(const int time, Parameters* params)
 	  neighborsBlinkPast_(nullptr), neighborsBlinkFuture_(nullptr),
 	  neighborsBlinkPastCount_(0), neighborsBlinkFutureCount_(0)
 {
-	info_ = new InfoNode2D(parameters_);
+	info_ = new InfoNode(parameters_);
 	parameters_->nNodeAllocated_++;
 }
 
@@ -110,7 +112,7 @@ int Node::SortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 				ChainNeighbor* l = *neighborsHead;
 				ChainNeighbor* lOld = nullptr;
 				while (l->next_ != nullptr) {
-					if (l->next_->neighbor_->info_->GetIntensity() > l->neighbor_->info_->GetIntensity()) {
+					if (l->next_->neighbor_->info_->intensity_ > l->neighbor_->info_->intensity_) {
 						ChainNeighbor* l2 = l->next_;
 						if (lOld == nullptr) { *neighborsHead = l2; }
 						else { lOld->next_ = l2; }

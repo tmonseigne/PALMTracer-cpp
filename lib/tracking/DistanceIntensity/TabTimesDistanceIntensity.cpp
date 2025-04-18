@@ -91,14 +91,14 @@ void TabTimesDistanceIntensity::updateConstantes() const
 			Node* node = local->nodes_[n];
 			if (node->future_ != nullptr) {
 				parameters_->stdDistance_ += node->Distance(node->future_) * node->Distance(node->future_);
-				parameters_->stdIntensity_ += (node->info_->GetIntensity() - node->future_->info_->GetIntensity())
-					* (node->info_->GetIntensity() - node->future_->info_->GetIntensity());
-				parameters_->stdMean_ += (node->info_->GetMean() - node->future_->info_->GetMean())
-					* (node->info_->GetMean() - node->future_->info_->GetMean());
-				covID += (node->info_->GetIntensity() - node->future_->info_->GetIntensity()) * node->Distance(node->future_);
-				parameters_->covMeanIntensity_ += (node->info_->GetIntensity() - node->future_->info_->GetIntensity())
-					* (node->info_->GetMean() - node->future_->info_->GetMean());
-				covDM += node->Distance(node->future_) * (node->info_->GetMean() - node->future_->info_->GetMean());
+				parameters_->stdIntensity_ += (node->info_->intensity_ - node->future_->info_->intensity_)
+					* (node->info_->intensity_ - node->future_->info_->intensity_);
+				parameters_->stdMean_ += (node->info_->mean_ - node->future_->info_->mean_)
+					* (node->info_->mean_ - node->future_->info_->mean_);
+				covID += (node->info_->intensity_ - node->future_->info_->intensity_) * node->Distance(node->future_);
+				parameters_->covMeanIntensity_ += (node->info_->intensity_ - node->future_->info_->intensity_)
+					* (node->info_->mean_ - node->future_->info_->mean_);
+				covDM += node->Distance(node->future_) * (node->info_->mean_ - node->future_->info_->mean_);
 				cpt++;
 			}
 		}
