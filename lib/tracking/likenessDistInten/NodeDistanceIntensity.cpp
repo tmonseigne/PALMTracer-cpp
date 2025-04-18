@@ -63,7 +63,7 @@ double NodeDistanceIntensity::stericEffect(Node* n1, Node* n2)
   Compute the sum of the minimum radius of the nodes n1 and n2
   New version from 2005/01/12
 *********************************************************************************************/
-double NodeDistanceIntensity::stericEffect(Node* n1, Node* n2) { return n1->StericEffect() + n2->StericEffect(); }
+double NodeDistanceIntensity::stericEffect(const Node* n1, const Node* n2) { return n1->StericEffect() + n2->StericEffect(); }
 
 /*********************************************************************************************
 double NodeDistanceIntensity::likenessDistanceFusion(Node* n1, Node* n2)
@@ -395,7 +395,7 @@ double NodeDistanceIntensity::makeChangeFission0(const double limitLoss)
 }
 
 
-double NodeDistanceIntensity::makeChangeFission1(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeFission1(const double limitLoss, const ChainNeighbor* cRand)
 {
 	//From
 	//1(this)---------2(fission1Future_)
@@ -431,7 +431,7 @@ double NodeDistanceIntensity::makeChangeFission1(const double limitLoss, ChainNe
 	}
 }
 
-double NodeDistanceIntensity::makeChangeFission2(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeFission2(const double limitLoss, const ChainNeighbor* cRand)
 {
 	//From
 	//1(this)---------2(fission1Future_)
@@ -513,7 +513,7 @@ double NodeDistanceIntensity::makeChangeFission4(const double limitLoss)
 	}
 }
 
-double NodeDistanceIntensity::makeChangeFission5(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeFission5(const double limitLoss, const ChainNeighbor* cRand)
 {
 	//From
 	//1(this)---------2(fission1Future_)
@@ -551,7 +551,7 @@ double NodeDistanceIntensity::makeChangeFission5(const double limitLoss, ChainNe
 }
 
 
-double NodeDistanceIntensity::makeChangeFission8(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeFission8(const double limitLoss, const ChainNeighbor* cRand)
 {
 	//From
 	//1(this)---------2(fission1Future_)
@@ -588,7 +588,7 @@ double NodeDistanceIntensity::makeChangeFission8(const double limitLoss, ChainNe
 	}
 }
 
-double NodeDistanceIntensity::makeChangeFission9(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeFission9(const double limitLoss, const ChainNeighbor* cRand)
 {
 	//From
 	//1(this)---------2(fission1Future_)
@@ -630,7 +630,7 @@ double NodeDistanceIntensity::makeChangeFission9(const double limitLoss, ChainNe
 	}
 }
 
-double NodeDistanceIntensity::makeChangeFission6(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeFission6(const double limitLoss, const ChainNeighbor* cRand)
 {
 	//From
 	//1(this)---------2(fission1Future_)
@@ -667,7 +667,7 @@ double NodeDistanceIntensity::makeChangeFission6(const double limitLoss, ChainNe
 	}
 }
 
-double NodeDistanceIntensity::makeChangeFission7(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeFission7(const double limitLoss, const ChainNeighbor* cRand)
 {
 	//From
 	//1(this)---------2(fission1Future_)
@@ -879,7 +879,7 @@ double NodeDistanceIntensity::makeChangeFusion0(const double limitLoss)
 }
 
 
-double NodeDistanceIntensity::makeChangeFusion1(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeFusion1(const double limitLoss, const ChainNeighbor* cRand)
 {
 	Node* node;
 
@@ -928,7 +928,7 @@ double NodeDistanceIntensity::makeChangeFusion1(const double limitLoss, ChainNei
 	}
 }
 
-double NodeDistanceIntensity::makeChangeFusion2(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeFusion2(const double limitLoss, const ChainNeighbor* cRand)
 {
 	Node* node;
 
@@ -1037,7 +1037,7 @@ double NodeDistanceIntensity::makeChangeFusion4(const double limitLoss)
 }
 
 
-double NodeDistanceIntensity::makeChangeFusion5(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeFusion5(const double limitLoss, const ChainNeighbor* cRand)
 {
 	Node* node;
 
@@ -1090,7 +1090,7 @@ double NodeDistanceIntensity::makeChangeFusion5(const double limitLoss, ChainNei
 }
 
 
-double NodeDistanceIntensity::makeChangeFusion7(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeFusion7(const double limitLoss, const ChainNeighbor* cRand)
 {
 	Node* node;
 
@@ -1142,7 +1142,7 @@ double NodeDistanceIntensity::makeChangeFusion7(const double limitLoss, ChainNei
 }
 
 
-double NodeDistanceIntensity::makeChangeFusion8(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeFusion8(const double limitLoss, const ChainNeighbor* cRand)
 {
 	Node* node;
 
@@ -1188,7 +1188,7 @@ double NodeDistanceIntensity::makeChangeFusion8(const double limitLoss, ChainNei
 	}
 }
 
-double NodeDistanceIntensity::makeChangeFusion6(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeFusion6(const double limitLoss, const ChainNeighbor* cRand)
 {
 	Node* node;
 
@@ -1239,7 +1239,7 @@ double NodeDistanceIntensity::makeChangeFusion6(const double limitLoss, ChainNei
 	}
 }
 
-double NodeDistanceIntensity::makeChangeFusion9(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeFusion9(const double limitLoss, const ChainNeighbor* cRand)
 {
 	Node* node;
 
@@ -1434,7 +1434,7 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage0(const double limitLoss)
 }
 
 
-double NodeDistanceIntensity::makeChangeSimpleLinkage1(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeSimpleLinkage1(const double limitLoss, const ChainNeighbor* cRand)
 {
 	//	From
 	//	Present		Future
@@ -1465,7 +1465,7 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage1(const double limitLoss, C
 	//return(0.);
 }
 
-double NodeDistanceIntensity::makeChangeSimpleLinkage2(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeSimpleLinkage2(const double limitLoss, const ChainNeighbor* cRand)
 {
 	// try to break the link
 	//	From
@@ -1498,7 +1498,7 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage2(const double limitLoss, C
 	//return(0.);
 }
 
-double NodeDistanceIntensity::makeChangeSimpleLinkage3(const double limitLoss, ChainNeighbor* cRand, const long count)
+double NodeDistanceIntensity::makeChangeSimpleLinkage3(const double limitLoss, const ChainNeighbor* cRand, const long count)
 {
 	//	From
 	//	Present		Future
@@ -1558,7 +1558,7 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage3(const double limitLoss, C
 	//return(0.);
 }
 
-double NodeDistanceIntensity::makeChangeSimpleLinkage4(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeSimpleLinkage4(const double limitLoss, const ChainNeighbor* cRand)
 {
 	//	From
 	//	Present		Future
@@ -1662,7 +1662,7 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage1(const double limitLoss)
 	}
 }
 
-double NodeDistanceIntensity::makeChangeBlinkLinkage2(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeBlinkLinkage2(const double limitLoss, const ChainNeighbor* cRand)
 {
 	//transform : 
 	//	From
@@ -1696,7 +1696,7 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage2(const double limitLoss, Ch
 	}
 }
 
-double NodeDistanceIntensity::makeChangeBlinkLinkage3(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeBlinkLinkage3(const double limitLoss, const ChainNeighbor* cRand)
 {
 	//transform : 
 	//	From
@@ -1732,7 +1732,7 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage3(const double limitLoss, Ch
 	}
 }
 
-double NodeDistanceIntensity::makeChangeBlinkLinkage4(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeBlinkLinkage4(const double limitLoss, const ChainNeighbor* cRand)
 {
 	//transform : 
 	//	From
@@ -1762,7 +1762,7 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage4(const double limitLoss, Ch
 	}
 }
 
-double NodeDistanceIntensity::makeChangeBlinkLinkage5(const double limitLoss, ChainNeighbor* cRand)
+double NodeDistanceIntensity::makeChangeBlinkLinkage5(const double limitLoss, const ChainNeighbor* cRand)
 {
 	//transform : 
 	//	From

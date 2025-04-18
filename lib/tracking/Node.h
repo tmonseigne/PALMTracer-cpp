@@ -10,11 +10,6 @@
 #include "InfoNode.h"
 #include "Parameters.h"
 
-
-#define DIST_SIGNIFICANT	10.
-#define DIST_INFINITY		1.e10
-
-
 class Node
 {
 public:
@@ -23,15 +18,13 @@ public:
 	Node(int time, Parameters* params);
 	~Node();
 
-	float Distance(Node* node) const;
-	float Distance(Node* n1, Node* n2) const;
+	float Distance(const Node* node) const;
+	float Distance(const Node* n1, const Node* n2) const;
 
 	Parameters* parameters_;
 	//InfoData2D	info_;
 
 	bool CheckLinksHomogeneity(const wchar_t* st) const;
-	bool CheckLinksHomogeneityInVicinity(wchar_t* st);
-	static bool CheckLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2 = nullptr, Node* p3 = nullptr, Node* p4 = nullptr, Node* p5 = nullptr, Node* p6 = nullptr);
 	int time_;
 	Node* future_;
 	Node* blinkFuture_;
@@ -44,9 +37,7 @@ public:
 	Node* fusion2Past_;
 	Node* fusionFuture_;
 	unsigned long trackedIndex_;
-	unsigned long trackedAmiraIndex_;
 	unsigned short colorIndex_[2];
-	double mSd_;
 
 	ChainNeighbor* neighborsPresent_;
 	long neighborsPresentCount_;

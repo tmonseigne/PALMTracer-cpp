@@ -106,10 +106,6 @@
     <ClInclude Include="..\lib\Constants.hpp" />
     <ClInclude Include="..\lib\palm\Info2D.h" />
     <ClInclude Include="..\lib\palm\Info3D.h" />
-    <ClInclude Include="..\lib\tools\allDataLib.h" />
-    <ClInclude Include="..\lib\tools\arrayType.h" />
-    <ClInclude Include="..\lib\tools\FltArray.h" />
-    <ClInclude Include="..\lib\tools\USrtArray.h" />
     <ClInclude Include="..\lib\tracking\ChainNeighbor.h" />
     <ClInclude Include="..\lib\tracking\closerNeighbors\NodeCloserNeighbors.h" />
     <ClInclude Include="..\lib\tracking\closerNeighbors\TabTimesCloserNeighbors.h" />
@@ -124,10 +120,6 @@
     <ClInclude Include="..\lib\tracking\TimeNodes.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\lib\tools\arrayType.cpp" />
-    <ClCompile Include="..\lib\tools\FltArray.cpp" />
-    <ClCompile Include="..\lib\tools\operators.cpp" />
-    <ClCompile Include="..\lib\tools\USrtArray.cpp" />
     <ClCompile Include="..\lib\tracking\ChainNeighbor.cpp" />
     <ClCompile Include="..\lib\tracking\closerNeighbors\NodeCloserNeighbors.cpp" />
     <ClCompile Include="..\lib\tracking\closerNeighbors\TabTimesCloserNeighbors.cpp" />

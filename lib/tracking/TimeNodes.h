@@ -4,8 +4,8 @@
 *******************************************************************************************************************/
 #pragma once
 
-#include "Parameters.h"
 #include "Node.h"
+#include "Parameters.h"
 
 
 class TimeNodes
@@ -18,13 +18,13 @@ public:
 	Parameters* parameters_;
 	Node** nodes_;
 	int nNodes_;
-	TimeNodes(int time, int nNodes, Parameters* params);
-	~TimeNodes();
+	TimeNodes(const int time, const int nNodes, Parameters* params) : time_(time), parameters_(params), nNodes_(nNodes) { nodes_ = new Node * [nNodes_]; }
+	virtual ~TimeNodes();
 
 	Node* operator()(int i) const;
 	int LinkNeighborsPresent() const;
-	int LinkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes) const;
-	int LinkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes) const;
+	int LinkNeighborsBeforeAndAfter(const TimeNodes& futures) const;
+	int LinkNeighborsBlinkBeforeAndAfter(const TimeNodes& futures) const;
 	int SortByIntensityAllNeighbors() const;
 
 	void CheckLinksHomogeneity(const wchar_t* st) const;

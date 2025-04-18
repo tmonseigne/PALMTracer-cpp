@@ -79,8 +79,6 @@ Node::Node(const int time, Parameters* params)
 	fusion1Past_ = nullptr;
 	fusion2Past_ = nullptr;
 	fusionFuture_ = nullptr;
-	trackedAmiraIndex_ = -1;
-	mSd_ = -1;
 	if (Parameters::N_DIM == 2) { info_ = new InfoNode2D(parameters_); }
 	else { info_ = new InfoNode3D(parameters_); }
 
@@ -119,7 +117,7 @@ Node::~Node()
 /********************************************************************************************************************
 distance(Node *node) gives the distance between "node" and the current objet. 
 ********************************************************************************************************************/
-float Node::Distance(Node* node) const
+float Node::Distance(const Node* node) const
 { //Distance 1
 	return info_->Distance(node->info_);
 }
@@ -127,7 +125,7 @@ float Node::Distance(Node* node) const
 /********************************************************************************************************************
 distance(Node *n1, Node *n2) gives the distance between the mass center of ( n1 and n2), to the current objet. 
 ********************************************************************************************************************/
-float Node::Distance(Node* n1, Node* n2) const { return info_->Distance(n1->info_, n2->info_); }
+float Node::Distance(const Node* n1, const Node* n2) const { return info_->Distance(n1->info_, n2->info_); }
 
 
 /********************************************************************************************************************
@@ -163,90 +161,6 @@ int Node::SortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 		}
 	}
 	return RET_OK;
-}
-
-/********************************************************************************************************************
-checkLinksHomogeneityInVicinity(wchar_t* st) check all the connection to verify the system homogeneity in the vicinity
-return true if error
-********************************************************************************************************************/
-bool Node::CheckLinksHomogeneityInVicinity(wchar_t* st)
-{
-	wchar_t st2[200];
-	bool err = false;
-	swprintf(st2, L"%ls this ", st);
-	CheckLinksHomogeneity(st2);
-	if (future_ != nullptr) {
-		swprintf(st2, L"%ls future_ ", st);
-		err = future_->CheckLinksHomogeneity(st2);
-	}
-	if (!err && fission1Future_ != nullptr) {
-		swprintf(st2, L"%ls fission1Future_ ", st);
-		err = fission1Future_->CheckLinksHomogeneity(st2);
-	}
-	if (!err && fission2Future_ != nullptr) {
-		swprintf(st2, L"%ls fission2Future_ ", st);
-		err = fission2Future_->CheckLinksHomogeneity(st2);
-	}
-	if (!err && fusionFuture_ != nullptr) {
-		swprintf(st2, L"%ls fusionFuture_ ", st);
-		err = fusionFuture_->CheckLinksHomogeneity(st2);
-	}
-	if (!err && blinkFuture_ != nullptr) {
-		swprintf(st2, L"%ls blinkFuture_ ", st);
-		err = blinkFuture_->CheckLinksHomogeneity(st2);
-	}
-	if (!err && past_ != nullptr) {
-		swprintf(st2, L"%ls past_ ", st);
-		err = past_->CheckLinksHomogeneity(st2);
-	}
-	if (!err && fusion1Past_ != nullptr) {
-		swprintf(st2, L"%ls fusion1Past_ ", st);
-		err = fusion1Past_->CheckLinksHomogeneity(st2);
-	}
-	if (!err && fusion2Past_ != nullptr) {
-		swprintf(st2, L"%ls fusion2Past_ ", st);
-		err = fusion2Past_->CheckLinksHomogeneity(st2);
-	}
-	if (!err && fissionPast_ != nullptr) {
-		swprintf(st2, L"%ls fissionPast_ ", st);
-		err = fissionPast_->CheckLinksHomogeneity(st2);
-	}
-	if (!err && blinkPast_ != nullptr) {
-		swprintf(st2, L"%ls blinkPast_ ", st);
-		err = blinkPast_->CheckLinksHomogeneity(st2);
-	}
-	return err;
-}
-
-bool Node::CheckLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2, Node* p3, Node* p4, Node* p5, Node* p6)
-{
-	wchar_t st2[256];
-	bool err = false;
-	if (p1 != nullptr) {
-		swprintf(st2, L"%ls 1 ", st);
-		err = p1->CheckLinksHomogeneityInVicinity(st2);
-	}
-	if (p2 != nullptr) {
-		swprintf(st2, L"%ls 2 ", st);
-		err = err || p2->CheckLinksHomogeneityInVicinity(st2);
-	}
-	if (p3 != nullptr) {
-		swprintf(st2, L"%ls 3 ", st);
-		err = err || p3->CheckLinksHomogeneityInVicinity(st2);
-	}
-	if (p4 != nullptr) {
-		swprintf(st2, L"%ls 4 ", st);
-		err = err || p4->CheckLinksHomogeneityInVicinity(st2);
-	}
-	if (p5 != nullptr) {
-		swprintf(st2, L"%ls 5 ", st);
-		err = err || p5->CheckLinksHomogeneityInVicinity(st2);
-	}
-	if (p6 != nullptr) {
-		swprintf(st2, L"%ls 6 ", st);
-		err = err || p6->CheckLinksHomogeneityInVicinity(st2);
-	}
-	return err;
 }
 
 /********************************************************************************************************************

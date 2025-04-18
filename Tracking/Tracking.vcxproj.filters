@@ -2,18 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="..\lib\tools\arrayType.cpp">
-      <Filter>Tools</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\tools\FltArray.cpp">
-      <Filter>Tools</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\tools\operators.cpp">
-      <Filter>Tools</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\tools\USrtArray.cpp">
-      <Filter>Tools</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\tracking\ChainNeighbor.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
@@ -49,18 +37,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\lib\tools\allDataLib.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tools\arrayType.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tools\FltArray.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tools\USrtArray.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\tracking\ChainNeighbor.h">
       <Filter>Tracking</Filter>
     </ClInclude>
@@ -109,9 +85,6 @@
     <None Include="Tracking_PALM.def" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Tools">
-      <UniqueIdentifier>{120fba11-7e8f-4026-86ec-d878e6706104}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Palm">
       <UniqueIdentifier>{0fe7f492-b518-409e-9b4f-143953d0e47f}</UniqueIdentifier>
     </Filter>

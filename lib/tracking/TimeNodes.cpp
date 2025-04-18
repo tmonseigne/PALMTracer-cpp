@@ -11,21 +11,6 @@ Class TimeNodes contains the Node objets for one time_.
 #include <cstdio>
 
 /********************************************************************************************************************
-Constructuor(int _time, int _nbNodes) of TimeNodes class.
-The current objets is at the time_ "time_".
-Create nNodes_ objets Node.
-********************************************************************************************************************/
-TimeNodes::TimeNodes(const int time, const int nNodes, Parameters* params)
-{
-	parameters_ = params;
-
-	nNodes_ = nNodes;
-	time_ = time;
-	nodes_ = new Node*[nNodes_];
-}
-
-
-/********************************************************************************************************************
 Destructuor() of TimeNodes class. 
 Delete all objets Node.
 ********************************************************************************************************************/
@@ -64,17 +49,15 @@ int TimeNodes::LinkNeighborsPresent() const
 linkBeforeAndAfter() for each structure at the time_ t, it builds the chained list of all the structures of the next 
 time_ (t+1) close to it. 
 ********************************************************************************************************************/
-int TimeNodes::LinkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes) const
+int TimeNodes::LinkNeighborsBeforeAndAfter(const TimeNodes& futures) const
 {
-	for (long presentNode = 0; presentNode < nNodes_; presentNode++) {
-		for (long futureNode = 0; futureNode < futureTimeNodes.nNodes_; futureNode++) {
-			if (nodes_[presentNode]->Distance(futureTimeNodes.nodes_[futureNode]) < parameters_->maxSpeed_) {
-				nodes_[presentNode]->neighborsFuture_ = new ChainNeighbor(futureTimeNodes.nodes_[futureNode], nodes_[presentNode]->neighborsFuture_,
-				                                                          parameters_);
-				nodes_[presentNode]->neighborsFutureCount_++;
-				futureTimeNodes.nodes_[futureNode]->neighborsPast_ = new ChainNeighbor(nodes_[presentNode], futureTimeNodes.nodes_[futureNode]->neighborsPast_,
-				                                                                       parameters_);
-				futureTimeNodes.nodes_[futureNode]->neighborsPastCount_++;
+	for (long present = 0; present < nNodes_; present++) {
+		for (long future = 0; future < futures.nNodes_; future++) {
+			if (nodes_[present]->Distance(futures.nodes_[future]) < parameters_->maxSpeed_) {
+				nodes_[present]->neighborsFuture_ = new ChainNeighbor(futures.nodes_[future], nodes_[present]->neighborsFuture_, parameters_);
+				nodes_[present]->neighborsFutureCount_++;
+				futures.nodes_[future]->neighborsPast_ = new ChainNeighbor(nodes_[present], futures.nodes_[future]->neighborsPast_, parameters_);
+				futures.nodes_[future]->neighborsPastCount_++;
 			}
 		}
 	}
@@ -86,18 +69,15 @@ int TimeNodes::LinkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes) const
 linkBlinkBeforeAndAfter() for each structure at the time_ t, it builds the chained list of all the structures of the next 
 time_ (t+dt) close to it. 
 ********************************************************************************************************************/
-int TimeNodes::LinkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes) const
+int TimeNodes::LinkNeighborsBlinkBeforeAndAfter(const TimeNodes& futures) const
 {
-	for (long presentNode = 0; presentNode < nNodes_; presentNode++) {
-		for (long futureNode = 0; futureNode < futureTimeNodes.nNodes_; futureNode++) {
-			if (nodes_[presentNode]->Distance(futureTimeNodes.nodes_[futureNode]) < parameters_->maxSpeed_) {
-				nodes_[presentNode]->neighborsBlinkFuture_ = new ChainNeighbor(futureTimeNodes.nodes_[futureNode], nodes_[presentNode]->neighborsBlinkFuture_,
-				                                                               parameters_);
-				nodes_[presentNode]->neighborsBlinkFutureCount_++;
-				futureTimeNodes.nodes_[futureNode]->neighborsBlinkPast_ = new ChainNeighbor(nodes_[presentNode],
-				                                                                            futureTimeNodes.nodes_[futureNode]->neighborsBlinkPast_,
-				                                                                            parameters_);
-				futureTimeNodes.nodes_[futureNode]->neighborsBlinkPastCount_++;
+	for (long present = 0; present < nNodes_; present++) {
+		for (long future = 0; future < futures.nNodes_; future++) {
+			if (nodes_[present]->Distance(futures.nodes_[future]) < parameters_->maxSpeed_) {
+				nodes_[present]->neighborsBlinkFuture_ = new ChainNeighbor(futures.nodes_[future], nodes_[present]->neighborsBlinkFuture_, parameters_);
+				nodes_[present]->neighborsBlinkFutureCount_++;
+				futures.nodes_[future]->neighborsBlinkPast_ = new ChainNeighbor(nodes_[present], futures.nodes_[future]->neighborsBlinkPast_, parameters_);
+				futures.nodes_[future]->neighborsBlinkPastCount_++;
 			}
 		}
 	}

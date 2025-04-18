@@ -28,7 +28,7 @@ getLikenessGlobal() compute the totalLikeness of hte system
 double TabTimesDistanceIntensity::GetLikenessGlobal() const
 {
 	double res = 0.;
-	for (int t = 0; t < nbTimes_; t++) { res += ((TimeNodesDistanceIntensity*)timeNodes_[t])->GetLikenessTime(nbTimes_); }
+	for (int t = 0; t < nbTimes_; ++t) { res += ((TimeNodesDistanceIntensity*)timeNodes_[t])->GetLikenessTime(nbTimes_); }
 
 	return res;
 }
@@ -58,7 +58,7 @@ void TabTimesDistanceIntensity::computeConstantes() const
 		stdIntensityComputing = 0;
 
 
-		for (int t = 0; t < nbTimes_ - 1; t++) {
+		for (int t = 0; t < nbTimes_ - 1; ++t) {
 			((TimeNodesDistanceIntensity*)timeNodes_[t])->ComputeConstantSigmas(stdIntensityComputing, countStdInt, stdMeanComputing, countStdMean,
 			                                                                        stdDistanceComputing, coutStdDist, false); //, true);
 		}
@@ -89,7 +89,7 @@ void TabTimesDistanceIntensity::updateConstantes() const
 	parameters_->stdIntensity_ = 0;
 	parameters_->stdMean_ = 0;
 	parameters_->covMeanIntensity_ = 0;
-	for (int t = 0; t < nbTimes_; t++) {
+	for (int t = 0; t < nbTimes_; ++t) {
 		const TimeNodes* local = timeNodes_[t];
 		for (int n = 0; n < local->nNodes_; n++) {
 			Node* node = local->nodes_[n];
@@ -133,7 +133,7 @@ int TabTimesDistanceIntensity::RunModel()
 
 		if (iLearning == 0) {
 			computeConstantes();
-			for (int t = 0; t < nbTimes_ - 1; t++) { ((TimeNodesDistanceIntensity*)timeNodes_[t])->MakeAllInitializationConnections(); }
+			for (int t = 0; t < nbTimes_ - 1; ++t) { ((TimeNodesDistanceIntensity*)timeNodes_[t])->MakeAllInitializationConnections(); }
 		}
 		else { updateConstantes(); }
 
@@ -149,7 +149,7 @@ int TabTimesDistanceIntensity::RunModel()
 
 			double deltaLikeness = 0;
 			for (int i = 0; i < Parameters::N_ITERATIONS; i++) {
-				for (int t = 0; t < nbTimes_ - 1; t++) { deltaLikeness += ((TimeNodesDistanceIntensity*)timeNodes_[t])->TryRandomChange(error); }
+				for (int t = 0; t < nbTimes_ - 1; ++t) { deltaLikeness += ((TimeNodesDistanceIntensity*)timeNodes_[t])->TryRandomChange(error); }
 			}
 			totalLikeness += deltaLikeness;
 

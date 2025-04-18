@@ -10,6 +10,8 @@ Class TabTimes contains several TabTimes objets for each time_ (nbTimes).
 
 #include "TabTimes.h"
 
+#include <algorithm>
+
 /********************************************************************************************************************
 Constructuor(int _nbTimes) of TabTimes class. 
 Create nbTimes objets TimeNodes.
@@ -25,7 +27,6 @@ TabTimes::TabTimes(Parameters* params)
 	nbTimes_ = 0;
 }
 
-
 /********************************************************************************************************************
 Destructuor() of TabTimes class. 
 Delete all objets TimeNodes.
@@ -36,12 +37,10 @@ TabTimes::~TabTimes()
 	delete [] timeNodes_;
 }
 
-
 /********************************************************************************************************************
 allocTabTimes() alloc the timeNodes array of nbTimes long 
 ********************************************************************************************************************/
 void TabTimes::allocTabTimes() { timeNodes_ = new TimeNodes*[nbTimes_]; }
-
 
 /********************************************************************************************************************
 initialisation() initialisation of the data in memory
@@ -68,14 +67,14 @@ Colonne 1         numero de la trace
 Colonne 2         numero de l'image, ou temps (commencant à 1 SVP)
 Colonne 3         X
 Colonne 4         Y
-(Colonne 5        z_)
+(Colonne 5        Z)
 Colonne 5 ou 6         nombre de pixels de l'objet
 Colonne 6 ou 7         intensité intégrée
 ********************************************************************************************************************/
 int TabTimes::printConnectionsASCII_trc() const
 {
 	unsigned long index = 0;
-	for (int t = 0; t < nbTimes_; t++) {
+	for (int t = 0; t < nbTimes_; ++t) {
 		const TimeNodes* localTimeNodes = timeNodes_[t];
 		for (int n = 0; n < localTimeNodes->nNodes_; n++) {
 			Node* node = localTimeNodes->nodes_[n];
@@ -159,11 +158,9 @@ int TabTimes::readPointsList()
 			str->SetMean(parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 8] / (unsigned long)parameters_->points_[index + node *
 				             Parameters::N_SEG_PARAMS + 9]);
 
-			if (parameters_->maxX_ < (*localTimeNodes)(node)->info_->GetX()) { parameters_->maxX_ = (*localTimeNodes)(node)->info_->GetX(); }
-			if (parameters_->maxY_ < (*localTimeNodes)(node)->info_->GetY()) { parameters_->maxY_ = (*localTimeNodes)(node)->info_->GetY(); }
-			if (Parameters::N_DIM == 3) {
-				if (parameters_->maxZ_ < (*localTimeNodes)(node)->info_->GetZ()) { parameters_->maxZ_ = (*localTimeNodes)(node)->info_->GetZ(); }
-			}
+			parameters_->maxX_ = std::max(parameters_->maxX_, (*localTimeNodes)(node)->info_->GetX());
+			parameters_->maxY_ = std::max(parameters_->maxY_, (*localTimeNodes)(node)->info_->GetY());
+			if (Parameters::N_DIM == 3) { parameters_->maxZ_ = std::max(parameters_->maxZ_, (*localTimeNodes)(node)->info_->GetZ()); }
 		}
 
 		//Sorting the nodes by the intensity for one time_
@@ -202,7 +199,7 @@ int linkNeighborsPresent() to link of the neighbors in the presents of all nodes
 int TabTimes::linkNeighborsPresent() const
 {
 	int ret;
-	for (int t = 0; t < nbTimes_; t++) { if ((ret = timeNodes_[t]->LinkNeighborsPresent()) < 0) { return ret; } }
+	for (int t = 0; t < nbTimes_; ++t) { if ((ret = timeNodes_[t]->LinkNeighborsPresent()) < 0) { return ret; } }
 	return RET_OK;
 }
 
@@ -213,7 +210,7 @@ int linkNeighborsBeforeAndAfter() to link of the neighbors in the past and in th
 int TabTimes::linkNeighborsBeforeAndAfter() const
 {
 	int ret;
-	for (int t = 0; t < nbTimes_ - 1; t++) { if ((ret = timeNodes_[t]->LinkNeighborsBeforeAndAfter(*timeNodes_[t + 1])) < 0) { return ret; } }
+	for (int t = 0; t < nbTimes_ - 1; ++t) { if ((ret = timeNodes_[t]->LinkNeighborsBeforeAndAfter(*timeNodes_[t + 1])) < 0) { return ret; } }
 	return RET_OK;
 }
 
@@ -224,7 +221,7 @@ all times for blinking purpose
 int TabTimes::linkNeighborsBlinkBeforeAndAfter() const
 {
 	int ret;
-	for (int t = 0; t < nbTimes_; t++) {
+	for (int t = 0; t < nbTimes_; ++t) {
 		for (long dt = 2; dt <= Parameters::N_TEMPORAL_WINDOWS; dt++) {
 			if (t + dt < nbTimes_) { if ((ret = timeNodes_[t]->LinkNeighborsBlinkBeforeAndAfter(*timeNodes_[t + dt])) < 0) { return ret; } }
 		}
@@ -238,7 +235,7 @@ int sortByIntensityAllNeighbors() sort by intensity of the node neighbors of eac
 int TabTimes::sortByIntensityAllNeighbors() const
 {
 	int ret;
-	for (int t = 0; t < nbTimes_; t++) { if ((ret = timeNodes_[t]->SortByIntensityAllNeighbors()) < 0) { return ret; } }
+	for (int t = 0; t < nbTimes_; ++t) { if ((ret = timeNodes_[t]->SortByIntensityAllNeighbors()) < 0) { return ret; } }
 	return RET_OK;
 }
 

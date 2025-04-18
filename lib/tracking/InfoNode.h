@@ -12,7 +12,7 @@
 class InfoNode
 {
 public:
-	InfoNode(Parameters* params);
+	explicit InfoNode(Parameters* params): parameters_(params){ }
 	~InfoNode() = default;
 
 	Parameters* parameters_;
@@ -25,9 +25,6 @@ public:
 	virtual double GetY() { return T_ERR_OOP; }
 	virtual double GetZ() { return T_ERR_OOP; }
 	virtual double GetIntensity() { return T_ERR_OOP; }
-	virtual unsigned long GetIndex() { return T_ERR_OOP; }
-	virtual unsigned long SizeofInfoData() { return T_ERR_OOP; }
-	virtual void* GetPtrInfoData() { return nullptr; }
 
 	virtual void SetSurface(long s) { }
 	virtual void SetX(double x) { }
@@ -49,7 +46,7 @@ class InfoNode2D : public InfoNode
 public:
 	InfoNode2D(Parameters* params): InfoNode(params) { }
 	double Distance(InfoNode* node) override;
-	double Distance(InfoNode* i1, InfoNode* i2) override;
+	double Distance(InfoNode* n1, InfoNode* n2) override;
 	info_2d info_;
 	double GetMean() override;
 	double GetX() override;
@@ -57,9 +54,6 @@ public:
 	double GetZ() override;
 	double GetIntensity() override;
 	long GetSurface() override;
-	unsigned long GetIndex() override;
-	unsigned long SizeofInfoData() override;
-	void* GetPtrInfoData() override;
 
 	void SetSurface(long s) override;
 	void SetX(double x) override;
@@ -93,9 +87,6 @@ public:
 	double GetZ() override;
 	double GetIntensity() override;
 	long GetVolume() override;
-	unsigned long GetIndex() override;
-	unsigned long SizeofInfoData() override;
-	void* GetPtrInfoData() override;
 
 	void SetSurface(long s) override;
 	void SetX(double x) override;
