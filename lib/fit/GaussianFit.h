@@ -1,20 +1,13 @@
 #pragma once
 #include <vector>
 
-constexpr double EPSILON_1 = 1e-6;
-constexpr double EPSILON_2 = 1e-6;
-constexpr double EPSILON_3 = 1e-5;
-constexpr double EPSILON_4 = 1e-2;
-constexpr double LAMBDA_0 = 1e-2;
-constexpr double LAMBDA_EPSILON_MAX = 1e7;
-constexpr double LAMBDA_EPSILON_MIN = 1e-7;
-constexpr double LAMBDA_UP_FAC = 11;
-constexpr double LAMBDA_DN_FAC = 9;
-
 class GaussianFit
 {
 public:
 	size_t n_, nParam_, nParam2_;
+	static constexpr size_t N_ITER = 10;
+	static constexpr double EPSILON_1 = 1e-6, EPSILON_2 = 1e-6, EPSILON_3 = 1e-5, EPSILON_4 = 1e-2;
+	static constexpr double LAMBDA_0 = 1e-2, LAMBDA_EPSILON_MAX = 1e7, LAMBDA_EPSILON_MIN = 1e-7, LAMBDA_UP = 11, LAMBDA_DN = 9;
 
 	GaussianFit() : n_(0), nParam_(0), nParam2_(0) { }
 	virtual ~GaussianFit() = default;

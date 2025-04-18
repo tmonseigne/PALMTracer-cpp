@@ -36,7 +36,7 @@ void GaussianFit2D::initP(const double x, const double y)
 
 void GaussianFit2D::Run(const unsigned short* image, const size_t sizeX, const size_t sizeY,
                         double& x, double& y, double& intensity, const double& sigma, double& offset,
-                        double& rss, const size_t iterNum, size_t roi)
+                        double& rss, size_t roi)
 {
 	if (roi % 2 == 0) { roi--; } // Not present in GPU original file why ?
 	n_ = roi * roi;
@@ -103,11 +103,11 @@ void GaussianFit2D::Run(const unsigned short* image, const size_t sizeX, const s
 				std::copy_n(p_try.begin(), nParam_, p_.begin()); // accept p_try
 
 				x2 = lm_matx(t, p_.data(), dat, weight, alpha.data(), beta.data(), hat);
-				lambda = std::max(lambda / LAMBDA_DN_FAC, LAMBDA_EPSILON_MIN);
+				lambda = std::max(lambda / LAMBDA_DN, LAMBDA_EPSILON_MIN);
 			}
 			else {           // it IS NOT better
 				x2 = x2_old; // do not accept a_try
-				lambda = std::min(lambda * LAMBDA_UP_FAC, LAMBDA_EPSILON_MAX);
+				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_EPSILON_MAX);
 			}
 
 			m = 0;
@@ -119,7 +119,7 @@ void GaussianFit2D::Run(const unsigned short* image, const size_t sizeX, const s
 			m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::abs(b); }));
 
 			if (m < EPSILON_1 && iteration > 2) { stop = true; }
-			if (iteration >= iterNum) { stop = true; }
+			if (iteration >= N_ITER) { stop = true; }
 		}
 
 		x = p_[1];

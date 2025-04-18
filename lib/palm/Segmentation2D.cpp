@@ -24,8 +24,9 @@ void Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double* 
 	std::vector bounds(infos_.size(), false);
 	if (useParam[12] == 1) {
 		for (size_t i = 0; i < height_; ++i) {
-			if (seg[i * width_] != 0) { bounds[seg[i * width_]] = true; }
-			if (seg[i * width_ + width_ - 1] != 0) { bounds[seg[i * width_ + width_ - 1]] = true; }
+			const auto Idx = i * width_;
+			if (seg[Idx] != 0) { bounds[seg[Idx]] = true; }
+			if (seg[Idx + width_ - 1] != 0) { bounds[seg[Idx + width_ - 1]] = true; }
 		}
 		for (size_t i = 1; i < width_ - 1; ++i) {
 			if (seg[i] != 0) { bounds[seg[i]] = true; }
@@ -321,14 +322,14 @@ std::vector<double> &image: input image
 std::vector<unsigned short> &localMax: local maximum
 double threshold: a point to be considered as a local maximum have to be > to threshold.
 ********************************************************************************************************************/
-void Segmentation2D::getLocalMax(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double threshold)
+void Segmentation2D::getLocalMax(const std::vector<double>& potential, std::vector<unsigned short>& seg)
 {
 	std::ranges::fill(seg, 0);
 	unsigned short label = 1;
 
 	for (size_t i = 0, idx = 0; i < height_; ++i) {
 		for (size_t j = 0; j < width_; ++j, ++idx) {
-			if (potential[idx] > threshold) {
+			if (potential[idx] > THRESHOLD) {
 				bool err = false;
 				//test if it is a new maximum from the vicinity
 				for (size_t ii = i == 0 ? 0 : i - 1; ii <= std::min(i + 1, height_ - 1) && !err; ++ii) {
@@ -371,7 +372,7 @@ struct Compare
 };
 
 /********************************************************************************************************************/
-void Segmentation2D::watershed(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double threshold) const
+void Segmentation2D::watershed(const std::vector<double>& potential, std::vector<unsigned short>& seg) const
 {
 	std::priority_queue<std::pair<double, coord_2d>, std::vector<std::pair<double, coord_2d>>, Compare> heap;
 
@@ -415,7 +416,7 @@ void Segmentation2D::watershed(const std::vector<double>& potential, std::vector
 				if ((dx == 0 && dy == 0) || ny < 0 || ny >= static_cast<int>(width_)) { continue; }
 
 				const size_t Nid = nx * width_ + ny;
-				if (potential[Nid] > threshold && seg[Nid] == 0) {
+				if (potential[Nid] > THRESHOLD && seg[Nid] == 0) {
 					double newCle = -potential[Nid] + static_cast<double>(it) * EPSILON;
 					heap.emplace(newCle, coord_2d{nx, ny});
 					seg[Nid] = seg[p.first * width_ + p.second];
@@ -436,14 +437,13 @@ double thresholdRatio: value 0<= X <=1. Makes a fusion to minimize the oversegme
 						if X=1 no watershed
 return value: number of detected structures
 ********************************************************************************************************************/
-void Segmentation2D::WatershedIntelligent(const std::vector<double>& potential, std::vector<unsigned short>& seg,
-                                          const double threshold, const double thresholdRatio)
+void Segmentation2D::WatershedIntelligent(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double thresholdRatio)
 {
-	getLocalMax(potential, seg, threshold); //first, find the local maximum to set the different germinates
-	watershed(potential, seg, threshold);   //first watershed
-	if (static_cast<int>(thresholdRatio) == 0) { return; }
-	filterStructureWS(potential, seg, thresholdRatio); //filter the germinates to minimize the oversegmentation
-	watershed(potential, seg, threshold);              //second watershed
+	getLocalMax(potential, seg);                           //first, find the local maximum to set the different germinates
+	watershed(potential, seg);                             //first watershed
+	if (static_cast<int>(thresholdRatio) == 0) { return; } // Ratio test
+	filterStructureWS(potential, seg, thresholdRatio);     //filter the germinates to minimize the oversegmentation
+	watershed(potential, seg);                             //second watershed
 }
 
 #undef EPSILON

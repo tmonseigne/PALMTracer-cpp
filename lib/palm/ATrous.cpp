@@ -29,33 +29,6 @@ int ATrous::testSizes2D(bool* planesToUse, size_t& nbPlane) const
 	return static_cast<int>(nbPlane);
 }
 
-
-void ATrous::projectionV02D(const unsigned short* image, const bool realProj)
-{
-	//Makes a projection in V0 space to be in the apropriate condition of the multiresolution, 
-	//realProj make be set to 1 if realProj=0 it just copies the data from image to destData
-	if (realProj) {
-		constexpr std::array Tab = {0.1666666666, 0.6666666666666, 0.16666666666};
-		for (size_t i = 0; i < height_; ++i) {
-			for (size_t j = 0; j < width_; ++j) {
-				const size_t Idx = offset(i, j);
-				double acc = 0.0;
-				for (int di = -1; di <= 1; ++di) {
-					for (int dj = -1; dj <= 1; ++dj) {
-						const size_t SourceIdx = offsetTest(static_cast<int>(i) + di, static_cast<int>(j) + dj);
-						acc += image[SourceIdx] * Tab[di + 1] * Tab[dj + 1];
-					}
-				}
-				wDecomp_[0][Idx] = acc;
-			}
-		}
-	}
-	else {
-		std::transform(image, image + size_, wDecomp_[0].begin(),
-		               [](const unsigned short val) { return static_cast<double>(val); });
-	}
-}
-
 void ATrous::b3SplineFiltering2D(const std::vector<double>& in, std::vector<double>& out, const size_t plane)
 {
 	//Makes the projection in V(x) with hte knowlage of V(x-1)
@@ -99,7 +72,7 @@ void ATrous::b3SplineFiltering2D(const std::vector<double>& in, std::vector<doub
 	}
 }
 
-int ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t height, const size_t width, bool* planesToUse, size_t nbPlane, const bool realProj)
+int ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t height, const size_t width, bool* planesToUse, size_t nbPlane)
 {
 	/**
 		WAVELET TRANSFORM WITH "A TROUS" ALGORITHM
@@ -131,7 +104,7 @@ int ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t heig
 	if ((ret = testSizes2D(planesToUse, nbPlane)) < 0) { return ret; }
 
 	//do the initialisation of multiresolution algorthm (initialisation of the first wavelet plane) signal is projected in V0 space
-	projectionV02D(image, realProj);
+	std::transform(image, image + size_, wDecomp_[0].begin(), [](const unsigned short val) { return static_cast<double>(val); });
 
 	//Projection of the input signal in each wavelet space. the signal waveletPlanes[x] is the projection of the input signal in the W(x+1) space
 	for (size_t i = 0; i < nbPlane - 1; ++i) {

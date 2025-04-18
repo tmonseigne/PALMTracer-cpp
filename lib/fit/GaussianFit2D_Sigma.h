@@ -19,7 +19,7 @@ public :
 	}
 
 	void Run(const unsigned short* image, size_t sizeX, size_t sizeY, double& x, double& y, double& intensity,
-	         double& sigma, double& offset, double& rss, size_t iterNum, size_t roi);
+	         double& sigma, double& offset, double& rss, size_t roi);
 
 protected:
 	double lm_matx(const std::vector<size_t>& t, const double* p, const std::vector<double>& dat, const std::vector<double>& weight,

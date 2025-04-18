@@ -49,7 +49,7 @@ Palm::Palm(unsigned short* image, double* points, const size_t pointsListSize, c
 int Palm::Processing()
 {
 	int ret;
-	if ((ret = aTrousPub_.ATrousDecomposition2D(image_, height_, width_, planesToUseB_.data(), nbPlane_, false)) < 0) { return ret; }
+	if ((ret = aTrousPub_.ATrousDecomposition2D(image_, height_, width_, planesToUseB_.data(), nbPlane_)) < 0) { return ret; }
 
 	for (size_t j = 0; j < size_; ++j) {
 		if (aTrousPub_.wDecomp_[waveletNo_][j] > thresholdVal_) {
@@ -62,12 +62,12 @@ int Palm::Processing()
 		}
 	}
 
-	segmentPub_.WatershedIntelligent(outputPub_, segPub_, 1e-8, watershedRatio_);
+	segmentPub_.WatershedIntelligent(outputPub_, segPub_, watershedRatio_);
 	segmentPub_.ComputeStatistics(outputPub_, segPub_, aTrousPub_.wDecomp_[waveletNo_], gaussFit_);
 	if (volMin_ > 0. || intMin_ > 0.) { segmentPub_.FilterData(segPub_, structFiltParam_.data(), structFiltParamUse_.data()); }
 
 	const auto& P = segmentPub_.GetInfos();
-
+	constexpr size_t N_Iter = 10;
 	for (size_t i = 0; i < std::min<size_t>(P.size(), nPointsMaxPerPlane_ - 1); ++i) {
 		initGaussianFitParam(P[i].moment_.y, P[i].moment_.x, initSigmaX_, initSigmaY_, initTheta_);
 		switch (gaussFit_) {
@@ -83,7 +83,7 @@ int Palm::Processing()
 
 				// Gaussian fit of 2D
 				GaussianFit2D fit;
-				fit.Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, offset_, rss_, 10, roi_);
+				fit.Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, offset_, rss_, roi_);
 				sigmaX_ = initSigmaX_;
 				sigmaY_ = initSigmaX_;
 				theta_ = 0;
@@ -93,7 +93,7 @@ int Palm::Processing()
 			case 2: {
 				// Gaussian fit of 2D
 				GaussianFit2D_Sigma fit;
-				fit.Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, offset_, rss_, 10, roi_);
+				fit.Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, offset_, rss_, roi_);
 				sigmaY_ = sigmaX_;
 				theta_ = 0;
 				break;
@@ -103,14 +103,14 @@ int Palm::Processing()
 
 				// Gaussian fit of 3D
 				GaussianFit3D fit;
-				fit.Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, 10, roi_);
+				fit.Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, roi_);
 				break;
 			}
 
 			case 4: {
 				// Gaussian fit of 3D
 				GaussianFit3D_Theta fit;
-				fit.Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, 140, roi_);
+				fit.Run(image_, width_, height_, x_, y_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_, roi_);
 				break;
 			}
 		}

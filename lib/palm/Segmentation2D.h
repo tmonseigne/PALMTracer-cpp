@@ -16,9 +16,10 @@ public:
 	void FilterData(std::vector<unsigned short>& seg, const double* param, const unsigned short* useParam);
 	std::vector<Info2D> GetInfos() const { return infos_; }
 
-	void WatershedIntelligent(const std::vector<double>& potential, std::vector<unsigned short>& seg, double threshold, double thresholdRatio);
+	void WatershedIntelligent(const std::vector<double>& potential, std::vector<unsigned short>& seg, double thresholdRatio);
 
 private:
+	static constexpr double THRESHOLD = 1e-8;
 	size_t height_, width_, size_;
 	std::vector<Info2D> infos_;
 
@@ -26,6 +27,6 @@ private:
 	void desalloc();
 
 	void filterStructureWS(const std::vector<double>& potential, std::vector<unsigned short>& seg, double thresholdRatio);
-	void getLocalMax(const std::vector<double>& potential, std::vector<unsigned short>& seg, double threshold);
-	void watershed(const std::vector<double>& potential, std::vector<unsigned short>& seg, double threshold) const;
+	void getLocalMax(const std::vector<double>& potential, std::vector<unsigned short>& seg);
+	void watershed(const std::vector<double>& potential, std::vector<unsigned short>& seg) const;
 };

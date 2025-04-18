@@ -8,6 +8,7 @@ class GaussianFit3D_Theta final : GaussianFit
 public:
 	static constexpr size_t N_PARAM = 7; // I0, x0, y0, sigmaX, sigmaY, theta, offset
 	static constexpr size_t N_PARAM2 = N_PARAM * N_PARAM;
+	static constexpr size_t N_ITER2 = 140;
 
 	std::array<double, N_PARAM> pMin_, p_, pMax_; // Possible maintenant
 
@@ -19,7 +20,7 @@ public:
 	}
 
 	void Run(const unsigned short* image, size_t sizeX, size_t sizeY, double& x, double& y, double& intensity,
-	         double& sigmaX, double& sigmaY, double& theta, double& offset, double& rss, size_t iterNum, size_t roi);
+	         double& sigmaX, double& sigmaY, double& theta, double& offset, double& rss, size_t roi);
 
 protected:
 	void initP(double x, double y, double sigmaX, double sigmaY, double theta);

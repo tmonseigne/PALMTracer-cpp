@@ -11,7 +11,7 @@ public:
 	ATrous() = default;
 	~ATrous() = default;
 
-	int ATrousDecomposition2D(const unsigned short* image, size_t height, size_t width, bool* planesToUse, size_t nbPlane, bool realProj);
+	int ATrousDecomposition2D(const unsigned short* image, size_t height, size_t width, bool* planesToUse, size_t nbPlane);
 
 	//2D transform:
 private:
@@ -19,6 +19,5 @@ private:
 	[[nodiscard]] size_t offsetTest(int i, int j) const;
 	[[nodiscard]] size_t offset(size_t i, size_t j) const;
 	int testSizes2D(bool* planesToUse, size_t& nbPlane) const;
-	void projectionV02D(const unsigned short* image, bool realProj);
 	void b3SplineFiltering2D(const std::vector<double>& in, std::vector<double>& out, size_t plane);
 };
