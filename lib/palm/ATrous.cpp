@@ -24,7 +24,7 @@ int ATrous::testSizes2D(bool* planesToUse, size_t& nbPlane) const
 	std::fill(planesToUse + wDecomp_.size(), planesToUse + 9, false);
 	if (nbPlane < 2) { return W_SIZE_ERR; }
 	while (height_ <= twoToThe(nbPlane + 1) || width_ <= twoToThe(nbPlane + 1)) {
-		if (--nbPlane < 2) { return W_SIZE_ERR; } // s�curit� si boucle infinie
+		if (nbPlane-- <= 2) { return W_SIZE_ERR; } // s�curit� si boucle infinie
 	}
 	return static_cast<int>(nbPlane);
 }
@@ -56,18 +56,20 @@ void ATrous::b3SplineFiltering2D(const std::vector<double>& in, std::vector<doub
 	};
 
 	// Convolution horizontale (Y-axis)
-	for (size_t i = 0; i < height_; ++i) {
-		for (size_t j = 0; j < width_; ++j) {
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(height_); ++i) {
+		for (int j = 0; j < static_cast<int>(width_); ++j) {
 			const size_t Idx = offset(i, j);
-			tmp_[Idx] = convolutionY(Idx, static_cast<int>(i), static_cast<int>(j));
+			tmp_[Idx] = convolutionY(Idx, i, j);
 		}
 	}
 
 	// Convolution verticale (X-axis)
-	for (size_t i = 0; i < height_; ++i) {
-		for (size_t j = 0; j < width_; ++j) {
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(height_); ++i) {
+		for (int j = 0; j < static_cast<int>(width_); ++j) {
 			const size_t Idx = offset(i, j);
-			out[Idx] = convolutionX(Idx, static_cast<int>(i), static_cast<int>(j));
+			out[Idx] = convolutionX(Idx, i, j);
 		}
 	}
 }
@@ -78,7 +80,7 @@ int ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t heig
 		WAVELET TRANSFORM WITH "A TROUS" ALGORITHM
 
 		Makes the transformation of the 2D signal "image".
-		"image" must be a USrtArray array of 2 dimentions ( 2D image).
+		"image" must be a unsigned short array of 2 dimentions ( 2D image).
 
 
 		The algorithm makes a decompostion of the input signal in "outputData.size(2)" wavelet planes ("outputData").

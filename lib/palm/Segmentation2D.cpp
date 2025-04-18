@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <utility> // std::pair
 
-#define EPSILON 0.0000001f
+constexpr double EPSILON = 1e-7;
 
 void Segmentation2D::alloc(const size_t nbStruct)
 {
@@ -445,5 +445,3 @@ void Segmentation2D::WatershedIntelligent(const std::vector<double>& potential, 
 	filterStructureWS(potential, seg, thresholdRatio);     //filter the germinates to minimize the oversegmentation
 	watershed(potential, seg);                             //second watershed
 }
-
-#undef EPSILON
