@@ -116,9 +116,6 @@
     <ClInclude Include="..\lib\tools\miscTools.h">
       <Filter>Tools</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tools\NoError.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\tools\USrtArray.h">
       <Filter>Tools</Filter>
     </ClInclude>

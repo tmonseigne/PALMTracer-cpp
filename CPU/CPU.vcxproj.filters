@@ -29,9 +29,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h" />
-    <ClInclude Include="..\lib\tools\NoError.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\fit\GaussianFit.h">
       <Filter>Fit</Filter>
     </ClInclude>
@@ -59,14 +56,12 @@
     <ClInclude Include="..\lib\palm\Segmentation2D.h">
       <Filter>Palm</Filter>
     </ClInclude>
+    <ClInclude Include="..\lib\Constants.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CPU_PALM.def" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Tools">
-      <UniqueIdentifier>{5dc05904-0bd2-4808-b6f9-dfedecdd4251}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Fit">
       <UniqueIdentifier>{c74675e3-662a-49e2-b547-068d9686f118}</UniqueIdentifier>
     </Filter>

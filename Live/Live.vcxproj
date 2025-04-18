@@ -207,7 +207,6 @@
     <ClInclude Include="..\lib\tools\arrayType.h" />
     <ClInclude Include="..\lib\tools\FltArray.h" />
     <ClInclude Include="..\lib\tools\miscTools.h" />
-    <ClInclude Include="..\lib\tools\NoError.h" />
     <ClInclude Include="..\lib\tools\USrtArray.h" />
     <ClInclude Include="PALM.h" />
     <ClInclude Include="PALM_Class.h" />

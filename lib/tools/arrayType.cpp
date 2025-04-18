@@ -5,7 +5,7 @@
 
 #ifdef		_ARRAY_TYPE_
 
-#include "NoError.h"
+#include "Constants.hpp"
 
 //*****************		CONSTRUCTORS		DESTRUCTOR		ALLOC		**************
 ArrayType::ArrayType()

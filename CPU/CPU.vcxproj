@@ -106,6 +106,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <OutputFile>../PALM\CPU_PALM.dll</OutputFile>
@@ -121,6 +122,7 @@
       <TargetMachine>MachineX64</TargetMachine>
       <AdditionalDependencies>gsl.lib;gslcblas.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <LargeAddressAware>true</LargeAddressAware>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -138,6 +140,7 @@
     <None Include="CPU_PALM.def" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\lib\Constants.hpp" />
     <ClInclude Include="..\lib\fit\GaussianFit.h" />
     <ClInclude Include="..\lib\fit\GaussianFit2D.h" />
     <ClInclude Include="..\lib\fit\GaussianFit2D_Sigma.h" />
@@ -147,7 +150,6 @@
     <ClInclude Include="..\lib\palm\Palm.h" />
     <ClInclude Include="..\lib\palm\Info2D.h" />
     <ClInclude Include="..\lib\palm\Segmentation2D.h" />
-    <ClInclude Include="..\lib\tools\NoError.h" />
     <ClInclude Include="main.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

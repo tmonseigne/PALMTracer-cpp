@@ -59,9 +59,6 @@
     <ClInclude Include="..\lib\tools\FltArray.h">
       <Filter>Tools</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tools\NoError.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\tools\USrtArray.h">
       <Filter>Tools</Filter>
     </ClInclude>
@@ -110,6 +107,7 @@
     <ClInclude Include="..\lib\palm\Info2D.h">
       <Filter>Palm</Filter>
     </ClInclude>
+    <ClInclude Include="..\lib\Constants.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Tracking.def" />

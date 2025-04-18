@@ -103,12 +103,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\lib\Constants.hpp" />
     <ClInclude Include="..\lib\palm\Info2D.h" />
     <ClInclude Include="..\lib\palm\Info3D.h" />
     <ClInclude Include="..\lib\tools\allDataLib.h" />
     <ClInclude Include="..\lib\tools\arrayType.h" />
     <ClInclude Include="..\lib\tools\FltArray.h" />
-    <ClInclude Include="..\lib\tools\NoError.h" />
     <ClInclude Include="..\lib\tools\USrtArray.h" />
     <ClInclude Include="..\lib\tracking\chain_neighbor.h" />
     <ClInclude Include="..\lib\tracking\closerNeighbors\nodes_closer_neighbors.h" />

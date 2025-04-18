@@ -38,10 +38,4 @@ private:
 	Segmentation2D segmentPub_;
 	std::array<bool, N_PLANES> planesToUseB_;
 	size_t nbPlane_;
-
-	// Gaussian Fit Parameters
-	double y_, x_, intensity_, sigmaX_, sigmaY_, theta_, offset_, rss_;
-
-	void initGaussianFitParam(double x, double y, double sigmaX, double sigmaY, double theta);
-	void fillPointList(const Info2D& data);
 };

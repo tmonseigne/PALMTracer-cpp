@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <array>
 
-#include "tools/NoError.h"
+#include "Constants.hpp"
 
 
 size_t ATrous::offsetTest(const int i, const int j) const
