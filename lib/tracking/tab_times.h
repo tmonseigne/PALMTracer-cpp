@@ -5,7 +5,7 @@
 #pragma once
 
 #include <stdlib.h>
-#include "general.h"
+#include "Parameters.h"
 #include "time_nodes.h"
 #include "tools/allDataLib.h"
 //#include "tracking_2D.h"
@@ -19,9 +19,7 @@ protected:
 	int linkNeighborsBeforeAndAfter() const;
 	int linkNeighborsBlinkBeforeAndAfter() const;
 	int sortByIntensityAllNeighbors() const;
-	int readStatFile();
 	int readPointsList();
-	int printConnectionsASCII() const;
 	int printConnectionsASCII_trc() const;
 	void setColorToTrackedStructures() const;
 	void setIndexToTrackedStructures() const;
@@ -31,12 +29,12 @@ protected:
 
 public:
 	int giveResult();
-	TabTimes(PublicParameters* publicParameters);
+	TabTimes(Parameters* publicParameters);
 	virtual ~TabTimes();
 	TimeNodes* operator()(int i) const;
 	TimeNodes** operator[](int i) const;
 	int nbTimes;
-	PublicParameters* publicParameters;
+	Parameters* publicParameters;
 
 	int initialisation();
 	virtual int runModel() { return T_ERR_OOP; };

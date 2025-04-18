@@ -14,13 +14,13 @@ Class TabTimes contains several TabTimes objets for each time (nbTimes).
 Constructuor(int _nbTimes) of TabTimes class. 
 Create nbTimes objets TimeNodes.
 ********************************************************************************************************************/
-TabTimes::TabTimes(PublicParameters* _publicParameters)
+TabTimes::TabTimes(Parameters* _publicParameters)
 {
 	publicParameters = _publicParameters;
-	publicParameters->nbNodeAllocated = 0;
-	publicParameters->nbNodeDeallocated = 0;
-	publicParameters->nbChainNeighborDeallocated = 0;
-	publicParameters->nbChainNeighborAllocated = 0;
+	publicParameters->nNodeAllocated_ = 0;
+	publicParameters->nNodeDeallocated_ = 0;
+	publicParameters->nChainNeighborDeallocated_ = 0;
+	publicParameters->nChainNeighborAllocated_ = 0;
 	timeNodes = NULL;
 	nbTimes = 0;
 }
@@ -49,58 +49,16 @@ initialisation() initialisation of the data in memory
 int TabTimes::initialisation()
 {
 	int ret;
-	if (publicParameters->statFile[0] != L'\0') { if ((ret = readStatFile()) < 0) { return ret; } }
-	else if ((ret = readPointsList()) < 0) { return ret; }
+	if ((ret = readPointsList()) < 0) { return ret; }
 
 	if ((ret = linkNeighborsPresent()) < 0) { return ret; }
 	if ((ret = linkNeighborsBeforeAndAfter()) < 0) { return ret; }
 	if ((ret = sortByIntensityAllNeighbors()) < 0) { return ret; }
 
-	if (publicParameters->nbTemporalWindows > 1) { if ((ret = linkNeighborsBlinkBeforeAndAfter()) < 0) { return ret; } }
+	if (publicParameters->N_TEMPORAL_WINDOWS > 1) { if ((ret = linkNeighborsBlinkBeforeAndAfter()) < 0) { return ret; } }
 
 	checkLinksHomogeneity(L"initalisation");
 	srand((unsigned)time(NULL));
-	return RET_OK;
-}
-
-
-/********************************************************************************************************************
-printConnectionsASCII() print the result of the connections in a ASCII file as Daniel Choquet has defined:
-Colonne 1         numero de la trace
-Colonne 2         numero de l'image, ou temps (commencant à 1 SVP)
-Colonne 3         X
-Colonne 4         Y
-(Colonne 5        Z)
-Colonne 5 ou 6         nombre de pixels de l'objet
-Colonne 6 ou 7         intensité intégrée
-********************************************************************************************************************/
-int TabTimes::printConnectionsASCII() const
-{
-	FILE* stream;
-	if ((stream = _wfopen(publicParameters->fileResASCII, L"w")) == NULL) {
-		wprintf(L"The file %ls can not be opened\n", publicParameters->fileResASCII);
-		return T_ERR_OPENNING_FILE;
-	}
-	for (int t = 0; t < nbTimes; t++) { const TimeNodes* _localTimeNodes = timeNodes[t];
-		for (int n = 0; n < _localTimeNodes->nbNodes; n++) {
-			Node* node = _localTimeNodes->tabNodes[n];
-			if (node->connectionPast == NULL && node->trackedStructureIndex > 0) {
-				for (const Node* nodeConnection = node; nodeConnection != NULL; nodeConnection = nodeConnection->connectionFuture) {
-					fprintf(stream, "%d\t", node->trackedStructureIndex);
-					fprintf(stream, "%d\t", nodeConnection->time + 1);
-					fprintf(stream, "%f\t", nodeConnection->info->getX());
-					fprintf(stream, "%f\t", nodeConnection->info->getY());
-					if (publicParameters->nbDim == 3) {
-						fprintf(stream, "%f\t", nodeConnection->info->getZ());
-						fprintf(stream, "%d\t", nodeConnection->info->getVolume());
-					}
-					else { fprintf(stream, "%d\t", nodeConnection->info->getSurface()); }
-					fprintf(stream, "%f\n", nodeConnection->info->getIntensity());
-				}
-			}
-		}
-	}
-	fclose(stream);
 	return RET_OK;
 }
 
@@ -122,104 +80,30 @@ int TabTimes::printConnectionsASCII_trc() const
 			Node* node = _localTimeNodes->tabNodes[n];
 			if (node->connectionPast == NULL && node->trackedStructureIndex > 0) {
 				for (const Node* nodeConnection = node; nodeConnection != NULL; nodeConnection = nodeConnection->connectionFuture) {
-					publicParameters->trc[index++] = node->trackedStructureIndex;
-					publicParameters->trc[index++] = nodeConnection->time + 1;
-					publicParameters->trc[index++] = nodeConnection->info->getX();
-					publicParameters->trc[index++] = nodeConnection->info->getY();
+					publicParameters->tracks_[index++] = node->trackedStructureIndex;
+					publicParameters->tracks_[index++] = nodeConnection->time + 1;
+					publicParameters->tracks_[index++] = nodeConnection->info->getX();
+					publicParameters->tracks_[index++] = nodeConnection->info->getY();
 
-					if (publicParameters->nbDim == 3) {
-						publicParameters->trc[index++] = nodeConnection->info->getZ();
-						publicParameters->trc[index++] = nodeConnection->info->getVolume();
+					if (publicParameters->N_DIM == 3) {
+						publicParameters->tracks_[index++] = nodeConnection->info->getZ();
+						publicParameters->tracks_[index++] = nodeConnection->info->getVolume();
 					}
-					else { publicParameters->trc[index++] = nodeConnection->info->getSurface(); }
+					else { publicParameters->tracks_[index++] = nodeConnection->info->getSurface(); }
 
-					publicParameters->trc[index++] = nodeConnection->info->getIntensity();
+					publicParameters->tracks_[index++] = nodeConnection->info->getIntensity();
 
-					publicParameters->trc[index++] = nodeConnection->info->getZ();
+					publicParameters->tracks_[index++] = nodeConnection->info->getZ();
 
-					publicParameters->trc[index++] = nodeConnection->info->getColor();
-					publicParameters->trc[index++] = nodeConnection->info->getMolId();
+					publicParameters->tracks_[index++] = nodeConnection->info->getColor();
+					publicParameters->tracks_[index++] = nodeConnection->info->getMolId();
 
 					// The number of trajectory
-					publicParameters->nbTraj = node->trackedStructureIndex;
+					publicParameters->nTraj_ = node->trackedStructureIndex;
 				}
 			}
 		}
 	}
-	return RET_OK;
-}
-
-/********************************************************************************************************************
-readStatFile() reads the file specified in publicParameters and allocates the corresponding TimeNodes
-********************************************************************************************************************/
-int TabTimes::readStatFile()
-{
-	//unsigned long nbTimes;
-	unsigned long nbNodes;
-	int fileHandle;
-
-
-	if ((fileHandle = _wopen(publicParameters->statFile, O_RDONLY | O_BINARY, S_IREAD)) != -1) {
-		int count = read(fileHandle, &publicParameters->nbDim, sizeof(long)); //reading the number of dimentions
-		if (count != sizeof(long)) { return T_ERR_CORRUPT_FILE; }
-		if (publicParameters->nbDim != 2 && publicParameters->nbDim != 3) { return T_ERR_NBDIM; }
-
-
-		count = read(fileHandle, &nbTimes, sizeof(long)); //reading the number of times
-		if (count != sizeof(long)) { return T_ERR_CORRUPT_FILE; }
-
-
-		allocTabTimes(); //Allocation of tabTimes
-
-		long incre = 0;
-
-		publicParameters->maxX = 0;
-		publicParameters->maxY = 0;
-		publicParameters->maxZ = 0;
-
-		for (int time_ = 0; time_ < (long)nbTimes; time_++) {
-			count = read(fileHandle, &nbNodes, sizeof(long)); //reading the number of nodes
-			if (count != sizeof(long)) { return T_ERR_CORRUPT_FILE; }
-
-
-			timeNodes[time_] = allocTimeNodes(time_, (int)nbNodes); //Allocation of timeNodes
-			//new TimeNodes(time_,(int)nbNodes);
-			TimeNodes* localTimeNodes = timeNodes[time_];
-
-			if (localTimeNodes == NULL) { return T_ERR_ALLOC; }
-
-
-			for (long node = 0; node < localTimeNodes->nbNodes; node++) {
-				count = read(fileHandle, (*localTimeNodes)(node)->info->getPtrInfoData(), (*localTimeNodes)(node)->info->sizeofInfoData()); //reading one node
-
-				if ((*localTimeNodes)(node)->info->getIntensity() < 0) { wprintf(L"%d : <0\n", ++incre); }
-
-				if (count != (long)(*localTimeNodes)(node)->info->sizeofInfoData()) { return T_ERR_CORRUPT_FILE; }
-
-				if (publicParameters->maxX < (*localTimeNodes)(node)->info->getX()) { publicParameters->maxX = (*localTimeNodes)(node)->info->getX(); }
-				if (publicParameters->maxY < (*localTimeNodes)(node)->info->getY()) { publicParameters->maxY = (*localTimeNodes)(node)->info->getY(); }
-				if (publicParameters->nbDim == 3) { if (publicParameters->maxZ < (*localTimeNodes)(node)->info->getZ()) { publicParameters->maxZ = (*localTimeNodes)(node)->info->getZ(); } }
-			}
-
-			//Sorting the nodes by the intensity for one time
-			int indexMax;
-			for (int i = 0; i < timeNodes[time_]->nbNodes - 1; i++) {
-				double maxIntensity = -1.;
-				for (int j = i; j < localTimeNodes->nbNodes; j++) {
-					if (maxIntensity < (*localTimeNodes)(j)->info->getIntensity()) {
-						maxIntensity = (*localTimeNodes)(j)->info->getIntensity();
-						indexMax = j;
-					}
-				}
-				Node* nodeMax = localTimeNodes->tabNodes[indexMax];
-				localTimeNodes->tabNodes[indexMax] = localTimeNodes->tabNodes[i];
-				localTimeNodes->tabNodes[i] = nodeMax;
-			}
-		}
-		close(fileHandle);
-	}
-	else { return T_ERR_OPENNING_FILE; }
-
 	return RET_OK;
 }
 
@@ -232,19 +116,19 @@ int TabTimes::readPointsList()
 	unsigned long index = 0;
 	int i;
 
-	nbTimes = publicParameters->nbTimes;
+	nbTimes = publicParameters->nTimes_;
 
 	allocTabTimes(); //Allocation of tabTimes
 
-	publicParameters->maxX = 0;
-	publicParameters->maxY = 0;
-	publicParameters->maxZ = 0;
+	publicParameters->maxX_ = 0;
+	publicParameters->maxY_ = 0;
+	publicParameters->maxZ_ = 0;
 
 	for (int time_ = 0; time_ < (long)nbTimes; time_++) {
 		// Computing the number of nodes by frame
 		unsigned long nbNodes = 0;
-		for (i = index; ; /*i+=4*/ i += publicParameters->NbSegParams) {
-			if ((int)publicParameters->pointsList[i + 9] != -1 && (int)publicParameters->pointsList[i + 9] != 0) { nbNodes++; } // surface
+		for (i = index; ; /*i+=4*/ i += publicParameters->N_SEG_PARAMS) {
+			if ((int)publicParameters->points_[i + 9] != -1 && (int)publicParameters->points_[i + 9] != 0) { nbNodes++; } // surface
 			else { break; }
 		}
 
@@ -259,23 +143,23 @@ int TabTimes::readPointsList()
 			// Just for the case of '2D'
 			InfoNode* str = (*localTimeNodes)(node)->info;
 			// version correcte
-			str->setX(publicParameters->pointsList[index + node * publicParameters->NbSegParams + 3]);
-			str->setY(publicParameters->pointsList[index + node * publicParameters->NbSegParams + 4]);
-			str->setZ(publicParameters->pointsList[index + node * publicParameters->NbSegParams + 10]);
+			str->setX(publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 3]);
+			str->setY(publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 4]);
+			str->setZ(publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 10]);
 
-			str->setColor(publicParameters->pointsList[index + node * publicParameters->NbSegParams + 11]);
-			str->setMolId(publicParameters->pointsList[index + node * publicParameters->NbSegParams + 12]);
+			str->setColor(publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 11]);
+			str->setMolId(publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 12]);
 
 			str->setIndex(node + 1);
 
-			str->setIntensity(publicParameters->pointsList[index + node * publicParameters->NbSegParams + 8]);
+			str->setIntensity(publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 8]);
 
-			str->setSurface((unsigned long)publicParameters->pointsList[index + node * publicParameters->NbSegParams + 9]);
-			str->setMean(publicParameters->pointsList[index + node * publicParameters->NbSegParams + 8] / (unsigned long)publicParameters->pointsList[index + node * publicParameters->NbSegParams + 9]);
+			str->setSurface((unsigned long)publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 9]);
+			str->setMean(publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 8] / (unsigned long)publicParameters->points_[index + node * publicParameters->N_SEG_PARAMS + 9]);
 
-			if (publicParameters->maxX < (*localTimeNodes)(node)->info->getX()) { publicParameters->maxX = (*localTimeNodes)(node)->info->getX(); }
-			if (publicParameters->maxY < (*localTimeNodes)(node)->info->getY()) { publicParameters->maxY = (*localTimeNodes)(node)->info->getY(); }
-			if (publicParameters->nbDim == 3) { if (publicParameters->maxZ < (*localTimeNodes)(node)->info->getZ()) { publicParameters->maxZ = (*localTimeNodes)(node)->info->getZ(); } }
+			if (publicParameters->maxX_ < (*localTimeNodes)(node)->info->getX()) { publicParameters->maxX_ = (*localTimeNodes)(node)->info->getX(); }
+			if (publicParameters->maxY_ < (*localTimeNodes)(node)->info->getY()) { publicParameters->maxY_ = (*localTimeNodes)(node)->info->getY(); }
+			if (publicParameters->N_DIM == 3) { if (publicParameters->maxZ_ < (*localTimeNodes)(node)->info->getZ()) { publicParameters->maxZ_ = (*localTimeNodes)(node)->info->getZ(); } }
 		}
 
 		//Sorting the nodes by the intensity for one time
@@ -293,7 +177,7 @@ int TabTimes::readPointsList()
 			localTimeNodes->tabNodes[i] = nodeMax;
 		}
 
-		index += (nbNodes + 1) * publicParameters->NbSegParams; //(A vérifier)
+		index += (nbNodes + 1) * publicParameters->N_SEG_PARAMS; //(A vérifier)
 	}
 	return RET_OK;
 }
@@ -336,7 +220,7 @@ all times for blinking purpose
 int TabTimes::linkNeighborsBlinkBeforeAndAfter() const
 {
 	int ret;
-	for (long time_ = 0; time_ < nbTimes; time_++) { for (long dt = 2; dt <= publicParameters->nbTemporalWindows; dt++) { if (time_ + dt < nbTimes) { if ((ret = timeNodes[time_]->linkNeighborsBlinkBeforeAndAfter(*timeNodes[time_ + dt])) < 0) { return ret; } } } }
+	for (long time_ = 0; time_ < nbTimes; time_++) { for (long dt = 2; dt <= publicParameters->N_TEMPORAL_WINDOWS; dt++) { if (time_ + dt < nbTimes) { if ((ret = timeNodes[time_]->linkNeighborsBlinkBeforeAndAfter(*timeNodes[time_ + dt])) < 0) { return ret; } } } }
 	return RET_OK;
 }
 
@@ -459,12 +343,12 @@ void TabTimes::setIndexToTrackedStructures() const
 	for (long time_ = 0; time_ < nbTimes; time_++) {
 		for (long indexNode = 0; indexNode < timeNodes[time_]->nbNodes; indexNode++) {
 			if (timeNodes[time_]->tabNodes[indexNode]->connectionPast == NULL) {
-				for (node = timeNodes[time_]->tabNodes[indexNode], oldNode = NULL, nbSuccessiveNodes = 0; node != NULL && nbSuccessiveNodes < publicParameters->nbMinSuccessiveStructures; node = node->connectionFuture, nbSuccessiveNodes++) {
+				for (node = timeNodes[time_]->tabNodes[indexNode], oldNode = NULL, nbSuccessiveNodes = 0; node != NULL && nbSuccessiveNodes < publicParameters->minLife_; node = node->connectionFuture, nbSuccessiveNodes++) {
 					oldNode = node;
 					node->trackedStructureIndex = 0;
 				}
 				bool isNewIndex = false;
-				if (nbSuccessiveNodes >= publicParameters->nbMinSuccessiveStructures) //it was == 
+				if (nbSuccessiveNodes >= publicParameters->minLife_) //it was == 
 				{
 					isNewIndex = true;
 				}
@@ -513,11 +397,8 @@ int TabTimes::giveResult()
 	setIndexToTrackedStructures();
 	setColorToTrackedStructures();
 
-	if (publicParameters->fileResASCII[0] != L'\0') {
-		if ((ret = printConnectionsASCII()) < 0) { return ret; }
-		if ((ret = printConnectionsASCII_trc()) < 0) { return ret; } //(A enlever)
-	}
-	else if ((ret = printConnectionsASCII_trc()) < 0) { return ret; }
+
+	if ((ret = printConnectionsASCII_trc()) < 0) { return ret; }
 
 	return RET_OK;
 }

@@ -12,7 +12,7 @@ protected:
 	TimeNodes* allocTimeNodes(long time, long nbNodes) override;
 
 public:
-	TabTimesCloserNeighbors(PublicParameters* publicParameters);
+	TabTimesCloserNeighbors(Parameters* publicParameters);
 
 	int runModel() override;
 };

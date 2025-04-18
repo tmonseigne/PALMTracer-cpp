@@ -11,7 +11,7 @@
 /********************************************************************************************************************
 Constructuor() of TabTimesCloserNeighbors class.
 ********************************************************************************************************************/
-TabTimesCloserNeighbors::TabTimesCloserNeighbors(PublicParameters* _publicParameters): TabTimes(_publicParameters) { publicParameters = _publicParameters; }
+TabTimesCloserNeighbors::TabTimesCloserNeighbors(Parameters* _publicParameters): TabTimes(_publicParameters) { publicParameters = _publicParameters; }
 
 
 /********************************************************************************************************************

@@ -11,13 +11,13 @@ Class TimeNodes contains the Node objets for one time.
 #include <cstdio>
 
 extern FILE* outputStream;
-//extern PublicParameters *publicParameters;
+//extern Parameters *publicParameters;
 /********************************************************************************************************************
 Constructuor(int _time, int _nbNodes) of TimeNodes class.
 The current objets is at the time "time".
 Create nbNodes objets Node.
 ********************************************************************************************************************/
-TimeNodes::TimeNodes(const int _time, const int _nbNodes, PublicParameters* _publicParameters)
+TimeNodes::TimeNodes(const int _time, const int _nbNodes, Parameters* _publicParameters)
 {
 	publicParameters = _publicParameters;
 
@@ -50,7 +50,7 @@ int TimeNodes::linkNeighborsPresent() const
 	for (long i = 0; i < nbNodes; i++) {
 		for (long j = 0; j < nbNodes; j++) {
 			if (i != j) {
-				if (tabNodes[i]->distance(tabNodes[j]) < publicParameters->distMaxNeighbour) {
+				if (tabNodes[i]->distance(tabNodes[j]) < publicParameters->DIST_MAX) {
 					tabNodes[i]->neighborsPresent = new ChainNeighbor(tabNodes[j], tabNodes[i]->neighborsPresent, publicParameters);
 					tabNodes[i]->neighborsPresentCount++;
 				}
@@ -70,7 +70,7 @@ int TimeNodes::linkNeighborsBeforeAndAfter(TimeNodes& futureTimeNodes) const
 {
 	for (long presentNode = 0; presentNode < nbNodes; presentNode++) {
 		for (long futureNode = 0; futureNode < futureTimeNodes.nbNodes; futureNode++) {
-			if (tabNodes[presentNode]->distance(futureTimeNodes.tabNodes[futureNode]) < publicParameters->distMaxPastAndFuture) {
+			if (tabNodes[presentNode]->distance(futureTimeNodes.tabNodes[futureNode]) < publicParameters->maxSpeed_) {
 				tabNodes[presentNode]->neighborsFuture = new ChainNeighbor(futureTimeNodes.tabNodes[futureNode], tabNodes[presentNode]->neighborsFuture, publicParameters);
 				tabNodes[presentNode]->neighborsFutureCount++;
 				futureTimeNodes.tabNodes[futureNode]->neighborsPast = new ChainNeighbor(tabNodes[presentNode], futureTimeNodes.tabNodes[futureNode]->neighborsPast, publicParameters);
@@ -90,7 +90,7 @@ int TimeNodes::linkNeighborsBlinkBeforeAndAfter(TimeNodes& futureTimeNodes) cons
 {
 	for (long presentNode = 0; presentNode < nbNodes; presentNode++) {
 		for (long futureNode = 0; futureNode < futureTimeNodes.nbNodes; futureNode++) {
-			if (tabNodes[presentNode]->distance(futureTimeNodes.tabNodes[futureNode]) < publicParameters->distMaxPastAndFuture) {
+			if (tabNodes[presentNode]->distance(futureTimeNodes.tabNodes[futureNode]) < publicParameters->maxSpeed_) {
 				tabNodes[presentNode]->neighborsBlinkFuture = new ChainNeighbor(futureTimeNodes.tabNodes[futureNode], tabNodes[presentNode]->neighborsBlinkFuture, publicParameters);
 				tabNodes[presentNode]->neighborsBlinkFutureCount++;
 				futureTimeNodes.tabNodes[futureNode]->neighborsBlinkPast = new ChainNeighbor(tabNodes[presentNode], futureTimeNodes.tabNodes[futureNode]->neighborsBlinkPast, publicParameters);

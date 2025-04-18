@@ -8,9 +8,9 @@
 
 #include "Info_Node.h"
 
-//extern PublicParameters *publicParameters;
+//extern Parameters *publicParameters;
 
-InfoNode::InfoNode(PublicParameters* _publicParameters) { publicParameters = _publicParameters; }
+InfoNode::InfoNode(Parameters* _publicParameters) { publicParameters = _publicParameters; }
 
 float InfoNode2D::distance(InfoNode* infoNode)
 {
@@ -116,7 +116,7 @@ void* InfoNode3D::getPtrInfoData() { return &info; }
 //!!!!! invertion of coordinates !!! to respect Amira and UIC convenitons
 double InfoNode3D::getX() { return info.moment.z; }
 double InfoNode3D::getY() { return info.moment.y; }
-double InfoNode3D::getZ() { return info.moment.x * publicParameters->dZDX; }
+double InfoNode3D::getZ() { return info.moment.x * publicParameters->dZdx_; }
 
 void InfoNode3D::setSurface(long s) { }
 

@@ -7,7 +7,7 @@
 #include <cstdlib>
 #include <string.h>
 #include "chain_neighbor.h"
-#include "general.h"
+#include "Parameters.h"
 #include "info_node.h"
 
 
@@ -21,13 +21,13 @@ public:
 	InfoNode* info;
 	//int n;
 
-	Node(int _time, PublicParameters* _publicParameters);
+	Node(int _time, Parameters* _publicParameters);
 	~Node();
 
 	float distance(Node* node) const;
 	float distance(Node* n1, Node* n2) const;
 
-	PublicParameters* publicParameters;
+	Parameters* publicParameters;
 	//InfoData2D	info;
 
 	bool checkLinksHomogeneity(const wchar_t* st) const;

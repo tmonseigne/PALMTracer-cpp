@@ -5,17 +5,17 @@
 #pragma once
 
 #include "Constants.hpp"
-#include "general.h"
+#include "Parameters.h"
 #include "palm/Info2D.h"
 #include "palm/Info3D.h"
 
 class InfoNode
 {
 public:
-	InfoNode(PublicParameters* _publicParameters);
+	InfoNode(Parameters* _publicParameters);
 	~InfoNode() { };
 
-	PublicParameters* publicParameters;
+	Parameters* publicParameters;
 	virtual float distance(InfoNode* infoData) { return T_ERR_OOP; };
 	virtual float distance(InfoNode* i1, InfoNode* i2) { return T_ERR_OOP; };
 	virtual double getMean() { return T_ERR_OOP; };
@@ -47,7 +47,7 @@ public:
 class InfoNode2D : public InfoNode
 {
 public:
-	InfoNode2D(PublicParameters* _publicParameters): InfoNode(_publicParameters) { };
+	InfoNode2D(Parameters* _publicParameters): InfoNode(_publicParameters) { };
 	float distance(InfoNode* infoData) override;
 	float distance(InfoNode* i1, InfoNode* i2) override;
 	info_2d info;
@@ -83,7 +83,7 @@ public:
 class InfoNode3D : public InfoNode
 {
 public:
-	InfoNode3D(PublicParameters* _publicParameters): InfoNode(_publicParameters) { };
+	InfoNode3D(Parameters* _publicParameters): InfoNode(_publicParameters) { };
 	float distance(InfoNode* infoData) override;
 	float distance(InfoNode* i1, InfoNode* i2) override;
 	info_3d info;

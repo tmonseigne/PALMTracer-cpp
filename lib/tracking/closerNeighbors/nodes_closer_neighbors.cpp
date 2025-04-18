@@ -11,7 +11,7 @@
 /********************************************************************************************************************
 Constructuor(int _time) of NodeCloserNeighbors class.
 ********************************************************************************************************************/
-NodeCloserNeighbors::NodeCloserNeighbors(const int _time, PublicParameters* _publicParameters): Node(_time, _publicParameters) { }
+NodeCloserNeighbors::NodeCloserNeighbors(const int _time, Parameters* _publicParameters): Node(_time, _publicParameters) { }
 
 void NodeCloserNeighbors::makeConnection()
 {

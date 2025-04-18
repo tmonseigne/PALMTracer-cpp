@@ -6,7 +6,7 @@
 *******************************************************************************************************************/
 #pragma once
 
-#include "tracking/general.h"
+#include "tracking/Parameters.h"
 #include "tracking/nodes.h"
 
 
@@ -69,6 +69,6 @@ public:
 	double makeChange(double limit);
 	double likeness(Node* n) override;
 	double likenessBlink(Node* n) override;
-	NodeDistanceIntensity(int _time, PublicParameters* _publicParameters);
+	NodeDistanceIntensity(int _time, Parameters* _publicParameters);
 	double makeInitializationConnection();
 };

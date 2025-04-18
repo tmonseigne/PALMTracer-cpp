@@ -22,9 +22,9 @@ double distanceToBorder()
 double Node::distanceToBorder() const
 {
 	double mini = info->getX();
-	mini = __min(mini, publicParameters->maxX-info->getX());
+	mini = __min(mini, publicParameters->maxX_-info->getX());
 	mini = __min(mini, info->getY());
-	mini = __min(mini, publicParameters->maxY-info->getY());
+	mini = __min(mini, publicParameters->maxY_-info->getY());
 	return mini;
 }
 
@@ -37,7 +37,7 @@ double Node::stericEffect() const
 	double ret;
 	double val;
 
-	if (publicParameters->nbDim == 3) {
+	if (publicParameters->N_DIM == 3) {
 		val = info->getVolume();
 		//volume of a shere is 4/3 * PI *r^3
 		ret = pow(val * 3. / 4. / PI, 1. / 3.);
@@ -54,7 +54,7 @@ double Node::stericEffect() const
 Constructuor(int _time) of Node class.
 The current objets is at the time "time".
 ********************************************************************************************************************/
-Node::Node(const int _time, PublicParameters* _publicParameters)
+Node::Node(const int _time, Parameters* _publicParameters)
 {
 	publicParameters = _publicParameters;
 
@@ -82,10 +82,10 @@ Node::Node(const int _time, PublicParameters* _publicParameters)
 	connectionFusionFuture = NULL;
 	trackedStructureAmiraIndex = -1;
 	mSD = -1;
-	if (publicParameters->nbDim == 2) { info = new InfoNode2D(publicParameters); }
+	if (publicParameters->N_DIM == 2) { info = new InfoNode2D(publicParameters); }
 	else { info = new InfoNode3D(publicParameters); }
 
-	publicParameters->nbNodeAllocated++;
+	publicParameters->nNodeAllocated_++;
 }
 
 /********************************************************************************************************************
@@ -113,7 +113,7 @@ Node::~Node()
 		neighborsPresent = l;
 	}
 	delete info;
-	publicParameters->nbNodeDeallocated++;
+	publicParameters->nNodeDeallocated_++;
 	trackedStructureIndex = 0;
 }
 

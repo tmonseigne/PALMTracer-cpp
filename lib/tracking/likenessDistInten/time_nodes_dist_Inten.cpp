@@ -17,7 +17,7 @@ Node* TimeNodesDistanceIntensity::allocNode() { return new NodeDistanceIntensity
 /********************************************************************************************************************
 Constructor(int _time, int _nbNodes) is run after the base constructor TimeNodes::TimeNodes
 ********************************************************************************************************************/
-TimeNodesDistanceIntensity::TimeNodesDistanceIntensity(const int _time, const int _nbNodes, PublicParameters* _publicParameters): TimeNodes(_time, _nbNodes, _publicParameters) { for (int i = 0; i < nbNodes; i++) { tabNodes[i] = allocNode(); } }
+TimeNodesDistanceIntensity::TimeNodesDistanceIntensity(const int _time, const int _nbNodes, Parameters* _publicParameters): TimeNodes(_time, _nbNodes, _publicParameters) { for (int i = 0; i < nbNodes; i++) { tabNodes[i] = allocNode(); } }
 
 
 /********************************************************************************************************************

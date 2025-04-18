@@ -4,7 +4,7 @@
 *******************************************************************************************************************/
 #pragma once
 
-#include "general.h"
+#include "Parameters.h"
 
 
 class Node;
@@ -12,10 +12,10 @@ class Node;
 class ChainNeighbor
 {
 public:
-	ChainNeighbor(Node* _neighbor, ChainNeighbor* _next, PublicParameters* _publicParameters);
+	ChainNeighbor(Node* _neighbor, ChainNeighbor* _next, Parameters* _publicParameters);
 	~ChainNeighbor();
 
-	PublicParameters* publicParameters;
+	Parameters* publicParameters;
 	Node* neighbor;
 	ChainNeighbor* next;
 };

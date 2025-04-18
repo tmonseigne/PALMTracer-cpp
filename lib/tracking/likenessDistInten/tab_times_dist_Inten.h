@@ -16,7 +16,7 @@ protected:
 	void computeConstantes() const;
 
 public:
-	TabTimesDistanceIntensity(PublicParameters* publicParameters);
+	TabTimesDistanceIntensity(Parameters* publicParameters);
 	double getLikenessGlobal() const;
 	int runModel() override;
 };

@@ -4,7 +4,7 @@
 *******************************************************************************************************************/
 #pragma once
 
-#include "general.h"
+#include "Parameters.h"
 #include "nodes.h"
 
 
@@ -16,10 +16,10 @@ protected:
 
 public:
 	Node** tabNodes;
-	TimeNodes(int _time, int _nbNodes, PublicParameters* _publicParameters);
+	TimeNodes(int _time, int _nbNodes, Parameters* _publicParameters);
 	~TimeNodes();
 
-	PublicParameters* publicParameters;
+	Parameters* publicParameters;
 	Node* operator()(int i) const;
 	int nbNodes;
 	int linkNeighborsPresent() const;

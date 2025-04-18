@@ -6,21 +6,21 @@
 
 #include "chain_neighbor.h"
 
-//extern PublicParameters *publicParameters;
+//extern Parameters *publicParameters;
 
 /********************************************************************************************************************
 ChainNeighbor(Node*	_neighbor, ChainNeighbor* _next) of ChainNeighbor class.
 ********************************************************************************************************************/
-ChainNeighbor::ChainNeighbor(Node* _neighbor, ChainNeighbor* _next, PublicParameters* _publicParameters)
+ChainNeighbor::ChainNeighbor(Node* _neighbor, ChainNeighbor* _next, Parameters* _publicParameters)
 {
 	publicParameters = _publicParameters;
 
 	neighbor = _neighbor;
 	next = _next;
-	publicParameters->nbChainNeighborAllocated++;
+	publicParameters->nChainNeighborAllocated_++;
 }
 
 /********************************************************************************************************************
 Destructuor() of ChainLink class.
 ********************************************************************************************************************/
-ChainNeighbor::~ChainNeighbor() { publicParameters->nbChainNeighborDeallocated++; }
+ChainNeighbor::~ChainNeighbor() { publicParameters->nChainNeighborDeallocated_++; }

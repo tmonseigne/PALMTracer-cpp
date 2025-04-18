@@ -9,12 +9,12 @@
 #include "tab_times_dist_inten.h"
 #include "time_nodes_dist_Inten.h"
 
-//extern PublicParameters *publicParameters;
+//extern Parameters *publicParameters;
 
 /********************************************************************************************************************
 Constructuor() of TabTimesDistanceIntensity class.
 ********************************************************************************************************************/
-TabTimesDistanceIntensity::TabTimesDistanceIntensity(PublicParameters* _publicParameters): TabTimes(_publicParameters) { publicParameters = _publicParameters; }
+TabTimesDistanceIntensity::TabTimesDistanceIntensity(Parameters* _publicParameters): TabTimes(_publicParameters) { publicParameters = _publicParameters; }
 
 /********************************************************************************************************************
 allocTabTimes(int _nbTimes) alloc an array of _nbTimes long 
@@ -41,9 +41,9 @@ publicParameters->stdDistance
 ********************************************************************************************************************/
 void TabTimesDistanceIntensity::computeConstantes() const
 {
-	publicParameters->stdIntensity = 1000;
-	publicParameters->stdMean = 1000;
-	publicParameters->stdDistance = 1000;
+	publicParameters->stdIntensity_ = 1000;
+	publicParameters->stdMean_ = 1000;
+	publicParameters->stdDistance_ = 1000;
 	double stdMeanComputing = 0;
 	double stdDistanceComputing = 0;
 	double stdIntensityComputing = 0;
@@ -62,16 +62,16 @@ void TabTimesDistanceIntensity::computeConstantes() const
 			((TimeNodesDistanceIntensity*)timeNodes[_time])->computeConstantSigmas(stdIntensityComputing, countStdInt, stdMeanComputing, countStdMean, stdDistanceComputing, coutStdDist, false); //, true);
 		}
 
-		if (stdIntensityComputing > 1e-8 && countStdInt > 0) { publicParameters->stdIntensity = stdIntensityComputing / countStdInt; } //*1.0275;//3.4352;
-		publicParameters->stdIntensity = sqrt(publicParameters->stdIntensity);
+		if (stdIntensityComputing > 1e-8 && countStdInt > 0) { publicParameters->stdIntensity_ = stdIntensityComputing / countStdInt; } //*1.0275;//3.4352;
+		publicParameters->stdIntensity_ = sqrt(publicParameters->stdIntensity_);
 
-		if (stdMeanComputing > 1e-8 && countStdMean > 0) { publicParameters->stdMean = stdMeanComputing / countStdMean; } //*1.0275;//3.4352;
-		publicParameters->stdMean = sqrt(publicParameters->stdMean);
+		if (stdMeanComputing > 1e-8 && countStdMean > 0) { publicParameters->stdMean_ = stdMeanComputing / countStdMean; } //*1.0275;//3.4352;
+		publicParameters->stdMean_ = sqrt(publicParameters->stdMean_);
 
-		if (stdDistanceComputing > 1e-8 && coutStdDist > 0) { publicParameters->stdDistance = stdDistanceComputing / coutStdDist; } //*1.0275;//3.4352;
-		publicParameters->stdDistance = sqrt(publicParameters->stdDistance);
+		if (stdDistanceComputing > 1e-8 && coutStdDist > 0) { publicParameters->stdDistance_ = stdDistanceComputing / coutStdDist; } //*1.0275;//3.4352;
+		publicParameters->stdDistance_ = sqrt(publicParameters->stdDistance_);
 	}
-	publicParameters->stdDistance /= 3; //attention au /3 c'est just pour augmenter l'influence de la distance
+	publicParameters->stdDistance_ /= 3; //attention au /3 c'est just pour augmenter l'influence de la distance
 }
 
 /********************************************************************************************************************
@@ -84,31 +84,31 @@ void TabTimesDistanceIntensity::updateConstantes() const
 	double covDM = 0;
 
 
-	publicParameters->stdDistance = 0;
-	publicParameters->stdIntensity = 0;
-	publicParameters->stdMean = 0;
-	publicParameters->covMeanIntensity = 0;
+	publicParameters->stdDistance_ = 0;
+	publicParameters->stdIntensity_ = 0;
+	publicParameters->stdMean_ = 0;
+	publicParameters->covMeanIntensity_ = 0;
 	for (long t = 0; t < nbTimes; t++) { const TimeNodes* _localTimeNodes = timeNodes[t];
 		for (int n = 0; n < _localTimeNodes->nbNodes; n++) {
 			Node* node = _localTimeNodes->tabNodes[n];
 			if (node->connectionFuture != NULL) {
-				publicParameters->stdDistance += node->distance(node->connectionFuture) * node->distance(node->connectionFuture);
-				publicParameters->stdIntensity += (node->info->getIntensity() - node->connectionFuture->info->getIntensity()) * (node->info->getIntensity() - node->connectionFuture->info->getIntensity());
-				publicParameters->stdMean += (node->info->getMean() - node->connectionFuture->info->getMean()) * (node->info->getMean() - node->connectionFuture->info->getMean());
+				publicParameters->stdDistance_ += node->distance(node->connectionFuture) * node->distance(node->connectionFuture);
+				publicParameters->stdIntensity_ += (node->info->getIntensity() - node->connectionFuture->info->getIntensity()) * (node->info->getIntensity() - node->connectionFuture->info->getIntensity());
+				publicParameters->stdMean_ += (node->info->getMean() - node->connectionFuture->info->getMean()) * (node->info->getMean() - node->connectionFuture->info->getMean());
 				covID += (node->info->getIntensity() - node->connectionFuture->info->getIntensity()) * node->distance(node->connectionFuture);
-				publicParameters->covMeanIntensity += (node->info->getIntensity() - node->connectionFuture->info->getIntensity()) * (node->info->getMean() - node->connectionFuture->info->getMean());
+				publicParameters->covMeanIntensity_ += (node->info->getIntensity() - node->connectionFuture->info->getIntensity()) * (node->info->getMean() - node->connectionFuture->info->getMean());
 				covDM += node->distance(node->connectionFuture) * (node->info->getMean() - node->connectionFuture->info->getMean());
 				cpt++;
 			}
 		}
 	}
-	publicParameters->stdDistance /= cpt;
-	publicParameters->stdIntensity /= cpt;
-	publicParameters->stdMean /= cpt;
-	publicParameters->covMeanIntensity /= cpt;
-	publicParameters->stdIntensity = sqrt(publicParameters->stdIntensity);
-	publicParameters->stdDistance = sqrt(publicParameters->stdDistance);
-	publicParameters->stdMean = sqrt(publicParameters->stdMean);
+	publicParameters->stdDistance_ /= cpt;
+	publicParameters->stdIntensity_ /= cpt;
+	publicParameters->stdMean_ /= cpt;
+	publicParameters->covMeanIntensity_ /= cpt;
+	publicParameters->stdIntensity_ = sqrt(publicParameters->stdIntensity_);
+	publicParameters->stdDistance_ = sqrt(publicParameters->stdDistance_);
+	publicParameters->stdMean_ = sqrt(publicParameters->stdMean_);
 }
 
 
@@ -138,12 +138,12 @@ int TabTimesDistanceIntensity::runModel()
 
 		int bcl = 0;
 		do {
-			if (iLearning == countLearning - 1) { error *= 1. - (float)publicParameters->temperatureDecrease / 100.; }
+			if (iLearning == countLearning - 1) { error *= 1. - (float)publicParameters->decrease_ / 100.; }
 
 			nbInt++;
 
 			double deltaLikeness = 0;
-			for (int i = 0; i < publicParameters->NbIterations; i++) { for (int _time = 0; _time < nbTimes - 1; _time++) { deltaLikeness += ((TimeNodesDistanceIntensity*)timeNodes[_time])->tryRandomChange(error); } }
+			for (int i = 0; i < publicParameters->N_ITERATIONS; i++) { for (int _time = 0; _time < nbTimes - 1; _time++) { deltaLikeness += ((TimeNodesDistanceIntensity*)timeNodes[_time])->tryRandomChange(error); } }
 			totalLikeness += deltaLikeness;
 
 			if (fabs(deltaLikeness) < 1e-8) { cpt++; }
