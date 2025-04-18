@@ -9,7 +9,7 @@
 #include <cstdio>
 
 #include "NodeDistanceIntensity.h"
-//extern Parameters *publicParameters;
+//extern Parameters *parameters_;
 extern FILE* outputStream;
 
 #define _weightDistance_ 0.6  //0.6
@@ -120,7 +120,7 @@ double NodeDistanceIntensity::likenessIntensity(Node* n)
 *********************************************************************************************/
 double NodeDistanceIntensity::likenessIntensity(Node* n)
 {
-	//__max(1., 3.*publicParameters->stdDistance/this->distanceToBorder())));
+	//__max(1., 3.*parameters_->stdDistance/this->distanceToBorder())));
 	if (n == NULL) { return getLikeness(info->getIntensity(), publicParameters->stdIntensity_ * __max(1., 3.*publicParameters->stdDistance_/this->distanceToBorder())); }
 	else { return getLikeness(info->getIntensity() - n->info->getIntensity(), publicParameters->stdIntensity_); }
 }
@@ -203,10 +203,10 @@ void NodeDistanceIntensity::computeConstantSigmas(double& stdIntensityComputing,
 	Node* nMax = NULL;
 	double likenessMax = -1e10;
 
-	for (const ChainNeighbor* c = neighborsFuture; c != NULL; c = c->next) { const double likenessVal = likeness(c->neighbor);
+	for (const ChainNeighbor* c = neighborsFuture; c != NULL; c = c->next_) { const double likenessVal = likeness(c->neighbor_);
 		if (likenessVal > likenessMax) {
 			likenessMax = likenessVal;
-			nMax = c->neighbor;
+			nMax = c->neighbor_;
 		}
 	}
 
@@ -255,12 +255,12 @@ double NodeDistanceIntensity::makeInitializationConnection()
 	Node* nMax = NULL;
 	double likenessMax = -1e10;
 
-	for (const ChainNeighbor* c = neighborsFuture; c != NULL; c = c->next) {
-		if (c->neighbor->connectionPast == NULL) { const double likenessVal = likeness(c->neighbor);
+	for (const ChainNeighbor* c = neighborsFuture; c != NULL; c = c->next_) {
+		if (c->neighbor_->connectionPast == NULL) { const double likenessVal = likeness(c->neighbor_);
 
 			if (likenessVal > likenessMax) {
 				likenessMax = likenessVal;
-				nMax = c->neighbor;
+				nMax = c->neighbor_;
 			}
 		}
 	}
@@ -355,28 +355,28 @@ double NodeDistanceIntensity::makeChangeFission0(const double limitLoss)
 	if (neighborsFutureCount < 2) { return 0.; } //no neighbors like 3
 	const long idRandNeighbor = rand() % neighborsFutureCount;
 	//set the node cRand
-	for (i = 0, cRand = neighborsFuture; i < idRandNeighbor && cRand != NULL; cRand = cRand->next, i++) { ; }
+	for (i = 0, cRand = neighborsFuture; i < idRandNeighbor && cRand != NULL; cRand = cRand->next_, i++) { ; }
 	//test if the node is good
 	if (cRand == NULL) { return -1.; }                                 //ERROR 
-	if (cRand->neighbor == connectionFuture) { return 0.; }            // nothing to do, the new random link is the same than connectionFuture.
-	if (cRand->neighbor->connectionFusion1Past != NULL) { return 0.; } // crand is already implicated in a fusion.
-	if (cRand->neighbor->connectionFissionPast != NULL) { return 0.; } // crand is already implicated in a fission.
-	if (cRand->neighbor->connectionBlinkPast != NULL) { return 0.; }   // crand is already implicated in a past blink.
+	if (cRand->neighbor_ == connectionFuture) { return 0.; }            // nothing to do, the new random link is the same than connectionFuture.
+	if (cRand->neighbor_->connectionFusion1Past != NULL) { return 0.; } // crand is already implicated in a fusion.
+	if (cRand->neighbor_->connectionFissionPast != NULL) { return 0.; } // crand is already implicated in a fission.
+	if (cRand->neighbor_->connectionBlinkPast != NULL) { return 0.; }   // crand is already implicated in a past blink.
 
-	if (distance(cRand->neighbor) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (distance(cRand->neighbor_) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 
-	const double deltaLikeness = +likenessFission(cRand->neighbor, connectionFuture) + (cRand->neighbor->connectionPast == NULL ? 0. : cRand->neighbor->connectionPast->likeness(NULL)) - likeness(connectionFuture) - cRand->neighbor->likeness(cRand->neighbor->connectionPast);
+	const double deltaLikeness = +likenessFission(cRand->neighbor_, connectionFuture) + (cRand->neighbor_->connectionPast == NULL ? 0. : cRand->neighbor_->connectionPast->likeness(NULL)) - likeness(connectionFuture) - cRand->neighbor_->likeness(cRand->neighbor_->connectionPast);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 		connectionFission1Future = connectionFuture;
-		connectionFission2Future = cRand->neighbor;
+		connectionFission2Future = cRand->neighbor_;
 		connectionFuture->connectionFissionPast = this;
-		cRand->neighbor->connectionFissionPast = this;
+		cRand->neighbor_->connectionFissionPast = this;
 		connectionFuture->connectionPast = NULL;
 		connectionFuture = NULL;
 
-		if (cRand->neighbor->connectionPast != NULL) { cRand->neighbor->connectionPast->connectionFuture = NULL; }
-		cRand->neighbor->connectionPast = NULL;
+		if (cRand->neighbor_->connectionPast != NULL) { cRand->neighbor_->connectionPast->connectionFuture = NULL; }
+		cRand->neighbor_->connectionPast = NULL;
 
 		return deltaLikeness;
 	}
@@ -395,20 +395,20 @@ double NodeDistanceIntensity::makeChangeFission1(const double limitLoss, ChainNe
 	//4(cRand)--------3(connectionFission2Future)
 	//NULL------------5
 
-	if (cRand->neighbor->distance(connectionFission2Future) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (cRand->neighbor_->distance(connectionFission2Future) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 
-	if (cRand->neighbor->connectionFission1Future != NULL) { return 0; } // cRand is already implicated in a fission.
-	if (cRand->neighbor->connectionFusionFuture != NULL) { return 0; }   // cRand is already implicated in a fusion.
-	if (cRand->neighbor->connectionBlinkFuture != NULL) { return 0.; }   // crand is already implicated in a future blink.
+	if (cRand->neighbor_->connectionFission1Future != NULL) { return 0; } // cRand is already implicated in a fission.
+	if (cRand->neighbor_->connectionFusionFuture != NULL) { return 0; }   // cRand is already implicated in a fusion.
+	if (cRand->neighbor_->connectionBlinkFuture != NULL) { return 0.; }   // crand is already implicated in a future blink.
 
-	const double deltaLikeness = +likeness(connectionFission1Future) + cRand->neighbor->likeness(connectionFission2Future) + (cRand->neighbor->connectionFuture == NULL ? 0 : cRand->neighbor->connectionFuture->likeness(NULL)) - likenessFusion(connectionFission1Future, connectionFission2Future) - cRand->neighbor->likeness(cRand->neighbor->connectionFuture);
+	const double deltaLikeness = +likeness(connectionFission1Future) + cRand->neighbor_->likeness(connectionFission2Future) + (cRand->neighbor_->connectionFuture == NULL ? 0 : cRand->neighbor_->connectionFuture->likeness(NULL)) - likenessFusion(connectionFission1Future, connectionFission2Future) - cRand->neighbor_->likeness(cRand->neighbor_->connectionFuture);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 		connectionFuture = connectionFission1Future;
 		connectionFuture->connectionPast = this;
-		if (cRand->neighbor->connectionFuture != NULL) { cRand->neighbor->connectionFuture->connectionPast = NULL; }
-		cRand->neighbor->connectionFuture = connectionFission2Future;
-		connectionFission2Future->connectionPast = cRand->neighbor;
+		if (cRand->neighbor_->connectionFuture != NULL) { cRand->neighbor_->connectionFuture->connectionPast = NULL; }
+		cRand->neighbor_->connectionFuture = connectionFission2Future;
+		connectionFission2Future->connectionPast = cRand->neighbor_;
 		connectionFission1Future->connectionFissionPast = NULL;
 		connectionFission2Future->connectionFissionPast = NULL;
 		connectionFission1Future = NULL;
@@ -429,20 +429,20 @@ double NodeDistanceIntensity::makeChangeFission2(const double limitLoss, ChainNe
 	//4(cRand)--------2(connectionFission1Future)
 	//NULL------------5
 
-	if (cRand->neighbor->distance(connectionFission1Future) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (cRand->neighbor_->distance(connectionFission1Future) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 
-	if (cRand->neighbor->connectionFission2Future != NULL) { return 0; } // cRand is already implicated in a fission.
-	if (cRand->neighbor->connectionFusionFuture != NULL) { return 0; }   // cRand is already implicated in a fusion.
-	if (cRand->neighbor->connectionBlinkFuture != NULL) { return 0.; }   // crand is already implicated in a future blink.
+	if (cRand->neighbor_->connectionFission2Future != NULL) { return 0; } // cRand is already implicated in a fission.
+	if (cRand->neighbor_->connectionFusionFuture != NULL) { return 0; }   // cRand is already implicated in a fusion.
+	if (cRand->neighbor_->connectionBlinkFuture != NULL) { return 0.; }   // crand is already implicated in a future blink.
 
-	const double deltaLikeness = +likeness(connectionFission2Future) + cRand->neighbor->likeness(connectionFission1Future) + (cRand->neighbor->connectionFuture == NULL ? 0 : cRand->neighbor->connectionFuture->likeness(NULL)) - likenessFusion(connectionFission2Future, connectionFission1Future) - cRand->neighbor->likeness(cRand->neighbor->connectionFuture);
+	const double deltaLikeness = +likeness(connectionFission2Future) + cRand->neighbor_->likeness(connectionFission1Future) + (cRand->neighbor_->connectionFuture == NULL ? 0 : cRand->neighbor_->connectionFuture->likeness(NULL)) - likenessFusion(connectionFission2Future, connectionFission1Future) - cRand->neighbor_->likeness(cRand->neighbor_->connectionFuture);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 		connectionFuture = connectionFission2Future;
 		connectionFuture->connectionPast = this;
-		if (cRand->neighbor->connectionFuture != NULL) { cRand->neighbor->connectionFuture->connectionPast = NULL; }
-		cRand->neighbor->connectionFuture = connectionFission1Future;
-		connectionFission1Future->connectionPast = cRand->neighbor;
+		if (cRand->neighbor_->connectionFuture != NULL) { cRand->neighbor_->connectionFuture->connectionPast = NULL; }
+		cRand->neighbor_->connectionFuture = connectionFission1Future;
+		connectionFission1Future->connectionPast = cRand->neighbor_;
 		connectionFission2Future->connectionFissionPast = NULL;
 		connectionFission1Future->connectionFissionPast = NULL;
 		connectionFission2Future = NULL;
@@ -509,25 +509,25 @@ double NodeDistanceIntensity::makeChangeFission5(const double limitLoss, ChainNe
 	//           /----3(connectionFission2Future)
 	//4(cRand)--/-----5
 
-	if (cRand->neighbor->distance(connectionFission2Future) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
-	if (cRand->neighbor->connectionBlinkFuture != NULL) { return 0.; }                                                // crand is already implicated in a future blink.
+	if (cRand->neighbor_->distance(connectionFission2Future) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (cRand->neighbor_->connectionBlinkFuture != NULL) { return 0.; }                                                // crand is already implicated in a future blink.
 
-	const double deltaLikeness = +likeness(connectionFission1Future) + cRand->neighbor->likenessFusion(connectionFission2Future, cRand->neighbor->connectionFuture) - likenessFusion(connectionFission1Future, connectionFission2Future) - cRand->neighbor->likeness(cRand->neighbor->connectionFuture);
+	const double deltaLikeness = +likeness(connectionFission1Future) + cRand->neighbor_->likenessFusion(connectionFission2Future, cRand->neighbor_->connectionFuture) - likenessFusion(connectionFission1Future, connectionFission2Future) - cRand->neighbor_->likeness(cRand->neighbor_->connectionFuture);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 
 		connectionFuture = connectionFission1Future;
 		connectionFuture->connectionPast = this;
-		cRand->neighbor->connectionFission1Future = connectionFission2Future;
-		cRand->neighbor->connectionFission1Future->connectionFissionPast = cRand->neighbor;
-		cRand->neighbor->connectionFission2Future = cRand->neighbor->connectionFuture;
-		cRand->neighbor->connectionFission2Future->connectionFissionPast = cRand->neighbor;
+		cRand->neighbor_->connectionFission1Future = connectionFission2Future;
+		cRand->neighbor_->connectionFission1Future->connectionFissionPast = cRand->neighbor_;
+		cRand->neighbor_->connectionFission2Future = cRand->neighbor_->connectionFuture;
+		cRand->neighbor_->connectionFission2Future->connectionFissionPast = cRand->neighbor_;
 
 		connectionFission1Future->connectionFissionPast = NULL;
 		connectionFission1Future = NULL;
 		connectionFission2Future = NULL;
-		cRand->neighbor->connectionFuture->connectionPast = NULL;
-		cRand->neighbor->connectionFuture = NULL;
+		cRand->neighbor_->connectionFuture->connectionPast = NULL;
+		cRand->neighbor_->connectionFuture = NULL;
 
 		return deltaLikeness;
 	}
@@ -546,25 +546,25 @@ double NodeDistanceIntensity::makeChangeFission8(const double limitLoss, ChainNe
 	//           /----2(connectionFission1Future)
 	//4(cRand)--/-----5
 
-	if (cRand->neighbor->distance(connectionFission1Future) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
-	if (cRand->neighbor->connectionBlinkFuture != NULL) { return 0.; }                                                // crand is already implicated in a future blink.
+	if (cRand->neighbor_->distance(connectionFission1Future) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (cRand->neighbor_->connectionBlinkFuture != NULL) { return 0.; }                                                // crand is already implicated in a future blink.
 
-	const double deltaLikeness = +likeness(connectionFission2Future) + cRand->neighbor->likenessFusion(connectionFission1Future, cRand->neighbor->connectionFuture) - likenessFusion(connectionFission1Future, connectionFission2Future) - cRand->neighbor->likeness(cRand->neighbor->connectionFuture);
+	const double deltaLikeness = +likeness(connectionFission2Future) + cRand->neighbor_->likenessFusion(connectionFission1Future, cRand->neighbor_->connectionFuture) - likenessFusion(connectionFission1Future, connectionFission2Future) - cRand->neighbor_->likeness(cRand->neighbor_->connectionFuture);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 
 		connectionFuture = connectionFission2Future;
 		connectionFuture->connectionPast = this;
-		cRand->neighbor->connectionFission2Future = connectionFission1Future;
-		cRand->neighbor->connectionFission2Future->connectionFissionPast = cRand->neighbor;
-		cRand->neighbor->connectionFission1Future = cRand->neighbor->connectionFuture;
-		cRand->neighbor->connectionFission1Future->connectionFissionPast = cRand->neighbor;
+		cRand->neighbor_->connectionFission2Future = connectionFission1Future;
+		cRand->neighbor_->connectionFission2Future->connectionFissionPast = cRand->neighbor_;
+		cRand->neighbor_->connectionFission1Future = cRand->neighbor_->connectionFuture;
+		cRand->neighbor_->connectionFission1Future->connectionFissionPast = cRand->neighbor_;
 
 		connectionFission2Future->connectionFissionPast = NULL;
 		connectionFission2Future = NULL;
 		connectionFission1Future = NULL;
-		cRand->neighbor->connectionFuture->connectionPast = NULL;
-		cRand->neighbor->connectionFuture = NULL;
+		cRand->neighbor_->connectionFuture->connectionPast = NULL;
+		cRand->neighbor_->connectionFuture = NULL;
 
 		return deltaLikeness;
 	}
@@ -581,32 +581,32 @@ double NodeDistanceIntensity::makeChangeFission9(const double limitLoss, ChainNe
 	//1(this)---------5
 	//           /----2(connectionFission1Future)
 	//4(cRand)--/-----3(connectionFission2Future)
-	if (cRand->neighbor->connectionBlinkFuture != NULL) { return 0.; } // crand is already implicated in a future blink.
+	if (cRand->neighbor_->connectionBlinkFuture != NULL) { return 0.; } // crand is already implicated in a future blink.
 
-	if (cRand->neighbor->connectionFuture != NULL) {
-		if (distance(cRand->neighbor->connectionFuture) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (cRand->neighbor_->connectionFuture != NULL) {
+		if (distance(cRand->neighbor_->connectionFuture) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 	}
 
-	if (cRand->neighbor->distance(connectionFission1Future) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
-	if (cRand->neighbor->distance(connectionFission2Future) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (cRand->neighbor_->distance(connectionFission1Future) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (cRand->neighbor_->distance(connectionFission2Future) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 
-	if (cRand->neighbor->connectionFission1Future != NULL) { return 0.; }
-	if (cRand->neighbor->connectionFusionFuture != NULL) { return 0.; }
+	if (cRand->neighbor_->connectionFission1Future != NULL) { return 0.; }
+	if (cRand->neighbor_->connectionFusionFuture != NULL) { return 0.; }
 
-	const double deltaLikeness = +likeness(cRand->neighbor->connectionFuture) + cRand->neighbor->likenessFusion(connectionFission1Future, connectionFission2Future) - likenessFusion(connectionFission1Future, connectionFission2Future) - cRand->neighbor->likeness(cRand->neighbor->connectionFuture);
+	const double deltaLikeness = +likeness(cRand->neighbor_->connectionFuture) + cRand->neighbor_->likenessFusion(connectionFission1Future, connectionFission2Future) - likenessFusion(connectionFission1Future, connectionFission2Future) - cRand->neighbor_->likeness(cRand->neighbor_->connectionFuture);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 
 
-		cRand->neighbor->connectionFission1Future = connectionFission1Future;
-		connectionFission1Future->connectionFissionPast = cRand->neighbor;
-		cRand->neighbor->connectionFission2Future = connectionFission2Future;
-		connectionFission2Future->connectionFissionPast = cRand->neighbor;
-		connectionFuture = cRand->neighbor->connectionFuture;
+		cRand->neighbor_->connectionFission1Future = connectionFission1Future;
+		connectionFission1Future->connectionFissionPast = cRand->neighbor_;
+		cRand->neighbor_->connectionFission2Future = connectionFission2Future;
+		connectionFission2Future->connectionFissionPast = cRand->neighbor_;
+		connectionFuture = cRand->neighbor_->connectionFuture;
 		if (connectionFuture != NULL) { connectionFuture->connectionPast = this; }
 		connectionFission1Future = NULL;
 		connectionFission2Future = NULL;
-		cRand->neighbor->connectionFuture = NULL;
+		cRand->neighbor_->connectionFuture = NULL;
 		return deltaLikeness;
 	}
 }
@@ -616,7 +616,7 @@ double NodeDistanceIntensity::makeChangeFission6(const double limitLoss, ChainNe
 	//From
 	//1(this)---------2(connectionFission1Future)
 	//          \-----3(connectionFission2Future)
-	//4(cRand)--------5(cRand->neighbor->connectionFuture)
+	//4(cRand)--------5(cRand->neighbor_->connectionFuture)
 
 	//To
 	//possibility 6
@@ -624,21 +624,21 @@ double NodeDistanceIntensity::makeChangeFission6(const double limitLoss, ChainNe
 	//          \-----5
 	//4(cRand)--------3(connectionFission2Future)
 
-	if (cRand->neighbor->connectionBlinkFuture != NULL) { return 0.; } // crand is already implicated in a future blink.
+	if (cRand->neighbor_->connectionBlinkFuture != NULL) { return 0.; } // crand is already implicated in a future blink.
 
-	if (cRand->neighbor->connectionFuture != NULL) {
-		if (distance(cRand->neighbor->connectionFuture) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (cRand->neighbor_->connectionFuture != NULL) {
+		if (distance(cRand->neighbor_->connectionFuture) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 	}
-	if (cRand->neighbor->distance(connectionFission2Future) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (cRand->neighbor_->distance(connectionFission2Future) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 
-	const double deltaLikeness = +likenessFusion(connectionFission1Future, cRand->neighbor->connectionFuture) + cRand->neighbor->likeness(connectionFission2Future) - likenessFusion(connectionFission1Future, connectionFission2Future) - cRand->neighbor->likeness(cRand->neighbor->connectionFuture);
+	const double deltaLikeness = +likenessFusion(connectionFission1Future, cRand->neighbor_->connectionFuture) + cRand->neighbor_->likeness(connectionFission2Future) - likenessFusion(connectionFission1Future, connectionFission2Future) - cRand->neighbor_->likeness(cRand->neighbor_->connectionFuture);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 
-		connectionFission2Future->connectionPast = cRand->neighbor;
-		cRand->neighbor->connectionFuture->connectionFissionPast = this;
-		Node* localN = cRand->neighbor->connectionFuture;
-		cRand->neighbor->connectionFuture = connectionFission2Future;
+		connectionFission2Future->connectionPast = cRand->neighbor_;
+		cRand->neighbor_->connectionFuture->connectionFissionPast = this;
+		Node* localN = cRand->neighbor_->connectionFuture;
+		cRand->neighbor_->connectionFuture = connectionFission2Future;
 		connectionFission2Future->connectionFissionPast = NULL;
 		connectionFission2Future = localN;
 		connectionFission2Future->connectionPast = NULL;
@@ -652,7 +652,7 @@ double NodeDistanceIntensity::makeChangeFission7(const double limitLoss, ChainNe
 	//From
 	//1(this)---------2(connectionFission1Future)
 	//          \-----3(connectionFission2Future)
-	//4(cRand)--------5(cRand->neighbor->connectionFuture)
+	//4(cRand)--------5(cRand->neighbor_->connectionFuture)
 
 	//To
 	//possibility 7
@@ -660,22 +660,22 @@ double NodeDistanceIntensity::makeChangeFission7(const double limitLoss, ChainNe
 	//          \-----5
 	//4(cRand)--------2(connectionFission1Future)
 
-	if (cRand->neighbor->connectionBlinkFuture != NULL) { return 0.; } // crand is already implicated in a future blink.
+	if (cRand->neighbor_->connectionBlinkFuture != NULL) { return 0.; } // crand is already implicated in a future blink.
 
-	if (cRand->neighbor->connectionFuture != NULL) {
-		if (distance(cRand->neighbor->connectionFuture) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (cRand->neighbor_->connectionFuture != NULL) {
+		if (distance(cRand->neighbor_->connectionFuture) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 	}
-	if (cRand->neighbor->distance(connectionFission1Future) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (cRand->neighbor_->distance(connectionFission1Future) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 
 
-	const double deltaLikeness = +likenessFusion(connectionFission2Future, cRand->neighbor->connectionFuture) + cRand->neighbor->likeness(connectionFission1Future) - likenessFusion(connectionFission2Future, connectionFission1Future) - cRand->neighbor->likeness(cRand->neighbor->connectionFuture);
+	const double deltaLikeness = +likenessFusion(connectionFission2Future, cRand->neighbor_->connectionFuture) + cRand->neighbor_->likeness(connectionFission1Future) - likenessFusion(connectionFission2Future, connectionFission1Future) - cRand->neighbor_->likeness(cRand->neighbor_->connectionFuture);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 
-		connectionFission1Future->connectionPast = cRand->neighbor;
-		cRand->neighbor->connectionFuture->connectionFissionPast = this;
-		Node* localN = cRand->neighbor->connectionFuture;
-		cRand->neighbor->connectionFuture = connectionFission1Future;
+		connectionFission1Future->connectionPast = cRand->neighbor_;
+		cRand->neighbor_->connectionFuture->connectionFissionPast = this;
+		Node* localN = cRand->neighbor_->connectionFuture;
+		cRand->neighbor_->connectionFuture = connectionFission1Future;
 		connectionFission1Future->connectionFissionPast = NULL;
 		connectionFission1Future = localN;
 		connectionFission1Future->connectionPast = NULL;
@@ -777,16 +777,16 @@ double NodeDistanceIntensity::makeChangeFission(const double limitLoss)
 			}
 		}
 
-		//try to find a neighbor "4" in the neighborhood of "3"
+		//try to find a neighbor_ "4" in the neighborhood of "3"
 		const long idRandNeighbor = rand() % connectionFission2Future->neighborsPastCount;
 		//set the node cRand
-		for (i = 0, cRand = connectionFission2Future->neighborsPast; i < idRandNeighbor && cRand != NULL; cRand = cRand->next, i++) { ; }
+		for (i = 0, cRand = connectionFission2Future->neighborsPast; i < idRandNeighbor && cRand != NULL; cRand = cRand->next_, i++) { ; }
 		//test if the node is good
 
-		if (cRand->neighbor == this) { return 0; }                         // nothing to do, the new random link is the same than this.
-		if (cRand->neighbor->connectionBlinkFuture != NULL) { return 0.; } // crand is already implicated in a future blink.
+		if (cRand->neighbor_ == this) { return 0; }                         // nothing to do, the new random link is the same than this.
+		if (cRand->neighbor_->connectionBlinkFuture != NULL) { return 0.; } // crand is already implicated in a future blink.
 
-		if (cRand->neighbor->connectionFuture != NULL) {
+		if (cRand->neighbor_->connectionFuture != NULL) {
 			switch (rand() % 7) {
 				case 0: return makeChangeFission5(limitLoss, cRand);
 				case 1: return makeChangeFission6(limitLoss, cRand);
@@ -823,17 +823,17 @@ double NodeDistanceIntensity::makeChangeFusion0(const double limitLoss)
 	if (connectionFuture->neighborsPastCount < 2) { return 0.; } //no neighbors like 3
 	const long idRandNeighbor = rand() % connectionFuture->neighborsPastCount;
 	//set the node cRand
-	for (i = 0, cRand = connectionFuture->neighborsPast; i < idRandNeighbor && cRand != NULL; cRand = cRand->next, i++) { ; }
+	for (i = 0, cRand = connectionFuture->neighborsPast; i < idRandNeighbor && cRand != NULL; cRand = cRand->next_, i++) { ; }
 	//test if the node is good
 	if (cRand == NULL) { return -1.; }                                   //ERROR 
-	if (cRand->neighbor == this) { return 0; }                           // nothing to do, the new random link is the same than this.
-	if (cRand->neighbor->connectionFission1Future != NULL) { return 0; } // cRand is already implicated in a fission.
-	if (cRand->neighbor->connectionFusionFuture != NULL) { return 0; }   // cRand is already implicated in a fusion.
-	if (cRand->neighbor->connectionBlinkFuture != NULL) { return 0; }    // cRand is already implicated in a blink connection
+	if (cRand->neighbor_ == this) { return 0; }                           // nothing to do, the new random link is the same than this.
+	if (cRand->neighbor_->connectionFission1Future != NULL) { return 0; } // cRand is already implicated in a fission.
+	if (cRand->neighbor_->connectionFusionFuture != NULL) { return 0; }   // cRand is already implicated in a fusion.
+	if (cRand->neighbor_->connectionBlinkFuture != NULL) { return 0; }    // cRand is already implicated in a blink connection
 
-	if (connectionFuture->distance(cRand->neighbor) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (connectionFuture->distance(cRand->neighbor_) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 
-	const double deltaLikeness = +connectionFuture->likenessFusion(cRand->neighbor, this) + (cRand->neighbor->connectionFuture != NULL ? cRand->neighbor->connectionFuture->likeness(NULL) : 0.) - likeness(connectionFuture) - cRand->neighbor->likeness(cRand->neighbor->connectionFuture);
+	const double deltaLikeness = +connectionFuture->likenessFusion(cRand->neighbor_, this) + (cRand->neighbor_->connectionFuture != NULL ? cRand->neighbor_->connectionFuture->likeness(NULL) : 0.) - likeness(connectionFuture) - cRand->neighbor_->likeness(cRand->neighbor_->connectionFuture);
 
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
@@ -841,12 +841,12 @@ double NodeDistanceIntensity::makeChangeFusion0(const double limitLoss)
 
 		connectionFusionFuture = connectionFuture;
 		connectionFuture->connectionFusion1Past = this;
-		cRand->neighbor->connectionFusionFuture = connectionFuture;
-		connectionFuture->connectionFusion2Past = cRand->neighbor;
+		cRand->neighbor_->connectionFusionFuture = connectionFuture;
+		connectionFuture->connectionFusion2Past = cRand->neighbor_;
 
-		if (cRand->neighbor->connectionFuture != NULL) { cRand->neighbor->connectionFuture->connectionPast = NULL; }
+		if (cRand->neighbor_->connectionFuture != NULL) { cRand->neighbor_->connectionFuture->connectionPast = NULL; }
 
-		cRand->neighbor->connectionFuture = NULL;
+		cRand->neighbor_->connectionFuture = NULL;
 		connectionFuture = NULL;
 		connectionFusionFuture->connectionPast = NULL;
 
@@ -878,25 +878,25 @@ double NodeDistanceIntensity::makeChangeFusion1(const double limitLoss, ChainNei
 	//5---------------NULL
 
 
-	if (cRand->neighbor->connectionFissionPast != NULL) { return 0; } // cRand is already implicated in a fission.
-	if (cRand->neighbor->connectionFusion1Past != NULL) { return 0; } // cRand is already implicated in a fusion.
+	if (cRand->neighbor_->connectionFissionPast != NULL) { return 0; } // cRand is already implicated in a fission.
+	if (cRand->neighbor_->connectionFusion1Past != NULL) { return 0; } // cRand is already implicated in a fusion.
 
-	if (cRand->neighbor->distance(node) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (cRand->neighbor_->distance(node) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 
 
-	const double deltaLikeness = +likeness(connectionFusionFuture) + node->likeness(cRand->neighbor) + (cRand->neighbor->connectionPast == NULL ? 0 : cRand->neighbor->connectionPast->likeness(NULL)) - connectionFusionFuture->likenessFusion(node, this) - cRand->neighbor->likeness(cRand->neighbor->connectionPast);
+	const double deltaLikeness = +likeness(connectionFusionFuture) + node->likeness(cRand->neighbor_) + (cRand->neighbor_->connectionPast == NULL ? 0 : cRand->neighbor_->connectionPast->likeness(NULL)) - connectionFusionFuture->likenessFusion(node, this) - cRand->neighbor_->likeness(cRand->neighbor_->connectionPast);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 		connectionFusionFuture->connectionPast = this;
 		connectionFusionFuture->connectionFusion1Past = NULL;
 		connectionFusionFuture->connectionFusion2Past = NULL;
-		node->connectionFuture = cRand->neighbor;
+		node->connectionFuture = cRand->neighbor_;
 		node->connectionFusionFuture = NULL;
 		connectionFuture = connectionFusionFuture;
 		connectionFusionFuture = NULL;
 
-		if (cRand->neighbor->connectionPast != NULL) { cRand->neighbor->connectionPast->connectionFuture = NULL; }
-		cRand->neighbor->connectionPast = node;
+		if (cRand->neighbor_->connectionPast != NULL) { cRand->neighbor_->connectionPast->connectionFuture = NULL; }
+		cRand->neighbor_->connectionPast = node;
 
 		return deltaLikeness;
 	}
@@ -920,15 +920,15 @@ double NodeDistanceIntensity::makeChangeFusion2(const double limitLoss, ChainNei
 	//1---------------4(cRand)
 	//3(node)---------2(connectionFusionFuture)
 	//5---------------NULL
-	//try to find a neighbor "4" in the neighborhood of "1"
+	//try to find a neighbor_ "4" in the neighborhood of "1"
 
-	if (cRand->neighbor->connectionFissionPast != NULL) { return 0; } // cRand is already implicated in a fission.
-	if (cRand->neighbor->connectionFusion1Past != NULL) { return 0; } // cRand is already implicated in a fusion.
+	if (cRand->neighbor_->connectionFissionPast != NULL) { return 0; } // cRand is already implicated in a fission.
+	if (cRand->neighbor_->connectionFusion1Past != NULL) { return 0; } // cRand is already implicated in a fusion.
 
-	if (distance(cRand->neighbor) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (distance(cRand->neighbor_) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 
 
-	const double deltaLikeness = +likeness(cRand->neighbor) + node->likeness(connectionFusionFuture) + (cRand->neighbor->connectionPast == NULL ? 0 : cRand->neighbor->connectionPast->likeness(NULL)) - connectionFusionFuture->likenessFusion(node, this) - cRand->neighbor->likeness(cRand->neighbor->connectionPast);
+	const double deltaLikeness = +likeness(cRand->neighbor_) + node->likeness(connectionFusionFuture) + (cRand->neighbor_->connectionPast == NULL ? 0 : cRand->neighbor_->connectionPast->likeness(NULL)) - connectionFusionFuture->likenessFusion(node, this) - cRand->neighbor_->likeness(cRand->neighbor_->connectionPast);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 		//unlink connectionFuture
@@ -939,9 +939,9 @@ double NodeDistanceIntensity::makeChangeFusion2(const double limitLoss, ChainNei
 		node->connectionFusionFuture = NULL;
 		node->connectionFuture = connectionFusionFuture;
 		connectionFusionFuture = NULL;
-		connectionFuture = cRand->neighbor;
-		if (cRand->neighbor->connectionPast != NULL) { cRand->neighbor->connectionPast->connectionFuture = NULL; }
-		cRand->neighbor->connectionPast = this;
+		connectionFuture = cRand->neighbor_;
+		if (cRand->neighbor_->connectionPast != NULL) { cRand->neighbor_->connectionPast->connectionFuture = NULL; }
+		cRand->neighbor_->connectionPast = this;
 
 		return deltaLikeness;
 	}
@@ -1028,33 +1028,33 @@ double NodeDistanceIntensity::makeChangeFusion5(const double limitLoss, ChainNei
 	//3(node)----\
 	//5-----------\---4(cRand)
 
-	if (node->distance(cRand->neighbor) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (node->distance(cRand->neighbor_) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 
-	if (cRand->neighbor->connectionFissionPast != NULL) { return 0; } // cRand is already implicated in a fission.
-	if (cRand->neighbor->connectionFusion1Past != NULL) { return 0; } // cRand is already implicated in a fusion.
+	if (cRand->neighbor_->connectionFissionPast != NULL) { return 0; } // cRand is already implicated in a fission.
+	if (cRand->neighbor_->connectionFusion1Past != NULL) { return 0; } // cRand is already implicated in a fusion.
 
-	if (cRand->neighbor->connectionPast == NULL) { return 0; } // not possible to reconnection the fusion.
+	if (cRand->neighbor_->connectionPast == NULL) { return 0; } // not possible to reconnection the fusion.
 
-	const double deltaLikeness = +likeness(connectionFusionFuture) + cRand->neighbor->likenessFusion(node, cRand->neighbor->connectionPast) - connectionFusionFuture->likenessFusion(node, this) - cRand->neighbor->likeness(cRand->neighbor->connectionPast);
+	const double deltaLikeness = +likeness(connectionFusionFuture) + cRand->neighbor_->likenessFusion(node, cRand->neighbor_->connectionPast) - connectionFusionFuture->likenessFusion(node, this) - cRand->neighbor_->likeness(cRand->neighbor_->connectionPast);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 
 		connectionFuture = connectionFusionFuture;
 		connectionFuture->connectionPast = this;
 
-		node->connectionFusionFuture = cRand->neighbor;
-		cRand->neighbor->connectionFusion1Past = node;
+		node->connectionFusionFuture = cRand->neighbor_;
+		cRand->neighbor_->connectionFusion1Past = node;
 
-		cRand->neighbor->connectionPast->connectionFusionFuture = cRand->neighbor;
-		cRand->neighbor->connectionFusion2Past = cRand->neighbor->connectionPast;
+		cRand->neighbor_->connectionPast->connectionFusionFuture = cRand->neighbor_;
+		cRand->neighbor_->connectionFusion2Past = cRand->neighbor_->connectionPast;
 
 		connectionFuture->connectionFusion1Past = NULL;
 		connectionFusionFuture = NULL;
 
 		connectionFuture->connectionFusion2Past = NULL;
 
-		cRand->neighbor->connectionPast->connectionFuture = NULL;
-		cRand->neighbor->connectionPast = NULL;
+		cRand->neighbor_->connectionPast->connectionFuture = NULL;
+		cRand->neighbor_->connectionPast = NULL;
 
 		return deltaLikeness;
 	}
@@ -1080,32 +1080,32 @@ double NodeDistanceIntensity::makeChangeFusion7(const double limitLoss, ChainNei
 	//1(this)----\
 	//5-----------\---4(cRand)
 
-	if (cRand->neighbor->connectionFissionPast != NULL) { return 0; } // cRand is already implicated in a fission.
-	if (cRand->neighbor->connectionFusion1Past != NULL) { return 0; } // cRand is already implicated in a fusion.
+	if (cRand->neighbor_->connectionFissionPast != NULL) { return 0; } // cRand is already implicated in a fission.
+	if (cRand->neighbor_->connectionFusion1Past != NULL) { return 0; } // cRand is already implicated in a fusion.
 
-	if (cRand->neighbor->connectionPast == NULL) { return 0; } // not possible to reconnection the fusion.
+	if (cRand->neighbor_->connectionPast == NULL) { return 0; } // not possible to reconnection the fusion.
 
-	if (distance(cRand->neighbor) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
-	const double deltaLikeness = +node->likeness(connectionFusionFuture) + cRand->neighbor->likenessFusion(this, cRand->neighbor->connectionPast) - connectionFusionFuture->likenessFusion(node, this) - cRand->neighbor->likeness(cRand->neighbor->connectionPast);
+	if (distance(cRand->neighbor_) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	const double deltaLikeness = +node->likeness(connectionFusionFuture) + cRand->neighbor_->likenessFusion(this, cRand->neighbor_->connectionPast) - connectionFusionFuture->likenessFusion(node, this) - cRand->neighbor_->likeness(cRand->neighbor_->connectionPast);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 
 		node->connectionFuture = node->connectionFusionFuture;
 		node->connectionFuture->connectionPast = node;
 
-		connectionFusionFuture = cRand->neighbor;
-		cRand->neighbor->connectionFusion1Past = this;
+		connectionFusionFuture = cRand->neighbor_;
+		cRand->neighbor_->connectionFusion1Past = this;
 
-		cRand->neighbor->connectionPast->connectionFusionFuture = cRand->neighbor;
-		cRand->neighbor->connectionFusion2Past = cRand->neighbor->connectionPast;
+		cRand->neighbor_->connectionPast->connectionFusionFuture = cRand->neighbor_;
+		cRand->neighbor_->connectionFusion2Past = cRand->neighbor_->connectionPast;
 
 		node->connectionFuture->connectionFusion1Past = NULL;
 		node->connectionFusionFuture = NULL;
 
 		node->connectionFuture->connectionFusion2Past = NULL;
 
-		cRand->neighbor->connectionPast->connectionFuture = NULL;
-		cRand->neighbor->connectionPast = NULL;
+		cRand->neighbor_->connectionPast->connectionFuture = NULL;
+		cRand->neighbor_->connectionPast = NULL;
 
 		return deltaLikeness;
 	}
@@ -1129,29 +1129,29 @@ double NodeDistanceIntensity::makeChangeFusion8(const double limitLoss, ChainNei
 	//1(this)----\
 	//3(node)-----\---4(cRand)
 
-	if (cRand->neighbor->connectionFissionPast != NULL) { return 0; } // cRand is already implicated in a fission.
-	if (cRand->neighbor->connectionFusion1Past != NULL) { return 0; } // cRand is already implicated in a fusion.
+	if (cRand->neighbor_->connectionFissionPast != NULL) { return 0; } // cRand is already implicated in a fission.
+	if (cRand->neighbor_->connectionFusion1Past != NULL) { return 0; } // cRand is already implicated in a fusion.
 
-	if (cRand->neighbor->connectionPast == NULL) { return 0; } // not possible to reconnection the fusion.
+	if (cRand->neighbor_->connectionPast == NULL) { return 0; } // not possible to reconnection the fusion.
 
-	if (distance(cRand->neighbor) >= publicParameters->maxSpeed_) { return 0.; }                                         //distance is not respected
-	if (node->distance(cRand->neighbor) >= publicParameters->maxSpeed_) { return 0.; }                                   //distance is not respected
-	if (cRand->neighbor->connectionPast->distance(connectionFusionFuture) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (distance(cRand->neighbor_) >= publicParameters->maxSpeed_) { return 0.; }                                         //distance is not respected
+	if (node->distance(cRand->neighbor_) >= publicParameters->maxSpeed_) { return 0.; }                                   //distance is not respected
+	if (cRand->neighbor_->connectionPast->distance(connectionFusionFuture) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 
-	const double deltaLikeness = +cRand->neighbor->connectionPast->likeness(connectionFusionFuture) + cRand->neighbor->likenessFusion(this, node) - connectionFusionFuture->likenessFusion(node, this) - cRand->neighbor->likeness(cRand->neighbor->connectionPast);
+	const double deltaLikeness = +cRand->neighbor_->connectionPast->likeness(connectionFusionFuture) + cRand->neighbor_->likenessFusion(this, node) - connectionFusionFuture->likenessFusion(node, this) - cRand->neighbor_->likeness(cRand->neighbor_->connectionPast);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
-		connectionFusionFuture->connectionPast = cRand->neighbor->connectionPast;
+		connectionFusionFuture->connectionPast = cRand->neighbor_->connectionPast;
 		connectionFusionFuture->connectionPast->connectionFuture = connectionFusionFuture;
 
-		cRand->neighbor->connectionFusion1Past = connectionFusionFuture->connectionFusion1Past;
-		cRand->neighbor->connectionFusion2Past = connectionFusionFuture->connectionFusion2Past;
-		cRand->neighbor->connectionPast = NULL;
+		cRand->neighbor_->connectionFusion1Past = connectionFusionFuture->connectionFusion1Past;
+		cRand->neighbor_->connectionFusion2Past = connectionFusionFuture->connectionFusion2Past;
+		cRand->neighbor_->connectionPast = NULL;
 		//connectionFusionFuture->connectionPast->connectionFuture=NULL;
-		node->connectionFusionFuture = cRand->neighbor;
+		node->connectionFusionFuture = cRand->neighbor_;
 		connectionFusionFuture->connectionFusion1Past = NULL;
 		connectionFusionFuture->connectionFusion2Past = NULL;
-		connectionFusionFuture = cRand->neighbor;
+		connectionFusionFuture = cRand->neighbor_;
 
 		return deltaLikeness;
 	}
@@ -1176,31 +1176,31 @@ double NodeDistanceIntensity::makeChangeFusion6(const double limitLoss, ChainNei
 	//5----------/
 	//3(node)---------4(cRand)
 
-	if (node->distance(cRand->neighbor) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
-	if (cRand->neighbor->connectionPast != NULL) {
-		if (cRand->neighbor->connectionPast->distance(connectionFusionFuture) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (node->distance(cRand->neighbor_) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (cRand->neighbor_->connectionPast != NULL) {
+		if (cRand->neighbor_->connectionPast->distance(connectionFusionFuture) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 	}
 
 
-	const double deltaLikeness = +connectionFusionFuture->likenessFusion(this, cRand->neighbor->connectionPast) + cRand->neighbor->likeness(node) - connectionFusionFuture->likenessFusion(node, this) - cRand->neighbor->likeness(cRand->neighbor->connectionPast);
+	const double deltaLikeness = +connectionFusionFuture->likenessFusion(this, cRand->neighbor_->connectionPast) + cRand->neighbor_->likeness(node) - connectionFusionFuture->likenessFusion(node, this) - cRand->neighbor_->likeness(cRand->neighbor_->connectionPast);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 
 		if (connectionFusionFuture->connectionFusion1Past == this) {
-			cRand->neighbor->connectionPast->connectionFusionFuture = connectionFusionFuture;
-			cRand->neighbor->connectionPast->connectionFuture = NULL;
-			connectionFusionFuture->connectionFusion2Past = cRand->neighbor->connectionPast;
+			cRand->neighbor_->connectionPast->connectionFusionFuture = connectionFusionFuture;
+			cRand->neighbor_->connectionPast->connectionFuture = NULL;
+			connectionFusionFuture->connectionFusion2Past = cRand->neighbor_->connectionPast;
 			node->connectionFusionFuture = NULL;
-			node->connectionFuture = cRand->neighbor;
-			cRand->neighbor->connectionPast = node;
+			node->connectionFuture = cRand->neighbor_;
+			cRand->neighbor_->connectionPast = node;
 		}
 		else {
-			cRand->neighbor->connectionPast->connectionFusionFuture = connectionFusionFuture;
-			cRand->neighbor->connectionPast->connectionFuture = NULL;
-			connectionFusionFuture->connectionFusion1Past = cRand->neighbor->connectionPast;
+			cRand->neighbor_->connectionPast->connectionFusionFuture = connectionFusionFuture;
+			cRand->neighbor_->connectionPast->connectionFuture = NULL;
+			connectionFusionFuture->connectionFusion1Past = cRand->neighbor_->connectionPast;
 			node->connectionFusionFuture = NULL;
-			node->connectionFuture = cRand->neighbor;
-			cRand->neighbor->connectionPast = node;
+			node->connectionFuture = cRand->neighbor_;
+			cRand->neighbor_->connectionPast = node;
 		}
 
 		return deltaLikeness;
@@ -1216,8 +1216,8 @@ double NodeDistanceIntensity::makeChangeFusion9(const double limitLoss, ChainNei
 	else { node = connectionFusionFuture->connectionFusion1Past; }
 	Node* node2;
 	//find "node2"
-	if (cRand->neighbor->connectionFissionPast->connectionFission1Future == cRand->neighbor) { node2 = cRand->neighbor->connectionFissionPast->connectionFission2Future; }
-	else { node2 = cRand->neighbor->connectionFissionPast->connectionFission1Future; }
+	if (cRand->neighbor_->connectionFissionPast->connectionFission1Future == cRand->neighbor_) { node2 = cRand->neighbor_->connectionFissionPast->connectionFission2Future; }
+	else { node2 = cRand->neighbor_->connectionFissionPast->connectionFission1Future; }
 
 	//possibility 9
 	//From 
@@ -1230,10 +1230,10 @@ double NodeDistanceIntensity::makeChangeFusion9(const double limitLoss, ChainNei
 	//3(node)---------4(cRand)
 	//5---------------6(node2)
 
-	if (node->distance(cRand->neighbor) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (node->distance(cRand->neighbor_) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 
 
-	const double deltaLikeness = +likeness(connectionFusionFuture) + node->likeness(cRand->neighbor) + cRand->neighbor->connectionFissionPast->likeness(node2) - connectionFusionFuture->likenessFusion(node, this) - cRand->neighbor->connectionFissionPast->likenessFission(cRand->neighbor, node2);
+	const double deltaLikeness = +likeness(connectionFusionFuture) + node->likeness(cRand->neighbor_) + cRand->neighbor_->connectionFissionPast->likeness(node2) - connectionFusionFuture->likenessFusion(node, this) - cRand->neighbor_->connectionFissionPast->likenessFission(cRand->neighbor_, node2);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 
@@ -1243,9 +1243,9 @@ double NodeDistanceIntensity::makeChangeFusion9(const double limitLoss, ChainNei
 		connectionFusionFuture->connectionFusion2Past = NULL;
 		node->connectionFusionFuture = NULL;
 		connectionFusionFuture = NULL;
-		node->connectionFuture = cRand->neighbor;
-		cRand->neighbor->connectionPast = node;
-		cRand->neighbor->connectionFissionPast = NULL;
+		node->connectionFuture = cRand->neighbor_;
+		cRand->neighbor_->connectionPast = node;
+		cRand->neighbor_->connectionFissionPast = NULL;
 		node2->connectionFissionPast->connectionFission1Future = NULL;
 		node2->connectionFissionPast->connectionFission2Future = NULL;
 		node2->connectionFissionPast->connectionFuture = node2;
@@ -1359,14 +1359,14 @@ double NodeDistanceIntensity::makeChangeFusion(const double limitLoss)
 
 		const long idRandNeighbor = rand() % neighborsFutureCount;
 		//set the node cRand
-		for (i = 0, cRand = neighborsFuture; i < idRandNeighbor && cRand != NULL; cRand = cRand->next, i++) { ; }
+		for (i = 0, cRand = neighborsFuture; i < idRandNeighbor && cRand != NULL; cRand = cRand->next_, i++) { ; }
 		//test if the node is good
 		if (cRand == NULL) { return -1.; } //ERROR
 
-		if (cRand->neighbor->connectionFissionPast != NULL) { return makeChangeFusion9(limitLoss, cRand); }
-		if (cRand->neighbor->connectionBlinkPast != NULL) { return 0; } // cRand is already implicated in a blink connection
+		if (cRand->neighbor_->connectionFissionPast != NULL) { return makeChangeFusion9(limitLoss, cRand); }
+		if (cRand->neighbor_->connectionBlinkPast != NULL) { return 0; } // cRand is already implicated in a blink connection
 
-		if (cRand->neighbor->connectionPast != NULL) {
+		if (cRand->neighbor_->connectionPast != NULL) {
 			switch (rand() % 7) {
 				case 0: return makeChangeFusion5(limitLoss, cRand);
 				case 1:
@@ -1413,17 +1413,17 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage1(const double limitLoss, C
 	//	1(this)-----3(cRand)
 	//	NULL--------2
 
-	if (cRand->neighbor->connectionBlinkPast != NULL) { return 0; } // cRand is already implicated in a blink connection
+	if (cRand->neighbor_->connectionBlinkPast != NULL) { return 0; } // cRand is already implicated in a blink connection
 
-	if (distance(cRand->neighbor) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (distance(cRand->neighbor_) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 
 
-	const double deltaLikeness = +likeness(cRand->neighbor) + (connectionFuture != NULL ? connectionFuture->likeness(NULL) : 0) - cRand->neighbor->likeness(NULL) - likeness(connectionFuture);
+	const double deltaLikeness = +likeness(cRand->neighbor_) + (connectionFuture != NULL ? connectionFuture->likeness(NULL) : 0) - cRand->neighbor_->likeness(NULL) - likeness(connectionFuture);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 		//unlink connectionFuture
 		if (connectionFuture != NULL) { connectionFuture->connectionPast = NULL; }
-		connectionFuture = cRand->neighbor;
+		connectionFuture = cRand->neighbor_;
 		connectionFuture->connectionPast = this;
 
 		return deltaLikeness;
@@ -1444,16 +1444,16 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage2(const double limitLoss, C
 	//	NULL--------2
 	//	4-----------NULL
 
-	if (distance(cRand->neighbor) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (distance(cRand->neighbor_) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 
-	const double deltaLikeness = +likeness(cRand->neighbor) + (connectionFuture == NULL ? 0 : connectionFuture->likeness(NULL)) + (cRand->neighbor->connectionPast == NULL ? 0 : cRand->neighbor->connectionPast->likeness(NULL)) - likeness(connectionFuture) - cRand->neighbor->likeness(cRand->neighbor->connectionPast);
+	const double deltaLikeness = +likeness(cRand->neighbor_) + (connectionFuture == NULL ? 0 : connectionFuture->likeness(NULL)) + (cRand->neighbor_->connectionPast == NULL ? 0 : cRand->neighbor_->connectionPast->likeness(NULL)) - likeness(connectionFuture) - cRand->neighbor_->likeness(cRand->neighbor_->connectionPast);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 		//unlink connectionFuture
 
 
 		if (connectionFuture != NULL) { connectionFuture->connectionPast = NULL; }
-		connectionFuture = cRand->neighbor;
+		connectionFuture = cRand->neighbor_;
 		connectionFuture->connectionPast->connectionFuture = NULL;
 		connectionFuture->connectionPast = this;
 
@@ -1474,13 +1474,13 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage3(const double limitLoss, C
 	const long idRandNeighbor = rand() % count;
 	int iCount = 0;
 
-	const ChainNeighbor* c = cRand->neighbor->connectionPast->neighborsFuture;
+	const ChainNeighbor* c = cRand->neighbor_->connectionPast->neighborsFuture;
 	do {
-		if (c->neighbor->connectionFusion1Past == NULL && c->neighbor->connectionFissionPast == NULL) {
-			if (c->neighbor->connectionPast == NULL) { iCount++; }
-			else { if (c->neighbor == connectionFuture) { iCount++; } }
+		if (c->neighbor_->connectionFusion1Past == NULL && c->neighbor_->connectionFissionPast == NULL) {
+			if (c->neighbor_->connectionPast == NULL) { iCount++; }
+			else { if (c->neighbor_ == connectionFuture) { iCount++; } }
 		}
-		if (iCount <= idRandNeighbor) { c = c->next; }
+		if (iCount <= idRandNeighbor) { c = c->next_; }
 	}
 	while (iCount <= idRandNeighbor);
 
@@ -1492,18 +1492,18 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage3(const double limitLoss, C
 	//	NULL--------2
 	if (c == NULL) { return -1; } //ERROR 
 
-	if (c->neighbor->connectionFusion1Past != NULL) { return -1; }                                   //ERROR 
-	if (c->neighbor->connectionFissionPast != NULL) { return -1; }                                   //ERROR 
-	if (c->neighbor != connectionFuture) { if (c->neighbor->connectionPast != NULL) { return -1; } } //ERROR 	
+	if (c->neighbor_->connectionFusion1Past != NULL) { return -1; }                                   //ERROR 
+	if (c->neighbor_->connectionFissionPast != NULL) { return -1; }                                   //ERROR 
+	if (c->neighbor_ != connectionFuture) { if (c->neighbor_->connectionPast != NULL) { return -1; } } //ERROR 	
 
-	if (distance(cRand->neighbor) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
-	if (cRand->neighbor->connectionBlinkPast != NULL) { return 0; }                         // cRand is already implicated in a blink connection
-	if (c->neighbor->connectionBlinkPast != NULL) { return 0; }                             // c is already implicated in a blink connection
-	if (cRand->neighbor->connectionPast != NULL) {
-		if (cRand->neighbor->connectionPast->distance(c->neighbor) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (distance(cRand->neighbor_) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (cRand->neighbor_->connectionBlinkPast != NULL) { return 0; }                         // cRand is already implicated in a blink connection
+	if (c->neighbor_->connectionBlinkPast != NULL) { return 0; }                             // c is already implicated in a blink connection
+	if (cRand->neighbor_->connectionPast != NULL) {
+		if (cRand->neighbor_->connectionPast->distance(c->neighbor_) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 	}
 
-	const double deltaLikeness = +likeness(cRand->neighbor) + cRand->neighbor->connectionPast->likeness(c->neighbor) + (connectionFuture == NULL ? 0 : connectionFuture->likeness(NULL)) - likeness(connectionFuture) - cRand->neighbor->likeness(cRand->neighbor->connectionPast) - c->neighbor->likeness(NULL);
+	const double deltaLikeness = +likeness(cRand->neighbor_) + cRand->neighbor_->connectionPast->likeness(c->neighbor_) + (connectionFuture == NULL ? 0 : connectionFuture->likeness(NULL)) - likeness(connectionFuture) - cRand->neighbor_->likeness(cRand->neighbor_->connectionPast) - c->neighbor_->likeness(NULL);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 		//unlink connectionFuture
@@ -1511,8 +1511,8 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage3(const double limitLoss, C
 		if (connectionFuture != NULL) {
 			connectionFuture->connectionPast = NULL; //????
 		}
-		connectionFuture = cRand->neighbor;
-		connectionFuture->connectionPast->connectionFuture = c->neighbor;
+		connectionFuture = cRand->neighbor_;
+		connectionFuture->connectionPast->connectionFuture = c->neighbor_;
 		connectionFuture->connectionPast->connectionFuture->connectionPast = connectionFuture->connectionPast;
 		connectionFuture->connectionPast = this;
 
@@ -1533,19 +1533,19 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage4(const double limitLoss, C
 	//	4-----------2
 
 
-	if (cRand->neighbor->connectionPast != NULL) {
-		if (cRand->neighbor->connectionPast->distance(connectionFuture) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (cRand->neighbor_->connectionPast != NULL) {
+		if (cRand->neighbor_->connectionPast->distance(connectionFuture) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 	}
-	if (distance(cRand->neighbor) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
+	if (distance(cRand->neighbor_) >= publicParameters->maxSpeed_) { return 0.; } //distance is not respected
 
-	const double deltaLikeness = +likeness(cRand->neighbor) + connectionFuture->likeness(cRand->neighbor->connectionPast) - cRand->neighbor->likeness(cRand->neighbor->connectionPast) - likeness(connectionFuture);
+	const double deltaLikeness = +likeness(cRand->neighbor_) + connectionFuture->likeness(cRand->neighbor_->connectionPast) - cRand->neighbor_->likeness(cRand->neighbor_->connectionPast) - likeness(connectionFuture);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 
-		cRand->neighbor->connectionPast->connectionFuture = connectionFuture;
-		connectionFuture->connectionPast = cRand->neighbor->connectionPast;
-		connectionFuture = cRand->neighbor;
-		cRand->neighbor->connectionPast = this;
+		cRand->neighbor_->connectionPast->connectionFuture = connectionFuture;
+		connectionFuture->connectionPast = cRand->neighbor_->connectionPast;
+		connectionFuture = cRand->neighbor_;
+		cRand->neighbor_->connectionPast = this;
 
 		return deltaLikeness;
 	}
@@ -1570,28 +1570,28 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage0(const double limitLoss)
 	long nbNodeAtGoodTime = 0;
 	ChainNeighbor* cRand;
 
-	for (cRand = neighborsBlinkFuture; cRand != NULL; cRand = cRand->next) { if (cRand->neighbor->time - time == dt && cRand->neighbor->connectionPast == NULL && cRand->neighbor->connectionBlinkPast == NULL && cRand->neighbor->connectionFissionPast == NULL && cRand->neighbor->connectionFusion1Past == NULL) { nbNodeAtGoodTime++; } }
+	for (cRand = neighborsBlinkFuture; cRand != NULL; cRand = cRand->next_) { if (cRand->neighbor_->time - time == dt && cRand->neighbor_->connectionPast == NULL && cRand->neighbor_->connectionBlinkPast == NULL && cRand->neighbor_->connectionFissionPast == NULL && cRand->neighbor_->connectionFusion1Past == NULL) { nbNodeAtGoodTime++; } }
 	if (nbNodeAtGoodTime == 0) { return 0; }
 
 	const long idRandNeighbor = rand() % nbNodeAtGoodTime;
 	long i = 0;
 	bool exitFor = false;
 	for (cRand = neighborsBlinkFuture; !exitFor && cRand != NULL;) {
-		if (cRand->neighbor->time - time == dt && cRand->neighbor->connectionPast == NULL && cRand->neighbor->connectionBlinkPast == NULL && cRand->neighbor->connectionFissionPast == NULL && cRand->neighbor->connectionFusion1Past == NULL) {
+		if (cRand->neighbor_->time - time == dt && cRand->neighbor_->connectionPast == NULL && cRand->neighbor_->connectionBlinkPast == NULL && cRand->neighbor_->connectionFissionPast == NULL && cRand->neighbor_->connectionFusion1Past == NULL) {
 			if (i == idRandNeighbor) { exitFor = true; }
 			i++;
 		}
-		if (!exitFor) { cRand = cRand->next; }
+		if (!exitFor) { cRand = cRand->next_; }
 	}
 
 
 	if (cRand == NULL) { return -1.; } //ERROR 
 
-	const double deltaLikeness = +likenessBlink(cRand->neighbor) - cRand->neighbor->likeness(NULL) - likeness(NULL);
+	const double deltaLikeness = +likenessBlink(cRand->neighbor_) - cRand->neighbor_->likeness(NULL) - likeness(NULL);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } //deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
-		cRand->neighbor->connectionBlinkPast = this;
-		connectionBlinkFuture = cRand->neighbor;
+		cRand->neighbor_->connectionBlinkPast = this;
+		connectionBlinkFuture = cRand->neighbor_;
 
 		return deltaLikeness;
 	}
@@ -1629,8 +1629,8 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage2(const double limitLoss, Ch
 	//	4---------3(cRand)----...
 	//  1=this
 	//  2=connectionBlinkFuture
-	//	3=cRand->neighbor
-	//	4=cRand->neighbor->connectionPast
+	//	3=cRand->neighbor_
+	//	4=cRand->neighbor_->connectionPast
 
 
 	//	To
@@ -1639,14 +1639,14 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage2(const double limitLoss, Ch
 	//	1(this)---3(cRand)----...
 
 
-	const double deltaLikeness = +likeness(cRand->neighbor) + cRand->neighbor->connectionPast->likenessBlink(connectionBlinkFuture) - likenessBlink(connectionBlinkFuture) - cRand->neighbor->connectionPast->likeness(cRand->neighbor);
+	const double deltaLikeness = +likeness(cRand->neighbor_) + cRand->neighbor_->connectionPast->likenessBlink(connectionBlinkFuture) - likenessBlink(connectionBlinkFuture) - cRand->neighbor_->connectionPast->likeness(cRand->neighbor_);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } // deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
-		connectionBlinkFuture->connectionBlinkPast = cRand->neighbor->connectionPast;
-		cRand->neighbor->connectionPast->connectionBlinkFuture = connectionBlinkFuture;
-		cRand->neighbor->connectionPast->connectionFuture = NULL;
-		cRand->neighbor->connectionPast = this;
-		connectionFuture = cRand->neighbor;
+		connectionBlinkFuture->connectionBlinkPast = cRand->neighbor_->connectionPast;
+		cRand->neighbor_->connectionPast->connectionBlinkFuture = connectionBlinkFuture;
+		cRand->neighbor_->connectionPast->connectionFuture = NULL;
+		cRand->neighbor_->connectionPast = this;
+		connectionFuture = cRand->neighbor_;
 		connectionBlinkFuture = NULL;
 
 		return deltaLikeness;
@@ -1662,8 +1662,8 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage3(const double limitLoss, Ch
 	//				...------3(cRand)---4
 	//  1=this
 	//  2=connectionBlinkFuture
-	//	3=cRand->neighbor
-	//	4=cRand->neighbor->connectionFuture
+	//	3=cRand->neighbor_
+	//	4=cRand->neighbor_->connectionFuture
 
 
 	//	To
@@ -1672,16 +1672,16 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage3(const double limitLoss, Ch
 	//				...------3(cRand)---2(connectionBlinkFuture)
 	//  makeChangeBlinkLinkage3
 
-	const double deltaLikeness = +likenessBlink(cRand->neighbor->connectionFuture) + cRand->neighbor->likeness(connectionBlinkFuture) - likenessBlink(connectionBlinkFuture) - cRand->neighbor->connectionFuture->likeness(cRand->neighbor);
+	const double deltaLikeness = +likenessBlink(cRand->neighbor_->connectionFuture) + cRand->neighbor_->likeness(connectionBlinkFuture) - likenessBlink(connectionBlinkFuture) - cRand->neighbor_->connectionFuture->likeness(cRand->neighbor_);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } // deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 
-		cRand->neighbor->connectionFuture->connectionBlinkPast = this;
-		cRand->neighbor->connectionFuture->connectionPast = NULL;
+		cRand->neighbor_->connectionFuture->connectionBlinkPast = this;
+		cRand->neighbor_->connectionFuture->connectionPast = NULL;
 		connectionBlinkFuture->connectionBlinkPast = NULL;
-		connectionBlinkFuture->connectionPast = cRand->neighbor;
-		Node* tmp = cRand->neighbor->connectionFuture;
-		cRand->neighbor->connectionFuture = connectionBlinkFuture;
+		connectionBlinkFuture->connectionPast = cRand->neighbor_;
+		Node* tmp = cRand->neighbor_->connectionFuture;
+		cRand->neighbor_->connectionFuture = connectionBlinkFuture;
 		connectionBlinkFuture = tmp;
 
 		return deltaLikeness;
@@ -1697,7 +1697,7 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage4(const double limitLoss, Ch
 	//	NULL--------3(cRand2)----...
 	//  1=this
 	//  2=connectionBlinkFuture
-	//	3=cRand2->neighbor
+	//	3=cRand2->neighbor_
 
 
 	//	To
@@ -1706,13 +1706,13 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage4(const double limitLoss, Ch
 	//	1(this)---3(cRand2)----...
 	//  makeChangeBlinkLinkage4
 
-	const double deltaLikeness = +likeness(cRand->neighbor) + connectionBlinkFuture->likeness(NULL) - likenessBlink(connectionBlinkFuture) - cRand->neighbor->likeness(NULL);
+	const double deltaLikeness = +likeness(cRand->neighbor_) + connectionBlinkFuture->likeness(NULL) - likenessBlink(connectionBlinkFuture) - cRand->neighbor_->likeness(NULL);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } // deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 		connectionBlinkFuture->connectionBlinkPast = NULL;
 		connectionBlinkFuture = NULL;
-		cRand->neighbor->connectionPast = this;
-		connectionFuture = cRand->neighbor;
+		cRand->neighbor_->connectionPast = this;
+		connectionFuture = cRand->neighbor_;
 
 		return deltaLikeness;
 	}
@@ -1727,7 +1727,7 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage5(const double limitLoss, Ch
 	//				...------3(cRand2)---NULL
 	//  1=this
 	//  2=connectionBlinkFuture
-	//	3=cRand2->neighbor
+	//	3=cRand2->neighbor_
 
 
 	//	To
@@ -1737,14 +1737,14 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage5(const double limitLoss, Ch
 	//  makeChangeBlinkLinkage5
 
 
-	const double deltaLikeness = +likeness(NULL) + cRand->neighbor->likeness(connectionBlinkFuture) - likenessBlink(connectionBlinkFuture) - cRand->neighbor->likeness(NULL);
+	const double deltaLikeness = +likeness(NULL) + cRand->neighbor_->likeness(connectionBlinkFuture) - likenessBlink(connectionBlinkFuture) - cRand->neighbor_->likeness(NULL);
 	if (!metropolis(deltaLikeness, limitLoss)) { return 0.; } // deltaLikeness<limitLoss) // if the new solution is to bad
 	else {                                                    // change the configuration
 
 
 		connectionBlinkFuture->connectionBlinkPast = NULL;
-		connectionBlinkFuture->connectionPast = cRand->neighbor;
-		cRand->neighbor->connectionFuture = connectionBlinkFuture;
+		connectionBlinkFuture->connectionPast = cRand->neighbor_;
+		cRand->neighbor_->connectionFuture = connectionBlinkFuture;
 		connectionBlinkFuture = NULL;
 		return deltaLikeness;
 	}
@@ -1785,8 +1785,8 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(const double limitLoss)
 		//	4---------3(cRand)----...
 		//  1=this
 		//  2=connectionBlinkFuture
-		//	3=cRand->neighbor
-		//	4=cRand->neighbor->connectionPast
+		//	3=cRand->neighbor_
+		//	4=cRand->neighbor_->connectionPast
 
 
 		//	To
@@ -1804,8 +1804,8 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(const double limitLoss)
 		//				...------3(cRand)---4
 		//  1=this
 		//  2=connectionBlinkFuture
-		//	3=cRand->neighbor
-		//	4=cRand->neighbor->connectionFuture
+		//	3=cRand->neighbor_
+		//	4=cRand->neighbor_->connectionFuture
 
 
 		//	To
@@ -1824,7 +1824,7 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(const double limitLoss)
 		//	NULL--------3(cRand2)----...
 		//  1=this
 		//  2=connectionBlinkFuture
-		//	3=cRand2->neighbor
+		//	3=cRand2->neighbor_
 
 
 		//	To
@@ -1842,7 +1842,7 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(const double limitLoss)
 		//				...------3(cRand2)---NULL
 		//  1=this
 		//  2=connectionBlinkFuture
-		//	3=cRand2->neighbor
+		//	3=cRand2->neighbor_
 
 
 		//	To
@@ -1862,10 +1862,10 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(const double limitLoss)
 
 			long idRandNeighbor;
 
-			for (cRand = neighborsFuture; cRand != NULL; cRand = cRand->next) {
-				if (cRand->neighbor->time - time == 1) {
-					if (cRand->neighbor->connectionPast != NULL) { nbNodeAtGoodTime++; }
-					else { if (cRand->neighbor->connectionFusion1Past == NULL && cRand->neighbor->connectionFissionPast == NULL && cRand->neighbor->connectionBlinkPast == NULL) { nbNodeAtGoodTime2++; } }
+			for (cRand = neighborsFuture; cRand != NULL; cRand = cRand->next_) {
+				if (cRand->neighbor_->time - time == 1) {
+					if (cRand->neighbor_->connectionPast != NULL) { nbNodeAtGoodTime++; }
+					else { if (cRand->neighbor_->connectionFusion1Past == NULL && cRand->neighbor_->connectionFissionPast == NULL && cRand->neighbor_->connectionBlinkPast == NULL) { nbNodeAtGoodTime2++; } }
 				}
 			}
 			if (nbNodeAtGoodTime == 0 && nbNodeAtGoodTime2 == 0) { return makeChangeBlinkLinkage1(limitLoss); }
@@ -1875,16 +1875,16 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(const double limitLoss)
 				i = 0;
 				bool exitFor = false;
 				for (cRand = neighborsFuture; !exitFor && cRand != NULL;) {
-					if (cRand->neighbor->time - time == 1 && cRand->neighbor->connectionPast != NULL) {
+					if (cRand->neighbor_->time - time == 1 && cRand->neighbor_->connectionPast != NULL) {
 						if (i == idRandNeighbor) { exitFor = true; }
 						i++;
 					}
-					if (!exitFor) { cRand = cRand->next; }
+					if (!exitFor) { cRand = cRand->next_; }
 				}
 				if (cRand == NULL) { return -1.; } //ERROR 
 
-				if (distance(cRand->neighbor) >= publicParameters->maxSpeed_) { return 0; }                                        //cRand not linked to this!
-				if (connectionBlinkFuture->distance(cRand->neighbor->connectionPast) >= publicParameters->maxSpeed_) { return 0; } //connectionBlinkFuture not linked to cRand->neighbor->connectionPast
+				if (distance(cRand->neighbor_) >= publicParameters->maxSpeed_) { return 0; }                                        //cRand not linked to this!
+				if (connectionBlinkFuture->distance(cRand->neighbor_->connectionPast) >= publicParameters->maxSpeed_) { return 0; } //connectionBlinkFuture not linked to cRand->neighbor_->connectionPast
 				return makeChangeBlinkLinkage2(limitLoss, cRand);
 			}
 			else {
@@ -1893,15 +1893,15 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(const double limitLoss)
 				i = 0;
 				bool exitFor = false;
 				for (cRand2 = neighborsFuture; !exitFor && cRand2 != NULL;) {
-					if (cRand2->neighbor->time - time == 1 && cRand2->neighbor->connectionPast == NULL && cRand2->neighbor->connectionFusion1Past == NULL && cRand2->neighbor->connectionFissionPast == NULL && cRand2->neighbor->connectionBlinkPast == NULL) {
+					if (cRand2->neighbor_->time - time == 1 && cRand2->neighbor_->connectionPast == NULL && cRand2->neighbor_->connectionFusion1Past == NULL && cRand2->neighbor_->connectionFissionPast == NULL && cRand2->neighbor_->connectionBlinkPast == NULL) {
 						if (i == idRandNeighbor) { exitFor = true; }
 						i++;
 					}
-					if (!exitFor) { cRand2 = cRand2->next; }
+					if (!exitFor) { cRand2 = cRand2->next_; }
 				}
 				if (cRand2 == NULL) { return -1.; } //ERROR 
 
-				if (distance(cRand2->neighbor) >= publicParameters->maxSpeed_) { return 0; } //cRand2 not linked to this!
+				if (distance(cRand2->neighbor_) >= publicParameters->maxSpeed_) { return 0; } //cRand2 not linked to this!
 
 				return makeChangeBlinkLinkage4(limitLoss, cRand2);
 			}
@@ -1913,10 +1913,10 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(const double limitLoss)
 
 			long idRandNeighbor;
 
-			for (cRand = connectionBlinkFuture->neighborsPast; cRand != NULL; cRand = cRand->next) {
-				if (connectionBlinkFuture->time - cRand->neighbor->time == 1) {
-					if (cRand->neighbor->connectionFuture != NULL) { nbNodeAtGoodTime++; }
-					else { if (cRand->neighbor->connectionFission1Future == NULL && cRand->neighbor->connectionFusionFuture == NULL && cRand->neighbor->connectionBlinkFuture == NULL) { nbNodeAtGoodTime2++; } }
+			for (cRand = connectionBlinkFuture->neighborsPast; cRand != NULL; cRand = cRand->next_) {
+				if (connectionBlinkFuture->time - cRand->neighbor_->time == 1) {
+					if (cRand->neighbor_->connectionFuture != NULL) { nbNodeAtGoodTime++; }
+					else { if (cRand->neighbor_->connectionFission1Future == NULL && cRand->neighbor_->connectionFusionFuture == NULL && cRand->neighbor_->connectionBlinkFuture == NULL) { nbNodeAtGoodTime2++; } }
 				}
 			}
 			if (nbNodeAtGoodTime == 0 && nbNodeAtGoodTime2 == 0) { return makeChangeBlinkLinkage1(limitLoss); }
@@ -1926,15 +1926,15 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(const double limitLoss)
 				i = 0;
 				bool exitFor = false;
 				for (cRand = connectionBlinkFuture->neighborsPast; !exitFor && cRand != NULL;) {
-					if (connectionBlinkFuture->time - cRand->neighbor->time == 1 && cRand->neighbor->connectionFuture != NULL) {
+					if (connectionBlinkFuture->time - cRand->neighbor_->time == 1 && cRand->neighbor_->connectionFuture != NULL) {
 						if (i == idRandNeighbor) { exitFor = true; }
 						i++;
 					}
-					if (!exitFor) { cRand = cRand->next; }
+					if (!exitFor) { cRand = cRand->next_; }
 				}
 				if (cRand == NULL) { return -1.; }                                                                            //ERROR 
-				if (connectionBlinkFuture->distance(cRand->neighbor) >= publicParameters->maxSpeed_) { return 0; } //cRand not linked to connectionBlinkFuture!
-				if (distance(cRand->neighbor->connectionFuture) >= publicParameters->maxSpeed_) { return 0; }      //this  not linked to cRand->neighbor->connectionFuture!
+				if (connectionBlinkFuture->distance(cRand->neighbor_) >= publicParameters->maxSpeed_) { return 0; } //cRand not linked to connectionBlinkFuture!
+				if (distance(cRand->neighbor_->connectionFuture) >= publicParameters->maxSpeed_) { return 0; }      //this  not linked to cRand->neighbor_->connectionFuture!
 
 
 				return makeChangeBlinkLinkage3(limitLoss, cRand);
@@ -1945,14 +1945,14 @@ double NodeDistanceIntensity::makeChangeBlinkLinkage(const double limitLoss)
 				i = 0;
 				bool exitFor = false;
 				for (cRand2 = connectionBlinkFuture->neighborsPast; !exitFor && cRand2 != NULL;) {
-					if (connectionBlinkFuture->time - cRand2->neighbor->time == 1 && cRand2->neighbor->connectionFuture == NULL && cRand2->neighbor->connectionFission1Future == NULL && cRand2->neighbor->connectionFusionFuture == NULL && cRand2->neighbor->connectionBlinkFuture == NULL) {
+					if (connectionBlinkFuture->time - cRand2->neighbor_->time == 1 && cRand2->neighbor_->connectionFuture == NULL && cRand2->neighbor_->connectionFission1Future == NULL && cRand2->neighbor_->connectionFusionFuture == NULL && cRand2->neighbor_->connectionBlinkFuture == NULL) {
 						if (i == idRandNeighbor) { exitFor = true; }
 						i++;
 					}
-					if (!exitFor) { cRand2 = cRand2->next; }
+					if (!exitFor) { cRand2 = cRand2->next_; }
 				}
 				if (cRand2 == NULL) { return -1.; }                                                                            //ERROR 
-				if (connectionBlinkFuture->distance(cRand2->neighbor) >= publicParameters->maxSpeed_) { return 0; } //cRand2 not linked to connectionBlinkFuture!
+				if (connectionBlinkFuture->distance(cRand2->neighbor_) >= publicParameters->maxSpeed_) { return 0; } //cRand2 not linked to connectionBlinkFuture!
 				return makeChangeBlinkLinkage5(limitLoss, cRand2);
 			}
 		}
@@ -1972,20 +1972,20 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage(const double limitLoss)
 
 		//set the node cRand
 		ChainNeighbor* cRand;
-		for (i = 0, cRand = neighborsFuture; i < idRandNeighbor && cRand != NULL; cRand = cRand->next, i++) { ; }
+		for (i = 0, cRand = neighborsFuture; i < idRandNeighbor && cRand != NULL; cRand = cRand->next_, i++) { ; }
 		//test if the node is good
 		if (cRand == NULL) { return -1.; } //ERROR 
 		// the new random link is the same than the connectionFuture.
-		if (cRand->neighbor == connectionFuture) { return makeChangeSimpleLinkage0(limitLoss); } //try simple deconnection
+		if (cRand->neighbor_ == connectionFuture) { return makeChangeSimpleLinkage0(limitLoss); } //try simple deconnection
 
 
-		if (cRand->neighbor->connectionFissionPast != NULL) { return 0; } // cRand already implicated in a fission
-		if (cRand->neighbor->connectionFusion1Past != NULL) { return 0; } // cRand already implicated in a fusion
-		if (cRand->neighbor->connectionBlinkPast != NULL) { return 0; }   // cRand is already implicated in a blink connection
+		if (cRand->neighbor_->connectionFissionPast != NULL) { return 0; } // cRand already implicated in a fission
+		if (cRand->neighbor_->connectionFusion1Past != NULL) { return 0; } // cRand already implicated in a fusion
+		if (cRand->neighbor_->connectionBlinkPast != NULL) { return 0; }   // cRand is already implicated in a blink connection
 
 
-		//is there a conflict between this and the pastConnextion of cRand->neighbor?
-		if (cRand->neighbor->connectionPast == NULL) { //no conflict cRand->neighbor can be linked with this.
+		//is there a conflict between this and the pastConnextion of cRand->neighbor_?
+		if (cRand->neighbor_->connectionPast == NULL) { //no conflict cRand->neighbor_ can be linked with this.
 			//	From
 			//	Present		Future
 			//	1(this)-----2
@@ -1998,7 +1998,7 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage(const double limitLoss)
 
 			return makeChangeSimpleLinkage1(limitLoss, cRand);
 		}
-		else {                                            //there is a conflict, the node cRand->neighbor is already connected to a node at the same time than this
+		else {                                            //there is a conflict, the node cRand->neighbor_ is already connected to a node at the same time than this
 			if (rand() % 2 && connectionFuture != NULL) { //just flip the 2 nodes
 				//	From
 				//	Present		Future
@@ -2018,10 +2018,10 @@ double NodeDistanceIntensity::makeChangeSimpleLinkage(const double limitLoss)
 				//	1(this)-----2
 				//	4-----------3(cRand)
 				int count = 0;
-				for (const ChainNeighbor* c = cRand->neighbor->connectionPast->neighborsFuture; c != NULL; c = c->next) {
-					if (c->neighbor->connectionFusion1Past == NULL && c->neighbor->connectionFissionPast == NULL) {
-						if (c->neighbor->connectionPast == NULL) { count++; }
-						else { if (c->neighbor == connectionFuture) { count++; } }
+				for (const ChainNeighbor* c = cRand->neighbor_->connectionPast->neighborsFuture; c != NULL; c = c->next_) {
+					if (c->neighbor_->connectionFusion1Past == NULL && c->neighbor_->connectionFissionPast == NULL) {
+						if (c->neighbor_->connectionPast == NULL) { count++; }
+						else { if (c->neighbor_ == connectionFuture) { count++; } }
 					}
 				}
 				if (count == 0) { //no node available to relink the conflicted node

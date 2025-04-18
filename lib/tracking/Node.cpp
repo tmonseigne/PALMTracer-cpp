@@ -96,19 +96,19 @@ Node::~Node()
 {
 	ChainNeighbor* l;
 	while (neighborsFuture != NULL) {
-		l = neighborsFuture->next;
+		l = neighborsFuture->next_;
 		delete neighborsFuture;
 		neighborsFuture = l;
 	}
 
 	while (neighborsPast != NULL) {
-		l = neighborsPast->next;
+		l = neighborsPast->next_;
 		delete neighborsPast;
 		neighborsPast = l;
 	}
 
 	while (neighborsPresent != NULL) {
-		l = neighborsPresent->next;
+		l = neighborsPresent->next_;
 		delete neighborsPresent;
 		neighborsPresent = l;
 	}
@@ -139,23 +139,23 @@ int Node::sortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 {
 	bool change;
 	if (*neighborsHead != NULL) {
-		if ((*neighborsHead)->next != NULL) {
+		if ((*neighborsHead)->next_ != NULL) {
 			do {
 				change = false;
 				ChainNeighbor* l = *neighborsHead;
 				ChainNeighbor* lOld = NULL;
-				while (l->next != NULL) {
-					if (l->next->neighbor->info->getIntensity() > l->neighbor->info->getIntensity()) {
-						ChainNeighbor* l2 = l->next;
+				while (l->next_ != NULL) {
+					if (l->next_->neighbor_->info->getIntensity() > l->neighbor_->info->getIntensity()) {
+						ChainNeighbor* l2 = l->next_;
 						if (lOld == NULL) { *neighborsHead = l2; }
-						else { lOld->next = l2; }
-						l->next = l2->next;
-						l2->next = l;
+						else { lOld->next_ = l2; }
+						l->next_ = l2->next_;
+						l2->next_ = l;
 						change = true;
 						lOld = l2;
 					}
 					else {
-						l = l->next;
+						l = l->next_;
 						if (lOld == NULL) { lOld = *neighborsHead; }
 					}
 				}

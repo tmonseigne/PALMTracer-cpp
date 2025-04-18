@@ -13,41 +13,41 @@ class InfoNode
 {
 public:
 	InfoNode(Parameters* _publicParameters);
-	~InfoNode() { };
+	~InfoNode() { }
 
 	Parameters* publicParameters;
-	virtual float distance(InfoNode* infoData) { return T_ERR_OOP; };
-	virtual float distance(InfoNode* i1, InfoNode* i2) { return T_ERR_OOP; };
-	virtual double getMean() { return T_ERR_OOP; };
-	virtual long getVolume() { return T_ERR_OOP; };
-	virtual long getSurface() { return T_ERR_OOP; };
-	virtual double getX() { return T_ERR_OOP; };
-	virtual double getY() { return T_ERR_OOP; };
+	virtual float distance(InfoNode* infoData) { return T_ERR_OOP; }
+	virtual float distance(InfoNode* i1, InfoNode* i2) { return T_ERR_OOP; }
+	virtual double getMean() { return T_ERR_OOP; }
+	virtual long getVolume() { return T_ERR_OOP; }
+	virtual long getSurface() { return T_ERR_OOP; }
+	virtual double getX() { return T_ERR_OOP; }
+	virtual double getY() { return T_ERR_OOP; }
 	virtual double getZ() { return T_ERR_OOP; }
-	virtual double getIntensity() { return T_ERR_OOP; };
-	virtual unsigned long getIndex() { return T_ERR_OOP; };
-	virtual unsigned long sizeofInfoData() { return T_ERR_OOP; };
-	virtual void* getPtrInfoData() { return nullptr; };
+	virtual double getIntensity() { return T_ERR_OOP; }
+	virtual unsigned long getIndex() { return T_ERR_OOP; }
+	virtual unsigned long sizeofInfoData() { return T_ERR_OOP; }
+	virtual void* getPtrInfoData() { return nullptr; }
 
-	virtual void setSurface(long s) { };
-	virtual void setX(double x) { };
-	virtual void setY(double y) { };
-	virtual void setZ(double z) { };
-	virtual void setIntensity(double I) { };
-	virtual void setIndex(unsigned long i) { };
-	virtual void setMean(double m) { };
+	virtual void setSurface(long s) { }
+	virtual void setX(double x) { }
+	virtual void setY(double y) { }
+	virtual void setZ(double z) { }
+	virtual void setIntensity(double I) { }
+	virtual void setIndex(unsigned long i) { }
+	virtual void setMean(double m) { }
 
 	// Added by Adel
-	virtual void setColor(double z) { };
-	virtual void setMolId(double molId) { };
-	virtual double getColor() { return 0; };
-	virtual double getMolId() { return 0; };
+	virtual void setColor(double z) { }
+	virtual void setMolId(double molId) { }
+	virtual double getColor() { return 0; }
+	virtual double getMolId() { return 0; }
 };
 
 class InfoNode2D : public InfoNode
 {
 public:
-	InfoNode2D(Parameters* _publicParameters): InfoNode(_publicParameters) { };
+	InfoNode2D(Parameters* _publicParameters): InfoNode(_publicParameters) { }
 	float distance(InfoNode* infoData) override;
 	float distance(InfoNode* i1, InfoNode* i2) override;
 	info_2d info;
@@ -83,7 +83,7 @@ public:
 class InfoNode3D : public InfoNode
 {
 public:
-	InfoNode3D(Parameters* _publicParameters): InfoNode(_publicParameters) { };
+	InfoNode3D(Parameters* _publicParameters): InfoNode(_publicParameters) { }
 	float distance(InfoNode* infoData) override;
 	float distance(InfoNode* i1, InfoNode* i2) override;
 	info_3d info;

@@ -11,21 +11,21 @@
 /********************************************************************************************************************
 Constructuor(int _time) of NodeCloserNeighbors class.
 ********************************************************************************************************************/
-NodeCloserNeighbors::NodeCloserNeighbors(const int _time, Parameters* _publicParameters): Node(_time, _publicParameters) { }
+NodeCloserNeighbors::NodeCloserNeighbors(const int time, Parameters* params): Node(time, params) { }
 
 void NodeCloserNeighbors::makeConnection()
 {
 	Node* nMin = NULL;
 	double distMin = -1.;
-	for (const ChainNeighbor* c = neighborsFuture; c != NULL; c = c->next) {
-		if (c->neighbor->connectionPast == NULL) {
+	for (const ChainNeighbor* c = neighborsFuture; c != NULL; c = c->next_) {
+		if (c->neighbor_->connectionPast == NULL) {
 			if (distMin < 0.) {
-				distMin = distance(c->neighbor);
-				nMin = c->neighbor;
+				distMin = distance(c->neighbor_);
+				nMin = c->neighbor_;
 			}
-			else if (distance(c->neighbor) < distMin) {
-				distMin = distance(c->neighbor);
-				nMin = c->neighbor;
+			else if (distance(c->neighbor_) < distMin) {
+				distMin = distance(c->neighbor_);
+				nMin = c->neighbor_;
 			}
 		}
 	}
