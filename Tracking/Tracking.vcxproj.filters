@@ -17,15 +17,6 @@
     <ClCompile Include="..\lib\tracking\TimeNodes.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tracking\DistanceIntensity\TabTimesDistanceIntensity.cpp">
-      <Filter>Tracking\Distance Intensity</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\tracking\DistanceIntensity\NodeDistanceIntensity.cpp">
-      <Filter>Tracking\Distance Intensity</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\tracking\DistanceIntensity\TimeNodesDistanceIntensity.cpp">
-      <Filter>Tracking\Distance Intensity</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\tracking\ChainNeighbor.h">
@@ -46,15 +37,6 @@
     <ClInclude Include="..\lib\tracking\TimeNodes.h">
       <Filter>Tracking</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\DistanceIntensity\TabTimesDistanceIntensity.h">
-      <Filter>Tracking\Distance Intensity</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tracking\DistanceIntensity\NodeDistanceIntensity.h">
-      <Filter>Tracking\Distance Intensity</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tracking\DistanceIntensity\TimeNodesDistanceIntensity.h">
-      <Filter>Tracking\Distance Intensity</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\Constants.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -63,9 +45,6 @@
   <ItemGroup>
     <Filter Include="Tracking">
       <UniqueIdentifier>{73f1bf69-8d62-4707-a081-af253e212f9e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Tracking\Distance Intensity">
-      <UniqueIdentifier>{da0a62ac-1f6f-408d-a391-32c4bf00b49e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

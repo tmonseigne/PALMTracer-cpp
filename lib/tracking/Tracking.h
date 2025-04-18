@@ -22,11 +22,13 @@ public:
 
 
 	int Initialisation();
-	virtual int RunModel() { return T_ERR_OOP; }
+	virtual int RunModel();
 	void CheckLinksHomogeneity() const;
 
 protected:
 	TimeNodes** timeNodes_;
+	void updateConstantes() const;
+	void computeConstantes() const;
 	int linkNeighborsPresent() const;
 	int linkNeighborsBeforeAndAfter() const;
 	int linkNeighborsBlinkBeforeAndAfter() const;
@@ -35,7 +37,8 @@ protected:
 	int printConnectionsASCII_trc() const;
 	void setColorToTrackedStructures() const;
 	void setIndexToTrackedStructures() const;
-	virtual TimeNodes* allocTimeNodes(long time, long nbNodes) { return nullptr; }
+	double getLikenessGlobal() const;
+	TimeNodes* allocTimeNodes(const long time, const long nNodes) { return new TimeNodes(time, nNodes, parameters_); }
 	void allocTabTimes();
 
 };

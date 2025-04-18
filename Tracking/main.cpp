@@ -2,7 +2,6 @@
 #include <filesystem>
 #include "tracking/Parameters.h"
 #include "tracking/Tracking.h"
-#include "tracking/DistanceIntensity/TabTimesDistanceIntensity.h"
 
 
 _declspec(dllexport) long _stdcall Process(double* pointsList, const unsigned long pointsListSize, double* trc, const unsigned long trcSize,
@@ -25,12 +24,12 @@ _declspec(dllexport) long _stdcall Process(double* pointsList, const unsigned lo
 	Param->nTimes_ = nbTimes;
 	Param->nTraj_ = 0;
 
-	TabTimesDistanceIntensity tabTimes(Param);
+	Tracking tracking(Param);
 
 	int ret;
-	if ((ret = tabTimes.Initialisation()) < 0) { return ret; }
-	if ((ret = tabTimes.RunModel()) < 0) { return ret; }
-	if ((ret = tabTimes.GiveResult()) < 0) { return ret; }
+	if ((ret = tracking.Initialisation()) < 0) { return ret; }
+	if ((ret = tracking.RunModel()) < 0) { return ret; }
+	if ((ret = tracking.GiveResult()) < 0) { return ret; }
 
 	const long N = static_cast<long>(Param->nTraj_);
 	delete Param;

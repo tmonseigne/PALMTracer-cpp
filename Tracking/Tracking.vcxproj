@@ -107,9 +107,6 @@
     <ClInclude Include="..\lib\tracking\ChainNeighbor.h" />
     <ClInclude Include="..\lib\tracking\Parameters.h" />
     <ClInclude Include="..\lib\tracking\InfoNode.h" />
-    <ClInclude Include="..\lib\tracking\DistanceIntensity\NodeDistanceIntensity.h" />
-    <ClInclude Include="..\lib\tracking\DistanceIntensity\TabTimesDistanceIntensity.h" />
-    <ClInclude Include="..\lib\tracking\DistanceIntensity\TimeNodesDistanceIntensity.h" />
     <ClInclude Include="..\lib\tracking\Node.h" />
     <ClInclude Include="..\lib\tracking\Tracking.h" />
     <ClInclude Include="..\lib\tracking\TimeNodes.h" />
@@ -117,9 +114,6 @@
   <ItemGroup>
     <ClCompile Include="..\lib\tracking\ChainNeighbor.cpp" />
     <ClCompile Include="..\lib\tracking\InfoNode.cpp" />
-    <ClCompile Include="..\lib\tracking\DistanceIntensity\NodeDistanceIntensity.cpp" />
-    <ClCompile Include="..\lib\tracking\DistanceIntensity\TabTimesDistanceIntensity.cpp" />
-    <ClCompile Include="..\lib\tracking\DistanceIntensity\TimeNodesDistanceIntensity.cpp" />
     <ClCompile Include="..\lib\tracking\Node.cpp" />
     <ClCompile Include="..\lib\tracking\Tracking.cpp" />
     <ClCompile Include="..\lib\tracking\TimeNodes.cpp" />

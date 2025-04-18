@@ -9,8 +9,19 @@ Class TimeNodes contains the Node objets for one time.
 
 #include "TimeNodes.h"
 #include <cstdio>
+#include <cstdlib>
 
 #include "Constants.hpp"
+
+
+/********************************************************************************************************************
+Constructor(int _time, int _nbNodes) is run after the base constructor TimeNodes::TimeNodes
+********************************************************************************************************************/
+TimeNodes::TimeNodes(const int time, const int nNodes, Parameters* params)
+	: time_(time), parameters_(params), nNodes_(nNodes) {
+	nodes_ = new Node * [nNodes_];
+	for (int i = 0; i < nNodes_; i++) { nodes_[i] = allocNode(); }
+}
 
 /********************************************************************************************************************
 Destructuor() of TimeNodes class. 
@@ -106,3 +117,65 @@ int TimeNodes::SortByIntensityAllNeighbors() const
 checkLinksHomogeneity() check all the connection to see the system homogeneity
 ********************************************************************************************************************/
 void TimeNodes::CheckLinksHomogeneity() const { for (int i = 0; i < nNodes_; i++) { nodes_[i]->CheckLinksHomogeneity(); } }
+
+
+
+/********************************************************************************************************************
+allocNode() allocation of one node in the class TimeNodes
+********************************************************************************************************************/
+Node* TimeNodes::allocNode() { return new Node(time_, parameters_); }
+
+
+
+/********************************************************************************************************************
+void computeConstantSigmas(double &stdIntensity, double &stdMean,
+	double &stdDistance, long &countStd) compute the constant kMean and kIntensity
+********************************************************************************************************************/
+void TimeNodes::ComputeConstantSigmas(double& stdIntensity, long& countStdInt, double& stdMean, long& countStdMean,
+	double& stdDistance, long& countStdDist, const bool sigmaClipping, long* hist) const
+{
+	for (int i = 0; i < nNodes_; i++) {
+		Node* node = (Node*)nodes_[i];
+		node->ComputeConstantSigmas(stdIntensity, countStdInt, stdMean, countStdMean, stdDistance, countStdDist, sigmaClipping, hist);
+	}
+}
+
+
+/********************************************************************************************************************
+makeAllInitializationConnections() finds connections from the nodes of this time_ to the nodes of the time_ after
+according the selected model.
+It returns the likeness computed for this time_
+********************************************************************************************************************/
+double TimeNodes::MakeAllInitializationConnections() const
+{
+	double globalLikeness = 0.;
+	for (int i = 0; i < nNodes_; i++) {
+		const auto Node = nodes_[i];
+		globalLikeness += Node->MakeInitializationConnection();
+	}
+	return globalLikeness;
+}
+
+/********************************************************************************************************************
+tryRandomChange() take a random node at this time_ and try to apply a change
+It returns the gain in likeness computed with this change
+********************************************************************************************************************/
+double TimeNodes::TryRandomChange(const double limit) const
+{
+	if (nNodes_ < 1) { return 0.; } //<=
+	if (nNodes_ == 1) { return (nodes_[0])->MakeChange(limit); }
+	return (nodes_[rand() % nNodes_])->MakeChange(limit);
+}
+
+/********************************************************************************************************************
+double giveLikeness(long lastTime) compute the total likeness for all nodes
+********************************************************************************************************************/
+double TimeNodes::GetLikenessTime(const long lastTime) const
+{
+	double globalLikeness = 0.;
+	for (int i = 0; i < nNodes_; i++) {
+		const auto Node = nodes_[i];
+		globalLikeness += Node->GetLikenessOfLocalNode(lastTime);
+	}
+	return globalLikeness;
+}
