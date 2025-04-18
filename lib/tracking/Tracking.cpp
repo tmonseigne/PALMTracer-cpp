@@ -1,22 +1,22 @@
 /*******************************************************************************************************************
-									TabTimes Class
+									Tracking Class
 							Array containing all the TimeNodes for all instants
 *******************************************************************************************************************/
 
 /********************************************************************************************************************
-Class TabTimes contains several TabTimes objets for each time (nbTimes).
+Class Tracking contains several Tracking objets for each time (nbTimes).
 ********************************************************************************************************************/
 
 
-#include "TabTimes.h"
+#include "Tracking.h"
 
 #include <algorithm>
 
 /********************************************************************************************************************
-Constructuor(int _nbTimes) of TabTimes class. 
+Constructuor(int _nbTimes) of Tracking class. 
 Create nbTimes objets TimeNodes.
 ********************************************************************************************************************/
-TabTimes::TabTimes(Parameters* params)
+Tracking::Tracking(Parameters* params)
 {
 	parameters_ = params;
 	parameters_->nNodeAllocated_ = 0;
@@ -28,10 +28,10 @@ TabTimes::TabTimes(Parameters* params)
 }
 
 /********************************************************************************************************************
-Destructuor() of TabTimes class. 
+Destructuor() of Tracking class. 
 Delete all objets TimeNodes.
 ********************************************************************************************************************/
-TabTimes::~TabTimes()
+Tracking::~Tracking()
 {
 	for (int i = 0; i < nbTimes_; i++) { delete timeNodes_[i]; }
 	delete [] timeNodes_;
@@ -40,12 +40,12 @@ TabTimes::~TabTimes()
 /********************************************************************************************************************
 allocTabTimes() alloc the timeNodes array of nbTimes long 
 ********************************************************************************************************************/
-void TabTimes::allocTabTimes() { timeNodes_ = new TimeNodes*[nbTimes_]; }
+void Tracking::allocTabTimes() { timeNodes_ = new TimeNodes*[nbTimes_]; }
 
 /********************************************************************************************************************
 initialisation() initialisation of the data in memory
 ********************************************************************************************************************/
-int TabTimes::Initialisation()
+int Tracking::Initialisation()
 {
 	int ret;
 	if ((ret = readPointsList()) < 0) { return ret; }
@@ -71,7 +71,7 @@ Colonne 4         Y
 Colonne 5 ou 6         nombre de pixels de l'objet
 Colonne 6 ou 7         intensité intégrée
 ********************************************************************************************************************/
-int TabTimes::printConnectionsASCII_trc() const
+int Tracking::printConnectionsASCII_trc() const
 {
 	unsigned long index = 0;
 	for (int t = 0; t < nbTimes_; ++t) {
@@ -102,7 +102,7 @@ int TabTimes::printConnectionsASCII_trc() const
 /********************************************************************************************************************
 readPointsList() reads the 'pointsList' specified in parameters_ and allocates the corresponding TimeNodes
 ********************************************************************************************************************/
-int TabTimes::readPointsList()
+int Tracking::readPointsList()
 {
 	//unsigned long nbTimes;
 	unsigned long index = 0;
@@ -174,17 +174,17 @@ int TabTimes::readPointsList()
 /********************************************************************************************************************
 operator()(int i) to access to all TimeNodes objets. 
 ********************************************************************************************************************/
-TimeNodes* TabTimes::operator()(const int i) const { return timeNodes_[i]; }
+TimeNodes* Tracking::operator()(const int i) const { return timeNodes_[i]; }
 
 /********************************************************************************************************************
 operator[](int i) to access to pointors to all TimeNodes objets. 
 ********************************************************************************************************************/
-TimeNodes** TabTimes::operator[](const int i) const { return timeNodes_ + i; }
+TimeNodes** Tracking::operator[](const int i) const { return timeNodes_ + i; }
 
 /********************************************************************************************************************
 int linkNeighborsPresent() to link of the neighbors in the presents of all nodes of all times
 ********************************************************************************************************************/
-int TabTimes::linkNeighborsPresent() const
+int Tracking::linkNeighborsPresent() const
 {
 	int ret;
 	for (int t = 0; t < nbTimes_; ++t) { if ((ret = timeNodes_[t]->LinkNeighborsPresent()) < 0) { return ret; } }
@@ -195,7 +195,7 @@ int TabTimes::linkNeighborsPresent() const
 /********************************************************************************************************************
 int linkNeighborsBeforeAndAfter() to link of the neighbors in the past and in the future of all nodes of all times
 ********************************************************************************************************************/
-int TabTimes::linkNeighborsBeforeAndAfter() const
+int Tracking::linkNeighborsBeforeAndAfter() const
 {
 	int ret;
 	for (int t = 0; t < nbTimes_ - 1; ++t) { if ((ret = timeNodes_[t]->LinkNeighborsBeforeAndAfter(*timeNodes_[t + 1])) < 0) { return ret; } }
@@ -206,7 +206,7 @@ int TabTimes::linkNeighborsBeforeAndAfter() const
 int linkNeighborsBlinkBeforeAndAfter() to link of the neighbors in the past and in the future of all nodes of 
 all times for blinking purpose
 ********************************************************************************************************************/
-int TabTimes::linkNeighborsBlinkBeforeAndAfter() const
+int Tracking::linkNeighborsBlinkBeforeAndAfter() const
 {
 	int ret;
 	for (int t = 0; t < nbTimes_; ++t) {
@@ -220,7 +220,7 @@ int TabTimes::linkNeighborsBlinkBeforeAndAfter() const
 /********************************************************************************************************************
 int sortByIntensityAllNeighbors() sort by intensity of the node neighbors of each time 
 ********************************************************************************************************************/
-int TabTimes::sortByIntensityAllNeighbors() const
+int Tracking::sortByIntensityAllNeighbors() const
 {
 	int ret;
 	for (int t = 0; t < nbTimes_; ++t) { if ((ret = timeNodes_[t]->SortByIntensityAllNeighbors()) < 0) { return ret; } }
@@ -231,7 +231,7 @@ int TabTimes::sortByIntensityAllNeighbors() const
 /********************************************************************************************************************
 void setColorToTrackedStructures() set a color index to each tracked structures
 ********************************************************************************************************************/
-void TabTimes::setColorToTrackedStructures() const
+void Tracking::setColorToTrackedStructures() const
 {
 	Node* nodePastFission;
 	Node* nodePastFission2;
@@ -332,7 +332,7 @@ void TabTimes::setColorToTrackedStructures() const
 	}
 }
 
-void TabTimes::setIndexToTrackedStructures() const
+void Tracking::setIndexToTrackedStructures() const
 {
 	unsigned long newIndex = 1;
 	long nbSuccessiveNodes;
@@ -373,7 +373,7 @@ void TabTimes::setIndexToTrackedStructures() const
 /********************************************************************************************************************
 int giveResult() just call the function to display the result
 ********************************************************************************************************************/
-int TabTimes::GiveResult()
+int Tracking::GiveResult()
 {
 	int ret;
 
@@ -388,4 +388,4 @@ int TabTimes::GiveResult()
 /********************************************************************************************************************
 void checkLinksHomogeneity() just call the function to display the result
 ********************************************************************************************************************/
-void TabTimes::CheckLinksHomogeneity() const { for (int t = 0; t < nbTimes_; ++t) { timeNodes_[t]->CheckLinksHomogeneity(); } }
+void Tracking::CheckLinksHomogeneity() const { for (int t = 0; t < nbTimes_; ++t) { timeNodes_[t]->CheckLinksHomogeneity(); } }

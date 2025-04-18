@@ -1,5 +1,5 @@
 /*******************************************************************************************************************
-									TabTimes Class
+									Tracking Class
 							Array containing all the TimeNodes for all instants
 *******************************************************************************************************************/
 #pragma once
@@ -8,8 +8,23 @@
 #include "Parameters.h"
 #include "TimeNodes.h"
 
-class TabTimes
+class Tracking
 {
+public:
+	int nbTimes_;
+	Parameters* parameters_;
+
+	int GiveResult();
+	explicit Tracking(Parameters* params);
+	virtual ~Tracking();
+	TimeNodes* operator()(int i) const;
+	TimeNodes** operator[](int i) const;
+
+
+	int Initialisation();
+	virtual int RunModel() { return T_ERR_OOP; }
+	void CheckLinksHomogeneity() const;
+
 protected:
 	TimeNodes** timeNodes_;
 	int linkNeighborsPresent() const;
@@ -23,16 +38,4 @@ protected:
 	virtual TimeNodes* allocTimeNodes(long time, long nbNodes) { return nullptr; }
 	void allocTabTimes();
 
-public:
-	int GiveResult();
-	explicit TabTimes(Parameters* params);
-	virtual ~TabTimes();
-	TimeNodes* operator()(int i) const;
-	TimeNodes** operator[](int i) const;
-	int nbTimes_;
-	Parameters* parameters_;
-
-	int Initialisation();
-	virtual int RunModel() { return T_ERR_OOP; }
-	void CheckLinksHomogeneity() const;
 };

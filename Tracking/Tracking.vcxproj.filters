@@ -11,7 +11,7 @@
     <ClCompile Include="..\lib\tracking\Node.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tracking\TabTimes.cpp">
+    <ClCompile Include="..\lib\tracking\Tracking.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\tracking\TimeNodes.cpp">
@@ -40,7 +40,7 @@
     <ClInclude Include="..\lib\tracking\Node.h">
       <Filter>Tracking</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\TabTimes.h">
+    <ClInclude Include="..\lib\tracking\Tracking.h">
       <Filter>Tracking</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\TimeNodes.h">

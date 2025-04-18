@@ -111,7 +111,7 @@
     <ClInclude Include="..\lib\tracking\DistanceIntensity\TabTimesDistanceIntensity.h" />
     <ClInclude Include="..\lib\tracking\DistanceIntensity\TimeNodesDistanceIntensity.h" />
     <ClInclude Include="..\lib\tracking\Node.h" />
-    <ClInclude Include="..\lib\tracking\TabTimes.h" />
+    <ClInclude Include="..\lib\tracking\Tracking.h" />
     <ClInclude Include="..\lib\tracking\TimeNodes.h" />
   </ItemGroup>
   <ItemGroup>
@@ -121,7 +121,7 @@
     <ClCompile Include="..\lib\tracking\DistanceIntensity\TabTimesDistanceIntensity.cpp" />
     <ClCompile Include="..\lib\tracking\DistanceIntensity\TimeNodesDistanceIntensity.cpp" />
     <ClCompile Include="..\lib\tracking\Node.cpp" />
-    <ClCompile Include="..\lib\tracking\TabTimes.cpp" />
+    <ClCompile Include="..\lib\tracking\Tracking.cpp" />
     <ClCompile Include="..\lib\tracking\TimeNodes.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>

@@ -1,6 +1,6 @@
 /*******************************************************************************************************************
 									TabTimesDistanceIntensity Class
-									It is derived from the class TabTimes
+									It is derived from the class Tracking
 								This class find the neighbor with the best likeness.
 								Likeness depend on the distance and the intensity.
 *******************************************************************************************************************/
