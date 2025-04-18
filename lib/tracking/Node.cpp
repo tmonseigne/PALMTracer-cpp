@@ -58,27 +58,27 @@ Node::Node(const int time, Parameters* params)
 	parameters_ = params;
 
 	time_ = time;
-	neighborsPresent_ = NULL;
+	neighborsPresent_ = nullptr;
 	neighborsPresentCount_ = 0;
-	neighborsPast_ = NULL;
+	neighborsPast_ = nullptr;
 	neighborsPastCount_ = 0;
-	neighborsFuture_ = NULL;
+	neighborsFuture_ = nullptr;
 	neighborsFutureCount_ = 0;
-	neighborsBlinkPast_ = NULL;
+	neighborsBlinkPast_ = nullptr;
 	neighborsBlinkPastCount_ = 0;
-	neighborsBlinkFuture_ = NULL;
+	neighborsBlinkFuture_ = nullptr;
 	neighborsBlinkFutureCount_ = 0;
 
-	future_ = NULL;
-	past_ = NULL;
-	blinkPast_ = NULL;
-	blinkFuture_ = NULL;
-	fission1Future_ = NULL;
-	fission2Future_ = NULL;
-	fissionPast_ = NULL;
-	fusion1Past_ = NULL;
-	fusion2Past_ = NULL;
-	fusionFuture_ = NULL;
+	future_ = nullptr;
+	past_ = nullptr;
+	blinkPast_ = nullptr;
+	blinkFuture_ = nullptr;
+	fission1Future_ = nullptr;
+	fission2Future_ = nullptr;
+	fissionPast_ = nullptr;
+	fusion1Past_ = nullptr;
+	fusion2Past_ = nullptr;
+	fusionFuture_ = nullptr;
 	trackedAmiraIndex_ = -1;
 	mSd_ = -1;
 	if (Parameters::N_DIM == 2) { info_ = new InfoNode2D(parameters_); }
@@ -94,19 +94,19 @@ Delete all the linkage objets.
 Node::~Node()
 {
 	ChainNeighbor* l;
-	while (neighborsFuture_ != NULL) {
+	while (neighborsFuture_ != nullptr) {
 		l = neighborsFuture_->next_;
 		delete neighborsFuture_;
 		neighborsFuture_ = l;
 	}
 
-	while (neighborsPast_ != NULL) {
+	while (neighborsPast_ != nullptr) {
 		l = neighborsPast_->next_;
 		delete neighborsPast_;
 		neighborsPast_ = l;
 	}
 
-	while (neighborsPresent_ != NULL) {
+	while (neighborsPresent_ != nullptr) {
 		l = neighborsPresent_->next_;
 		delete neighborsPresent_;
 		neighborsPresent_ = l;
@@ -137,16 +137,16 @@ intensity.
 int Node::SortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 {
 	bool change;
-	if (*neighborsHead != NULL) {
-		if ((*neighborsHead)->next_ != NULL) {
+	if (*neighborsHead != nullptr) {
+		if ((*neighborsHead)->next_ != nullptr) {
 			do {
 				change = false;
 				ChainNeighbor* l = *neighborsHead;
-				ChainNeighbor* lOld = NULL;
-				while (l->next_ != NULL) {
+				ChainNeighbor* lOld = nullptr;
+				while (l->next_ != nullptr) {
 					if (l->next_->neighbor_->info_->GetIntensity() > l->neighbor_->info_->GetIntensity()) {
 						ChainNeighbor* l2 = l->next_;
-						if (lOld == NULL) { *neighborsHead = l2; }
+						if (lOld == nullptr) { *neighborsHead = l2; }
 						else { lOld->next_ = l2; }
 						l->next_ = l2->next_;
 						l2->next_ = l;
@@ -155,7 +155,7 @@ int Node::SortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 					}
 					else {
 						l = l->next_;
-						if (lOld == NULL) { lOld = *neighborsHead; }
+						if (lOld == nullptr) { lOld = *neighborsHead; }
 					}
 				}
 			}
@@ -175,43 +175,43 @@ bool Node::CheckLinksHomogeneityInVicinity(wchar_t* st)
 	bool err = false;
 	swprintf(st2, L"%ls this ", st);
 	CheckLinksHomogeneity(st2);
-	if (future_ != NULL) {
+	if (future_ != nullptr) {
 		swprintf(st2, L"%ls future_ ", st);
 		err = future_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && fission1Future_ != NULL) {
+	if (!err && fission1Future_ != nullptr) {
 		swprintf(st2, L"%ls fission1Future_ ", st);
 		err = fission1Future_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && fission2Future_ != NULL) {
+	if (!err && fission2Future_ != nullptr) {
 		swprintf(st2, L"%ls fission2Future_ ", st);
 		err = fission2Future_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && fusionFuture_ != NULL) {
+	if (!err && fusionFuture_ != nullptr) {
 		swprintf(st2, L"%ls fusionFuture_ ", st);
 		err = fusionFuture_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && blinkFuture_ != NULL) {
+	if (!err && blinkFuture_ != nullptr) {
 		swprintf(st2, L"%ls blinkFuture_ ", st);
 		err = blinkFuture_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && past_ != NULL) {
+	if (!err && past_ != nullptr) {
 		swprintf(st2, L"%ls past_ ", st);
 		err = past_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && fusion1Past_ != NULL) {
+	if (!err && fusion1Past_ != nullptr) {
 		swprintf(st2, L"%ls fusion1Past_ ", st);
 		err = fusion1Past_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && fusion2Past_ != NULL) {
+	if (!err && fusion2Past_ != nullptr) {
 		swprintf(st2, L"%ls fusion2Past_ ", st);
 		err = fusion2Past_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && fissionPast_ != NULL) {
+	if (!err && fissionPast_ != nullptr) {
 		swprintf(st2, L"%ls fissionPast_ ", st);
 		err = fissionPast_->CheckLinksHomogeneity(st2);
 	}
-	if (!err && blinkPast_ != NULL) {
+	if (!err && blinkPast_ != nullptr) {
 		swprintf(st2, L"%ls blinkPast_ ", st);
 		err = blinkPast_->CheckLinksHomogeneity(st2);
 	}
@@ -222,27 +222,27 @@ bool Node::CheckLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2, Node
 {
 	wchar_t st2[256];
 	bool err = false;
-	if (p1 != NULL) {
+	if (p1 != nullptr) {
 		swprintf(st2, L"%ls 1 ", st);
 		err = p1->CheckLinksHomogeneityInVicinity(st2);
 	}
-	if (p2 != NULL) {
+	if (p2 != nullptr) {
 		swprintf(st2, L"%ls 2 ", st);
 		err = err || p2->CheckLinksHomogeneityInVicinity(st2);
 	}
-	if (p3 != NULL) {
+	if (p3 != nullptr) {
 		swprintf(st2, L"%ls 3 ", st);
 		err = err || p3->CheckLinksHomogeneityInVicinity(st2);
 	}
-	if (p4 != NULL) {
+	if (p4 != nullptr) {
 		swprintf(st2, L"%ls 4 ", st);
 		err = err || p4->CheckLinksHomogeneityInVicinity(st2);
 	}
-	if (p5 != NULL) {
+	if (p5 != nullptr) {
 		swprintf(st2, L"%ls 5 ", st);
 		err = err || p5->CheckLinksHomogeneityInVicinity(st2);
 	}
-	if (p6 != NULL) {
+	if (p6 != nullptr) {
 		swprintf(st2, L"%ls 6 ", st);
 		err = err || p6->CheckLinksHomogeneityInVicinity(st2);
 	}
@@ -255,87 +255,87 @@ checkLinksHomogeneity(const wchar_t* st) check all the connection to see the sys
 bool Node::CheckLinksHomogeneity(const wchar_t* st) const
 {
 	bool err = false;
-	if (future_ != NULL) {
+	if (future_ != nullptr) {
 		if (future_->past_ != this) { err = true; }
-		if (future_->fusion1Past_ != NULL) { err = true; }
-		if (future_->fusion2Past_ != NULL) { err = true; }
-		if (future_->blinkPast_ != NULL) { err = true; }
+		if (future_->fusion1Past_ != nullptr) { err = true; }
+		if (future_->fusion2Past_ != nullptr) { err = true; }
+		if (future_->blinkPast_ != nullptr) { err = true; }
 	}
 
-	if (fission1Future_ != NULL) {
+	if (fission1Future_ != nullptr) {
 		if (fission1Future_->fissionPast_ != this) { err = true; }
-		if (fission1Future_->past_ != NULL) { err = true; }
-		if (fission1Future_->fusion2Past_ != NULL) { err = true; }
-		if (fission1Future_->fusion1Past_ != NULL) { err = true; }
-		if (fission1Future_->blinkPast_ != NULL) { err = true; }
+		if (fission1Future_->past_ != nullptr) { err = true; }
+		if (fission1Future_->fusion2Past_ != nullptr) { err = true; }
+		if (fission1Future_->fusion1Past_ != nullptr) { err = true; }
+		if (fission1Future_->blinkPast_ != nullptr) { err = true; }
 	}
 
-	if (fission2Future_ != NULL) {
+	if (fission2Future_ != nullptr) {
 		if (fission2Future_->fissionPast_ != this) { err = true; }
-		if (fission2Future_->past_ != NULL) { err = true; }
-		if (fission2Future_->fusion2Past_ != NULL) { err = true; }
-		if (fission2Future_->fusion1Past_ != NULL) { err = true; }
-		if (fission2Future_->past_ != NULL) { err = true; }
+		if (fission2Future_->past_ != nullptr) { err = true; }
+		if (fission2Future_->fusion2Past_ != nullptr) { err = true; }
+		if (fission2Future_->fusion1Past_ != nullptr) { err = true; }
+		if (fission2Future_->past_ != nullptr) { err = true; }
 	}
 
-	if (fusionFuture_ != NULL) {
-		if ((fusionFuture_->fusion1Past_ != this && fusionFuture_->fusion2Past_ != this) || fusionFuture_->fusion1Past_ == NULL || fusionFuture_->fusion2Past_
-		    == NULL || fusionFuture_->fusion1Past_ == fusionFuture_->fusion2Past_) { err = true; }
-		if (fusionFuture_->past_ != NULL) { err = true; }
-		if (fusionFuture_->blinkPast_ != NULL) { err = true; }
+	if (fusionFuture_ != nullptr) {
+		if ((fusionFuture_->fusion1Past_ != this && fusionFuture_->fusion2Past_ != this) || fusionFuture_->fusion1Past_ == nullptr || fusionFuture_->fusion2Past_
+		    == nullptr || fusionFuture_->fusion1Past_ == fusionFuture_->fusion2Past_) { err = true; }
+		if (fusionFuture_->past_ != nullptr) { err = true; }
+		if (fusionFuture_->blinkPast_ != nullptr) { err = true; }
 	}
 
-	if (past_ != NULL) {
+	if (past_ != nullptr) {
 		if (past_->future_ != this) { err = true; }
-		if (past_->fusionFuture_ != NULL) { err = true; }
-		if (past_->fission1Future_ != NULL) { err = true; }
-		if (past_->fission2Future_ != NULL) { err = true; }
+		if (past_->fusionFuture_ != nullptr) { err = true; }
+		if (past_->fission1Future_ != nullptr) { err = true; }
+		if (past_->fission2Future_ != nullptr) { err = true; }
 
-		if (past_->fusionFuture_ != NULL) { err = true; }
+		if (past_->fusionFuture_ != nullptr) { err = true; }
 	}
 
-	if (fissionPast_ != NULL) {
-		if ((fissionPast_->fission1Future_ != this && fissionPast_->fission2Future_ != this) || fissionPast_->fission1Future_ == NULL || fissionPast_->
-		    fission2Future_ == NULL || fissionPast_->fission1Future_ == fissionPast_->fission2Future_) { err = true; }
-		if (fissionPast_->fusionFuture_ != NULL) { err = true; }
-		if (fissionPast_->future_ != NULL) { err = true; }
+	if (fissionPast_ != nullptr) {
+		if ((fissionPast_->fission1Future_ != this && fissionPast_->fission2Future_ != this) || fissionPast_->fission1Future_ == nullptr || fissionPast_->
+		    fission2Future_ == nullptr || fissionPast_->fission1Future_ == fissionPast_->fission2Future_) { err = true; }
+		if (fissionPast_->fusionFuture_ != nullptr) { err = true; }
+		if (fissionPast_->future_ != nullptr) { err = true; }
 
-		if (fissionPast_->blinkFuture_ != NULL) { err = true; }
+		if (fissionPast_->blinkFuture_ != nullptr) { err = true; }
 	}
 
 
-	if (fusion1Past_ != NULL) {
+	if (fusion1Past_ != nullptr) {
 		if (fusion1Past_->fusionFuture_ != this) { err = true; }
-		if (fusion1Past_->fission1Future_ != NULL) { err = true; }
-		if (fusion1Past_->fission2Future_ != NULL) { err = true; }
-		if (fusion1Past_->future_ != NULL) { err = true; }
+		if (fusion1Past_->fission1Future_ != nullptr) { err = true; }
+		if (fusion1Past_->fission2Future_ != nullptr) { err = true; }
+		if (fusion1Past_->future_ != nullptr) { err = true; }
 
-		if (fusion1Past_->blinkFuture_ != NULL) { err = true; }
+		if (fusion1Past_->blinkFuture_ != nullptr) { err = true; }
 	}
 
-	if (fusion2Past_ != NULL) {
+	if (fusion2Past_ != nullptr) {
 		if (fusion2Past_->fusionFuture_ != this) { err = true; }
-		if (fusion2Past_->fission1Future_ != NULL) { err = true; }
-		if (fusion2Past_->fission2Future_ != NULL) { err = true; }
-		if (fusion2Past_->future_ != NULL) { err = true; }
+		if (fusion2Past_->fission1Future_ != nullptr) { err = true; }
+		if (fusion2Past_->fission2Future_ != nullptr) { err = true; }
+		if (fusion2Past_->future_ != nullptr) { err = true; }
 
-		if (fusion2Past_->blinkFuture_ != NULL) { err = true; }
+		if (fusion2Past_->blinkFuture_ != nullptr) { err = true; }
 	}
 
-	if (blinkPast_ != NULL) {
+	if (blinkPast_ != nullptr) {
 		if (blinkPast_->blinkFuture_ != this) { err = true; }
-		if (blinkPast_->fission1Future_ != NULL) { err = true; }
-		if (blinkPast_->fission2Future_ != NULL) { err = true; }
-		if (blinkPast_->future_ != NULL) { err = true; }
-		if (blinkPast_->fusionFuture_ != NULL) { err = true; }
+		if (blinkPast_->fission1Future_ != nullptr) { err = true; }
+		if (blinkPast_->fission2Future_ != nullptr) { err = true; }
+		if (blinkPast_->future_ != nullptr) { err = true; }
+		if (blinkPast_->fusionFuture_ != nullptr) { err = true; }
 	}
 
-	if (blinkFuture_ != NULL) {
+	if (blinkFuture_ != nullptr) {
 		if (blinkFuture_->blinkPast_ != this) { err = true; }
-		if (blinkFuture_->fusion1Past_ != NULL) { err = true; }
-		if (blinkFuture_->fusion2Past_ != NULL) { err = true; }
-		if (blinkFuture_->past_ != NULL) { err = true; }
-		if (blinkFuture_->fissionPast_ != NULL) { err = true; }
+		if (blinkFuture_->fusion1Past_ != nullptr) { err = true; }
+		if (blinkFuture_->fusion2Past_ != nullptr) { err = true; }
+		if (blinkFuture_->past_ != nullptr) { err = true; }
+		if (blinkFuture_->fissionPast_ != nullptr) { err = true; }
 	}
 
 	return err;

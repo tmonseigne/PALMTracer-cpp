@@ -17,7 +17,7 @@ protected:
 public:
 	TimeNodesDistanceIntensity(int time, int nNodes, Parameters* params);
 	void ComputeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean, double& stdDistanceComputing,
-	                           long& countStdDist, bool sigmaClipping, long* hist = NULL) const;
+	                           long& countStdDist, bool sigmaClipping, long* hist = nullptr) const;
 	double MakeAllInitializationConnections() const;
 	double TryRandomChange(double limit) const;
 

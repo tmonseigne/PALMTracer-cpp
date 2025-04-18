@@ -10,7 +10,7 @@
 //*****************		CONSTRUCTORS		DESTRUCTOR		ALLOC		**************
 ArrayType::ArrayType()
 {
-	data = NULL;
+	data = nullptr;
 	nbDim = 0;
 	nbPoints = 0;
 	sizeAllocated = 0;
@@ -25,7 +25,7 @@ ArrayType::ArrayType()
 
 ArrayType::ArrayType(const long i, const long j, const long k, const long l)
 {
-	data = NULL;
+	data = nullptr;
 	sizeAllocated = 0;
 	const int ret = alloc(i, j, k, l);
 	if (ret < 0) { exit(ret); }
@@ -34,14 +34,14 @@ ArrayType::ArrayType(const long i, const long j, const long k, const long l)
 
 ArrayType::ArrayType(DataType* _data, const long i, const long j, const long k, const long l)
 {
-	data = NULL;
+	data = nullptr;
 	sizeAllocated = 0;
 	const int ret = alloc(_data, i, j, k, l);
 	if (ret < 0) { exit(ret); }
 }
 
 
-bool ArrayType::isThereData() { return data != NULL; }
+bool ArrayType::isThereData() { return data != nullptr; }
 
 int ArrayType::getDim(const long i, const long j, const long k, const long l)
 {
@@ -61,7 +61,7 @@ int ArrayType::testDim(const long i, const long j, const long k, const long l)
 	if (i < 0 || j < 0 || k < 0 || l < 0) {
 		nbDim = 0;
 		nbPoints = 0;
-		data = NULL;
+		data = nullptr;
 		sizeAllocated = 0;
 		return SIZE_ERR;
 	}
@@ -90,13 +90,13 @@ int ArrayType::alloc(const long i, const long j, const long k, const long l)
 		else {
 			nbDim = 0;
 			nbPoints = 0;
-			data = NULL;
+			data = nullptr;
 			return SIZE_ERR;
 		}
 	}
 	else {
 		data = new DataType[i * j * k * l];
-		if (data == NULL) {
+		if (data == nullptr) {
 			nbDim = 0;
 			nbPoints = 0;
 			sizeAllocated = 0;
@@ -179,7 +179,7 @@ int ArrayType::realloc(const long i, const long j, const long k, const long l)
 		}
 		else {
 			delete [] data;
-			data = NULL;
+			data = nullptr;
 			if ((ret = alloc(i, j, k, l)) < 0) { return ret; }
 		}
 	}
@@ -191,7 +191,7 @@ int ArrayType::realloc(const long i, const long j, const long k, const long l)
 ArrayType::~ArrayType()
 {
 	if (dataAllocatedByConstructor) { if (isThereData()) { delete [] data; } }
-	else { data = NULL; }
+	else { data = nullptr; }
 }
 
 

@@ -31,7 +31,7 @@ public:
 
 	bool CheckLinksHomogeneity(const wchar_t* st) const;
 	bool CheckLinksHomogeneityInVicinity(wchar_t* st);
-	static bool CheckLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2 = NULL, Node* p3 = NULL, Node* p4 = NULL, Node* p5 = NULL, Node* p6 = NULL);
+	static bool CheckLinksHomogeneityInVicinity(wchar_t* st, Node* p1, Node* p2 = nullptr, Node* p3 = nullptr, Node* p4 = nullptr, Node* p5 = nullptr, Node* p6 = nullptr);
 	int time_;
 	Node* future_;
 	Node* blinkFuture_;

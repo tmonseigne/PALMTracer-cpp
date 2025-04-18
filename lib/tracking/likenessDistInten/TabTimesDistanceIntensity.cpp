@@ -93,7 +93,7 @@ void TabTimesDistanceIntensity::updateConstantes() const
 		const TimeNodes* local = timeNodes_[t];
 		for (int n = 0; n < local->nNodes_; n++) {
 			Node* node = local->nodes_[n];
-			if (node->future_ != NULL) {
+			if (node->future_ != nullptr) {
 				parameters_->stdDistance_ += node->Distance(node->future_) * node->Distance(node->future_);
 				parameters_->stdIntensity_ += (node->info_->GetIntensity() - node->future_->info_->GetIntensity()) * (
 					node->info_->GetIntensity() - node->future_->info_->GetIntensity());

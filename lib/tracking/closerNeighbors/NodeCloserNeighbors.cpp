@@ -15,10 +15,10 @@ NodeCloserNeighbors::NodeCloserNeighbors(const int time, Parameters* params): No
 
 void NodeCloserNeighbors::MakeConnection()
 {
-	Node* nMin = NULL;
+	Node* nMin = nullptr;
 	double distMin = -1.;
-	for (const ChainNeighbor* c = neighborsFuture_; c != NULL; c = c->next_) {
-		if (c->neighbor_->past_ == NULL) {
+	for (const ChainNeighbor* c = neighborsFuture_; c != nullptr; c = c->next_) {
+		if (c->neighbor_->past_ == nullptr) {
 			if (distMin < 0.) {
 				distMin = Distance(c->neighbor_);
 				nMin = c->neighbor_;
@@ -29,7 +29,7 @@ void NodeCloserNeighbors::MakeConnection()
 			}
 		}
 	}
-	if (nMin != NULL) {
+	if (nMin != nullptr) {
 		nMin->past_ = this;
 		future_ = nMin;
 	}

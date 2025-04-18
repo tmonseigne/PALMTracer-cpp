@@ -21,7 +21,7 @@ TabTimes::TabTimes(Parameters* params)
 	parameters_->nNodeDeallocated_ = 0;
 	parameters_->nChainNeighborDeallocated_ = 0;
 	parameters_->nChainNeighborAllocated_ = 0;
-	timeNodes_ = NULL;
+	timeNodes_ = nullptr;
 	nbTimes_ = 0;
 }
 
@@ -79,8 +79,8 @@ int TabTimes::printConnectionsASCII_trc() const
 		const TimeNodes* localTimeNodes = timeNodes_[t];
 		for (int n = 0; n < localTimeNodes->nNodes_; n++) {
 			Node* node = localTimeNodes->nodes_[n];
-			if (node->past_ == NULL && node->trackedIndex_ > 0) {
-				for (const Node* nodeConnection = node; nodeConnection != NULL; nodeConnection = nodeConnection->future_) {
+			if (node->past_ == nullptr && node->trackedIndex_ > 0) {
+				for (const Node* nodeConnection = node; nodeConnection != nullptr; nodeConnection = nodeConnection->future_) {
 					parameters_->tracks_[index++] = node->trackedIndex_;
 					parameters_->tracks_[index++] = nodeConnection->time_ + 1;
 					parameters_->tracks_[index++] = nodeConnection->info_->GetX();
@@ -137,7 +137,7 @@ int TabTimes::readPointsList()
 		timeNodes_[time] = allocTimeNodes(time, (int)nbNodes); //Allocation of timeNodes
 		TimeNodes* localTimeNodes = timeNodes_[time];
 
-		if (localTimeNodes == NULL) { return T_ERR_ALLOC; }
+		if (localTimeNodes == nullptr) { return T_ERR_ALLOC; }
 
 
 		for (long node = 0; node < localTimeNodes->nNodes_; node++) {
@@ -255,9 +255,9 @@ void TabTimes::setColorToTrackedStructures() const
 		for (long indexNode = 0; indexNode < timeNodes_[time]->nNodes_; indexNode++) {
 			Node* node = timeNodes_[time]->nodes_[indexNode];
 			if (node->trackedIndex_ != 0) {
-				if (node->past_ == NULL) {
-					if (node->blinkPast_ == NULL) {
-						if (node->fusion1Past_ != NULL) {
+				if (node->past_ == nullptr) {
+					if (node->blinkPast_ == nullptr) {
+						if (node->fusion1Past_ != nullptr) {
 							if (node->Likeness(node->fusion1Past_) > node->Likeness(node->fusion2Past_)) {
 								node->colorIndex_[0] = node->fusion1Past_->colorIndex_[0];
 								node->colorIndex_[1] = node->fusion2Past_->colorIndex_[0];
@@ -268,14 +268,14 @@ void TabTimes::setColorToTrackedStructures() const
 							}
 						}
 						else { //node->fusion1Past_==NULL
-							if (node->fissionPast_ != NULL) {
+							if (node->fissionPast_ != nullptr) {
 								Node* node2 = node == node->fissionPast_->fission1Future_
 									              ? node->fissionPast_->fission2Future_
 									              : node->fissionPast_->fission1Future_;
-								for (nodePastFission = node->fissionPast_; nodePastFission != NULL; nodePastFission = nodePastFission->past_) {
+								for (nodePastFission = node->fissionPast_; nodePastFission != nullptr; nodePastFission = nodePastFission->past_) {
 									nodePastFission2 = nodePastFission;
 								}
-								if (nodePastFission2->fusion1Past_ != NULL) {
+								if (nodePastFission2->fusion1Past_ != nullptr) {
 									Node* nodePastFission3 = nodePastFission2->fusion1Past_;
 									Node* nodePastFission4 = nodePastFission2->fusion2Past_;
 									if (node->Likeness(nodePastFission3) + node2->Likeness(nodePastFission4) > node2->Likeness(nodePastFission3) + node->
@@ -304,7 +304,7 @@ void TabTimes::setColorToTrackedStructures() const
 								}
 							}
 							else { //node->fissionPast_==NULL  and node->fusion1Past_==NULL
-								if (node->fission1Future_ != NULL) {
+								if (node->fission1Future_ != nullptr) {
 									node->colorIndex_[0] = newIndex;
 									newIndex++;
 									node->colorIndex_[1] = newIndex;
@@ -327,9 +327,9 @@ void TabTimes::setColorToTrackedStructures() const
 					node->colorIndex_[0] = node->past_->colorIndex_[0];
 					node->colorIndex_[1] = node->past_->colorIndex_[0];
 				}
-				if (node->fission1Future_ != NULL) {
-					for (nodePastFission = node; nodePastFission != NULL; nodePastFission = nodePastFission->past_) { nodePastFission2 = nodePastFission; }
-					if (nodePastFission2->fusion1Past_ != NULL) {
+				if (node->fission1Future_ != nullptr) {
+					for (nodePastFission = node; nodePastFission != nullptr; nodePastFission = nodePastFission->past_) { nodePastFission2 = nodePastFission; }
+					if (nodePastFission2->fusion1Past_ != nullptr) {
 						node->colorIndex_[0] = nodePastFission2->fusion1Past_->colorIndex_[0];
 						node->colorIndex_[1] = nodePastFission2->fusion2Past_->colorIndex_[0];
 					}
@@ -355,9 +355,9 @@ void TabTimes::setIndexToTrackedStructures() const
 	Node* oldNode;
 	for (int time = 0; time < nbTimes_; time++) {
 		for (long indexNode = 0; indexNode < timeNodes_[time]->nNodes_; indexNode++) {
-			if (timeNodes_[time]->nodes_[indexNode]->past_ == NULL) {
-				for (node = timeNodes_[time]->nodes_[indexNode], oldNode = NULL, nbSuccessiveNodes = 0;
-				     node != NULL && nbSuccessiveNodes < parameters_->minLife_; node = node->future_, nbSuccessiveNodes++) {
+			if (timeNodes_[time]->nodes_[indexNode]->past_ == nullptr) {
+				for (node = timeNodes_[time]->nodes_[indexNode], oldNode = nullptr, nbSuccessiveNodes = 0;
+				     node != nullptr && nbSuccessiveNodes < parameters_->minLife_; node = node->future_, nbSuccessiveNodes++) {
 					oldNode = node;
 					node->trackedIndex_ = 0;
 				}
@@ -366,13 +366,13 @@ void TabTimes::setIndexToTrackedStructures() const
 				{
 					isNewIndex = true;
 				}
-				if (timeNodes_[time]->nodes_[indexNode]->fissionPast_ != NULL) { isNewIndex = true; }
-				if (timeNodes_[time]->nodes_[indexNode]->fusion1Past_ != NULL) { isNewIndex = true; }
-				if (timeNodes_[time]->nodes_[indexNode]->blinkPast_ != NULL) { isNewIndex = true; }
-				if (oldNode != NULL) {
-					if (oldNode->fission1Future_ != NULL) { isNewIndex = true; }
-					if (oldNode->fusionFuture_ != NULL) { isNewIndex = true; }
-					if (oldNode->blinkFuture_ != NULL) { isNewIndex = true; }
+				if (timeNodes_[time]->nodes_[indexNode]->fissionPast_ != nullptr) { isNewIndex = true; }
+				if (timeNodes_[time]->nodes_[indexNode]->fusion1Past_ != nullptr) { isNewIndex = true; }
+				if (timeNodes_[time]->nodes_[indexNode]->blinkPast_ != nullptr) { isNewIndex = true; }
+				if (oldNode != nullptr) {
+					if (oldNode->fission1Future_ != nullptr) { isNewIndex = true; }
+					if (oldNode->fusionFuture_ != nullptr) { isNewIndex = true; }
+					if (oldNode->blinkFuture_ != nullptr) { isNewIndex = true; }
 				}
 
 				if (isNewIndex) {
