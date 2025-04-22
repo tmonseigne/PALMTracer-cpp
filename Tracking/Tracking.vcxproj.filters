@@ -2,9 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="..\lib\tracking\ChainNeighbor.cpp">
-      <Filter>Tracking</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\tracking\InfoNode.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
@@ -37,7 +34,6 @@
     <ClInclude Include="..\lib\tracking\TimeNodes.h">
       <Filter>Tracking</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\Constants.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Tracking_PALM.def" />

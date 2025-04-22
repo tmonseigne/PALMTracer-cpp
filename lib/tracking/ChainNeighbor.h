@@ -9,7 +9,7 @@ class Node;
 class ChainNeighbor
 {
 public:
-	ChainNeighbor(Node* neighbor, ChainNeighbor* next);
+	ChainNeighbor(Node* neighbor, ChainNeighbor* next) : neighbor_(neighbor), next_(next) {}
 	~ChainNeighbor() = default;
 
 	Node* neighbor_;
