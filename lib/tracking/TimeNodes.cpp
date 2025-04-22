@@ -47,7 +47,7 @@ int TimeNodes::LinkNeighborsPresent() const
 		for (long j = 0; j < nNodes_; j++) {
 			if (i != j) {
 				if (nodes_[i]->Distance(nodes_[j]) < Parameters::DIST_MAX) {
-					nodes_[i]->neighborsPresent_ = new ChainNeighbor(nodes_[j], nodes_[i]->neighborsPresent_, parameters_);
+					nodes_[i]->neighborsPresent_ = new ChainNeighbor(nodes_[j], nodes_[i]->neighborsPresent_);
 					nodes_[i]->neighborsPresentCount_++;
 				}
 			}
@@ -67,9 +67,9 @@ int TimeNodes::LinkNeighborsBeforeAndAfter(const TimeNodes& futures) const
 	for (long present = 0; present < nNodes_; present++) {
 		for (long future = 0; future < futures.nNodes_; future++) {
 			if (nodes_[present]->Distance(futures.nodes_[future]) < parameters_->maxSpeed_) {
-				nodes_[present]->neighborsFuture_ = new ChainNeighbor(futures.nodes_[future], nodes_[present]->neighborsFuture_, parameters_);
+				nodes_[present]->neighborsFuture_ = new ChainNeighbor(futures.nodes_[future], nodes_[present]->neighborsFuture_);
 				nodes_[present]->neighborsFutureCount_++;
-				futures.nodes_[future]->neighborsPast_ = new ChainNeighbor(nodes_[present], futures.nodes_[future]->neighborsPast_, parameters_);
+				futures.nodes_[future]->neighborsPast_ = new ChainNeighbor(nodes_[present], futures.nodes_[future]->neighborsPast_);
 				futures.nodes_[future]->neighborsPastCount_++;
 			}
 		}
@@ -87,9 +87,9 @@ int TimeNodes::LinkNeighborsBlinkBeforeAndAfter(const TimeNodes& futures) const
 	for (long present = 0; present < nNodes_; present++) {
 		for (long future = 0; future < futures.nNodes_; future++) {
 			if (nodes_[present]->Distance(futures.nodes_[future]) < parameters_->maxSpeed_) {
-				nodes_[present]->neighborsBlinkFuture_ = new ChainNeighbor(futures.nodes_[future], nodes_[present]->neighborsBlinkFuture_, parameters_);
+				nodes_[present]->neighborsBlinkFuture_ = new ChainNeighbor(futures.nodes_[future], nodes_[present]->neighborsBlinkFuture_);
 				nodes_[present]->neighborsBlinkFutureCount_++;
-				futures.nodes_[future]->neighborsBlinkPast_ = new ChainNeighbor(nodes_[present], futures.nodes_[future]->neighborsBlinkPast_, parameters_);
+				futures.nodes_[future]->neighborsBlinkPast_ = new ChainNeighbor(nodes_[present], futures.nodes_[future]->neighborsBlinkPast_);
 				futures.nodes_[future]->neighborsBlinkPastCount_++;
 			}
 		}

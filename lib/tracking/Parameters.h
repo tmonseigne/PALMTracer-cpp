@@ -13,12 +13,6 @@ public:
 	static constexpr size_t N_TEMPORAL_WINDOWS = 1;
 	static constexpr size_t MODEL = 2; //the number of the used model
 
-	// Allocation
-	int nNodeAllocated_;
-	int nNodeDeallocated_;
-	int nChainNeighborAllocated_;
-	int nChainNeighborDeallocated_;
-
 	// IN/Out
 	double* points_;
 	double* tracks_;

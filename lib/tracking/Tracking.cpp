@@ -18,10 +18,6 @@ Create nbTimes objets TimeNodes.
 Tracking::Tracking(Parameters* params)
 {
 	parameters_ = params;
-	parameters_->nNodeAllocated_ = 0;
-	parameters_->nNodeDeallocated_ = 0;
-	parameters_->nChainNeighborDeallocated_ = 0;
-	parameters_->nChainNeighborAllocated_ = 0;
 	timeNodes_ = nullptr;
 	nbTimes_ = 0;
 }
@@ -126,13 +122,13 @@ int Tracking::printConnectionsASCII_trc() const
 				for (const Node* nodeConnection = node; nodeConnection != nullptr; nodeConnection = nodeConnection->future_) {
 					parameters_->tracks_[index++] = node->trackedIndex_;
 					parameters_->tracks_[index++] = nodeConnection->time_ + 1;
-					parameters_->tracks_[index++] = nodeConnection->info_->x_;
-					parameters_->tracks_[index++] = nodeConnection->info_->y_;
-					parameters_->tracks_[index++] = nodeConnection->info_->surf_;
-					parameters_->tracks_[index++] = nodeConnection->info_->intensity_;
-					parameters_->tracks_[index++] = nodeConnection->info_->z_;
-					parameters_->tracks_[index++] = nodeConnection->info_->color_;
-					parameters_->tracks_[index++] = nodeConnection->info_->molId_;
+					parameters_->tracks_[index++] = nodeConnection->info_.x_;
+					parameters_->tracks_[index++] = nodeConnection->info_.y_;
+					parameters_->tracks_[index++] = nodeConnection->info_.surf_;
+					parameters_->tracks_[index++] = nodeConnection->info_.intensity_;
+					parameters_->tracks_[index++] = nodeConnection->info_.z_;
+					parameters_->tracks_[index++] = nodeConnection->info_.color_;
+					parameters_->tracks_[index++] = nodeConnection->info_.molId_;
 
 					// The number of trajectory
 					parameters_->nTraj_ = node->trackedIndex_;
@@ -177,22 +173,22 @@ int Tracking::readPointsList()
 
 		for (long node = 0; node < localTimeNodes->nNodes_; node++) {
 			// Just for the case of '2D'
-			InfoNode* str = (*localTimeNodes)(node)->info_;
+			InfoNode& str = (*localTimeNodes)(node)->info_;
 			// version correcte
-			str->x_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 3];
-			str->y_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 4];
-			str->z_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 10];
+			str.x_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 3];
+			str.y_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 4];
+			str.z_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 10];
 
-			str->color_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 11];
-			str->molId_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 12];
+			str.color_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 11];
+			str.molId_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 12];
 
-			str->intensity_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 8];
+			str.intensity_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 8];
 
-			str->surf_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 9];
-			str->mean_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 8] / parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 9];
+			str.surf_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 9];
+			str.mean_ = parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 8] / parameters_->points_[index + node * Parameters::N_SEG_PARAMS + 9];
 
-			parameters_->maxX_ = std::max(parameters_->maxX_, (*localTimeNodes)(node)->info_->x_);
-			parameters_->maxY_ = std::max(parameters_->maxY_, (*localTimeNodes)(node)->info_->y_);
+			parameters_->maxX_ = std::max(parameters_->maxX_, (*localTimeNodes)(node)->info_.x_);
+			parameters_->maxY_ = std::max(parameters_->maxY_, (*localTimeNodes)(node)->info_.y_);
 		}
 
 		//Sorting the nodes by the intensity for one time
@@ -200,8 +196,8 @@ int Tracking::readPointsList()
 		for (i = 0; i < timeNodes_[t]->nNodes_ - 1; i++) {
 			double maxIntensity = -1.;
 			for (int j = i; j < localTimeNodes->nNodes_; j++) {
-				if (maxIntensity < (*localTimeNodes)(j)->info_->intensity_) {
-					maxIntensity = (*localTimeNodes)(j)->info_->intensity_;
+				if (maxIntensity < (*localTimeNodes)(j)->info_.intensity_) {
+					maxIntensity = (*localTimeNodes)(j)->info_.intensity_;
 					indexMax = j;
 				}
 			}
@@ -497,14 +493,14 @@ void Tracking::updateConstantes() const
 			Node* node = local->nodes_[n];
 			if (node->future_ != nullptr) {
 				parameters_->stdDistance_ += node->Distance(node->future_) * node->Distance(node->future_);
-				parameters_->stdIntensity_ += (node->info_->intensity_ - node->future_->info_->intensity_)
-					* (node->info_->intensity_ - node->future_->info_->intensity_);
-				parameters_->stdMean_ += (node->info_->mean_ - node->future_->info_->mean_)
-					* (node->info_->mean_ - node->future_->info_->mean_);
-				covID += (node->info_->intensity_ - node->future_->info_->intensity_) * node->Distance(node->future_);
-				parameters_->covMeanIntensity_ += (node->info_->intensity_ - node->future_->info_->intensity_)
-					* (node->info_->mean_ - node->future_->info_->mean_);
-				covDM += node->Distance(node->future_) * (node->info_->mean_ - node->future_->info_->mean_);
+				parameters_->stdIntensity_ += (node->info_.intensity_ - node->future_->info_.intensity_)
+					* (node->info_.intensity_ - node->future_->info_.intensity_);
+				parameters_->stdMean_ += (node->info_.mean_ - node->future_->info_.mean_)
+					* (node->info_.mean_ - node->future_->info_.mean_);
+				covID += (node->info_.intensity_ - node->future_->info_.intensity_) * node->Distance(node->future_);
+				parameters_->covMeanIntensity_ += (node->info_.intensity_ - node->future_->info_.intensity_)
+					* (node->info_.mean_ - node->future_->info_.mean_);
+				covDM += node->Distance(node->future_) * (node->info_.mean_ - node->future_->info_.mean_);
 				cpt++;
 			}
 		}

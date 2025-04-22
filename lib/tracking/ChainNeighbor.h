@@ -4,18 +4,14 @@
 *******************************************************************************************************************/
 #pragma once
 
-#include "Parameters.h"
-
-
 class Node;
 
 class ChainNeighbor
 {
 public:
-	ChainNeighbor(Node* neighbor, ChainNeighbor* next, Parameters* params);
-	~ChainNeighbor();
+	ChainNeighbor(Node* neighbor, ChainNeighbor* next);
+	~ChainNeighbor() = default;
 
-	Parameters* parameters_;
 	Node* neighbor_;
 	ChainNeighbor* next_;
 };

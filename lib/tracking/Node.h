@@ -11,13 +11,13 @@
 class Node
 {
 public:
-	InfoNode* info_;
+	InfoNode info_;
 	Parameters* parameters_;
 
 	int time_;
-	Node* future_, * blinkFuture_, * past_, * blinkPast_;
-	Node* fission1Future_, * fission2Future_, * fissionPast_;
-	Node* fusion1Past_, * fusion2Past_, * fusionFuture_;
+	Node *future_, * blinkFuture_, * past_, * blinkPast_;
+	Node *fission1Future_, * fission2Future_, * fissionPast_;
+	Node *fusion1Past_, * fusion2Past_, * fusionFuture_;
 	size_t trackedIndex_;
 	size_t colorIndex_[2];
 
@@ -52,14 +52,14 @@ public:
 
 private:
 	static double getLikeness(double difference, double sigma);
-	double LikenessDistance(Node* n);
-	double LikenessDistanceFusion(Node* n1, Node* n2);
+	double LikenessDistance(const Node* n);
+	double LikenessDistanceFusion(const Node* n1, const Node* n2);
 	double LikenessFusion(Node* n1, Node* n2);
 	double LikenessFission(Node* n1, Node* n2);
 	double LikenessIntensity(Node* n);
 	double LikenessIntensityFusion(Node* n1, Node* n2);
-	double LikenessMeanIntensity(Node* n);
-	double LikenessMeanIntensityFusion(Node* n1, Node* n2);
+	double LikenessMeanIntensity(const Node* n);
+	double LikenessMeanIntensityFusion(const Node* n1, const Node* n2);
 	double makeChangeSimpleLinkage(double limit);
 	double makeChangeSimpleLinkage0(double limit);
 	double makeChangeSimpleLinkage1(double limit, const ChainNeighbor* cRand);
@@ -96,6 +96,6 @@ private:
 	double makeChangeBlinkLinkage4(double limitLoss, const ChainNeighbor* cRand);
 	double makeChangeBlinkLinkage5(double limitLoss, const ChainNeighbor* cRand);
 
-	static double stericEffect(const Node* n1, const Node* n2);
+	static double SphericEffect(const Node* n1, const Node* n2);
 	static bool metropolis(double deltaE, double temperature);
 };
