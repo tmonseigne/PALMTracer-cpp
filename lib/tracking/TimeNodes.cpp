@@ -8,8 +8,6 @@ Class TimeNodes contains the Node objets for one time.
 ********************************************************************************************************************/
 
 #include "TimeNodes.h"
-#include <cstdio>
-#include <cstdlib>
 
 /********************************************************************************************************************
 Constructor(int _time, int _nbNodes) is run after the base constructor TimeNodes::TimeNodes
@@ -128,6 +126,6 @@ It returns the gain in likeness computed with this change
 double TimeNodes::TryRandomChange(const double limit) const
 {
 	if (nNodes_ < 1) { return 0.; } //<=
-	if (nNodes_ == 1) { return (nodes_[0])->MakeChange(limit); }
-	return (nodes_[rand() % nNodes_])->MakeChange(limit);
+	if (nNodes_ == 1) { return nodes_[0]->MakeChange(limit); }
+	return nodes_[params_->RandomModulo(nNodes_)]->MakeChange(limit);
 }

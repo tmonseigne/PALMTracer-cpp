@@ -11,8 +11,6 @@ Class Tracking contains several Tracking objets for each time (nbTimes).
 #include "Tracking.h"
 #include <algorithm>
 
-#include "Constants.hpp"
-
 //=================================================================
 //==================== Constructor, Destructor ====================
 //=================================================================
@@ -34,7 +32,6 @@ void Tracking::allocTabTimes() { timeNodes_ = new TimeNodes*[nbTimes_]; }
 void Tracking::Processing()
 {
 	// Initialisation
-	srand(42);
 	readPointsList();
 	linkNeighborsPresent();
 	linkNeighborsBeforeAndAfter();

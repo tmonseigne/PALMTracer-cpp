@@ -11,7 +11,6 @@ links to the current objet.
 #include "Node.h"
 
 #include <algorithm>
-#include <cstdlib>
 #include <numbers>
 
 constexpr double WEIGHT_DISTANCE = 0.6;
@@ -64,6 +63,35 @@ Node::~Node()
 	trackedIndex_ = 0;
 }
 
+/*********************************************************************************************
+double Node::makeInitializationConnection()
+  Make the initial connections. For each strucutres, chose the one with the highest likeness
+  if it is avaliable. If it is not possible no connection.
+
+  It returns the likeness.
+
+  New version from 2005/01/12
+*********************************************************************************************/
+void Node::MakeInitializationConnection()
+{
+	Node* nMax = nullptr;
+	double max = -1e10;
+
+	for (const ChainNeighbor* c = neighborsFuture_; c != nullptr; c = c->next_) {
+		if (c->neighbor_->past_ == nullptr) {
+			const double Val = Likeness(c->neighbor_);
+
+			if (Val > max) {
+				max = Val;
+				nMax = c->neighbor_;
+			}
+		}
+	}
+	if (nMax != nullptr) {
+		nMax->past_ = this;
+		future_ = nMax;
+	}
+}
 
 /********************************************************************************************************************
 sortByIntersityNeighbors(ChainNeighbor* neighborsHead) sort the chained list begining at neighborsHead by the
@@ -99,35 +127,6 @@ void Node::SortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 	}
 }
 
-/*********************************************************************************************
-double Node::makeInitializationConnection()
-  Make the initial connections. For each strucutres, chose the one with the highest likeness
-  if it is avaliable. If it is not possible no connection.
-
-  It returns the likeness.
-
-  New version from 2005/01/12
-*********************************************************************************************/
-void Node::MakeInitializationConnection()
-{
-	Node* nMax = nullptr;
-	double max = -1e10;
-
-	for (const ChainNeighbor* c = neighborsFuture_; c != nullptr; c = c->next_) {
-		if (c->neighbor_->past_ == nullptr) {
-			const double Val = Likeness(c->neighbor_);
-
-			if (Val > max) {
-				max = Val;
-				nMax = c->neighbor_;
-			}
-		}
-	}
-	if (nMax != nullptr) {
-		nMax->past_ = this;
-		future_ = nMax;
-	}
-}
 
 //==================================================
 //==================== Computes ====================
@@ -139,10 +138,10 @@ to accept a reconfiguration that leads to a change deltaE in the objective funct
 metropolis = true, while if deltaE>0, metropolis is only true with probability exp(-deltaE/temperature), where
 temperature is a temperature determined by the annealing schedule.
 ********************************************************************************************************************/
-bool Node::metropolis(const double deltaE, const double temperature)
+bool Node::metropolis(const double deltaE, const double temperature) const
 {
 	if (deltaE >= 0.) { return true; }
-	if (static_cast<double>(rand() + 1) / static_cast<double>(RAND_MAX) > exp(deltaE / temperature)) { return false; }
+	if (params_->Randomfloat() > exp(deltaE / temperature)) { return false; }
 	return true;
 }
 
@@ -353,7 +352,7 @@ double Node::MakeChange(const double limit)
 
 	if (params_->allowFusionAndFission_) {
 		if (future_ != nullptr) {
-			switch (rand() % 4) {
+			switch (params_->RandomModulo(4)) {
 				case 0: return makeChangeFusion(limit);
 				case 1: return makeChangeFission(limit);
 				default: return makeChangeSimpleLinkage(limit);
@@ -363,14 +362,14 @@ double Node::MakeChange(const double limit)
 		if constexpr (Parameters::N_TEMPORAL_WINDOWS > 1 && blinkFuture_ != nullptr) { return makeChangeBlinkLinkage(limit); }
 		if (fission1Future_ != nullptr) { return makeChangeFission(limit); }
 		if (fusionFuture_ != nullptr) { return makeChangeFusion(limit); }
-		if constexpr (Parameters::N_TEMPORAL_WINDOWS > 1 && rand() % 2 == 0) { return makeChangeBlinkLinkage(limit); }
+		if constexpr (Parameters::N_TEMPORAL_WINDOWS > 1 && params_->RandomModulo(2) == 0) { return makeChangeBlinkLinkage(limit); }
 
 		return makeChangeSimpleLinkage(limit);
 	}
 
 	if (future_ != nullptr) { return makeChangeSimpleLinkage(limit); }
 	if (blinkFuture_ != nullptr) { return makeChangeBlinkLinkage(limit); }
-	if constexpr (Parameters::N_TEMPORAL_WINDOWS > 2 && rand() % 2 == 0) { return makeChangeBlinkLinkage(limit); }
+	if constexpr (Parameters::N_TEMPORAL_WINDOWS > 2 && params_->RandomModulo(2) == 0) { return makeChangeBlinkLinkage(limit); }
 
 	return makeChangeSimpleLinkage(limit);
 }
@@ -391,8 +390,8 @@ double Node::makeChangeFission0(const double limit)
 	if (neighborsFutureCount_ < 2) { return 0.; } //no neighbors like 3
 
 	ChainNeighbor* cRand;
-	long i;
-	const long IdRandNeighbor = rand() % neighborsFutureCount_;
+	size_t i;
+	const size_t IdRandNeighbor = params_->RandomModulo(neighborsFutureCount_);
 	//set the node cRand
 	for (i = 0, cRand = neighborsFuture_; i < IdRandNeighbor && cRand != nullptr; cRand = cRand->next_, ++i) { }
 	//test if the node is good
@@ -778,18 +777,14 @@ double Node::makeChangeFission(const double limit)
 	//4(cRand)--/-----3(fission2Future_)
 
 
-	switch (rand() % 8) {
+	switch (params_->RandomModulo(8)) {
 		case 0: return makeChangeFission3(limit);
 		case 1: return makeChangeFission4(limit);
 		default: ;
 	}
 
-	ChainNeighbor* cRand;
-	long i;
-
-
 	if (fission2Future_->neighborsPastCount_ < 2) { //no neighbors like "4"
-		switch (rand() % 2) {
+		switch (params_->RandomModulo(2)) {
 			case 0: return makeChangeFission3(limit);
 			case 1: return makeChangeFission4(limit);
 			default: ;
@@ -797,7 +792,10 @@ double Node::makeChangeFission(const double limit)
 	}
 
 	//try to find a neighbor_ "4" in the neighborhood of "3"
-	const long IdRandNeighbor = rand() % fission2Future_->neighborsPastCount_;
+	const size_t IdRandNeighbor = params_->RandomModulo(fission2Future_->neighborsPastCount_);
+
+	ChainNeighbor* cRand;
+	size_t i;
 	//set the node cRand
 	for (i = 0, cRand = fission2Future_->neighborsPast_; i < IdRandNeighbor && cRand != nullptr; cRand = cRand->next_, ++i) { }
 	//test if the node is good
@@ -806,7 +804,7 @@ double Node::makeChangeFission(const double limit)
 	if (cRand->neighbor_->blinkFuture_ != nullptr) { return 0.; } // crand is already implicated in a future blink.
 
 	if (cRand->neighbor_->future_ != nullptr) {
-		switch (rand() % 7) {
+		switch (params_->RandomModulo(7)) {
 			case 0: return makeChangeFission5(limit, cRand);
 			case 1: return makeChangeFission6(limit, cRand);
 			case 2: return makeChangeFission7(limit, cRand);
@@ -815,7 +813,7 @@ double Node::makeChangeFission(const double limit)
 		}
 	}
 
-	switch (rand() % 3) {
+	switch (params_->RandomModulo(3)) {
 		case 0: return makeChangeFission1(limit, cRand);
 		case 1: return makeChangeFission2(limit, cRand);
 		default: return makeChangeFission9(limit, cRand);
@@ -824,9 +822,6 @@ double Node::makeChangeFission(const double limit)
 
 double Node::makeChangeFusion0(const double limit)
 {
-	ChainNeighbor* cRand;
-	long i;
-
 	//no fusion in old configuration
 	//try to find 2 structures to make fusion:
 	//From
@@ -838,7 +833,9 @@ double Node::makeChangeFusion0(const double limit)
 	//NULL----------4
 
 	if (future_->neighborsPastCount_ < 2) { return 0.; } //no neighbors like 3
-	const long IdRandNeighbor = rand() % future_->neighborsPastCount_;
+	const size_t IdRandNeighbor = params_->RandomModulo(future_->neighborsPastCount_);
+	size_t i;
+	ChainNeighbor* cRand;
 	//set the node cRand
 	for (i = 0, cRand = future_->neighborsPast_; i < IdRandNeighbor && cRand != nullptr; cRand = cRand->next_, ++i) { }
 	//test if the node is good
@@ -1344,7 +1341,7 @@ double Node::makeChangeFusion(const double limit)
 
 	//just unlink the fusion
 
-	switch (rand() % 8) {
+	switch (params_->RandomModulo(8)) {
 		case 0: return makeChangeFusion3(limit);
 		case 1: return makeChangeFusion4(limit);
 		default: ;
@@ -1352,18 +1349,18 @@ double Node::makeChangeFusion(const double limit)
 
 
 	ChainNeighbor* cRand;
-	long i;
+	size_t i;
 
 	//get the cRand
 	if (neighborsFutureCount_ < 2) { //no neighbors like "4", no cRand
-		switch (rand() % 2) {
+		switch (params_->RandomModulo(2)) {
 			case 0: return makeChangeFusion3(limit);
 			case 1: return makeChangeFusion4(limit);
 			default: ;
 		}
 	}
 
-	const long IdRandNeighbor = rand() % neighborsFutureCount_;
+	const size_t IdRandNeighbor = params_->RandomModulo(neighborsFutureCount_);
 	//set the node cRand
 	for (i = 0, cRand = neighborsFuture_; i < IdRandNeighbor && cRand != nullptr; cRand = cRand->next_, ++i) { }
 	//test if the node is good
@@ -1373,7 +1370,7 @@ double Node::makeChangeFusion(const double limit)
 	if (cRand->neighbor_->blinkPast_ != nullptr) { return 0; } // cRand is already implicated in a blink connection
 
 	if (cRand->neighbor_->past_ != nullptr) {
-		switch (rand() % 7) {
+		switch (params_->RandomModulo(7)) {
 			case 0: return makeChangeFusion5(limit, cRand);
 			case 1:
 			case 2: return makeChangeFusion6(limit, cRand);
@@ -1383,7 +1380,7 @@ double Node::makeChangeFusion(const double limit)
 		}
 	}
 
-	switch (rand() % 2) {
+	switch (params_->RandomModulo(2)) {
 		case 0: return makeChangeFusion1(limit, cRand);
 		default: return makeChangeFusion2(limit, cRand);
 	}
@@ -1467,7 +1464,7 @@ double Node::makeChangeSimpleLinkage2(const double limit, const ChainNeighbor* c
 	//return(0.);
 }
 
-double Node::makeChangeSimpleLinkage3(const double limit, const ChainNeighbor* cRand, const long count)
+double Node::makeChangeSimpleLinkage3(const double limit, const ChainNeighbor* cRand, const size_t  count)
 {
 	//	From
 	//	Present		Future
@@ -1476,8 +1473,8 @@ double Node::makeChangeSimpleLinkage3(const double limit, const ChainNeighbor* c
 	//	NULL--------5(c)
 
 	//find a random one
-	const long IdRandNeighbor = rand() % count;
-	int iCount = 0;
+	const size_t IdRandNeighbor = params_->RandomModulo(count);
+	size_t  iCount = 0;
 
 	const ChainNeighbor* c = cRand->neighbor_->past_->neighborsFuture_;
 	do {
@@ -1570,7 +1567,7 @@ double Node::makeChangeBlinkLinkage0(const double limit)
 	//	t			t+1		t+2
 	//	1(this)-------------2(blinkFuture_)
 
-	//const size_t Dt = rand() % (Parameters::N_TEMPORAL_WINDOWS - 1) + 2;
+	//const size_t Dt = params_->RandomModulo((Parameters::N_TEMPORAL_WINDOWS - 1) + 2); Temporal = 1 donc c'est modulo 0
 	constexpr size_t Dt = 2;
 	size_t nbNodeAtGoodTime = 0;
 	ChainNeighbor* cRand;
@@ -1582,8 +1579,8 @@ double Node::makeChangeBlinkLinkage0(const double limit)
 	}
 	if (nbNodeAtGoodTime == 0) { return 0; }
 
-	const long IdRandNeighbor = rand() % nbNodeAtGoodTime;
-	long i = 0;
+	const size_t IdRandNeighbor = params_->RandomModulo(nbNodeAtGoodTime);
+	size_t i = 0;
 	bool exitFor = false;
 	for (cRand = neighborsBlinkFuture_; !exitFor && cRand != nullptr;) {
 		if (cRand->neighbor_->time_ - time_ == Dt && cRand->neighbor_->past_ == nullptr && cRand->neighbor_->blinkPast_ == nullptr && cRand->neighbor_->
@@ -1759,15 +1756,14 @@ double Node::makeChangeBlinkLinkage5(const double limit, const ChainNeighbor* cR
 
 double Node::makeChangeBlinkLinkage(const double limit)
 {
-	int i;
-	if (blinkFuture_ == nullptr) { //nothing connected in the future
+	size_t i;
+	if (blinkFuture_ == nullptr) {
+		//nothing connected in the future
 		//transform : 
 		//	From
 		//	t			t+1		t+n
 		//	1(this)-------------NULL
 		//	NULL----------------2
-
-
 		//	To
 		//	t			t+1		t+n
 		//	1(this)-------------2(blinkFuture_)
@@ -1858,16 +1854,13 @@ double Node::makeChangeBlinkLinkage(const double limit)
 	//				...------3(cRand2)---2(blinkFuture_)
 	//  makeChangeBlinkLinkage5
 
-	if (rand() % 2) { return makeChangeBlinkLinkage1(limit); }
+	if (params_->RandomModulo(2)) { return makeChangeBlinkLinkage1(limit); }
 
 	//find a potential cRand
 	//cRand has to be either just after this or just before blinkFuture_
-	if (rand() % 2) { //cRand just after this
-		long nbNodeAtGoodTime = 0;
-		long nbNodeAtGoodTime2 = 0;
+	if (params_->RandomModulo(2)) { //cRand just after this
+		size_t nbNodeAtGoodTime = 0, nbNodeAtGoodTime2 = 0, idRandNeighbor;
 		ChainNeighbor* cRand;
-
-		long idRandNeighbor;
 
 		for (cRand = neighborsFuture_; cRand != nullptr; cRand = cRand->next_) {
 			if (cRand->neighbor_->time_ - time_ == 1) {
@@ -1881,8 +1874,8 @@ double Node::makeChangeBlinkLinkage(const double limit)
 		}
 		if (nbNodeAtGoodTime == 0 && nbNodeAtGoodTime2 == 0) { return makeChangeBlinkLinkage1(limit); }
 
-		if ((rand() % 2 && nbNodeAtGoodTime != 0) || nbNodeAtGoodTime2 == 0) {
-			idRandNeighbor = rand() % nbNodeAtGoodTime;
+		if ((params_->RandomModulo(2) && nbNodeAtGoodTime != 0) || nbNodeAtGoodTime2 == 0) {
+			idRandNeighbor = params_->RandomModulo(nbNodeAtGoodTime);
 			i = 0;
 			bool exitFor = false;
 			for (cRand = neighborsFuture_; !exitFor && cRand != nullptr;) {
@@ -1900,7 +1893,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 			return makeChangeBlinkLinkage2(limit, cRand);
 		}
 		ChainNeighbor* cRand2;
-		idRandNeighbor = rand() % nbNodeAtGoodTime2;
+		idRandNeighbor = params_->RandomModulo(nbNodeAtGoodTime2);
 		i = 0;
 		bool exitFor = false;
 		for (cRand2 = neighborsFuture_; !exitFor && cRand2 != nullptr;) {
@@ -1918,11 +1911,8 @@ double Node::makeChangeBlinkLinkage(const double limit)
 		return makeChangeBlinkLinkage4(limit, cRand2);
 	}
 	// cRand is just before blinkFuture_
-	long nbNodeAtGoodTime = 0;
-	long nbNodeAtGoodTime2 = 0;
+	size_t nbNodeAtGoodTime = 0, nbNodeAtGoodTime2 = 0, idRandNeighbor;
 	ChainNeighbor* cRand;
-
-	long idRandNeighbor;
 
 	for (cRand = blinkFuture_->neighborsPast_; cRand != nullptr; cRand = cRand->next_) {
 		if (blinkFuture_->time_ - cRand->neighbor_->time_ == 1) {
@@ -1935,8 +1925,8 @@ double Node::makeChangeBlinkLinkage(const double limit)
 	}
 	if (nbNodeAtGoodTime == 0 && nbNodeAtGoodTime2 == 0) { return makeChangeBlinkLinkage1(limit); }
 
-	if ((rand() % 2 && nbNodeAtGoodTime != 0) || nbNodeAtGoodTime2 == 0) {
-		idRandNeighbor = rand() % nbNodeAtGoodTime;
+	if ((params_->RandomModulo(2) && nbNodeAtGoodTime != 0) || nbNodeAtGoodTime2 == 0) {
+		idRandNeighbor = params_->RandomModulo(nbNodeAtGoodTime);
 		i = 0;
 		bool exitFor = false;
 		for (cRand = blinkFuture_->neighborsPast_; !exitFor && cRand != nullptr;) {
@@ -1954,7 +1944,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 		return makeChangeBlinkLinkage3(limit, cRand);
 	}
 	ChainNeighbor* cRand2;
-	idRandNeighbor = rand() % nbNodeAtGoodTime2;
+	idRandNeighbor = params_->RandomModulo(nbNodeAtGoodTime2);
 	i = 0;
 	bool exitFor = false;
 	for (cRand2 = blinkFuture_->neighborsPast_; !exitFor && cRand2 != nullptr;) {
@@ -1973,12 +1963,12 @@ double Node::makeChangeBlinkLinkage(const double limit)
 
 double Node::makeChangeSimpleLinkage(const double limit)
 {
-	if (future_ == nullptr || rand() % 2 == 0) {
+	if (future_ == nullptr || params_->RandomModulo(2) == 0) {
 		//cRand is a random node in the vicinity of "this" in the future.
 
 		//compute index of cRand
 		if (neighborsFutureCount_ == 0) { return 0.; } //no neighbors
-		const size_t IdRandNeighbor = rand() % neighborsFutureCount_;
+		const size_t IdRandNeighbor = params_->RandomModulo(neighborsFutureCount_);
 
 		//set the node cRand
 		size_t i;
@@ -2010,7 +2000,7 @@ double Node::makeChangeSimpleLinkage(const double limit)
 			return makeChangeSimpleLinkage1(limit, cRand);
 		}
 		//there is a conflict, the node cRand->neighbor_ is already connected to a node at the same time_ than this
-		if (rand() % 2 && future_ != nullptr) { //just flip the 2 nodes
+		if (params_->RandomModulo(2) && future_ != nullptr) { //just flip the 2 nodes
 			//	From
 			//	Present		Future
 			//	1(this)-----2

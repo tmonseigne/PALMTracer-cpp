@@ -57,7 +57,7 @@ private:
 	double makeChangeSimpleLinkage0(double limit) const;
 	double makeChangeSimpleLinkage1(double limit, const ChainNeighbor* cRand);
 	double makeChangeSimpleLinkage2(double limit, const ChainNeighbor* cRand);
-	double makeChangeSimpleLinkage3(double limit, const ChainNeighbor* cRand, long count);
+	double makeChangeSimpleLinkage3(double limit, const ChainNeighbor* cRand, size_t count);
 	double makeChangeSimpleLinkage4(double limit, const ChainNeighbor* cRand);
 
 	double makeChangeFusion(double limit);
@@ -92,7 +92,7 @@ private:
 	double makeChangeBlinkLinkage4(double limit, const ChainNeighbor* cRand);
 	double makeChangeBlinkLinkage5(double limit, const ChainNeighbor* cRand);
 
-	static bool metropolis(double deltaE, double temperature);
+	bool metropolis(double deltaE, double temperature) const;
 	double sphericEffect() const;
 	static double sphericEffect(const Node* n1, const Node* n2) { return n1->sphericEffect() + n2->sphericEffect(); }
 	double distance(const Node* n1, const Node* n2) const { return info_.Distance(n1->info_, n2->info_); }

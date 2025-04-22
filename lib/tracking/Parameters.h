@@ -1,4 +1,5 @@
 #pragma once
+#include <random>
 
 class Parameters
 {
@@ -21,4 +22,9 @@ public:
 	// Computes
 	double stdIntensity_, stdMean_, stdDistance_, covMeanIntensity_;
 	double maxX_, maxY_, maxZ_;
+
+	size_t RandomModulo(const size_t n) { return rng_() % n; }
+	double Randomfloat() { return static_cast<double>(rng_()) / static_cast<double>(std::mt19937::max()); }
+
+	std::mt19937 rng_{42}; // Générateur de nombres pseudo-aléatoires, seedé avec 42
 };
