@@ -12,10 +12,10 @@ class TimeNodes
 {
 protected:
 	size_t time_;
-	Node* allocNode() const { return new Node(time_, parameters_); }
+	Node* allocNode() const { return new Node(time_, params_); }
 
 public:
-	Parameters* parameters_;
+	Parameters* params_;
 	Node** nodes_;
 	size_t nNodes_;
 	TimeNodes(size_t time, size_t nNodes, Parameters* params);
@@ -27,10 +27,8 @@ public:
 	void LinkNeighborsBlinkBeforeAndAfter(const TimeNodes& futures) const;
 	void SortByIntensityAllNeighbors() const;
 
-	void ComputeConstantSigmas(double& stdIntensity, long& countStdInt, double& stdMean, long& countStdMean, double& stdDistance,
-	                           long& countStdDist, bool sigmaClipping, long* hist = nullptr) const;
+	void ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance,
+	                           size_t& nDist, bool clipping, long* hist = nullptr) const;
 	void MakeAllInitializationConnections() const;
 	double TryRandomChange(double limit) const;
-
-	double GetLikenessTime(size_t lastTime) const;
 };

@@ -13,17 +13,8 @@ public:
 	static constexpr size_t N_TEMPORAL_WINDOWS = 1;
 	static constexpr size_t MODEL = 2; //the number of the used model
 
-	// IN/Out
-	double* points_;
-	double* tracks_;
-	size_t nPoints_, nTracks_;
-	size_t nTraj_;
-
 	// Params
 	double maxSpeed_;
-	double dZdx_;
-	double decrease_;
-	size_t minLife_;
 	bool allowFusionAndFission_;
 	double costBirthDeath_;
 

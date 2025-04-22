@@ -5,9 +5,9 @@
 #include "InfoNode.h"
 #include <cmath>
 
-double InfoNode::Distance(const InfoNode& node) const
+double InfoNode::Distance(const InfoNode& n) const
 {
-	const double Dx = x_ - node.x_, Dy = y_ - node.y_;
+	const double Dx = x_ - n.x_, Dy = y_ - n.y_;
 	return sqrt(Dx * Dx + Dy * Dy);
 }
 

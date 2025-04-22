@@ -4,44 +4,28 @@
 #include "tracking/Tracking.h"
 
 
-_declspec(dllexport) long _stdcall Process(double* pointsList, const unsigned long pointsListSize, double* trc, const unsigned long trcSize,
-                                           const double maxSpeed, const double dZdX, const unsigned long minLife, const double decrease,
-                                           const unsigned long allowFusiondisso, const double costBirth, const unsigned long nbTimes)
+_declspec(dllexport) long _stdcall Process(const double* pointsList, double* trc, const double maxSpeed, const unsigned long minLife,
+                                           const double decrease, const unsigned long allowFusiondisso, const double costBirth, const unsigned long nbTimes)
 {
 	const auto Param = new Parameters();
 
-	Param->points_ = pointsList;
-	Param->nPoints_ = pointsListSize;
-	Param->tracks_ = trc;
-	Param->nTracks_ = trcSize;
 	Param->maxSpeed_ = maxSpeed;
-	Param->dZdx_ = dZdX;
-	Param->minLife_ = minLife;
-	Param->decrease_ = decrease;
 	Param->allowFusionAndFission_ = allowFusiondisso;
 	Param->costBirthDeath_ = costBirth;
 
-	Param->nTraj_ = 0;
-
-	Tracking tracking(Param, nbTimes);
-
-	int ret;
-	tracking.Initialisation();
-	if ((ret = tracking.RunModel()) < 0) { return ret; }
-	tracking.GiveResult();
-
-	const long N = static_cast<long>(Param->nTraj_);
+	Tracking tracking(pointsList, trc, minLife, decrease / 100.0, nbTimes, Param);
+	tracking.Processing();
 	delete Param;
 
-	return N;
+	return static_cast<long>(tracking.nTraj_);
 }
 
 
-_declspec(dllexport) long _stdcall Tracking(double* pointsList, const unsigned long pointsListSize, double* trc, const unsigned long trcSize,
+_declspec(dllexport) long _stdcall Tracking(const double* points, const unsigned long nPoints, double* trc, const unsigned long nTracks,
                                             const double maxSpeed, const double dZdX, const double minLife, const double decrease,
                                             const unsigned long allowFusiondisso, const double costBirth, unsigned long nbDim, const unsigned long model,
                                             const unsigned long nbTimes)
 {
-	return Process(pointsList, pointsListSize, trc, trcSize, maxSpeed, dZdX, static_cast<unsigned long>(minLife),
+	return Process(points, trc, maxSpeed, static_cast<unsigned long>(minLife),
 	               decrease, allowFusiondisso, costBirth, nbTimes);
 }

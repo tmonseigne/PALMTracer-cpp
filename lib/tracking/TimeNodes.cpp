@@ -15,7 +15,7 @@ Class TimeNodes contains the Node objets for one time.
 Constructor(int _time, int _nbNodes) is run after the base constructor TimeNodes::TimeNodes
 ********************************************************************************************************************/
 TimeNodes::TimeNodes(const size_t time, const size_t nNodes, Parameters* params)
-	: time_(time), parameters_(params), nNodes_(nNodes)
+	: time_(time), params_(params), nNodes_(nNodes)
 {
 	nodes_ = new Node*[nNodes_];
 	for (size_t i = 0; i < nNodes_; ++i) { nodes_[i] = allocNode(); }
@@ -46,7 +46,6 @@ void TimeNodes::LinkNeighborsPresent() const
 			}
 		}
 	}
-
 }
 
 
@@ -58,7 +57,7 @@ void TimeNodes::LinkNeighborsBeforeAndAfter(const TimeNodes& futures) const
 {
 	for (size_t present = 0; present < nNodes_; ++present) {
 		for (size_t future = 0; future < futures.nNodes_; ++future) {
-			if (nodes_[present]->Distance(futures.nodes_[future]) < parameters_->maxSpeed_) {
+			if (nodes_[present]->Distance(futures.nodes_[future]) < params_->maxSpeed_) {
 				nodes_[present]->neighborsFuture_ = new ChainNeighbor(futures.nodes_[future], nodes_[present]->neighborsFuture_);
 				nodes_[present]->neighborsFutureCount_++;
 				futures.nodes_[future]->neighborsPast_ = new ChainNeighbor(nodes_[present], futures.nodes_[future]->neighborsPast_);
@@ -76,7 +75,7 @@ void TimeNodes::LinkNeighborsBlinkBeforeAndAfter(const TimeNodes& futures) const
 {
 	for (size_t present = 0; present < nNodes_; ++present) {
 		for (size_t future = 0; future < futures.nNodes_; ++future) {
-			if (nodes_[present]->Distance(futures.nodes_[future]) < parameters_->maxSpeed_) {
+			if (nodes_[present]->Distance(futures.nodes_[future]) < params_->maxSpeed_) {
 				nodes_[present]->neighborsBlinkFuture_ = new ChainNeighbor(futures.nodes_[future], nodes_[present]->neighborsBlinkFuture_);
 				nodes_[present]->neighborsBlinkFutureCount_++;
 				futures.nodes_[future]->neighborsBlinkPast_ = new ChainNeighbor(nodes_[present], futures.nodes_[future]->neighborsBlinkPast_);
@@ -100,16 +99,13 @@ void TimeNodes::SortByIntensityAllNeighbors() const
 
 
 /********************************************************************************************************************
-void computeConstantSigmas(double &stdIntensity, double &stdMean,
-	double &stdDistance, long &countStd) compute the constant kMean and kIntensity
+void computeConstantSigmas(double &intensity, double &mean,
+	double &distance, long &countStd) compute the constant kMean and kIntensity
 ********************************************************************************************************************/
-void TimeNodes::ComputeConstantSigmas(double& stdIntensity, long& countStdInt, double& stdMean, long& countStdMean,
-                                      double& stdDistance, long& countStdDist, const bool sigmaClipping, long* hist) const
+void TimeNodes::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance, size_t& nDist,
+                                      const bool clipping, long* hist) const
 {
-	for (size_t i = 0; i < nNodes_; ++i) {
-		Node* node = nodes_[i];
-		node->ComputeConstantSigmas(stdIntensity, countStdInt, stdMean, countStdMean, stdDistance, countStdDist, sigmaClipping, hist);
-	}
+	for (size_t i = 0; i < nNodes_; ++i) { nodes_[i]->ComputeConstantSigmas(intensity, nInt, mean, nMean, distance, nDist, clipping, hist); }
 }
 
 
@@ -134,17 +130,4 @@ double TimeNodes::TryRandomChange(const double limit) const
 	if (nNodes_ < 1) { return 0.; } //<=
 	if (nNodes_ == 1) { return (nodes_[0])->MakeChange(limit); }
 	return (nodes_[rand() % nNodes_])->MakeChange(limit);
-}
-
-/********************************************************************************************************************
-double giveLikeness(long lastTime) compute the total likeness for all nodes
-********************************************************************************************************************/
-double TimeNodes::GetLikenessTime(const size_t lastTime) const
-{
-	double res = 0.;
-	for (size_t i = 0; i < nNodes_; ++i) {
-		const auto Node = nodes_[i];
-		res += Node->GetLikeness(lastTime);
-	}
-	return res;
 }
