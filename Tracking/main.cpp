@@ -21,15 +21,14 @@ _declspec(dllexport) long _stdcall Process(double* pointsList, const unsigned lo
 	Param->allowFusionAndFission_ = allowFusiondisso;
 	Param->costBirthDeath_ = costBirth;
 
-	Param->nTimes_ = nbTimes;
 	Param->nTraj_ = 0;
 
-	Tracking tracking(Param);
+	Tracking tracking(Param, nbTimes);
 
 	int ret;
 	if ((ret = tracking.Initialisation()) < 0) { return ret; }
 	if ((ret = tracking.RunModel()) < 0) { return ret; }
-	if ((ret = tracking.GiveResult()) < 0) { return ret; }
+	tracking.GiveResult();
 
 	const long N = static_cast<long>(Param->nTraj_);
 	delete Param;

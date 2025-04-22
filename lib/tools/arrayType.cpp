@@ -226,7 +226,7 @@ DataType&ArrayType::operator()(long i, long j, long k, long l) { return data[((i
 #ifndef BOOL_TYPE
 ArrayType& ArrayType::operator++()
 {
-	for (unsigned long i = 0; i < nbPoints; i++) { ++data[i]; }
+	for (unsigned long i = 0; i < nbPoints; ++i) { ++data[i]; }
 	return *this;
 }
 #endif
@@ -235,7 +235,7 @@ ArrayType& ArrayType::operator++()
 #ifndef BOOL_TYPE
 ArrayType& ArrayType::operator--()
 {
-	for (unsigned long i = 0; i < nbPoints; i++) { ++data[i]; }
+	for (unsigned long i = 0; i < nbPoints; ++i) { ++data[i]; }
 	return *this;
 }
 #endif
@@ -249,7 +249,7 @@ void ArrayType::setSize(int di, int valSize)
 {
 	sizeData[di] = valSize;
 	nbDim = getDim(sizeData[0], sizeData[1], sizeData[2], sizeData[3]);
-	nbPoints = (unsigned long)(sizeData[0] * sizeData[1] * sizeData[2] * sizeData[3]);
+	nbPoints = sizeData[0] * sizeData[1] * sizeData[2] * sizeData[3];
 	if (nbPoints > sizeAllocated) { exit(SIZE_ERR); }
 }
 
@@ -261,7 +261,7 @@ DataType ArrayType::min()
 {
 	if (!isThereData()) { exit(ALLOC_ERR); }
 	DataType _min = data[0];
-	for (unsigned long i = 0; i < nbPoints; i++) { if (_min > data[i]) { _min = data[i]; } }
+	for (unsigned long i = 0; i < nbPoints; ++i) { if (_min > data[i]) { _min = data[i]; } }
 	return _min;
 }
 #endif
@@ -271,7 +271,7 @@ DataType ArrayType::max()
 {
 	if (!isThereData()) { exit(ALLOC_ERR); }
 	DataType _max = data[0];
-	for (unsigned long i = 0; i < nbPoints; i++) { if (_max < data[i]) { _max = data[i]; } }
+	for (unsigned long i = 0; i < nbPoints; ++i) { if (_max < data[i]) { _max = data[i]; } }
 	return _max;
 }
 #endif
@@ -282,9 +282,9 @@ double ArrayType::sigma()
 	double mean = 0.;
 	unsigned long i;
 	double var = 0.;
-	for (i = 0; i < nbPoints; i++) { mean += data[i]; }
+	for (i = 0; i < nbPoints; ++i) { mean += data[i]; }
 	mean /= (double)nbPoints;
-	for (i = 0; i < nbPoints; i++) { var += (data[i] - mean) * (data[i] - mean); }
+	for (i = 0; i < nbPoints; ++i) { var += (data[i] - mean) * (data[i] - mean); }
 	var /= nbPoints;
 	if (var < 0) { return 0.; }
 	else { return sqrt(var); }
@@ -295,7 +295,7 @@ double ArrayType::sigma()
 double ArrayType::power()
 {
 	double pow = 0.;
-	for (unsigned long i = 0; i < nbPoints; i++) { pow += data[i] * data[i]; }
+	for (unsigned long i = 0; i < nbPoints; ++i) { pow += data[i] * data[i]; }
 	pow /= (double)nbPoints;
 	return pow;
 }
@@ -306,7 +306,7 @@ double ArrayType::power()
 double ArrayType::mean()
 {
 	double m = 0.;
-	for (unsigned long i = 0; i < nbPoints; i++) { m += data[i]; }
+	for (unsigned long i = 0; i < nbPoints; ++i) { m += data[i]; }
 	m /= (double)nbPoints;
 	return m;
 }
@@ -316,7 +316,7 @@ double ArrayType::mean()
 double ArrayType::sum()
 {
 	double m = 0.;
-	for (unsigned long i = 0; i < nbPoints; i++) { m += data[i]; }
+	for (unsigned long i = 0; i < nbPoints; ++i) { m += data[i]; }
 	return m;
 }
 #endif

@@ -14,7 +14,7 @@ public:
 	InfoNode info_;
 	Parameters* parameters_;
 
-	int time_;
+	size_t time_;
 	Node *future_, * blinkFuture_, * past_, * blinkPast_;
 	Node *fission1Future_, * fission2Future_, * fissionPast_;
 	Node *fusion1Past_, * fusion2Past_, * fusionFuture_;
@@ -27,7 +27,7 @@ public:
 	ChainNeighbor* neighborsBlinkPast_, * neighborsBlinkFuture_;
 	size_t neighborsBlinkPastCount_, neighborsBlinkFutureCount_;
 
-	Node(int time, Parameters* params);
+	Node(size_t time, Parameters* params);
 	virtual ~Node();
 
 	double Distance(const Node* node) const;
@@ -35,7 +35,7 @@ public:
 
 	bool CheckLinksHomogeneity() const;
 
-	static int SortByIntersityNeighbors(ChainNeighbor** neighborsHead);
+	static void SortByIntersityNeighbors(ChainNeighbor** neighborsHead);
 
 	virtual double Likeness(Node* n);
 	virtual double LikenessBlink(Node* n);
@@ -45,21 +45,21 @@ public:
 
 	void ComputeConstantSigmas(double& stdIntensityComputing, long& countStdInt, double& stdMeanComputing, long& countStdMean, double& stdDistanceComputing,
 		long& countStdDist, bool sigmaClipping, long* hist);
-	double GetLikenessOfLocalNode(int lastTime);
+	double GetLikenessOfLocalNode(size_t lastTime);
 	double MakeInitializationConnection();
 	double MakeChange(double limit);
 
 
 private:
 	static double getLikeness(double difference, double sigma);
-	double LikenessDistance(const Node* n);
-	double LikenessDistanceFusion(const Node* n1, const Node* n2);
-	double LikenessFusion(Node* n1, Node* n2);
-	double LikenessFission(Node* n1, Node* n2);
-	double LikenessIntensity(Node* n);
-	double LikenessIntensityFusion(Node* n1, Node* n2);
-	double LikenessMeanIntensity(const Node* n);
-	double LikenessMeanIntensityFusion(const Node* n1, const Node* n2);
+	double likenessDistance(const Node* n) const;
+	double likenessDistanceFusion(const Node* n1, const Node* n2) const;
+	double likenessFusion(Node* n1, Node* n2);
+	double likenessFission(Node* n1, Node* n2);
+	double likenessIntensity(const Node* n) const;
+	double likenessIntensityFusion(const Node* n1, const Node* n2) const;
+	double likenessMeanIntensity(const Node* n) const;
+	double likenessMeanIntensityFusion(const Node* n1, const Node* n2) const;
 	double makeChangeSimpleLinkage(double limit);
 	double makeChangeSimpleLinkage0(double limit);
 	double makeChangeSimpleLinkage1(double limit, const ChainNeighbor* cRand);

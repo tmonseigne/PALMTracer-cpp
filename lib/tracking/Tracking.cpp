@@ -11,16 +11,7 @@ Class Tracking contains several Tracking objets for each time (nbTimes).
 #include "Tracking.h"
 #include <algorithm>
 
-/********************************************************************************************************************
-Constructuor(int _nbTimes) of Tracking class. 
-Create nbTimes objets TimeNodes.
-********************************************************************************************************************/
-Tracking::Tracking(Parameters* params)
-{
-	parameters_ = params;
-	timeNodes_ = nullptr;
-	nbTimes_ = 0;
-}
+#include "Constants.hpp"
 
 /********************************************************************************************************************
 Destructuor() of Tracking class. 
@@ -28,7 +19,7 @@ Delete all objets TimeNodes.
 ********************************************************************************************************************/
 Tracking::~Tracking()
 {
-	for (int i = 0; i < nbTimes_; i++) { delete timeNodes_[i]; }
+	for (size_t i = 0; i < nbTimes_; ++i) { delete timeNodes_[i]; }
 	delete [] timeNodes_;
 }
 
@@ -47,7 +38,7 @@ int Tracking::Initialisation()
 
 	if ((ret = linkNeighborsPresent()) < 0) { return ret; }
 	if ((ret = linkNeighborsBeforeAndAfter()) < 0) { return ret; }
-	if ((ret = sortByIntensityAllNeighbors()) < 0) { return ret; }
+	sortByIntensityAllNeighbors();
 
 	if constexpr (Parameters::N_TEMPORAL_WINDOWS > 1) { if ((ret = linkNeighborsBlinkBeforeAndAfter()) < 0) { return ret; } }
 
@@ -70,7 +61,7 @@ int Tracking::RunModel()
 
 			if (iLearning == 0) {
 				computeConstantes();
-				for (int t = 0; t < nbTimes_ - 1; ++t) { ((TimeNodes*)timeNodes_[t])->MakeAllInitializationConnections(); }
+				for (size_t t = 0; t < nbTimes_ - 1; ++t) { timeNodes_[t]->MakeAllInitializationConnections(); }
 			}
 			else { updateConstantes(); }
 
@@ -85,8 +76,8 @@ int Tracking::RunModel()
 				nbInt++;
 
 				double deltaLikeness = 0;
-				for (int i = 0; i < Parameters::N_ITERATIONS; i++) {
-					for (int t = 0; t < nbTimes_ - 1; ++t) { deltaLikeness += ((TimeNodes*)timeNodes_[t])->TryRandomChange(error); }
+				for (size_t i = 0; i < Parameters::N_ITERATIONS; ++i) {
+					for (size_t t = 0; t < nbTimes_ - 1; ++t) { deltaLikeness += timeNodes_[t]->TryRandomChange(error); }
 				}
 				totalLikeness += deltaLikeness;
 
@@ -94,7 +85,8 @@ int Tracking::RunModel()
 				else { cpt = 0; }
 
 				bcl++;
-			} while (cpt < 10);
+			}
+			while (cpt < 10);
 		}
 
 		return RET_OK;
@@ -111,12 +103,12 @@ Colonne 4         Y
 Colonne 5 ou 6         nombre de pixels de l'objet
 Colonne 6 ou 7         intensité intégrée
 ********************************************************************************************************************/
-int Tracking::printConnectionsASCII_trc() const
+void Tracking::printConnectionsASCII_trc() const
 {
-	unsigned long index = 0;
-	for (int t = 0; t < nbTimes_; ++t) {
+	size_t index = 0;
+	for (size_t t = 0; t < nbTimes_; ++t) {
 		const TimeNodes* localTimeNodes = timeNodes_[t];
-		for (int n = 0; n < localTimeNodes->nNodes_; n++) {
+		for (size_t n = 0; n < localTimeNodes->nNodes_; n++) {
 			Node* node = localTimeNodes->nodes_[n];
 			if (node->past_ == nullptr && node->trackedIndex_ > 0) {
 				for (const Node* nodeConnection = node; nodeConnection != nullptr; nodeConnection = nodeConnection->future_) {
@@ -136,7 +128,6 @@ int Tracking::printConnectionsASCII_trc() const
 			}
 		}
 	}
-	return RET_OK;
 }
 
 /********************************************************************************************************************
@@ -144,11 +135,8 @@ readPointsList() reads the 'pointsList' specified in parameters_ and allocates t
 ********************************************************************************************************************/
 int Tracking::readPointsList()
 {
-	//unsigned long nbTimes;
-	unsigned long index = 0;
+	size_t index = 0;
 	int i;
-
-	nbTimes_ = parameters_->nTimes_;
 
 	allocTabTimes(); //Allocation of tabTimes
 
@@ -156,9 +144,9 @@ int Tracking::readPointsList()
 	parameters_->maxY_ = 0;
 	parameters_->maxZ_ = 0;
 
-	for (int t = 0; t < nbTimes_; t++) {
+	for (size_t t = 0; t < nbTimes_; t++) {
 		// Computing the number of nodes by frame
-		unsigned long nbNodes = 0;
+		size_t nbNodes = 0;
 		for (i = index; ; /*i+=4*/ i += Parameters::N_SEG_PARAMS) {
 			if (static_cast<int>(parameters_->points_[i + 9]) != -1 && static_cast<int>(parameters_->points_[i + 9]) != 0) { nbNodes++; } // surface
 			else { break; }
@@ -193,9 +181,9 @@ int Tracking::readPointsList()
 
 		//Sorting the nodes by the intensity for one time
 		int indexMax;
-		for (i = 0; i < timeNodes_[t]->nNodes_ - 1; i++) {
+		for (i = 0; i < timeNodes_[t]->nNodes_ - 1; ++i) {
 			double maxIntensity = -1.;
-			for (int j = i; j < localTimeNodes->nNodes_; j++) {
+			for (int j = i; j < localTimeNodes->nNodes_; ++j) {
 				if (maxIntensity < (*localTimeNodes)(j)->info_.intensity_) {
 					maxIntensity = (*localTimeNodes)(j)->info_.intensity_;
 					indexMax = j;
@@ -260,12 +248,7 @@ int Tracking::linkNeighborsBlinkBeforeAndAfter() const
 /********************************************************************************************************************
 int sortByIntensityAllNeighbors() sort by intensity of the node neighbors of each time 
 ********************************************************************************************************************/
-int Tracking::sortByIntensityAllNeighbors() const
-{
-	int ret;
-	for (int t = 0; t < nbTimes_; ++t) { if ((ret = timeNodes_[t]->SortByIntensityAllNeighbors()) < 0) { return ret; } }
-	return RET_OK;
-}
+void Tracking::sortByIntensityAllNeighbors() const { for (size_t t = 0; t < nbTimes_; ++t) { timeNodes_[t]->SortByIntensityAllNeighbors(); } }
 
 
 /********************************************************************************************************************
@@ -374,12 +357,11 @@ void Tracking::setColorToTrackedStructures() const
 
 void Tracking::setIndexToTrackedStructures() const
 {
-	unsigned long newIndex = 1;
-	long nbSuccessiveNodes;
-	Node* node;
-	Node* oldNode;
-	for (int time = 0; time < nbTimes_; time++) {
-		for (long indexNode = 0; indexNode < timeNodes_[time]->nNodes_; indexNode++) {
+	size_t newIndex = 1;
+	size_t nbSuccessiveNodes;
+	Node *node, *oldNode;
+	for (size_t time = 0; time < nbTimes_; time++) {
+		for (size_t indexNode = 0; indexNode < timeNodes_[time]->nNodes_; indexNode++) {
 			if (timeNodes_[time]->nodes_[indexNode]->past_ == nullptr) {
 				for (node = timeNodes_[time]->nodes_[indexNode], oldNode = nullptr, nbSuccessiveNodes = 0;
 				     node != nullptr && nbSuccessiveNodes < parameters_->minLife_; node = node->future_, nbSuccessiveNodes++) {
@@ -387,10 +369,7 @@ void Tracking::setIndexToTrackedStructures() const
 					node->trackedIndex_ = 0;
 				}
 				bool isNewIndex = false;
-				if (nbSuccessiveNodes >= parameters_->minLife_) //it was == 
-				{
-					isNewIndex = true;
-				}
+				if (nbSuccessiveNodes >= parameters_->minLife_) { isNewIndex = true; } //it was == 
 				if (timeNodes_[time]->nodes_[indexNode]->fissionPast_ != nullptr) { isNewIndex = true; }
 				if (timeNodes_[time]->nodes_[indexNode]->fusion1Past_ != nullptr) { isNewIndex = true; }
 				if (timeNodes_[time]->nodes_[indexNode]->blinkPast_ != nullptr) { isNewIndex = true; }
@@ -413,22 +392,17 @@ void Tracking::setIndexToTrackedStructures() const
 /********************************************************************************************************************
 int giveResult() just call the function to display the result
 ********************************************************************************************************************/
-int Tracking::GiveResult()
+void Tracking::GiveResult() const
 {
-	int ret;
-
 	setIndexToTrackedStructures();
 	setColorToTrackedStructures();
-
-	if ((ret = printConnectionsASCII_trc()) < 0) { return ret; }
-
-	return RET_OK;
+	printConnectionsASCII_trc();
 }
 
 /********************************************************************************************************************
 void checkLinksHomogeneity() just call the function to display the result
 ********************************************************************************************************************/
-void Tracking::CheckLinksHomogeneity() const { for (int t = 0; t < nbTimes_; ++t) { timeNodes_[t]->CheckLinksHomogeneity(); } }
+void Tracking::CheckLinksHomogeneity() const { for (size_t t = 0; t < nbTimes_; ++t) { timeNodes_[t]->CheckLinksHomogeneity(); } }
 
 
 /********************************************************************************************************************
@@ -448,17 +422,14 @@ void Tracking::computeConstantes() const
 
 
 	for (int k = 0; k < 20; k++) {
-		long countStdInt = 0;
-		long countStdMean = 0;
-		long coutStdDist = 0;
+		long countStdInt = 0, countStdMean = 0, coutStdDist = 0;
 		stdMeanComputing = 0;
 		stdDistanceComputing = 0;
 		stdIntensityComputing = 0;
 
 
-		for (int t = 0; t < nbTimes_ - 1; ++t) {
-			((TimeNodes*)timeNodes_[t])->ComputeConstantSigmas(stdIntensityComputing, countStdInt, stdMeanComputing, countStdMean,
-				stdDistanceComputing, coutStdDist, false); //, true);
+		for (size_t t = 0; t < nbTimes_ - 1; ++t) {
+			timeNodes_[t]->ComputeConstantSigmas(stdIntensityComputing, countStdInt, stdMeanComputing, countStdMean, stdDistanceComputing, coutStdDist, false);
 		}
 
 		if (stdIntensityComputing > 1e-8 && countStdInt > 0) { parameters_->stdIntensity_ = stdIntensityComputing / countStdInt; } //*1.0275;//3.4352;
@@ -520,7 +491,7 @@ getLikenessGlobal() compute the totalLikeness of hte system
 double Tracking::getLikenessGlobal() const
 {
 	double res = 0.;
-	for (int t = 0; t < nbTimes_; ++t) { res += ((TimeNodes*)timeNodes_[t])->GetLikenessTime(nbTimes_); }
+	for (size_t t = 0; t < nbTimes_; ++t) { res += timeNodes_[t]->GetLikenessTime(nbTimes_); }
 
 	return res;
 }

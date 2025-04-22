@@ -17,7 +17,6 @@ public:
 	double* points_;
 	double* tracks_;
 	size_t nPoints_, nTracks_;
-	size_t nTimes_;
 	size_t nTraj_;
 
 	// Params

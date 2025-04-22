@@ -12,7 +12,7 @@ ArrayType& ArrayType::operator=(const ArrayType2& arrayType)
 	if (nbPoints != arrayType.nbPoints) { exit(SIZE_ERR); }
 	if (type() == USrtArray::type()) { memcpy(data, arrayType.data, sizeof(DataType) * nbPoints); }
 	else {
-		for (unsigned long i = 0; i < nbPoints; i++) {
+		for (unsigned long i = 0; i < nbPoints; ++i) {
 			#ifdef BOOL_TYPE
 			if (arrayType.data[i] == (DataType2)0) { data[i] = false; }
 			else { data[i] = true; }
@@ -34,7 +34,7 @@ ArrayType& ArrayType::operator=(const DataType2 val)
 	#else
 	val2 = (DataType)val;
 	#endif
-	for (unsigned long i = 0; i < nbPoints; i++) { data[i] = val2; }
+	for (unsigned long i = 0; i < nbPoints; ++i) { data[i] = val2; }
 	return *this;
 }
 
@@ -45,7 +45,7 @@ ArrayType& ArrayType::operator=(const DataType2 val)
 ArrayType& ArrayType::operator+=(const ArrayType2& arrayType)
 {
 	if (nbPoints != arrayType.nbPoints) { exit(SIZE_ERR); }
-	for (unsigned long i = 0; i < nbPoints; i++) {
+	for (unsigned long i = 0; i < nbPoints; ++i) {
 		#ifdef BOOL_TYPE
 		if (arrayType.data[i] != (DataType2)0) { data[i] = true; }
 		#else
@@ -60,7 +60,7 @@ ArrayType& ArrayType::operator+=(const DataType2 val)
 {
 	DataType val2;
 	val2 = (DataType)val;
-	for (unsigned long i = 0; i < nbPoints; i++) { data[i] += val2; }
+	for (unsigned long i = 0; i < nbPoints; ++i) { data[i] += val2; }
 
 	return *this;
 }
@@ -74,7 +74,7 @@ ArrayType& ArrayType::operator+=(const DataType2 val)
 ArrayType& ArrayType::operator-=(const ArrayType2& arrayType)
 {
 	if (nbPoints != arrayType.nbPoints) { exit(SIZE_ERR); }
-	for (unsigned long i = 0; i < nbPoints; i++) { data[i] -= (DataType)arrayType.data[i]; }
+	for (unsigned long i = 0; i < nbPoints; ++i) { data[i] -= (DataType)arrayType.data[i]; }
 	return *this;
 }
 
@@ -84,7 +84,7 @@ ArrayType& ArrayType::operator-=(const DataType2 val)
 	val2 = (DataType)val;
 
 
-	for (unsigned long i = 0; i < nbPoints; i++) { data[i] -= val2; }
+	for (unsigned long i = 0; i < nbPoints; ++i) { data[i] -= val2; }
 	return *this;
 }
 
@@ -93,7 +93,7 @@ ArrayType& ArrayType::operator-=(const DataType2 val)
 ArrayType& ArrayType::operator*=(const ArrayType2& arrayType)
 {
 	if (nbPoints != arrayType.nbPoints) { exit(SIZE_ERR); }
-	for (unsigned long i = 0; i < nbPoints; i++) {
+	for (unsigned long i = 0; i < nbPoints; ++i) {
 		#ifdef BOOL_TYPE
 			if (arrayType.data[i] == (DataType2)0) { data[i] = false; }
 		#else
@@ -112,7 +112,7 @@ ArrayType& ArrayType::operator*=(const DataType2 val)
 	DataType val2;
 	val2 = (DataType)val;
 
-	for (unsigned long i = 0; i < nbPoints; i++) { data[i] *= val2; }
+	for (unsigned long i = 0; i < nbPoints; ++i) { data[i] *= val2; }
 	return *this;
 }
 #endif
@@ -125,7 +125,7 @@ ArrayType& ArrayType::operator*=(const DataType2 val)
 ArrayType& ArrayType::operator/=(const ArrayType2& arrayType)
 {
 	if (nbPoints != arrayType.nbPoints) { exit(SIZE_ERR); }
-	for (unsigned long i = 0; i < nbPoints; i++) { data[i] /= (DataType)arrayType.data[i]; }
+	for (unsigned long i = 0; i < nbPoints; ++i) { data[i] /= (DataType)arrayType.data[i]; }
 	return *this;
 }
 
@@ -134,7 +134,7 @@ ArrayType& ArrayType::operator/=(const DataType2 val)
 {
 	DataType val2;
 	val2 = (DataType)val;
-	for (unsigned long i = 0; i < nbPoints; i++) { data[i] /= val2; }
+	for (unsigned long i = 0; i < nbPoints; ++i) { data[i] /= val2; }
 	return *this;
 }
 #endif

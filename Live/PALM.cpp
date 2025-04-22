@@ -66,11 +66,11 @@ Palm::Palm(unsigned short* image, double* points, unsigned long pointsListSize, 
 	initTheta_ = (float)theta;
 	roi_ = roi;
 
-	for (int i = 0; i < 13; i++) { structFiltParam_[i] = 0; }
-	for (int i = 0; i < 13; i++) { structFiltParamUse_[i] = 0; }
-	for (int i = 0; i < 10; i++) { planesToUse_[i] = 0; }
-	for (int i = 0; i < 9; i++) { operators_[i] = 0; }
-	for (int i = 0; i < 9; i++) { threshold_[i] = 0; }
+	for (int i = 0; i < 13; ++i) { structFiltParam_[i] = 0; }
+	for (int i = 0; i < 13; ++i) { structFiltParamUse_[i] = 0; }
+	for (int i = 0; i < 10; ++i) { planesToUse_[i] = 0; }
+	for (int i = 0; i < 9; ++i) { operators_[i] = 0; }
+	for (int i = 0; i < 9; ++i) { threshold_[i] = 0; }
 
 
 	planesToUse_[waveletNo_] = 2;
@@ -95,7 +95,7 @@ Palm::Palm(unsigned short* image, double* points, unsigned long pointsListSize, 
 	planesToUseB_ = new BlArray(9);
 
 	nbPlane_ = 0;
-	for (int i = 0; i < 9; i++) {
+	for (int i = 0; i < 9; ++i) {
 		(*planesToUseB_)(i) = (planesToUse_[i] != 0);
 		if ((*planesToUseB_)(i)) { nbPlane_ = i + 2; }
 	}
@@ -176,7 +176,7 @@ long Palm::Processing()
 	float end = clock();
 
 	begin = clock();
-	for (long j = 0; j < long(height_ * width_); j++) {
+	for (long j = 0; j < long(height_ * width_); ++j) {
 		long offs = waveletNo_ * height_ * width_;
 
 		if (aTrousPub_->wDecomp_->data[offs + j] > thresholdVal_) {
@@ -210,7 +210,7 @@ long Palm::Processing()
 	p = (InfoStruct2D**)segmentPub_->getTabInfo();
 
 	// le nombre de points détectés ne doit pas dépasser nPointsMaxPerPlane_ --> problème d'espace mémoire
-	for (int i = 1; i <= min(nbStruct, nbPointsMaxPerPlane_ - 2); i++) {
+	for (int i = 1; i <= min(nbStruct, nbPointsMaxPerPlane_ - 2); ++i) {
 		points_[currentPoint_++] = 0.;
 		points_[currentPoint_++] = 0.;
 		points_[currentPoint_++] = 0.;
@@ -320,7 +320,7 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 
 		unsigned int nbPoints = 0;
 
-		for (int i = 0; i < (pointsListSize / NbSegParams); i++) {
+		for (int i = 0; i < (pointsListSize / NbSegParams); ++i) {
 			if ((int)pointsList[NbSegParams * i] == -1) {
 				nbPoints += nbStruct[numFrame];
 
@@ -346,7 +346,7 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 
 		if (fromcplusplus == 1) {
 			for (int plane = 0; plane < sizeStk; plane++) {
-				for (int i = 0; i < nbStruct[plane]; i++) {
+				for (int i = 0; i < nbStruct[plane]; ++i) {
 					ind_src = cumNbStruct[plane] + plane + i;
 					ind_dst = cumNbStruct[plane] + i;
 
@@ -370,7 +370,7 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 		}
 		else {
 			for (int plane = 0; plane < sizeStk; plane++) {
-				for (int i = 0; i < nbStruct[plane]; i++) {
+				for (int i = 0; i < nbStruct[plane]; ++i) {
 					ind_src = cumNbStruct[plane] + plane + i;
 					ind_dst = cumNbStruct[plane] + i;
 
@@ -400,7 +400,7 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 		float _SigmaXCoefs[5];
 		float _SigmaYCoefs[5];
 
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 5; ++i) {
 			_SigmaXCoefs[i] = (float)SigmaXCoefs[i];
 			_SigmaYCoefs[i] = (float)SigmaYCoefs[i];
 		}
@@ -412,7 +412,7 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 		checkCudaErrors(cudaMemcpy(d_SigmaYCoefs, _SigmaYCoefs, 5 * sizeof(float), cudaMemcpyHostToDevice));
 
 		// Loop for computing
-		for (int i = 1; i <= iter; i++) {
+		for (int i = 1; i <= iter; ++i) {
 			// For test
 			unsigned short *d_images, *d_nbStruct;
 			float* d_list;
@@ -525,7 +525,7 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 		int ind_pointsList = 0;
 
 		if (fromcplusplus != 1) {
-			for (int i = 0; i < sizeStk /*host*/; i++) {
+			for (int i = 0; i < sizeStk /*host*/; ++i) {
 				for (int s = 0; s < nbStruct[i]; s++) {
 					pointsList[ind_pointsList++] = (double)list[ind_list++];   // sigmaX
 					pointsList[ind_pointsList++] = (double)list[ind_list++];   // sigmaY
@@ -560,7 +560,7 @@ _declspec(dllexport) void _stdcall LaunchGaussianFit(double* pointsList, unsigne
 			}
 		}
 		else {
-			for (int i = 0; i < sizeStk /*host*/; i++) {
+			for (int i = 0; i < sizeStk /*host*/; ++i) {
 				//ind_list = (i * maxNbStruct/* + 1*/) * NbSegParams;
 				//while((int)list[ind_list + 2] != 0)
 				for (int s = 0; s < nbStruct[i]; s++) {
@@ -627,7 +627,7 @@ _declspec(dllexport) void _stdcall GaussianVisuGPU(double* gaussianPointsList/*(
 	nbStruct[numFrame] = 0;
 	cumNbStruct[numFrame] = 0;
 
-	for (int i = 0; i < (pointsListSize / NbSegParams); i++) {
+	for (int i = 0; i < (pointsListSize / NbSegParams); ++i) {
 		if ((int)pointsList[NbSegParams * i] == -1) {
 			nbPoints += nbStruct[numFrame];
 
@@ -643,7 +643,7 @@ _declspec(dllexport) void _stdcall GaussianVisuGPU(double* gaussianPointsList/*(
 	int ind_src;
 	int ind_dst;
 	for (int plane = 0; plane < sizeStk; plane++) {
-		for (int i = 0; i < nbStruct[plane]; i++) {
+		for (int i = 0; i < nbStruct[plane]; ++i) {
 			ind_src = cumNbStruct[plane] + plane + i;
 			ind_dst = cumNbStruct[plane] + i;
 

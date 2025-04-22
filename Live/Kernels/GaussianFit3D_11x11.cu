@@ -83,8 +83,8 @@ __device__ float lm_matx_11x11(/*unsigned int* tIN,*/ float* p/*IN*/, float* y_d
 	}
 
 	// Computing alpha
-	for (int j = 0; j < N_PARAM; j++) {
-		for (int i = 0; i < N_PARAM; i++) {
+	for (int j = 0; j < N_PARAM; ++j) {
+		for (int i = 0; i < N_PARAM; ++i) {
 			alpha[N_PARAM * j + i] = 0;
 			for (int cursor = 0; cursor < Npnt; cursor++) { alpha[N_PARAM * j + i] += dydp[cursor * N_PARAM + j] * dydp[cursor * N_PARAM + i]; } // dydp' * inter : dydp'[i*Npnt + cursor]
 		}
@@ -105,12 +105,12 @@ __device__ void inverse_11x11(float* MM, float* Minv)
 	float M1[N_PARAM * N_PARAM];
 
 	// Copy MM to M1
-	for (int i = 0; i < N_PARAM * N_PARAM; i++) { M1[i] = MM[i]; }
+	for (int i = 0; i < N_PARAM * N_PARAM; ++i) { M1[i] = MM[i]; }
 	//M1[i] = MM[shift_ + (id + i * 16)];
 
 	// Initializatiion of identity matrix
 	float Mi1[N_PARAM * N_PARAM];
-	for (int i = 0; i < N_PARAM * N_PARAM; i++) { Mi1[i] = 0.; }
+	for (int i = 0; i < N_PARAM * N_PARAM; ++i) { Mi1[i] = 0.; }
 	Mi1[0 * N_PARAM + 0] = 1;
 	Mi1[1 * N_PARAM + 1] = 1;
 	Mi1[2 * N_PARAM + 2] = 1;
@@ -119,10 +119,10 @@ __device__ void inverse_11x11(float* MM, float* Minv)
 	Mi1[5 * N_PARAM + 5] = 1;
 
 	// Copy Mi1 to Minv
-	for (int i = 0; i < N_PARAM * N_PARAM; i++) { Minv[i] = Mi1[i]; }
+	for (int i = 0; i < N_PARAM * N_PARAM; ++i) { Minv[i] = Mi1[i]; }
 
-	for (int i = 0; i < N_PARAM; i++) {
-		for (int j = 0; j < N_PARAM; j++) {
+	for (int i = 0; i < N_PARAM; ++i) {
+		for (int j = 0; j < N_PARAM; ++j) {
 			M1[i * N_PARAM + j] = MM[i * N_PARAM + j] / MM[i * N_PARAM + i];
 			Mi1[i * N_PARAM + j] = Minv[i * N_PARAM + j] / MM[i * N_PARAM + i];
 			//M1[i*N_PARAM + j] = MM[shift_ + (id + (i*N_PARAM + j) * 16)] / MM[shift_ + (id + (i*N_PARAM + i) * 16)];
@@ -138,7 +138,7 @@ __device__ void inverse_11x11(float* MM, float* Minv)
 
 		for (int k = 0; k < N_PARAM; k++) { // mise zéros de la colonne
 			if (k != i) {
-				for (int j = 0; j < N_PARAM; j++) {
+				for (int j = 0; j < N_PARAM; ++j) {
 					M1[k * N_PARAM + j] = MM[k * N_PARAM + j] - MM[i * N_PARAM + j] * MM[k * N_PARAM + i];
 					Mi1[k * N_PARAM + j] = Minv[k * N_PARAM + j] - Minv[i * N_PARAM + j] * MM[k * N_PARAM + i];
 					//M1[k*N_PARAM+j] = MM[shift_ + (id + (k*N_PARAM+j) * 16)] - MM[shift_ + (id + (i*N_PARAM+j) * 16)] * MM[shift_ + (id + (k*N_PARAM+i) * 16)];

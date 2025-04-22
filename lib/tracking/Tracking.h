@@ -4,18 +4,17 @@
 *******************************************************************************************************************/
 #pragma once
 
-#include "Constants.hpp"
 #include "Parameters.h"
 #include "TimeNodes.h"
 
 class Tracking
 {
 public:
-	int nbTimes_;
+	size_t nbTimes_;
 	Parameters* parameters_;
 
-	int GiveResult();
-	explicit Tracking(Parameters* params);
+	void GiveResult() const;
+	explicit Tracking(Parameters* params, const size_t ntimes) : nbTimes_(ntimes), parameters_(params), timeNodes_(nullptr) {}
 	virtual ~Tracking();
 	TimeNodes* operator()(int i) const;
 	TimeNodes** operator[](int i) const;
@@ -32,13 +31,13 @@ protected:
 	int linkNeighborsPresent() const;
 	int linkNeighborsBeforeAndAfter() const;
 	int linkNeighborsBlinkBeforeAndAfter() const;
-	int sortByIntensityAllNeighbors() const;
+	void sortByIntensityAllNeighbors() const;
 	int readPointsList();
-	int printConnectionsASCII_trc() const;
+	void printConnectionsASCII_trc() const;
 	void setColorToTrackedStructures() const;
 	void setIndexToTrackedStructures() const;
 	double getLikenessGlobal() const;
-	TimeNodes* allocTimeNodes(const long time, const long nNodes) { return new TimeNodes(time, nNodes, parameters_); }
+	TimeNodes* allocTimeNodes(const long time, const long nNodes) const { return new TimeNodes(time, nNodes, parameters_); }
 	void allocTabTimes();
 
 };
