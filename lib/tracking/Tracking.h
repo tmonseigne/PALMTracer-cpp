@@ -14,30 +14,27 @@ public:
 	Parameters* parameters_;
 
 	void GiveResult() const;
-	explicit Tracking(Parameters* params, const size_t ntimes) : nbTimes_(ntimes), parameters_(params), timeNodes_(nullptr) {}
+	explicit Tracking(Parameters* params, const size_t ntimes) : nbTimes_(ntimes), parameters_(params), timeNodes_(nullptr) { }
 	virtual ~Tracking();
-	TimeNodes* operator()(int i) const;
-	TimeNodes** operator[](int i) const;
+	TimeNodes* operator()(const size_t i) const { return timeNodes_[i]; }
+	TimeNodes** operator[](const size_t i) const { return timeNodes_ + i; }
 
-
-	int Initialisation();
+	void Initialisation();
 	virtual int RunModel();
-	void CheckLinksHomogeneity() const;
 
 protected:
 	TimeNodes** timeNodes_;
 	void updateConstantes() const;
 	void computeConstantes() const;
-	int linkNeighborsPresent() const;
-	int linkNeighborsBeforeAndAfter() const;
-	int linkNeighborsBlinkBeforeAndAfter() const;
+	void linkNeighborsPresent() const { for (size_t t = 0; t < nbTimes_; ++t) { timeNodes_[t]->LinkNeighborsPresent(); } }
+	void linkNeighborsBeforeAndAfter() const { for (size_t t = 0; t < nbTimes_ - 1; ++t) { timeNodes_[t]->LinkNeighborsBeforeAndAfter(*timeNodes_[t + 1]); } }
+	void linkNeighborsBlinkBeforeAndAfter() const;
 	void sortByIntensityAllNeighbors() const;
-	int readPointsList();
+	void readPointsList();
 	void printConnectionsASCII_trc() const;
 	void setColorToTrackedStructures() const;
 	void setIndexToTrackedStructures() const;
 	double getLikenessGlobal() const;
-	TimeNodes* allocTimeNodes(const long time, const long nNodes) const { return new TimeNodes(time, nNodes, parameters_); }
+	TimeNodes* allocTimeNodes(const size_t time, const size_t nNodes) const { return new TimeNodes(time, nNodes, parameters_); }
 	void allocTabTimes();
-
 };

@@ -117,7 +117,7 @@ void GaussianFit::inverse(double* in, double* out) const
 	std::vector<double> m1(in, in + nParam2_), mi1(nParam2_, 0.0);       // Copie de 'in' dans 'm1' et mise à 0 de 'mi1'
 	for (size_t i = 0; i < nParam_; ++i) { mi1[i * nParam_ + i] = 1.0; } // Initialisation de la matrice identité
 
-	// �limination de Gauss-Jordan
+	// limination de Gauss-Jordan
 	for (size_t i = 0; i < nParam_; ++i) {
 		const double Pivot = m1[i * nParam_ + i];
 		const double Pivot_Inv = 1.0 / Pivot;

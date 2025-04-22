@@ -26,7 +26,7 @@ _declspec(dllexport) long _stdcall Process(double* pointsList, const unsigned lo
 	Tracking tracking(Param, nbTimes);
 
 	int ret;
-	if ((ret = tracking.Initialisation()) < 0) { return ret; }
+	tracking.Initialisation();
 	if ((ret = tracking.RunModel()) < 0) { return ret; }
 	tracking.GiveResult();
 

@@ -21,18 +21,15 @@ public:
 	TimeNodes(size_t time, size_t nNodes, Parameters* params);
 	virtual ~TimeNodes();
 
-	Node* operator()(int i) const;
-	int LinkNeighborsPresent() const;
-	int LinkNeighborsBeforeAndAfter(const TimeNodes& futures) const;
-	int LinkNeighborsBlinkBeforeAndAfter(const TimeNodes& futures) const;
+	Node* operator()(const size_t i) const { return nodes_[i]; }
+	void LinkNeighborsPresent() const;
+	void LinkNeighborsBeforeAndAfter(const TimeNodes& futures) const;
+	void LinkNeighborsBlinkBeforeAndAfter(const TimeNodes& futures) const;
 	void SortByIntensityAllNeighbors() const;
 
-	void CheckLinksHomogeneity() const;
-
-
 	void ComputeConstantSigmas(double& stdIntensity, long& countStdInt, double& stdMean, long& countStdMean, double& stdDistance,
-		long& countStdDist, bool sigmaClipping, long* hist = nullptr) const;
-	double MakeAllInitializationConnections() const;
+	                           long& countStdDist, bool sigmaClipping, long* hist = nullptr) const;
+	void MakeAllInitializationConnections() const;
 	double TryRandomChange(double limit) const;
 
 	double GetLikenessTime(size_t lastTime) const;

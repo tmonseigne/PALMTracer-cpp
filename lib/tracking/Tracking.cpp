@@ -31,20 +31,14 @@ void Tracking::allocTabTimes() { timeNodes_ = new TimeNodes*[nbTimes_]; }
 /********************************************************************************************************************
 initialisation() initialisation of the data in memory
 ********************************************************************************************************************/
-int Tracking::Initialisation()
+void Tracking::Initialisation()
 {
-	int ret;
-	if ((ret = readPointsList()) < 0) { return ret; }
-
-	if ((ret = linkNeighborsPresent()) < 0) { return ret; }
-	if ((ret = linkNeighborsBeforeAndAfter()) < 0) { return ret; }
+	readPointsList();
+	linkNeighborsPresent();
+	linkNeighborsBeforeAndAfter();
 	sortByIntensityAllNeighbors();
-
-	if constexpr (Parameters::N_TEMPORAL_WINDOWS > 1) { if ((ret = linkNeighborsBlinkBeforeAndAfter()) < 0) { return ret; } }
-
-	CheckLinksHomogeneity();
+	if constexpr (Parameters::N_TEMPORAL_WINDOWS > 1) { linkNeighborsBlinkBeforeAndAfter(); }
 	srand(42);
-	return RET_OK;
 }
 
 int Tracking::RunModel()
@@ -109,11 +103,11 @@ void Tracking::printConnectionsASCII_trc() const
 	for (size_t t = 0; t < nbTimes_; ++t) {
 		const TimeNodes* localTimeNodes = timeNodes_[t];
 		for (size_t n = 0; n < localTimeNodes->nNodes_; n++) {
-			Node* node = localTimeNodes->nodes_[n];
+			const Node* node = localTimeNodes->nodes_[n];
 			if (node->past_ == nullptr && node->trackedIndex_ > 0) {
 				for (const Node* nodeConnection = node; nodeConnection != nullptr; nodeConnection = nodeConnection->future_) {
-					parameters_->tracks_[index++] = node->trackedIndex_;
-					parameters_->tracks_[index++] = nodeConnection->time_ + 1;
+					parameters_->tracks_[index++] = static_cast<double>(node->trackedIndex_);
+					parameters_->tracks_[index++] = static_cast<double>(nodeConnection->time_ + 1);
 					parameters_->tracks_[index++] = nodeConnection->info_.x_;
 					parameters_->tracks_[index++] = nodeConnection->info_.y_;
 					parameters_->tracks_[index++] = nodeConnection->info_.surf_;
@@ -133,33 +127,26 @@ void Tracking::printConnectionsASCII_trc() const
 /********************************************************************************************************************
 readPointsList() reads the 'pointsList' specified in parameters_ and allocates the corresponding TimeNodes
 ********************************************************************************************************************/
-int Tracking::readPointsList()
+void Tracking::readPointsList()
 {
-	size_t index = 0;
-	int i;
-
 	allocTabTimes(); //Allocation of tabTimes
-
 	parameters_->maxX_ = 0;
 	parameters_->maxY_ = 0;
 	parameters_->maxZ_ = 0;
 
-	for (size_t t = 0; t < nbTimes_; t++) {
+	for (size_t t = 0, index = 0; t < nbTimes_; t++) {
 		// Computing the number of nodes by frame
 		size_t nbNodes = 0;
-		for (i = index; ; /*i+=4*/ i += Parameters::N_SEG_PARAMS) {
+		for (size_t i = index; ; i += Parameters::N_SEG_PARAMS) {
 			if (static_cast<int>(parameters_->points_[i + 9]) != -1 && static_cast<int>(parameters_->points_[i + 9]) != 0) { nbNodes++; } // surface
 			else { break; }
 		}
 
 
-		timeNodes_[t] = allocTimeNodes(t, (int)nbNodes); //Allocation of timeNodes
-		TimeNodes* localTimeNodes = timeNodes_[t];
+		timeNodes_[t] = allocTimeNodes(t, nbNodes); //Allocation of timeNodes
+		const TimeNodes* localTimeNodes = timeNodes_[t];
 
-		if (localTimeNodes == nullptr) { return T_ERR_ALLOC; }
-
-
-		for (long node = 0; node < localTimeNodes->nNodes_; node++) {
+		for (size_t node = 0; node < localTimeNodes->nNodes_; node++) {
 			// Just for the case of '2D'
 			InfoNode& str = (*localTimeNodes)(node)->info_;
 			// version correcte
@@ -180,10 +167,10 @@ int Tracking::readPointsList()
 		}
 
 		//Sorting the nodes by the intensity for one time
-		int indexMax;
-		for (i = 0; i < timeNodes_[t]->nNodes_ - 1; ++i) {
+		size_t indexMax = 0;
+		for (size_t i = 0; i < timeNodes_[t]->nNodes_ - 1; ++i) {
 			double maxIntensity = -1.;
-			for (int j = i; j < localTimeNodes->nNodes_; ++j) {
+			for (size_t j = i; j < localTimeNodes->nNodes_; ++j) {
 				if (maxIntensity < (*localTimeNodes)(j)->info_.intensity_) {
 					maxIntensity = (*localTimeNodes)(j)->info_.intensity_;
 					indexMax = j;
@@ -196,53 +183,19 @@ int Tracking::readPointsList()
 
 		index += (nbNodes + 1) * Parameters::N_SEG_PARAMS; //(A vérifier)
 	}
-	return RET_OK;
 }
 
 /********************************************************************************************************************
-operator()(int i) to access to all TimeNodes objets. 
-********************************************************************************************************************/
-TimeNodes* Tracking::operator()(const int i) const { return timeNodes_[i]; }
-
-/********************************************************************************************************************
-operator[](int i) to access to pointors to all TimeNodes objets. 
-********************************************************************************************************************/
-TimeNodes** Tracking::operator[](const int i) const { return timeNodes_ + i; }
-
-/********************************************************************************************************************
-int linkNeighborsPresent() to link of the neighbors in the presents of all nodes of all times
-********************************************************************************************************************/
-int Tracking::linkNeighborsPresent() const
-{
-	int ret;
-	for (int t = 0; t < nbTimes_; ++t) { if ((ret = timeNodes_[t]->LinkNeighborsPresent()) < 0) { return ret; } }
-	return RET_OK;
-}
-
-
-/********************************************************************************************************************
-int linkNeighborsBeforeAndAfter() to link of the neighbors in the past and in the future of all nodes of all times
-********************************************************************************************************************/
-int Tracking::linkNeighborsBeforeAndAfter() const
-{
-	int ret;
-	for (int t = 0; t < nbTimes_ - 1; ++t) { if ((ret = timeNodes_[t]->LinkNeighborsBeforeAndAfter(*timeNodes_[t + 1])) < 0) { return ret; } }
-	return RET_OK;
-}
-
-/********************************************************************************************************************
-int linkNeighborsBlinkBeforeAndAfter() to link of the neighbors in the past and in the future of all nodes of 
+void linkNeighborsBlinkBeforeAndAfter() to link of the neighbors in the past and in the future of all nodes of 
 all times for blinking purpose
 ********************************************************************************************************************/
-int Tracking::linkNeighborsBlinkBeforeAndAfter() const
+void Tracking::linkNeighborsBlinkBeforeAndAfter() const
 {
-	int ret;
-	for (int t = 0; t < nbTimes_; ++t) {
-		for (long dt = 2; dt <= Parameters::N_TEMPORAL_WINDOWS; dt++) {
-			if (t + dt < nbTimes_) { if ((ret = timeNodes_[t]->LinkNeighborsBlinkBeforeAndAfter(*timeNodes_[t + dt])) < 0) { return ret; } }
+	for (size_t t = 0; t < nbTimes_; ++t) {
+		for (size_t dt = 2; dt <= Parameters::N_TEMPORAL_WINDOWS; dt++) {
+			if (t + dt < nbTimes_) { timeNodes_[t]->LinkNeighborsBlinkBeforeAndAfter(*timeNodes_[t + dt]); }
 		}
 	}
-	return RET_OK;
 }
 
 /********************************************************************************************************************
@@ -259,8 +212,8 @@ void Tracking::setColorToTrackedStructures() const
 	Node* nodePastFission;
 	Node* nodePastFission2;
 	int newIndex = 1;
-	for (int time = 0; time < nbTimes_; time++) {
-		for (long indexNode = 0; indexNode < timeNodes_[time]->nNodes_; indexNode++) {
+	for (size_t time = 0; time < nbTimes_; time++) {
+		for (size_t indexNode = 0; indexNode < timeNodes_[time]->nNodes_; indexNode++) {
 			Node* node = timeNodes_[time]->nodes_[indexNode];
 			if (node->trackedIndex_ != 0) {
 				if (node->past_ == nullptr) {
@@ -280,6 +233,7 @@ void Tracking::setColorToTrackedStructures() const
 								Node* node2 = node == node->fissionPast_->fission1Future_
 									              ? node->fissionPast_->fission2Future_
 									              : node->fissionPast_->fission1Future_;
+
 								for (nodePastFission = node->fissionPast_; nodePastFission != nullptr; nodePastFission = nodePastFission->past_) {
 									nodePastFission2 = nodePastFission;
 								}
@@ -400,12 +354,6 @@ void Tracking::GiveResult() const
 }
 
 /********************************************************************************************************************
-void checkLinksHomogeneity() just call the function to display the result
-********************************************************************************************************************/
-void Tracking::CheckLinksHomogeneity() const { for (size_t t = 0; t < nbTimes_; ++t) { timeNodes_[t]->CheckLinksHomogeneity(); } }
-
-
-/********************************************************************************************************************
 computeConstantes() compute by convergence the values
 parameters_->stdIntensity
 parameters_->stdMean
@@ -421,7 +369,7 @@ void Tracking::computeConstantes() const
 	double stdIntensityComputing = 0;
 
 
-	for (int k = 0; k < 20; k++) {
+	for (size_t k = 0; k < 20; ++k) {
 		long countStdInt = 0, countStdMean = 0, coutStdDist = 0;
 		stdMeanComputing = 0;
 		stdDistanceComputing = 0;
@@ -458,10 +406,10 @@ void Tracking::updateConstantes() const
 	parameters_->stdIntensity_ = 0;
 	parameters_->stdMean_ = 0;
 	parameters_->covMeanIntensity_ = 0;
-	for (int t = 0; t < nbTimes_; ++t) {
+	for (size_t t = 0; t < nbTimes_; ++t) {
 		const TimeNodes* local = timeNodes_[t];
-		for (int n = 0; n < local->nNodes_; n++) {
-			Node* node = local->nodes_[n];
+		for (size_t n = 0; n < local->nNodes_; n++) {
+			const Node* node = local->nodes_[n];
 			if (node->future_ != nullptr) {
 				parameters_->stdDistance_ += node->Distance(node->future_) * node->Distance(node->future_);
 				parameters_->stdIntensity_ += (node->info_.intensity_ - node->future_->info_.intensity_)
@@ -492,6 +440,5 @@ double Tracking::getLikenessGlobal() const
 {
 	double res = 0.;
 	for (size_t t = 0; t < nbTimes_; ++t) { res += timeNodes_[t]->GetLikenessTime(nbTimes_); }
-
 	return res;
 }
