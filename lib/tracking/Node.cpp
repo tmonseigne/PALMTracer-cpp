@@ -211,8 +211,7 @@ double Node::likenessMeanIntensityFusion(Node* n1, Node* n2)
 double Node::likenessMeanIntensityFusion(const Node* n1, const Node* n2) const
 {
 	if (n1 == nullptr || n2 == nullptr) { return 0.; } //Error ???
-	return getLikeness(info_.mean_ - (n1->info_.intensity_ + n2->info_.intensity_)
-	                   / (n1->info_.surf_ + n2->info_.surf_), params_->stdMean_);
+	return getLikeness(info_.mean_ - (n1->info_.intensity_ + n2->info_.intensity_) / (n1->info_.surf_ + n2->info_.surf_), params_->stdMean_);
 	//if (Parameters::N_DIM == 2) { return getLikeness(info_.mean_ - (n1->info_.intensity_ + n2->info_.intensity_) / (n1->info_.surf_ + n2->info_.surf_), params_->stdMean_);}
 	//else { return getLikeness(info_.mean_ - (n1->info_.intensity_ + n2->info_.intensity_) / (n1->info_.GetVolume() + n2->info_.GetVolume()), params_->stdMean_);}
 }
@@ -348,6 +347,130 @@ double Node::MakeChange(const double limit)
 	return makeChangeSimpleLinkage(limit);
 }
 
+double Node::makeChangeFissionSymmetric(const double limit, Node* keepFuture)
+{
+	// Old makeChangeFission3 & makeChangeFission4
+	Node* tmp = (keepFuture == fission1Future_) ? fission2Future_ : fission1Future_;
+
+	const double DeltaE = Likeness(keepFuture) + tmp->Likeness(nullptr) - likenessFusion(fission1Future_, fission2Future_);
+	if (!metropolis(DeltaE, limit)) { return 0.; }
+
+	future_ = keepFuture;
+	tmp->fissionPast_ = nullptr;
+	future_->past_ = this;
+	future_->fissionPast_ = nullptr;
+	fission1Future_ = nullptr;
+	fission2Future_ = nullptr;
+
+	return DeltaE;
+}
+
+double Node::makeChangeFissionReassignBoth(const double limit, Node* node, Node* keep)
+{
+	// Old makeChangeFission5 & makeChangeFission8
+	Node* give = (keep == fission1Future_) ? fission2Future_ : fission1Future_;
+	if (node->Distance(*give) >= params_->maxSpeed_ || node->blinkFuture_ != nullptr) { return 0.; }
+
+	const double DeltaE = Likeness(keep) + node->likenessFusion(give, node->future_)
+	                      - likenessFusion(fission1Future_, fission2Future_) - node->Likeness(node->future_);
+
+	if (!metropolis(DeltaE, limit)) { return 0.; }
+
+	// Changes
+	future_ = keep;
+	future_->past_ = this;
+	node->fission1Future_ = give;
+	give->fissionPast_ = node;
+	node->fission2Future_ = node->future_;
+	node->fission2Future_->fissionPast_ = node;
+
+	// Clean
+	keep->fissionPast_ = nullptr;
+	fission1Future_ = nullptr;
+	fission2Future_ = nullptr;
+	node->future_->past_ = nullptr;
+	node->future_ = nullptr;
+
+	return DeltaE;
+}
+
+double Node::makeChangeFissionSwapFuture(const double limit, Node* node, Node* swapTarget)
+{
+	// Old makeChangeFission6 & makeChangeFission7
+	if (node->blinkFuture_ != nullptr ||
+	    (node->future_ != nullptr && Distance(*node->future_) >= params_->maxSpeed_) ||
+	    node->Distance(*swapTarget) >= params_->maxSpeed_) { return 0.; }
+
+	const double DeltaE = likenessFusion(swapTarget, node->future_)
+	                      + node->Likeness((swapTarget == fission1Future_ ? fission2Future_ : fission1Future_))
+	                      - likenessFusion(fission1Future_, fission2Future_) - node->Likeness(node->future_);
+	if (!metropolis(DeltaE, limit)) { return 0.; }
+
+	swapTarget->past_ = node;
+	node->future_->fissionPast_ = this;
+
+	Node* tmp = node->future_;
+	node->future_ = swapTarget;
+	swapTarget->fissionPast_ = nullptr;
+
+	if (swapTarget == fission1Future_) {
+		fission1Future_ = tmp;
+		fission1Future_->past_ = nullptr;
+	}
+	else {
+		fission2Future_ = tmp;
+		fission2Future_->past_ = nullptr;
+	}
+
+	return DeltaE;
+}
+
+double Node::makeChangeFissionDouble(const double limit, Node* node, bool keepFirst)
+{
+	// Old makeChangeFission1 & makeChangeFission2
+	if (node->fusionFuture_ != nullptr || node->blinkFuture_ != nullptr) { return 0; } // node is already implicated in a fusion or future blink.
+	if (keepFirst) {
+		if (node->fission1Future_ != nullptr) { return 0; }                        // node is already implicated in a fission.
+		if (node->Distance(*fission2Future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
+	}
+	else {
+		if (node->fission2Future_ != nullptr) { return 0; }                        // node is already implicated in a fission.
+		if (node->Distance(*fission1Future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
+	}
+	double DeltaE;
+	if (keepFirst) {
+		DeltaE = Likeness(fission1Future_) + node->Likeness(fission2Future_)
+		         + (node->future_ == nullptr ? 0 : node->future_->Likeness(nullptr))
+		         - likenessFusion(fission1Future_, fission2Future_) - node->Likeness(node->future_);
+	}
+	else {
+		DeltaE = Likeness(fission2Future_) + node->Likeness(fission1Future_)
+		         + (node->future_ == nullptr ? 0 : node->future_->Likeness(nullptr))
+		         - likenessFusion(fission2Future_, fission1Future_) - node->Likeness(node->future_);
+	}
+	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
+	if (keepFirst) {
+		future_ = fission1Future_;
+		if (node->future_ != nullptr) { node->future_->past_ = nullptr; }
+		node->future_ = fission2Future_;
+		fission2Future_->past_ = node;
+	}
+	// change the configuration
+	else {
+		future_ = fission2Future_;
+		if (node->future_ != nullptr) { node->future_->past_ = nullptr; }
+		node->future_ = fission1Future_;
+		fission1Future_->past_ = node;
+	}
+
+	future_->past_ = this;
+	fission1Future_->fissionPast_ = nullptr;
+	fission2Future_->fissionPast_ = nullptr;
+	fission1Future_ = nullptr;
+	fission2Future_ = nullptr;
+	return DeltaE;
+}
+
 double Node::makeChangeFission0(const double limit)
 {
 	//no fission in old configuration
@@ -395,190 +518,6 @@ double Node::makeChangeFission0(const double limit)
 	return DeltaE;
 }
 
-double Node::makeChangeFission1(const double limit, Node* node)
-{
-	//From
-	//1(this)---------2(fission1Future_)
-	//          \-----3(fission2Future_)
-	//4(cRand)--------5
-	//possiblilty 1
-	//To
-	//1(this)---------2(fission1Future_)
-	//4(cRand)--------3(fission2Future_)
-	//NULL------------5
-
-	if (node->Distance(*fission2Future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-	if (node->fission1Future_ != nullptr) { return 0; }                        // cRand is already implicated in a fission.
-	if (node->fusionFuture_ != nullptr) { return 0; }                          // cRand is already implicated in a fusion.
-	if (node->blinkFuture_ != nullptr) { return 0.; }                          // crand is already implicated in a future blink.
-
-	const double DeltaE = Likeness(fission1Future_) + node->Likeness(fission2Future_)
-	                      + (node->future_ == nullptr ? 0 : node->future_->Likeness(nullptr))
-	                      - likenessFusion(fission1Future_, fission2Future_) - node->Likeness(node->future_);
-	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
-	// change the configuration
-	future_ = fission1Future_;
-	future_->past_ = this;
-	if (node->future_ != nullptr) { node->future_->past_ = nullptr; }
-	node->future_ = fission2Future_;
-	fission2Future_->past_ = node;
-	fission1Future_->fissionPast_ = nullptr;
-	fission2Future_->fissionPast_ = nullptr;
-	fission1Future_ = nullptr;
-	fission2Future_ = nullptr;
-	return DeltaE;
-}
-
-double Node::makeChangeFission2(const double limit, Node* node)
-{
-	//From
-	//1(this)---------2(fission1Future_)
-	//          \-----3(fission2Future_)
-	//4(cRand)--------5
-	//possiblilty 2
-	//To
-	//1---------------3(fission2Future_)
-	//4(cRand)--------2(fission1Future_)
-	//NULL------------5
-
-	if (node->Distance(*fission1Future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-
-	if (node->fission2Future_ != nullptr) { return 0; } // cRand is already implicated in a fission.
-	if (node->fusionFuture_ != nullptr) { return 0; }   // cRand is already implicated in a fusion.
-	if (node->blinkFuture_ != nullptr) { return 0.; }   // crand is already implicated in a future blink.
-
-	const double DeltaE = Likeness(fission2Future_) + node->Likeness(fission1Future_)
-	                      + (node->future_ == nullptr ? 0 : node->future_->Likeness(nullptr))
-	                      - likenessFusion(fission2Future_, fission1Future_) - node->Likeness(node->future_);
-	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
-	// change the configuration
-	future_ = fission2Future_;
-	future_->past_ = this;
-	if (node->future_ != nullptr) { node->future_->past_ = nullptr; }
-	node->future_ = fission1Future_;
-	fission1Future_->past_ = node;
-	fission2Future_->fissionPast_ = nullptr;
-	fission1Future_->fissionPast_ = nullptr;
-	fission2Future_ = nullptr;
-	fission1Future_ = nullptr;
-
-	return DeltaE;
-}
-
-double Node::makeChangeFission3(const double limit)
-{
-	//From
-	//1(this)---------2(fission1Future_)
-	//          \-----3(fission2Future_)
-
-	//possiblilty 3
-	//To
-	//1(this)---------2(fission1Future_)
-	//NULL------------3(fission2Future_)
-
-	const double DeltaE = Likeness(fission1Future_) + fission2Future_->Likeness(nullptr) - likenessFusion(fission1Future_, fission2Future_);
-	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
-	// change the configuration
-
-	future_ = fission1Future_;
-	future_->past_ = this;
-	future_->fissionPast_ = nullptr;
-	fission2Future_->fissionPast_ = nullptr;
-	fission1Future_ = nullptr;
-	fission2Future_ = nullptr;
-
-	return DeltaE;
-}
-
-double Node::makeChangeFission4(const double limit)
-{
-	//possiblilty 4
-	//To
-	//1(this)---------3(fission2Future_)
-	//NULL------------2(fission1Future_)
-	const double DeltaE = Likeness(fission2Future_) + fission1Future_->Likeness(nullptr) - likenessFusion(fission1Future_, fission2Future_);
-	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
-	// change the configuration
-	future_ = fission2Future_;
-	future_->past_ = this;
-	future_->fissionPast_ = nullptr;
-	fission1Future_->fissionPast_ = nullptr;
-	fission1Future_ = nullptr;
-	fission2Future_ = nullptr;
-	return DeltaE;
-}
-
-double Node::makeChangeFission5(const double limit, Node* node)
-{
-	//From
-	//1(this)---------2(fission1Future_)
-	//          \-----3(fission2Future_)
-	//4(cRand)--------5
-
-	//possibility 5
-	//1(this)---------2(fission1Future_)
-	//           /----3(fission2Future_)
-	//4(cRand)--/-----5
-
-	if (node->Distance(*fission2Future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-	if (node->blinkFuture_ != nullptr) { return 0.; }                          // crand is already implicated in a future blink.
-
-	const double DeltaE = Likeness(fission1Future_) + node->likenessFusion(fission2Future_, node->future_) -
-	                      likenessFusion(fission1Future_, fission2Future_) - node->Likeness(node->future_);
-	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
-	// change the configuration
-
-	future_ = fission1Future_;
-	future_->past_ = this;
-	node->fission1Future_ = fission2Future_;
-	node->fission1Future_->fissionPast_ = node;
-	node->fission2Future_ = node->future_;
-	node->fission2Future_->fissionPast_ = node;
-
-	fission1Future_->fissionPast_ = nullptr;
-	fission1Future_ = nullptr;
-	fission2Future_ = nullptr;
-	node->future_->past_ = nullptr;
-	node->future_ = nullptr;
-
-	return DeltaE;
-}
-
-double Node::makeChangeFission8(const double limit, Node* node)
-{
-	//From
-	//1(this)---------2(fission1Future_)
-	//          \-----3(fission2Future_)
-	//4(cRand)--------5
-	//possibility 8
-	//1(this)---------3(fission2Future_)
-	//           /----2(fission1Future_)
-	//4(cRand)--/-----5
-
-	if (node->Distance(*fission1Future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-	if (node->blinkFuture_ != nullptr) { return 0.; }                          // crand is already implicated in a future blink.
-
-	const double DeltaE = Likeness(fission2Future_) + node->likenessFusion(fission1Future_, node->future_)
-	                      - likenessFusion(fission1Future_, fission2Future_) - node->Likeness(node->future_);
-	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
-	// change the configuration
-
-	future_ = fission2Future_;
-	future_->past_ = this;
-	node->fission2Future_ = fission1Future_;
-	node->fission2Future_->fissionPast_ = node;
-	node->fission1Future_ = node->future_;
-	node->fission1Future_->fissionPast_ = node;
-
-	fission2Future_->fissionPast_ = nullptr;
-	fission2Future_ = nullptr;
-	fission1Future_ = nullptr;
-	node->future_->past_ = nullptr;
-	node->future_ = nullptr;
-
-	return DeltaE;
-}
-
 double Node::makeChangeFission9(const double limit, Node* node)
 {
 	//From
@@ -614,70 +553,6 @@ double Node::makeChangeFission9(const double limit, Node* node)
 	return DeltaE;
 }
 
-double Node::makeChangeFission6(const double limit, Node* node)
-{
-	//From
-	//1(this)---------2(fission1Future_)
-	//          \-----3(fission2Future_)
-	//4(cRand)--------5(node->future_)
-	//To
-	//possibility 6
-	//1(this)--\------2(fission1Future_)
-	//          \-----5
-	//4(cRand)--------3(fission2Future_)
-
-	if (node->blinkFuture_ != nullptr) { return 0.; }                                                    // crand is already implicated in a future blink.
-	if (node->future_ != nullptr) { if (Distance(*node->future_) >= params_->maxSpeed_) { return 0.; } } // Distance is not respected
-	if (node->Distance(*fission2Future_) >= params_->maxSpeed_) { return 0.; }                           // Distance is not respected
-
-	const double DeltaE = likenessFusion(fission1Future_, node->future_) + node->Likeness(fission2Future_)
-	                      - likenessFusion(fission1Future_, fission2Future_) - node->Likeness(node->future_);
-	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
-	// change the configuration
-
-	fission2Future_->past_ = node;
-	node->future_->fissionPast_ = this;
-	Node* localN = node->future_;
-	node->future_ = fission2Future_;
-	fission2Future_->fissionPast_ = nullptr;
-	fission2Future_ = localN;
-	fission2Future_->past_ = nullptr;
-
-	return DeltaE;
-}
-
-double Node::makeChangeFission7(const double limit, Node* node)
-{
-	//From
-	//1(this)---------2(fission1Future_)
-	//          \-----3(fission2Future_)
-	//4(cRand)--------5(node->future_)
-	//To
-	//possibility 7
-	//1(this)-\-------3(fission2Future_)
-	//          \-----5
-	//4(cRand)--------2(fission1Future_)
-
-	if (node->blinkFuture_ != nullptr) { return 0.; }                                                    // crand is already implicated in a future blink.
-	if (node->future_ != nullptr) { if (Distance(*node->future_) >= params_->maxSpeed_) { return 0.; } } // Distance is not respected
-	if (node->Distance(*fission1Future_) >= params_->maxSpeed_) { return 0.; }                           // Distance is not respected
-
-	const double DeltaE = likenessFusion(fission2Future_, node->future_) + node->Likeness(fission1Future_)
-	                      - likenessFusion(fission2Future_, fission1Future_) - node->Likeness(node->future_);
-	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
-	// change the configuration
-
-	fission1Future_->past_ = node;
-	node->future_->fissionPast_ = this;
-	Node* localN = node->future_;
-	node->future_ = fission1Future_;
-	fission1Future_->fissionPast_ = nullptr;
-	fission1Future_ = localN;
-	fission1Future_->past_ = nullptr;
-
-	return DeltaE;
-}
-
 double Node::makeChangeFission(const double limit)
 {
 	//is the node already makes a Fission with another structure
@@ -685,27 +560,23 @@ double Node::makeChangeFission(const double limit)
 	if (blinkFuture_ != nullptr) { return 0.; }                          // crand is already implicated in a future blink.
 	if (fusionFuture_ != nullptr) { return 0.; }                         //already implicated in a Fusion
 
-	if (fission1Future_ == nullptr) {
-		//no fission in old configuration
-		//try to find 2 structures to make fission:
-		//From
-		//1(this)-------2
-		//4-------------3(cRand)
+	//no fission in old configuration
+	//try to find 2 structures to make fission:
+	//From
+	//1(this)-------2
+	//4-------------3(cRand)
+	//To
+	//1(this)-------2
+	//        \-----3(cRand)
+	//4-------------NULL
+	if (fission1Future_ == nullptr) { return makeChangeFission0(limit); }
 
-		//To
-		//1(this)-------2
-		//        \-----3(cRand)
-		//4-------------NULL
-
-		return makeChangeFission0(limit);
-	}
 	//there is a fission in old configuration
 	//Try to break or change the fission:
 	//From
 	//1(this)---------2(fission1Future_)
 	//          \-----3(fission2Future_)
 	//4(cRand)--------5
-
 	//To
 	//possiblilty 1
 	//1---------------2(fission1Future_)
@@ -724,27 +595,22 @@ double Node::makeChangeFission(const double limit)
 	//possibility 4
 	//1(this)---------3(fission2Future_)
 	//NULL------------2(fission1Future_)
-
 	//possibility 5
 	//1(this)---------2(fission1Future_)
 	//           /----3(fission2Future_)
 	//4(cRand)--/-----5
-
 	//possibility 6
 	//1(this)--\------2(fission1Future_)
 	//          \-----5
 	//4(cRand)--------3(fission2Future_)
-
 	//possibility 7
 	//1(this)-\-------3(fission2Future_)
 	//          \-----5
 	//4(cRand)--------2(fission1Future_)
-
 	//possibility 8
 	//1(this)---------3(fission2Future_)
 	//           /----2(fission1Future_)
 	//4(cRand)--/-----5
-
 	//possibility 9
 	//1(this)---------5
 	//           /----2(fission1Future_)
@@ -752,15 +618,15 @@ double Node::makeChangeFission(const double limit)
 
 
 	switch (params_->RandomModulo(8)) {
-		case 0: return makeChangeFission3(limit);
-		case 1: return makeChangeFission4(limit);
+		case 0: return makeChangeFissionSymmetric(limit, fission1Future_);
+		case 1: return makeChangeFissionSymmetric(limit, fission2Future_);
 		default: ;
 	}
 
 	if (fission2Future_->neighborsPastCount_ < 2) { //no neighbors like "4"
 		switch (params_->RandomModulo(2)) {
-			case 0: return makeChangeFission3(limit);
-			case 1: return makeChangeFission4(limit);
+			case 0: return makeChangeFissionSymmetric(limit, fission1Future_);
+			case 1: return makeChangeFissionSymmetric(limit, fission2Future_);
 			default: ;
 		}
 	}
@@ -779,19 +645,159 @@ double Node::makeChangeFission(const double limit)
 
 	if (cRand->neighbor_->future_ != nullptr) {
 		switch (params_->RandomModulo(7)) {
-			case 0: return makeChangeFission5(limit, cRand->neighbor_);
-			case 1: return makeChangeFission6(limit, cRand->neighbor_);
-			case 2: return makeChangeFission7(limit, cRand->neighbor_);
-			case 3: return makeChangeFission8(limit, cRand->neighbor_);
+			case 0: return makeChangeFissionReassignBoth(limit, cRand->neighbor_, fission1Future_);
+			case 1: return makeChangeFissionSwapFuture(limit, cRand->neighbor_, fission2Future_);
+			case 2: return makeChangeFissionSwapFuture(limit, cRand->neighbor_, fission1Future_);
+			case 3: return makeChangeFissionReassignBoth(limit, cRand->neighbor_, fission2Future_);
 			default: ;
 		}
 	}
 
 	switch (params_->RandomModulo(3)) {
-		case 0: return makeChangeFission1(limit, cRand->neighbor_);
-		case 1: return makeChangeFission2(limit, cRand->neighbor_);
+		case 0: return makeChangeFissionDouble(limit, cRand->neighbor_, true);
+		case 1: return makeChangeFissionDouble(limit, cRand->neighbor_, false);
 		default: return makeChangeFission9(limit, cRand->neighbor_);
 	}
+}
+
+double Node::makeChangeFusionSimple(const double limit, const bool keepThisAsPast)
+{
+	// Old makeChangeFusion3 & makeChangeFusion4
+	Node* tmp = fusionFuture_->fusion1Past_ == this ? fusionFuture_->fusion2Past_ : fusionFuture_->fusion1Past_;
+	const double DeltaE = (keepThisAsPast ? Likeness(fusionFuture_) + tmp->Likeness(nullptr) : tmp->Likeness(fusionFuture_) + Likeness(nullptr))
+	                      - fusionFuture_->likenessFusion(tmp, this);
+
+	if (!metropolis(DeltaE, limit)) { return 0.; }
+
+	if (keepThisAsPast) {
+		fusionFuture_->past_ = this;
+		future_ = fusionFuture_;
+	}
+	else {
+		fusionFuture_->past_ = tmp;
+		tmp->future_ = fusionFuture_;
+	}
+
+	fusionFuture_->fusion1Past_ = nullptr;
+	fusionFuture_->fusion2Past_ = nullptr;
+	tmp->fusionFuture_ = nullptr;
+	fusionFuture_ = nullptr;
+
+	if ((!keepThisAsPast && future_ != nullptr) || (keepThisAsPast && tmp->future_ != nullptr)) { return -1.; }
+
+	return DeltaE;
+}
+
+double Node::makeChangeFusionDouble(const double limit, Node* node, const bool keepFirst)
+{
+	// Old makeChangeFusion1 & makeChangeFusion2
+	Node* tmp = fusionFuture_->fusion1Past_ == this ? fusionFuture_->fusion2Past_ : fusionFuture_->fusion1Past_;
+	if (node->fissionPast_ != nullptr || node->fusion1Past_ != nullptr) { return 0; } // node is already implicated in a fission or fusion.
+	if (keepFirst && node->Distance(*tmp) >= params_->maxSpeed_ || !keepFirst && Distance(*node) >= params_->maxSpeed_) { return 0; }
+	// Distance is not respected
+
+	const double DeltaE = (keepFirst
+		                       ? Likeness(fusionFuture_) + tmp->Likeness(node)
+		                       : Likeness(node) + tmp->Likeness(fusionFuture_))
+	                      + (node->past_ == nullptr ? 0 : node->past_->Likeness(nullptr))
+	                      - fusionFuture_->likenessFusion(tmp, this) - node->Likeness(node->past_);
+
+	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
+
+	if (keepFirst) {
+		// change the configuration
+		fusionFuture_->past_ = this;
+		tmp->future_ = node;
+		tmp->fusionFuture_ = nullptr;
+		future_ = fusionFuture_;
+		if (node->past_ != nullptr) { node->past_->future_ = nullptr; }
+		node->past_ = tmp;
+	}
+	else {
+		// change the configuration
+		fusionFuture_->past_ = tmp;
+		tmp->future_ = fusionFuture_;
+		future_ = node;
+		if (node->past_ != nullptr) { node->past_->future_ = nullptr; }
+		node->past_ = this;
+	}
+
+
+	tmp->fusionFuture_ = nullptr;
+	fusionFuture_->fusion1Past_ = nullptr;
+	fusionFuture_->fusion2Past_ = nullptr;
+	fusionFuture_ = nullptr;
+	return DeltaE;
+}
+
+double Node::makeChangeFusionX(const double limit, Node* node, fusion_mode mode)
+{
+	Node* tmp = (fusionFuture_->fusion1Past_ == this) ? fusionFuture_->fusion2Past_ : fusionFuture_->fusion1Past_;
+
+	// Vérifications de distance
+	if (mode != fusion_mode::from_this && tmp->Distance(*node) >= params_->maxSpeed_) { return 0.; }
+	if (mode == fusion_mode::from_node_to_tmp && node->past_ != nullptr) { if (node->past_->Distance(*fusionFuture_) >= params_->maxSpeed_) { return 0.; } }
+
+	// Vérifications de connexions
+	if (node->fissionPast_ || node->fusion1Past_) { return 0.; }
+	if (mode != fusion_mode::from_node_to_this && !node->past_) { return 0.; }
+
+	double deltaE = 0.;
+
+	if (mode == fusion_mode::from_this) {
+		deltaE = Likeness(fusionFuture_) + node->likenessFusion(tmp, node->past_)
+		         - fusionFuture_->likenessFusion(tmp, this) - node->Likeness(node->past_);
+	}
+	else if (mode == fusion_mode::from_node_to_tmp) {
+		deltaE = tmp->Likeness(fusionFuture_) + node->likenessFusion(this, node->past_)
+		         - fusionFuture_->likenessFusion(tmp, this) - node->Likeness(node->past_);
+	}
+	else {
+		deltaE = fusionFuture_->likenessFusion(this, node->past_) + node->Likeness(tmp)
+		         - fusionFuture_->likenessFusion(tmp, this) - node->Likeness(node->past_);
+	}
+
+	if (!metropolis(deltaE, limit)) { return 0.; }
+
+	// Application du changement selon le mode
+	switch (mode) {
+		case fusion_mode::from_this: future_ = fusionFuture_;
+			future_->past_ = this;
+			tmp->fusionFuture_ = node;
+			node->fusion1Past_ = tmp;
+			node->fusion2Past_ = node->past_;
+			node->past_->fusionFuture_ = node;
+			node->past_->future_ = nullptr;
+			node->past_ = nullptr;
+			break;
+
+		case fusion_mode::from_node_to_tmp: tmp->future_ = tmp->fusionFuture_;
+			tmp->future_->past_ = tmp;
+			tmp->fusionFuture_ = nullptr;
+			tmp->future_->fusion1Past_ = nullptr;
+			tmp->future_->fusion2Past_ = nullptr;
+			node->fusion1Past_ = this;
+			node->fusion2Past_ = node->past_;
+			node->past_->fusionFuture_ = node;
+			node->past_->future_ = nullptr;
+			node->past_ = nullptr;
+			break;
+
+		case fusion_mode::from_node_to_this: node->past_->fusionFuture_ = fusionFuture_;
+			node->past_->future_ = nullptr;
+			if (fusionFuture_->fusion1Past_ == this) { fusionFuture_->fusion2Past_ = node->past_; }
+			else { fusionFuture_->fusion1Past_ = node->past_; }
+			tmp->fusionFuture_ = nullptr;
+			tmp->future_ = node;
+			node->past_ = tmp;
+			break;
+	}
+
+	fusionFuture_->fusion1Past_ = nullptr;
+	fusionFuture_->fusion2Past_ = nullptr;
+	fusionFuture_ = nullptr;
+
+	return deltaE;
 }
 
 double Node::makeChangeFusion0(const double limit)
@@ -843,254 +849,6 @@ double Node::makeChangeFusion0(const double limit)
 	return DeltaE;
 }
 
-double Node::makeChangeFusion1(const double limit, Node* node)
-{
-	Node* tmp;
-
-	//find "node"
-	if (fusionFuture_->fusion1Past_ == this) { tmp = fusionFuture_->fusion2Past_; }
-	else { tmp = fusionFuture_->fusion1Past_; }
-	//there is a fusion in old configuration
-	//Try to break the fusion:
-	//From
-	//1(this)---------2(fusionFuture_)
-	//3(node)----/
-	//5---------------4(cRand)
-	//To
-	//possiblilty 1
-	//1---------------2
-	//3---------------4(cRand)
-	//5---------------NULL
-
-
-	if (node->fissionPast_ != nullptr) { return 0; }               // cRand is already implicated in a fission.
-	if (node->fusion1Past_ != nullptr) { return 0; }               // cRand is already implicated in a fusion.
-	if (node->Distance(*tmp) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-
-
-	const double DeltaE = Likeness(fusionFuture_) + tmp->Likeness(node)
-	                      + (node->past_ == nullptr ? 0 : node->past_->Likeness(nullptr))
-	                      - fusionFuture_->likenessFusion(tmp, this) - node->Likeness(node->past_);
-	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
-	// change the configuration
-	fusionFuture_->past_ = this;
-	fusionFuture_->fusion1Past_ = nullptr;
-	fusionFuture_->fusion2Past_ = nullptr;
-	tmp->future_ = node;
-	tmp->fusionFuture_ = nullptr;
-	future_ = fusionFuture_;
-	fusionFuture_ = nullptr;
-
-	if (node->past_ != nullptr) { node->past_->future_ = nullptr; }
-	node->past_ = tmp;
-
-	return DeltaE;
-}
-
-double Node::makeChangeFusion2(const double limit, Node* node)
-{
-	Node* tmp;
-
-	//find "node"
-	if (fusionFuture_->fusion1Past_ == this) { tmp = fusionFuture_->fusion2Past_; }
-	else { tmp = fusionFuture_->fusion1Past_; }
-
-	//From
-	//1(this)---------2(fusionFuture_)
-	//3(node)----/
-	//5---------------4(cRand)
-	//possiblilty 2
-	//To
-	//1---------------4(cRand)
-	//3(node)---------2(fusionFuture_)
-	//5---------------NULL
-	//try to find a neighbor_ "4" in the neighborhood of "1"
-
-	if (node->fissionPast_ != nullptr) { return 0; } // cRand is already implicated in a fission.
-	if (node->fusion1Past_ != nullptr) { return 0; } // cRand is already implicated in a fusion.
-
-	if (Distance(*node) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-
-
-	const double DeltaE = Likeness(node) + tmp->Likeness(fusionFuture_)
-	                      + (node->past_ == nullptr ? 0 : node->past_->Likeness(nullptr))
-	                      - fusionFuture_->likenessFusion(tmp, this) - node->Likeness(node->past_);
-	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
-	// change the configuration
-	//unlink future_
-
-	fusionFuture_->past_ = tmp;
-	fusionFuture_->fusion1Past_ = nullptr;
-	fusionFuture_->fusion2Past_ = nullptr;
-	tmp->fusionFuture_ = nullptr;
-	tmp->future_ = fusionFuture_;
-	fusionFuture_ = nullptr;
-	future_ = node;
-	if (node->past_ != nullptr) { node->past_->future_ = nullptr; }
-	node->past_ = this;
-
-	return DeltaE;
-}
-
-double Node::makeChangeFusion3(const double limit)
-{
-	Node* tmp;
-
-	//find "node"
-	if (fusionFuture_->fusion1Past_ == this) { tmp = fusionFuture_->fusion2Past_; }
-	else { tmp = fusionFuture_->fusion1Past_; }
-	//From
-	//1(this)---------2(fusionFuture_)
-	//3(node)----/
-	//possiblilty 3
-	//To
-	//1(this)---------2(fusionFuture_)
-	//3(node)---------NULL
-
-	const double DeltaE = Likeness(fusionFuture_) + tmp->Likeness(nullptr) - fusionFuture_->likenessFusion(tmp, this);
-	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
-	// change the configuration
-
-	fusionFuture_->past_ = this;
-	fusionFuture_->fusion1Past_ = nullptr;
-	fusionFuture_->fusion2Past_ = nullptr;
-	future_ = fusionFuture_;
-	fusionFuture_ = nullptr;
-	tmp->fusionFuture_ = nullptr;
-	if (tmp->future_ != nullptr) { return -1.; } //impossible inutile
-
-	return DeltaE;
-}
-
-double Node::makeChangeFusion4(const double limit)
-{
-	Node* tmp;
-
-	//find "node"
-	if (fusionFuture_->fusion1Past_ == this) { tmp = fusionFuture_->fusion2Past_; }
-	else { tmp = fusionFuture_->fusion1Past_; }
-	//From
-	//1(this)---------2(fusionFuture_)
-	//3(node)----/
-
-	//possiblilty 4
-	//1(this)---------NULL
-	//3(node)---------2(fusionFuture_)
-	const double DeltaE = tmp->Likeness(fusionFuture_) + Likeness(nullptr) - fusionFuture_->likenessFusion(tmp, this);
-	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
-	// change the configuration
-	fusionFuture_->past_ = tmp;
-	fusionFuture_->fusion1Past_ = nullptr;
-	fusionFuture_->fusion2Past_ = nullptr;
-	tmp->future_ = fusionFuture_;
-	fusionFuture_ = nullptr;
-	tmp->fusionFuture_ = nullptr;
-
-	if (future_ != nullptr) { return -1.; } //impossible inutile
-	return DeltaE;
-}
-
-double Node::makeChangeFusion5(const double limit, Node* node)
-{
-	Node* tmp;
-
-	//find "node"
-	if (fusionFuture_->fusion1Past_ == this) { tmp = fusionFuture_->fusion2Past_; }
-	else { tmp = fusionFuture_->fusion1Past_; }
-
-	//From
-	//1(this)-----/---2(fusionFuture_)
-	//3(node)----/
-	//5---------------4(cRand)
-
-
-	//possibility 5
-	//1(this)---------2(fusionFuture_)
-	//3(node)----\
-	//5-----------\---4(cRand)
-
-	if (tmp->Distance(*node) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-
-	if (node->fissionPast_ != nullptr) { return 0; } // cRand is already implicated in a fission.
-	if (node->fusion1Past_ != nullptr) { return 0; } // cRand is already implicated in a fusion.
-
-	if (node->past_ == nullptr) { return 0; } // not possible to reconnection the fusion.
-
-	const double DeltaE = Likeness(fusionFuture_) + node->likenessFusion(tmp, node->past_)
-	                      - fusionFuture_->likenessFusion(tmp, this) - node->Likeness(node->past_);
-	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
-	// change the configuration
-
-	future_ = fusionFuture_;
-	future_->past_ = this;
-
-	tmp->fusionFuture_ = node;
-	node->fusion1Past_ = tmp;
-
-	node->past_->fusionFuture_ = node;
-	node->fusion2Past_ = node->past_;
-
-	future_->fusion1Past_ = nullptr;
-	fusionFuture_ = nullptr;
-
-	future_->fusion2Past_ = nullptr;
-
-	node->past_->future_ = nullptr;
-	node->past_ = nullptr;
-
-	return DeltaE;
-}
-
-double Node::makeChangeFusion7(const double limit, Node* node)
-{
-	Node* tmp;
-
-	//find "node"
-	if (fusionFuture_->fusion1Past_ == this) { tmp = fusionFuture_->fusion2Past_; }
-	else { tmp = fusionFuture_->fusion1Past_; }
-
-	//From
-	//1(this)-----/---2(fusionFuture_)
-	//3(node)----/
-	//5---------------4(cRand)
-
-
-	//possibility 7
-	//3(node)---------2(fusionFuture_)
-	//1(this)----\
-	//5-----------\---4(cRand)
-
-	if (node->fissionPast_ != nullptr) { return 0; } // cRand is already implicated in a fission.
-	if (node->fusion1Past_ != nullptr) { return 0; } // cRand is already implicated in a fusion.
-
-	if (node->past_ == nullptr) { return 0; } // not possible to reconnection the fusion.
-
-	if (Distance(*node) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-	const double DeltaE = tmp->Likeness(fusionFuture_) + node->likenessFusion(this, node->past_)
-	                      - fusionFuture_->likenessFusion(tmp, this) - node->Likeness(node->past_);
-	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
-	// change the configuration
-
-	tmp->future_ = tmp->fusionFuture_;
-	tmp->future_->past_ = tmp;
-
-	fusionFuture_ = node;
-	node->fusion1Past_ = this;
-
-	node->past_->fusionFuture_ = node;
-	node->fusion2Past_ = node->past_;
-
-	tmp->future_->fusion1Past_ = nullptr;
-	tmp->fusionFuture_ = nullptr;
-
-	tmp->future_->fusion2Past_ = nullptr;
-
-	node->past_->future_ = nullptr;
-	node->past_ = nullptr;
-
-	return DeltaE;
-}
-
 double Node::makeChangeFusion8(const double limit, Node* node)
 {
 	Node* tmp;
@@ -1132,56 +890,6 @@ double Node::makeChangeFusion8(const double limit, Node* node)
 	fusionFuture_->fusion1Past_ = nullptr;
 	fusionFuture_->fusion2Past_ = nullptr;
 	fusionFuture_ = node;
-
-	return DeltaE;
-}
-
-double Node::makeChangeFusion6(const double limit, Node* node) const
-{
-	Node* tmp;
-
-	//find "node"
-	if (fusionFuture_->fusion1Past_ == this) { tmp = fusionFuture_->fusion2Past_; }
-	else { tmp = fusionFuture_->fusion1Past_; }
-
-	//From
-	//1(this)-----/---2(fusionFuture_)
-	//3(node)----/
-	//5---------------4(cRand)
-
-
-	//possibility 6
-	//1(this)-----/---2(fusionFuture_)
-	//5----------/
-	//3(node)---------4(cRand)
-
-	if (tmp->Distance(*node) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-	if (node->past_ != nullptr) {
-		if (node->past_->Distance(*fusionFuture_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-	}
-
-
-	const double DeltaE = fusionFuture_->likenessFusion(this, node->past_) + node->Likeness(tmp)
-	                      - fusionFuture_->likenessFusion(tmp, this) - node->Likeness(node->past_);
-	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
-	// change the configuration
-
-	if (fusionFuture_->fusion1Past_ == this) {
-		node->past_->fusionFuture_ = fusionFuture_;
-		node->past_->future_ = nullptr;
-		fusionFuture_->fusion2Past_ = node->past_;
-		tmp->fusionFuture_ = nullptr;
-		tmp->future_ = node;
-		node->past_ = tmp;
-	}
-	else {
-		node->past_->fusionFuture_ = fusionFuture_;
-		node->past_->future_ = nullptr;
-		fusionFuture_->fusion1Past_ = node->past_;
-		tmp->fusionFuture_ = nullptr;
-		tmp->future_ = node;
-		node->past_ = tmp;
-	}
 
 	return DeltaE;
 }
@@ -1312,12 +1020,11 @@ double Node::makeChangeFusion(const double limit)
 	//3(node)---------4(cRand)
 	//5---------------6
 
-
 	//just unlink the fusion
 
 	switch (params_->RandomModulo(8)) {
-		case 0: return makeChangeFusion3(limit);
-		case 1: return makeChangeFusion4(limit);
+		case 0: return makeChangeFusionSimple(limit, true);
+		case 1: return makeChangeFusionSimple(limit, false);
 		default: ;
 	}
 
@@ -1327,11 +1034,7 @@ double Node::makeChangeFusion(const double limit)
 
 	//get the cRand
 	if (neighborsFutureCount_ < 2) { //no neighbors like "4", no cRand
-		switch (params_->RandomModulo(2)) {
-			case 0: return makeChangeFusion3(limit);
-			case 1: return makeChangeFusion4(limit);
-			default: ;
-		}
+		return makeChangeFusionSimple(limit, params_->RandomModulo(2));
 	}
 
 	const size_t IdRandNeighbor = params_->RandomModulo(neighborsFutureCount_);
@@ -1345,19 +1048,15 @@ double Node::makeChangeFusion(const double limit)
 
 	if (cRand->neighbor_->past_ != nullptr) {
 		switch (params_->RandomModulo(7)) {
-			case 0: return makeChangeFusion5(limit, cRand->neighbor_);
+			case 0: return makeChangeFusionX(limit, cRand->neighbor_, fusion_mode::from_this);
 			case 1:
-			case 2: return makeChangeFusion6(limit, cRand->neighbor_);
-			case 3: return makeChangeFusion7(limit, cRand->neighbor_);
+			case 2: return makeChangeFusionX(limit, cRand->neighbor_, fusion_mode::from_node_to_this);
+			case 3: return makeChangeFusionX(limit, cRand->neighbor_, fusion_mode::from_node_to_tmp);
 			case 4: return makeChangeFusion8(limit, cRand->neighbor_);
 			default: ;
 		}
 	}
-
-	switch (params_->RandomModulo(2)) {
-		case 0: return makeChangeFusion1(limit, cRand->neighbor_);
-		default: return makeChangeFusion2(limit, cRand->neighbor_);
-	}
+	return makeChangeFusionDouble(limit, cRand->neighbor_, params_->RandomModulo(2));
 }
 
 double Node::makeChangeSimpleLinkage0(const double limit) const

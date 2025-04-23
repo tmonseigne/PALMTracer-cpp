@@ -11,6 +11,8 @@
 #include "InfoNode.h"
 #include "Parameters.h"
 
+enum class fusion_mode { from_this, from_node_to_tmp, from_node_to_this };
+
 class Node
 {
 public:
@@ -60,27 +62,19 @@ private:
 	double makeChangeSimpleLinkage4(double limit, Node* node);
 
 	double makeChangeFusion(double limit);
+	double makeChangeFusionSimple(double limit, bool keepThisAsPast);
+	double makeChangeFusionDouble(double limit, Node* node, bool keepFirst);
+	double makeChangeFusionX(double limit, Node* node, fusion_mode mode);
 	double makeChangeFusion0(double limit);
-	double makeChangeFusion1(double limit, Node* node);
-	double makeChangeFusion2(double limit, Node* node);
-	double makeChangeFusion3(double limit);
-	double makeChangeFusion4(double limit);
-	double makeChangeFusion5(double limit, Node* node);
-	double makeChangeFusion6(double limit, Node* node) const;
-	double makeChangeFusion7(double limit, Node* node);
 	double makeChangeFusion8(double limit, Node* node);
 	double makeChangeFusion9(double limit, Node* node);
 
 	double makeChangeFission(double limit);
+	double makeChangeFissionSymmetric(double limit, Node* keepFuture);
+	double makeChangeFissionReassignBoth(double limit, Node* node, Node* keep);
+	double makeChangeFissionSwapFuture(double limit, Node* node, Node* swapTarget);
+	double makeChangeFissionDouble(double limit, Node* node, bool keepFirst);
 	double makeChangeFission0(double limit);
-	double makeChangeFission1(double limit, Node* node);
-	double makeChangeFission2(double limit, Node* node);
-	double makeChangeFission3(double limit);
-	double makeChangeFission4(double limit);
-	double makeChangeFission5(double limit, Node* node);
-	double makeChangeFission6(double limit, Node* node);
-	double makeChangeFission7(double limit, Node* node);
-	double makeChangeFission8(double limit, Node* node);
 	double makeChangeFission9(double limit, Node* node);
 
 	double makeChangeBlinkLinkage(double limit);
