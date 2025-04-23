@@ -11,7 +11,11 @@
 #include "InfoNode.h"
 #include "Parameters.h"
 
-enum class fusion_mode { from_this, from_node_to_tmp, from_node_to_this };
+enum class TransferType {
+	KeepFirst,  // ancien Fission1
+	KeepSecond, // ancien Fission2
+	GiveAll     // ancien Fission9
+};
 
 class Node
 {
@@ -62,20 +66,19 @@ private:
 	double makeChangeSimpleLinkage4(double limit, Node* node);
 
 	double makeChangeFusion(double limit);
-	double makeChangeFusionSimple(double limit, bool keepThisAsPast);
-	double makeChangeFusionDouble(double limit, Node* node, bool keepFirst);
-	double makeChangeFusionX(double limit, Node* node, fusion_mode mode);
-	double makeChangeFusion0(double limit);
-	double makeChangeFusion8(double limit, Node* node);
-	double makeChangeFusion9(double limit, Node* node);
+	double makeChangeFusionCreate(double limit);
+	double makeChangeFusionSymmetric(double limit, const Node* keep);
+	double makeChangeFusionReassignBoth(double limit, Node* node, const Node* keep);
+	double makeChangeFusionSwapFuture(double limit, Node* node, const Node* swap) const;
+	double makeChangeFusionTransferToNode(double limit, Node* node, TransferType type);
+	double makeChangeFusionTransferFull(double limit, Node* node);
 
 	double makeChangeFission(double limit);
-	double makeChangeFissionSymmetric(double limit, Node* keepFuture);
+	double makeChangeFissionSymmetric(double limit, Node* keep);
 	double makeChangeFissionReassignBoth(double limit, Node* node, Node* keep);
-	double makeChangeFissionSwapFuture(double limit, Node* node, Node* swapTarget);
-	double makeChangeFissionDouble(double limit, Node* node, bool keepFirst);
+	double makeChangeFissionSwapFuture(double limit, Node* node, Node* swap);
+	double makeChangeFissionTransferToNode(double limit, Node* node, TransferType type);
 	double makeChangeFission0(double limit);
-	double makeChangeFission9(double limit, Node* node);
 
 	double makeChangeBlinkLinkage(double limit);
 	double makeChangeBlinkLinkage0(double limit);
@@ -90,4 +93,5 @@ private:
 	static double sphericEffect(const Node& n1, const Node& n2) { return n1.sphericEffect() + n2.sphericEffect(); }
 	double distance(const Node& n1, const Node& n2) const { return info_.Distance(n1.info_, n2.info_); }
 	double distanceToBorder() const;
+	ChainNeighbor* getRandomNeighbor(ChainNeighbor* head, size_t size) const;
 };
