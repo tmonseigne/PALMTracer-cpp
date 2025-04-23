@@ -322,7 +322,6 @@ void Node::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, 
 		}
 	}
 
-
 	if (nMax) {
 		intensity += (intensity_ - nMax->intensity_) * (intensity_ - nMax->intensity_);
 		mean += (mean_ - nMax->mean_) * (mean_ - nMax->mean_);
@@ -947,7 +946,7 @@ double Node::makeChangeSimpleLinkage(const double limit)
 		if (!cRand) { return -1.; } //ERROR
 		Node* target = cRand->neighbor_;
 		// the new random link is the same as future_.
-		if (target == future_) { return simpleLinkage0(limit); } //try simple deconnection
+		if (target == future_) { return simpleLinkageDisconnection(limit); } //try simple deconnection
 		// target already implicated in a fission / fusion / blink connection
 		if (target->fissionPast_ || target->fusion1Past_ || target->blinkPast_) { return 0; }
 
@@ -962,7 +961,7 @@ double Node::makeChangeSimpleLinkage(const double limit)
 			//	1(this)-----3(cRand)
 			//	NULL--------2
 
-			return simpleLinkage1(limit, target);
+			return simpleLinkageReassignment(limit, target);
 		}
 		//there is a conflict, the node target is already connected to a node at the same time_ than this
 		if (params_->RandomModulo(2) && future_) { //just flip the 2 nodes
@@ -974,7 +973,7 @@ double Node::makeChangeSimpleLinkage(const double limit)
 			//	Present		Future
 			//	1-----------3(cRand)
 			//	4-----------2
-			return simpleLinkage4(limit, target);
+			return simpleLinkageSwap(limit, target);
 		}
 		//find a new node to be connected
 		// try to find a free node to connect the past_ of the conflict node.
@@ -1001,7 +1000,7 @@ double Node::makeChangeSimpleLinkage(const double limit)
 			//	1-----------3(cRand)
 			//	NULL--------2
 			//	4-----------NULL
-			return simpleLinkage2(limit, target);
+			return simpleLinkageBreakAndReconnect(limit, target);
 		}
 		//there is several available nodes to relink the conflicted node
 		//	From
@@ -1009,24 +1008,21 @@ double Node::makeChangeSimpleLinkage(const double limit)
 		//	1-----------2
 		//	4-----------3(cRand)
 		//	NULL--------5(c)
-
 		//	To
 		//	Present		Future
 		//	1-----------3(cRand)
 		//	4-----------5(c)
 		//	NULL--------2
-		return simpleLinkage3(limit, target, count);
+		return simpleLinkageDoubleSwap(limit, target, count);
 	}
-	return simpleLinkage0(limit);
+	return simpleLinkageDisconnection(limit);
 }
 
-double Node::simpleLinkage0(const double limit) const
-{ //simple deconnection
-
+double Node::simpleLinkageDisconnection(const double limit) const
+{
 	//From 
 	//Present	Future
 	//1(this)-----2(future_)
-
 	//To
 	//1(this)-----NULL
 	//NULL--------2(future_)
@@ -1036,25 +1032,21 @@ double Node::simpleLinkage0(const double limit) const
 	return 0.;
 }
 
-double Node::simpleLinkage1(const double limit, Node* node)
+double Node::simpleLinkageReassignment(const double limit, Node* node)
 {
 	//	From
 	//	Present		Future
 	//	1(this)-----2
 	//	NULL--------3(cRand)
-
 	//	To
 	//	Present		Future
 	//	1(this)-----3(cRand)
 	//	NULL--------2
 
-	if (node->blinkPast_) { return 0; } // cRand is already implicated in a blink connection
-
+	if (node->blinkPast_) { return 0; }                       // cRand is already implicated in a blink connection
 	if (Distance(*node) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
 
-
-	const double DeltaE = Likeness(node) + (future_ ? future_->Likeness() : 0)
-	                      - node->Likeness() - Likeness(future_);
+	const double DeltaE = Likeness(node) + (future_ ? future_->Likeness() : 0) - node->Likeness() - Likeness(future_);
 	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
 	// change the configuration
 	//unlink future_
@@ -1066,7 +1058,7 @@ double Node::simpleLinkage1(const double limit, Node* node)
 	//return(0.);
 }
 
-double Node::simpleLinkage2(const double limit, Node* node)
+double Node::simpleLinkageBreakAndReconnect(const double limit, Node* node)
 {
 	// try to break the link
 	//	From
@@ -1082,8 +1074,7 @@ double Node::simpleLinkage2(const double limit, Node* node)
 	if (Distance(*node) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
 
 	const double DeltaE = Likeness(node) + (!future_ ? 0 : future_->Likeness())
-	                      + (!node->past_ ? 0 : node->past_->Likeness())
-	                      - Likeness(future_) - node->Likeness(node->past_);
+	                      + (!node->past_ ? 0 : node->past_->Likeness()) - Likeness(future_) - node->Likeness(node->past_);
 	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
 	// change the configuration
 	//unlink future_
@@ -1098,7 +1089,7 @@ double Node::simpleLinkage2(const double limit, Node* node)
 	//return(0.);
 }
 
-double Node::simpleLinkage3(const double limit, Node* node, const size_t count)
+double Node::simpleLinkageDoubleSwap(const double limit, Node* node, const size_t count)
 {
 	//	From
 	//	Present		Future
@@ -1157,7 +1148,7 @@ double Node::simpleLinkage3(const double limit, Node* node, const size_t count)
 	//return(0.);
 }
 
-double Node::simpleLinkage4(const double limit, Node* node)
+double Node::simpleLinkageSwap(const double limit, Node* node)
 {
 	//	From
 	//	Present		Future
@@ -1168,14 +1159,10 @@ double Node::simpleLinkage4(const double limit, Node* node)
 	//	1-----------3(cRand)
 	//	4-----------2
 
+	if (node->past_ && node->past_->Distance(*future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
+	if (Distance(*node) >= params_->maxSpeed_) { return 0.; }                                // Distance is not respected
 
-	if (node->past_) {
-		if (node->past_->Distance(*future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-	}
-	if (Distance(*node) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-
-	const double DeltaE = Likeness(node) + future_->Likeness(node->past_)
-	                      - node->Likeness(node->past_) - Likeness(future_);
+	const double DeltaE = Likeness(node) + future_->Likeness(node->past_) - node->Likeness(node->past_) - Likeness(future_);
 	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
 	// change the configuration
 
@@ -1202,7 +1189,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 		//	To
 		//	t			t+1		t+n
 		//	1(this)-------------2(blinkFuture_)
-		return blinkLinkage0(limit);
+		return blinkLinkageConnection(limit);
 	}
 	//blinkFuture_!=NULL
 	//transform : 
@@ -1213,7 +1200,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 	//	t			t+1		t+n
 	//	1(this)-------------NULL
 	//	NULL----------------2
-	//  blinkLinkage1
+	//  blinkLinkageDisconnection
 
 	//transform : 
 	//	From
@@ -1225,7 +1212,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 	//	t			t+1					t+n
 	//	4-------------------------------2(blinkFuture_)
 	//	1(this)---3(cRand)----...
-	//  blinkLinkage2
+	//  blinkLinkageSwapBegin
 
 	//OR
 
@@ -1239,7 +1226,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 	//	t					 t+n-1		t+n
 	//	1(this)-------------------------4
 	//				...------3(cRand)---2(blinkFuture_)
-	//  blinkLinkage3
+	//  blinkLinkageSwapEnd
 
 	//OR
 
@@ -1253,7 +1240,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 	//	t			t+1					t+n
 	//	NULL----------------------------2(blinkFuture_)
 	//	1(this)---3(cRand2)----...
-	//  blinkLinkage4
+	//  blinkLinkageSwapStart
 
 	//OR
 
@@ -1267,9 +1254,9 @@ double Node::makeChangeBlinkLinkage(const double limit)
 	//	t					 t+n-1		t+n
 	//	1(this)-------------------------NULL
 	//				...------3(cRand2)---2(blinkFuture_)
-	//  blinkLinkage5
+	//  blinkLinkageSwapFinish
 
-	if (params_->RandomModulo(2)) { return blinkLinkage1(limit); }
+	if (params_->RandomModulo(2)) { return blinkLinkageDisconnection(limit); }
 
 	//find a potential cRand
 	//cRand has to be either just after this or just before blinkFuture_
@@ -1287,7 +1274,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 				}
 			}
 		}
-		if (nbNodeAtGoodTime == 0 && nbNodeAtGoodTime2 == 0) { return blinkLinkage1(limit); }
+		if (nbNodeAtGoodTime == 0 && nbNodeAtGoodTime2 == 0) { return blinkLinkageDisconnection(limit); }
 
 		if ((params_->RandomModulo(2) && nbNodeAtGoodTime != 0) || nbNodeAtGoodTime2 == 0) {
 			idRandNeighbor = params_->RandomModulo(nbNodeAtGoodTime);
@@ -1305,7 +1292,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 			if (Distance(*cRand->neighbor_) >= params_->maxSpeed_) { return 0; } //cRand not linked to this!
 			if (blinkFuture_->Distance(*cRand->neighbor_->past_) >= params_->maxSpeed_) { return 0; }
 			//blinkFuture_ not linked to cRand->neighbor_->past_
-			return blinkLinkage2(limit, cRand->neighbor_);
+			return blinkLinkageSwapBegin(limit, cRand->neighbor_);
 		}
 		ChainNeighbor* cRand2;
 		idRandNeighbor = params_->RandomModulo(nbNodeAtGoodTime2);
@@ -1323,7 +1310,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 
 		if (Distance(*cRand2->neighbor_) >= params_->maxSpeed_) { return 0; } //cRand2 not linked to this!
 
-		return blinkLinkage4(limit, cRand2->neighbor_);
+		return blinkLinkageSwapStart(limit, cRand2->neighbor_);
 	}
 	// cRand is just before blinkFuture_
 	size_t nbNodeAtGoodTime = 0, nbNodeAtGoodTime2 = 0, idRandNeighbor;
@@ -1338,7 +1325,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 			}
 		}
 	}
-	if (nbNodeAtGoodTime == 0 && nbNodeAtGoodTime2 == 0) { return blinkLinkage1(limit); }
+	if (nbNodeAtGoodTime == 0 && nbNodeAtGoodTime2 == 0) { return blinkLinkageDisconnection(limit); }
 
 	if ((params_->RandomModulo(2) && nbNodeAtGoodTime != 0) || nbNodeAtGoodTime2 == 0) {
 		idRandNeighbor = params_->RandomModulo(nbNodeAtGoodTime);
@@ -1356,7 +1343,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 		if (Distance(*cRand->neighbor_->future_) >= params_->maxSpeed_) { return 0; }      //this is not linked to cRand->neighbor_->future_!
 
 
-		return blinkLinkage3(limit, cRand->neighbor_);
+		return blinkLinkageSwapEnd(limit, cRand->neighbor_);
 	}
 	ChainNeighbor* cRand2;
 	idRandNeighbor = params_->RandomModulo(nbNodeAtGoodTime2);
@@ -1373,18 +1360,16 @@ double Node::makeChangeBlinkLinkage(const double limit)
 	}
 	if (cRand2 == nullptr) { return -1.; }                                              //ERROR 
 	if (blinkFuture_->Distance(*cRand2->neighbor_) >= params_->maxSpeed_) { return 0; } //cRand2 not linked to blinkFuture_!
-	return blinkLinkage5(limit, cRand2->neighbor_);
+	return blinkLinkageSwapFinish(limit, cRand2->neighbor_);
 }
 
-double Node::blinkLinkage0(const double limit)
+double Node::blinkLinkageConnection(const double limit)
 {
 	//transform : 
 	//	From
 	//	t			t+1		t+2
 	//	1(this)-------------NULL
 	//	NULL----------------2
-
-
 	//	To
 	//	t			t+1		t+2
 	//	1(this)-------------2(blinkFuture_)
@@ -1395,9 +1380,8 @@ double Node::blinkLinkage0(const double limit)
 	ChainNeighbor* cRand;
 
 	for (cRand = neighborsBlinkFuture_; cRand; cRand = cRand->next_) {
-		if (cRand->neighbor_->time_ - time_ == Dt && cRand->neighbor_->past_ == nullptr && cRand->neighbor_->blinkPast_ == nullptr && cRand->neighbor_->
-		    fissionPast_
-		    == nullptr && cRand->neighbor_->fusion1Past_ == nullptr) { nbNodeAtGoodTime++; }
+		if (cRand->neighbor_->time_ - time_ == Dt && cRand->neighbor_->past_ == nullptr && cRand->neighbor_->blinkPast_ == nullptr
+		    && cRand->neighbor_->fissionPast_ == nullptr && cRand->neighbor_->fusion1Past_ == nullptr) { nbNodeAtGoodTime++; }
 	}
 	if (nbNodeAtGoodTime == 0) { return 0; }
 
@@ -1405,9 +1389,8 @@ double Node::blinkLinkage0(const double limit)
 	size_t i = 0;
 	bool exitFor = false;
 	for (cRand = neighborsBlinkFuture_; !exitFor && cRand;) {
-		if (cRand->neighbor_->time_ - time_ == Dt && cRand->neighbor_->past_ == nullptr && cRand->neighbor_->blinkPast_ == nullptr && cRand->neighbor_->
-		    fissionPast_
-		    == nullptr && cRand->neighbor_->fusion1Past_ == nullptr) {
+		if (cRand->neighbor_->time_ - time_ == Dt && cRand->neighbor_->past_ == nullptr && cRand->neighbor_->blinkPast_ == nullptr
+		    && cRand->neighbor_->fissionPast_ == nullptr && cRand->neighbor_->fusion1Past_ == nullptr) {
 			if (i == IdRandNeighbor) { exitFor = true; }
 			i++;
 		}
@@ -1426,13 +1409,12 @@ double Node::blinkLinkage0(const double limit)
 	return DeltaE;
 }
 
-double Node::blinkLinkage1(const double limit)
+double Node::blinkLinkageDisconnection(const double limit)
 {
 	//transform : 
 	//	From
 	//	t			t+1		t+2
 	//	1(this)-------------2(blinkFuture_)
-
 	//	To
 	//	t			t+1		t+2
 	//	1(this)-------------NULL
@@ -1440,35 +1422,25 @@ double Node::blinkLinkage1(const double limit)
 	const double DeltaE = blinkFuture_->Likeness() + Likeness() - likenessBlink(blinkFuture_);
 	if (!metropolis(DeltaE, limit)) { return 0.; } // deltaLikeness<limit // if the new solution is too bad
 	// change the configuration
-
-
 	blinkFuture_->blinkPast_ = nullptr;
 	blinkFuture_ = nullptr;
-
 	return DeltaE;
 }
 
-double Node::blinkLinkage2(const double limit, Node* node)
+double Node::blinkLinkageSwapBegin(const double limit, Node* node)
 {
 	//transform : 
 	//	From
 	//	t			t+1					t+n
 	//	1(this)-------------------------2(blinkFuture_)
 	//	4---------3(cRand)----...
-	//  1=this
-	//  2=blinkFuture_
-	//	3=node
-	//	4=node->past_
-
-
+	//  1=this, 2=blinkFuture_, 3=node, 4=node->past_
 	//	To
 	//	t			t+1					t+n
 	//	4-------------------------------2(blinkFuture_)
 	//	1(this)---3(cRand)----...
 
-
-	const double DeltaE = Likeness(node) + node->past_->likenessBlink(blinkFuture_) - likenessBlink(blinkFuture_)
-	                      - node->past_->Likeness(node);
+	const double DeltaE = Likeness(node) + node->past_->likenessBlink(blinkFuture_) - likenessBlink(blinkFuture_) - node->past_->Likeness(node);
 	if (!metropolis(DeltaE, limit)) { return 0.; } // deltaLikeness<limit // if the new solution is too bad
 	// change the configuration
 	blinkFuture_->blinkPast_ = node->past_;
@@ -1481,27 +1453,20 @@ double Node::blinkLinkage2(const double limit, Node* node)
 	return DeltaE;
 }
 
-double Node::blinkLinkage3(const double limit, Node* node)
+double Node::blinkLinkageSwapEnd(const double limit, Node* node)
 {
 	//transform : 
 	//	From
-	//	t					 t+n-1		t+n
+	//	t				t+n-1		t+n
 	//	1(this)-------------------------2(blinkFuture_)
-	//				...------3(cRand)---4
-	//  1=this
-	//  2=blinkFuture_
-	//	3=node
-	//	4=node->future_
-
-
+	//		...------3(cRand)---4
+	//  1=this, 2=blinkFuture_, 3=node, 4=node->future_
 	//	To
-	//	t					 t+n-1		t+n
+	//	t				t+n-1		t+n
 	//	1(this)-------------------------4
-	//				...------3(cRand)---2(blinkFuture_)
-	//  blinkLinkage3
+	//		...------3(cRand)---2(blinkFuture_)
 
-	const double DeltaE = likenessBlink(node->future_) + node->Likeness(blinkFuture_)
-	                      - likenessBlink(blinkFuture_) - node->future_->Likeness(node);
+	const double DeltaE = likenessBlink(node->future_) + node->Likeness(blinkFuture_) - likenessBlink(blinkFuture_) - node->future_->Likeness(node);
 	if (!metropolis(DeltaE, limit)) { return 0.; } // deltaLikeness<limit // if the new solution is too bad
 	// change the configuration
 
@@ -1516,23 +1481,18 @@ double Node::blinkLinkage3(const double limit, Node* node)
 	return DeltaE;
 }
 
-double Node::blinkLinkage4(const double limit, Node* node)
+double Node::blinkLinkageSwapStart(const double limit, Node* node)
 {
 	//transform : 
 	//	From
 	//	t			t+1					t+n
 	//	1(this)-------------------------2(blinkFuture_)
 	//	NULL--------3(cRand2)----...
-	//  1=this
-	//  2=blinkFuture_
-	//	3=cRand2->neighbor_
-
-
+	//  1=this, 2=blinkFuture_, 3=cRand2->neighbor_, 
 	//	To
 	//	t			t+1					t+n
 	//	NULL----------------------------2(blinkFuture_)
 	//	1(this)---3(cRand2)----...
-	//  blinkLinkage4
 
 	const double DeltaE = Likeness(node) + blinkFuture_->Likeness() - likenessBlink(blinkFuture_) - node->Likeness();
 	if (!metropolis(DeltaE, limit)) { return 0.; } // deltaLikeness<limit // if the new solution is too bad
@@ -1545,30 +1505,23 @@ double Node::blinkLinkage4(const double limit, Node* node)
 	return DeltaE;
 }
 
-double Node::blinkLinkage5(const double limit, Node* node)
+double Node::blinkLinkageSwapFinish(const double limit, Node* node)
 {
 	//transform : 
 	//	From
-	//	t					 t+n-1		t+n
+	//	t				t+n-1		t+n
 	//	1(this)-------------------------2(blinkFuture_)
-	//				...------3(cRand2)---NULL
-	//  1=this
-	//  2=blinkFuture_
-	//	3=cRand2->neighbor_
-
-
+	//		...------3(cRand2)---NULL
+	//  1=this, 2=blinkFuture_, 3=cRand2->neighbor_
 	//	To
-	//	t					 t+n-1		t+n
+	//	t				t+n-1		t+n
 	//	1(this)-------------------------NULL
-	//				...------3(cRand2)---2(blinkFuture_)
-	//  blinkLinkage5
-
+	//		...------3(cRand2)---2(blinkFuture_)
+	//  blinkLinkageSwapFinish
 
 	const double DeltaE = Likeness() + node->Likeness(blinkFuture_) - likenessBlink(blinkFuture_) - node->Likeness();
 	if (!metropolis(DeltaE, limit)) { return 0.; } // deltaLikeness<limit // if the new solution is too bad
 	// change the configuration
-
-
 	blinkFuture_->blinkPast_ = nullptr;
 	blinkFuture_->past_ = node;
 	node->future_ = blinkFuture_;

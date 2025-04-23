@@ -4,14 +4,12 @@
 *******************************************************************************************************************/
 #pragma once
 
-#include <array>
 #include <cmath>
 
 #include "ChainNeighbor.h"
-#include "InfoNode.h"
 #include "Parameters.h"
 
-enum class transfer_type { keep_first, keep_second, give_all }; // ancien Fission/Fusion 1, 2 et 9
+enum class transfer_type: uint8_t { keep_first, keep_second, give_all }; // ancien Fission/Fusion 1, 2 et 9
 
 class Node
 {
@@ -83,18 +81,18 @@ private:
 
 	//==================== Linkage ====================
 	double makeChangeSimpleLinkage(double limit);
-	double simpleLinkage0(double limit) const;
-	double simpleLinkage1(double limit, Node* node);
-	double simpleLinkage2(double limit, Node* node);
-	double simpleLinkage3(double limit, Node* node, size_t count);
-	double simpleLinkage4(double limit, Node* node);
+	double simpleLinkageDisconnection(double limit) const;
+	double simpleLinkageReassignment(double limit, Node* node);
+	double simpleLinkageBreakAndReconnect(double limit, Node* node);
+	double simpleLinkageDoubleSwap(double limit, Node* node, size_t count);
+	double simpleLinkageSwap(double limit, Node* node);
 
 	//==================== Blink Linkage ====================
 	double makeChangeBlinkLinkage(double limit);
-	double blinkLinkage0(double limit);
-	double blinkLinkage1(double limit);
-	double blinkLinkage2(double limit, Node* node);
-	double blinkLinkage3(double limit, Node* node);
-	double blinkLinkage4(double limit, Node* node);
-	double blinkLinkage5(double limit, Node* node);
+	double blinkLinkageConnection(double limit);
+	double blinkLinkageDisconnection(double limit);
+	double blinkLinkageSwapBegin(double limit, Node* node);
+	double blinkLinkageSwapEnd(double limit, Node* node);
+	double blinkLinkageSwapStart(double limit, Node* node);
+	double blinkLinkageSwapFinish(double limit, Node* node);
 };
