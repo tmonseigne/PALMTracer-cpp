@@ -22,7 +22,6 @@ public:
 	virtual ~TimeNodes();
 
 	Node* operator()(const size_t i) const { return nodes_[i]; }
-	void LinkNeighborsPresent() const;
 	void LinkNeighborsBeforeAndAfter(const TimeNodes& futures) const;
 	void LinkNeighborsBlinkBeforeAndAfter(const TimeNodes& futures) const;
 	void SortByIntensityAllNeighbors() const;

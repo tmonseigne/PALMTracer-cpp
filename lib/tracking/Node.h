@@ -24,8 +24,8 @@ public:
 	size_t trackedIndex_;
 	size_t colorIndex_[2];
 
-	ChainNeighbor *neighborsPresent_, *neighborsPast_, *neighborsFuture_;
-	size_t neighborsPresentCount_, neighborsPastCount_, neighborsFutureCount_;
+	ChainNeighbor *neighborsPast_, *neighborsFuture_;
+	size_t neighborsPastCount_, neighborsFutureCount_;
 
 	ChainNeighbor *neighborsBlinkPast_, *neighborsBlinkFuture_;
 	size_t neighborsBlinkPastCount_, neighborsBlinkFutureCount_;

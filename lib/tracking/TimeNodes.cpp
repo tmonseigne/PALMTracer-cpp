@@ -30,24 +30,6 @@ TimeNodes::~TimeNodes()
 }
 
 /********************************************************************************************************************
-linkNeighbors() build the chained list of all the neighbours of each nodes presents at this time. 
-********************************************************************************************************************/
-void TimeNodes::LinkNeighborsPresent() const
-{
-	for (size_t i = 0; i < nNodes_; ++i) {
-		for (size_t j = 0; j < nNodes_; ++j) {
-			if (i != j) {
-				if (nodes_[i]->Distance(nodes_[j]) < Parameters::DIST_MAX) {
-					nodes_[i]->neighborsPresent_ = new ChainNeighbor(nodes_[j], nodes_[i]->neighborsPresent_);
-					nodes_[i]->neighborsPresentCount_++;
-				}
-			}
-		}
-	}
-}
-
-
-/********************************************************************************************************************
 linkBeforeAndAfter() for each structure at the time_ t, it builds the chained list of all the structures of the next 
 time_ (t+1) close to it. 
 ********************************************************************************************************************/
@@ -90,7 +72,6 @@ void TimeNodes::SortByIntensityAllNeighbors() const
 {
 	for (size_t i = 0; i < nNodes_; ++i) {
 		Node::SortByIntersityNeighbors(&nodes_[i]->neighborsPast_);
-		Node::SortByIntersityNeighbors(&nodes_[i]->neighborsPresent_);
 		Node::SortByIntersityNeighbors(&nodes_[i]->neighborsFuture_);
 	}
 }

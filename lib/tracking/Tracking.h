@@ -32,7 +32,6 @@ protected:
 
 	void updateConstantes() const;
 	void computeConstantes() const;
-	void linkNeighborsPresent() const { for (size_t t = 0; t < nbTimes_; ++t) { timeNodes_[t]->LinkNeighborsPresent(); } }
 	void linkNeighborsBeforeAndAfter() const { for (size_t t = 0; t < nbTimes_ - 1; ++t) { timeNodes_[t]->LinkNeighborsBeforeAndAfter(*timeNodes_[t + 1]); } }
 	void linkNeighborsBlinkBeforeAndAfter() const;
 	void sortByIntensityAllNeighbors() const { for (size_t t = 0; t < nbTimes_; ++t) { timeNodes_[t]->SortByIntensityAllNeighbors(); } }

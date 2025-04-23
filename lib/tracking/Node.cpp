@@ -31,8 +31,8 @@ Node::Node(const size_t time, Parameters* params)
 	  fission1Future_(nullptr), fission2Future_(nullptr), fissionPast_(nullptr),
 	  fusion1Past_(nullptr), fusion2Past_(nullptr), fusionFuture_(nullptr),
 	  trackedIndex_(0), colorIndex_{},
-	  neighborsPresent_(nullptr), neighborsPast_(nullptr), neighborsFuture_(nullptr),
-	  neighborsPresentCount_(0), neighborsPastCount_(0), neighborsFutureCount_(0),
+	  neighborsPast_(nullptr), neighborsFuture_(nullptr),
+	  neighborsPastCount_(0), neighborsFutureCount_(0),
 	  neighborsBlinkPast_(nullptr), neighborsBlinkFuture_(nullptr),
 	  neighborsBlinkPastCount_(0), neighborsBlinkFutureCount_(0) { }
 
@@ -55,11 +55,6 @@ Node::~Node()
 		neighborsPast_ = l;
 	}
 
-	while (neighborsPresent_ != nullptr) {
-		l = neighborsPresent_->next_;
-		delete neighborsPresent_;
-		neighborsPresent_ = l;
-	}
 	trackedIndex_ = 0;
 }
 

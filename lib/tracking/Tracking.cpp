@@ -33,7 +33,6 @@ void Tracking::Processing()
 {
 	// Initialisation
 	readPointsList();
-	linkNeighborsPresent();
 	linkNeighborsBeforeAndAfter();
 	sortByIntensityAllNeighbors();
 	if constexpr (Parameters::N_TEMPORAL_WINDOWS > 1) { linkNeighborsBlinkBeforeAndAfter(); }
