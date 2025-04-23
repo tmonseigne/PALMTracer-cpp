@@ -76,13 +76,6 @@ void TimeNodes::ComputeConstantSigmas(double& intensity, size_t& nInt, double& m
 	for (const auto& N : nodes_) { N.ComputeConstantSigmas(intensity, nInt, mean, nMean, distance, nDist); }
 }
 
-
-/********************************************************************************************************************
-makeAllInitializationConnections() finds connections from the nodes of this time_ to the nodes of the time_ after according to the selected model.
-It returns the likeness computed for this time_
-********************************************************************************************************************/
-void TimeNodes::MakeAllInitializationConnections() { for (size_t i = 0; i < nNodes_; ++i) { nodes_[i].MakeInitializationConnection(); } }
-
 /********************************************************************************************************************
 tryRandomChange() take a random node at this time_ and try to apply a change
 It returns the gain in likeness computed with this change

@@ -9,6 +9,7 @@ public:
 
 	// Static
 	static constexpr double DIST_MAX = 20;
+	static constexpr size_t N_STEPS = 5;
 	static constexpr size_t N_ITERATIONS = 300;
 	static constexpr size_t N_SEG_PARAMS = 13;
 	static constexpr size_t N_TEMPORAL_WINDOWS = 1;

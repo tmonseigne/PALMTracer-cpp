@@ -26,6 +26,6 @@ public:
 	void SortByIntensityAllNeighbors();
 
 	void ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance, size_t& nDist) const;
-	void MakeAllInitializationConnections();
+	void MakeAllInitializationConnections() { for (auto& node : nodes_) { node.MakeInitializationConnection(); } }
 	double TryRandomChange(double limit);
 };

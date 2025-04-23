@@ -76,16 +76,16 @@ void Tracking::printConnectionsASCII_trc()
 	for (const auto& T : timeNodes_) {
 		for (const auto& N : T.nodes_) {
 			if (N.past_ == nullptr && N.trackedIndex_ > 0) {
-				for (const Node* nodeConnection = &N; nodeConnection != nullptr; nodeConnection = nodeConnection->future_) {
+				for (const Node* node = &N; node; node = node->future_) {
 					tracks_[idx++] = static_cast<double>(N.trackedIndex_);
-					tracks_[idx++] = static_cast<double>(nodeConnection->time_ + 1);
-					tracks_[idx++] = nodeConnection->x_;
-					tracks_[idx++] = nodeConnection->y_;
-					tracks_[idx++] = nodeConnection->surf_;
-					tracks_[idx++] = nodeConnection->intensity_;
-					tracks_[idx++] = nodeConnection->z_;
-					tracks_[idx++] = nodeConnection->color_;
-					tracks_[idx++] = nodeConnection->molId_;
+					tracks_[idx++] = static_cast<double>(node->time_ + 1);
+					tracks_[idx++] = node->x_;
+					tracks_[idx++] = node->y_;
+					tracks_[idx++] = node->surf_;
+					tracks_[idx++] = node->intensity_;
+					tracks_[idx++] = node->z_;
+					tracks_[idx++] = node->color_;
+					tracks_[idx++] = node->molId_;
 
 					// The number of trajectory
 					nTraj_ = N.trackedIndex_;
@@ -177,7 +177,7 @@ void Tracking::setColorToTrackedStructures()
 			if (node.trackedIndex_ != 0) {
 				if (node.past_ == nullptr) {
 					if (node.blinkPast_ == nullptr) {
-						if (node.fusion1Past_ != nullptr) {
+						if (node.fusion1Past_) {
 							if (node.Likeness(node.fusion1Past_) > node.Likeness(node.fusion2Past_)) {
 								node.colorIndex_[0] = node.fusion1Past_->colorIndex_[0];
 								node.colorIndex_[1] = node.fusion2Past_->colorIndex_[0];
@@ -188,16 +188,16 @@ void Tracking::setColorToTrackedStructures()
 							}
 						}
 						else { //node.fusion1Past_==NULL
-							if (node.fissionPast_ != nullptr) {
+							if (node.fissionPast_) {
 								Node* node2 = &node == node.fissionPast_->fission1Future_
 									              ? node.fissionPast_->fission2Future_
 									              : node.fissionPast_->fission1Future_;
 
 								nodePastFission2 = node.fissionPast_;
-								for (nodePastFission = node.fissionPast_; nodePastFission != nullptr; nodePastFission = nodePastFission->past_) {
+								for (nodePastFission = node.fissionPast_; nodePastFission; nodePastFission = nodePastFission->past_) {
 									nodePastFission2 = nodePastFission;
 								}
-								if (nodePastFission2->fusion1Past_ != nullptr) {
+								if (nodePastFission2->fusion1Past_) {
 									const Node* nodePastFission3 = nodePastFission2->fusion1Past_;
 									const Node* nodePastFission4 = nodePastFission2->fusion2Past_;
 									if (node.Likeness(nodePastFission3) + node2->Likeness(nodePastFission4) > node2->Likeness(nodePastFission3) + node.
@@ -226,7 +226,7 @@ void Tracking::setColorToTrackedStructures()
 								}
 							}
 							else { //node.fissionPast_==NULL  and node.fusion1Past_==NULL
-								if (node.fission1Future_ != nullptr) {
+								if (node.fission1Future_) {
 									node.colorIndex_[0] = idx;
 									idx++;
 									node.colorIndex_[1] = idx;
@@ -249,10 +249,10 @@ void Tracking::setColorToTrackedStructures()
 					node.colorIndex_[0] = node.past_->colorIndex_[0];
 					node.colorIndex_[1] = node.past_->colorIndex_[0];
 				}
-				if (node.fission1Future_ != nullptr) {
+				if (node.fission1Future_) {
 					nodePastFission2 = &node;
-					for (nodePastFission = &node; nodePastFission != nullptr; nodePastFission = nodePastFission->past_) { nodePastFission2 = nodePastFission; }
-					if (nodePastFission2->fusion1Past_ != nullptr) {
+					for (nodePastFission = &node; nodePastFission; nodePastFission = nodePastFission->past_) { nodePastFission2 = nodePastFission; }
+					if (nodePastFission2->fusion1Past_) {
 						node.colorIndex_[0] = nodePastFission2->fusion1Past_->colorIndex_[0];
 						node.colorIndex_[1] = nodePastFission2->fusion2Past_->colorIndex_[0];
 					}
@@ -277,21 +277,13 @@ void Tracking::setIndexToTrackedStructures()
 	for (auto& T : timeNodes_) {
 		for (size_t i = 0; i < T.nNodes_; ++i) {
 			if (T.nodes_[i].past_ == nullptr) {
-				for (node = &T.nodes_[i], oldNode = nullptr, nNodes = 0;
-				     node != nullptr && nNodes < minLife_; node = node->future_, ++nNodes) {
+				for (node = &T.nodes_[i], oldNode = nullptr, nNodes = 0; node && nNodes < minLife_; node = node->future_, ++nNodes) {
 					oldNode = node;
 					node->trackedIndex_ = 0;
 				}
 				bool change = false;
-				if (nNodes >= minLife_) { change = true; } //it was == 
-				if (T.nodes_[i].fissionPast_ != nullptr) { change = true; }
-				if (T.nodes_[i].fusion1Past_ != nullptr) { change = true; }
-				if (T.nodes_[i].blinkPast_ != nullptr) { change = true; }
-				if (oldNode != nullptr) {
-					if (oldNode->fission1Future_ != nullptr) { change = true; }
-					if (oldNode->fusionFuture_ != nullptr) { change = true; }
-					if (oldNode->blinkFuture_ != nullptr) { change = true; }
-				}
+				if (nNodes >= minLife_ || T.nodes_[i].fissionPast_ || T.nodes_[i].fusion1Past_ || T.nodes_[i].blinkPast_) { change = true; }
+				if (oldNode && (oldNode->fission1Future_ || oldNode->fusionFuture_ || oldNode->blinkFuture_)) { change = true; }
 
 				if (change) {
 					T.nodes_[i].trackedIndex_ = idx;
@@ -346,14 +338,11 @@ void Tracking::updateConstantes() const
 
 	for (const auto& T : timeNodes_) {
 		for (const auto& Node : T.nodes_) {
-			if (Node.future_ != nullptr) {
+			if (Node.future_) {
 				params_->stdDistance_ += Node.Distance(*Node.future_) * Node.Distance(*Node.future_);
-				params_->stdIntensity_ += (Node.intensity_ - Node.future_->intensity_)
-					* (Node.intensity_ - Node.future_->intensity_);
-				params_->stdMean_ += (Node.mean_ - Node.future_->mean_)
-					* (Node.mean_ - Node.future_->mean_);
-				params_->covMeanIntensity_ += (Node.intensity_ - Node.future_->intensity_)
-					* (Node.mean_ - Node.future_->mean_);
+				params_->stdIntensity_ += (Node.intensity_ - Node.future_->intensity_) * (Node.intensity_ - Node.future_->intensity_);
+				params_->stdMean_ += (Node.mean_ - Node.future_->mean_) * (Node.mean_ - Node.future_->mean_);
+				params_->covMeanIntensity_ += (Node.intensity_ - Node.future_->intensity_) * (Node.mean_ - Node.future_->mean_);
 				cpt++;
 			}
 		}
