@@ -11,11 +11,7 @@
 #include "InfoNode.h"
 #include "Parameters.h"
 
-enum class TransferType {
-	KeepFirst,  // ancien Fission1
-	KeepSecond, // ancien Fission2
-	GiveAll     // ancien Fission9
-};
+enum class transfer_type { keep_first, keep_second, give_all }; // ancien Fission/Fusion 1, 2 et 9
 
 class Node
 {
@@ -48,6 +44,15 @@ public:
 	double MakeChange(double limit);
 
 private:
+	//==================== Computes ====================
+	bool metropolis(double deltaE, double temperature) const;
+	double sphericEffect() const;
+	static double sphericEffect(const Node& n1, const Node& n2) { return n1.sphericEffect() + n2.sphericEffect(); }
+	double distance(const Node& n1, const Node& n2) const { return info_.Distance(n1.info_, n2.info_); }
+	double distanceToBorder() const;
+	ChainNeighbor* getRandomNeighbor(ChainNeighbor* head, size_t size) const;
+
+	//==================== likeness ====================
 	static double getLikeness(const double difference, const double sigma) { return 1. - fabs(difference) / (3. * sigma); }
 	double likenessBlink(const Node* n) const;
 	double likenessDistance(const Node* n) const;
@@ -58,40 +63,37 @@ private:
 	double likenessMeanIntensity(const Node* n) const;
 	double likenessMeanIntensityFusion(const Node* n1, const Node* n2) const;
 
-	double makeChangeSimpleLinkage(double limit);
-	double makeChangeSimpleLinkage0(double limit) const;
-	double makeChangeSimpleLinkage1(double limit, Node* node);
-	double makeChangeSimpleLinkage2(double limit, Node* node);
-	double makeChangeSimpleLinkage3(double limit, Node* node, size_t count);
-	double makeChangeSimpleLinkage4(double limit, Node* node);
-
-	double makeChangeFusion(double limit);
-	double makeChangeFusionCreate(double limit);
-	double makeChangeFusionSymmetric(double limit, const Node* keep);
-	double makeChangeFusionReassignBoth(double limit, Node* node, const Node* keep);
-	double makeChangeFusionSwapFuture(double limit, Node* node, const Node* swap) const;
-	double makeChangeFusionTransferToNode(double limit, Node* node, TransferType type);
-	double makeChangeFusionTransferFull(double limit, Node* node);
-
+	//==================== Fission ====================
 	double makeChangeFission(double limit);
-	double makeChangeFissionSymmetric(double limit, Node* keep);
-	double makeChangeFissionReassignBoth(double limit, Node* node, Node* keep);
-	double makeChangeFissionSwapFuture(double limit, Node* node, Node* swap);
-	double makeChangeFissionTransferToNode(double limit, Node* node, TransferType type);
-	double makeChangeFission0(double limit);
+	double fissionCreate(double limit);
+	double fissionSymmetric(double limit, Node* keep);
+	double fissionReassignBoth(double limit, Node* node, Node* keep);
+	double fissionSwapFuture(double limit, Node* node, Node* swap);
+	double fissionTransferToNode(double limit, Node* node, transfer_type type);
 
+	//==================== Fusion ====================
+	double makeChangeFusion(double limit);
+	double fusionCreate(double limit);
+	double fusionSymmetric(double limit, const Node* keep);
+	double fusionReassignBoth(double limit, Node* node, const Node* keep);
+	double fusionSwapFuture(double limit, Node* node, const Node* swap) const;
+	double fusionTransferToNode(double limit, Node* node, transfer_type type);
+	double fusionTransferFull(double limit, Node* node);
+
+	//==================== Linkage ====================
+	double makeChangeSimpleLinkage(double limit);
+	double simpleLinkage0(double limit) const;
+	double simpleLinkage1(double limit, Node* node);
+	double simpleLinkage2(double limit, Node* node);
+	double simpleLinkage3(double limit, Node* node, size_t count);
+	double simpleLinkage4(double limit, Node* node);
+
+	//==================== Blink Linkage ====================
 	double makeChangeBlinkLinkage(double limit);
-	double makeChangeBlinkLinkage0(double limit);
-	double makeChangeBlinkLinkage1(double limit);
-	double makeChangeBlinkLinkage2(double limit, Node* node);
-	double makeChangeBlinkLinkage3(double limit, Node* node);
-	double makeChangeBlinkLinkage4(double limit, Node* node);
-	double makeChangeBlinkLinkage5(double limit, Node* node);
-
-	bool metropolis(double deltaE, double temperature) const;
-	double sphericEffect() const;
-	static double sphericEffect(const Node& n1, const Node& n2) { return n1.sphericEffect() + n2.sphericEffect(); }
-	double distance(const Node& n1, const Node& n2) const { return info_.Distance(n1.info_, n2.info_); }
-	double distanceToBorder() const;
-	ChainNeighbor* getRandomNeighbor(ChainNeighbor* head, size_t size) const;
+	double blinkLinkage0(double limit);
+	double blinkLinkage1(double limit);
+	double blinkLinkage2(double limit, Node* node);
+	double blinkLinkage3(double limit, Node* node);
+	double blinkLinkage4(double limit, Node* node);
+	double blinkLinkage5(double limit, Node* node);
 };
