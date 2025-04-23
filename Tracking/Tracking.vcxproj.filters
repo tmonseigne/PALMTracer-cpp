@@ -2,9 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="..\lib\tracking\InfoNode.cpp">
-      <Filter>Tracking</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\tracking\Node.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
@@ -20,9 +17,6 @@
       <Filter>Tracking</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\Parameters.h">
-      <Filter>Tracking</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tracking\InfoNode.h">
       <Filter>Tracking</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\Node.h">

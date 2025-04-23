@@ -26,7 +26,8 @@ Constructuor(size_t time) of Node class.
 The current objets is at the time "time".
 ********************************************************************************************************************/
 Node::Node(const size_t time, Parameters* params)
-	: params_(params), time_(time),
+	: x_(0), y_(0), z_(0), intensity_(0), mean_(0), surf_(0), color_(0), molId_(0),
+	  params_(params), time_(time),
 	  future_(nullptr), blinkFuture_(nullptr), past_(nullptr), blinkPast_(nullptr),
 	  fission1Future_(nullptr), fission2Future_(nullptr), fissionPast_(nullptr),
 	  fusion1Past_(nullptr), fusion2Past_(nullptr), fusionFuture_(nullptr),
@@ -55,6 +56,12 @@ Node::~Node()
 		neighborsPast_ = l;
 	}
 	trackedIndex_ = 0;
+}
+
+double Node::Distance(const Node& node) const
+{
+	const double Dx = x_ - node.x_, Dy = y_ - node.y_;
+	return sqrt(Dx * Dx + Dy * Dy);
 }
 
 /*********************************************************************************************
@@ -101,7 +108,7 @@ void Node::SortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 				ChainNeighbor* l = *neighborsHead;
 				ChainNeighbor* lOld = nullptr;
 				while (l->next_) {
-					if (l->next_->neighbor_->info_.intensity_ > l->neighbor_->info_.intensity_) {
+					if (l->next_->neighbor_->intensity_ > l->neighbor_->intensity_) {
 						ChainNeighbor* l2 = l->next_;
 						if (!lOld) { *neighborsHead = l2; }
 						else { lOld->next_ = l2; }
@@ -136,13 +143,21 @@ bool Node::metropolis(const double deltaE, const double temperature) const
 	return true;
 }
 
+double Node::distance(const Node& n1, const Node& n2) const
+{
+	const double N1N2X = (n1.x_ * n1.intensity_ + n2.x_ * n2.intensity_) / (n1.intensity_ + n2.intensity_);
+	const double N1N2Y = (n1.y_ * n1.intensity_ + n2.y_ * n2.intensity_) / (n1.intensity_ + n2.intensity_);
+	const double Dx = x_ - N1N2X, Dy = y_ - N1N2Y;
+	return sqrt(Dx * Dx + Dy * Dy);
+}
+
 /*********************************************************************************************
 double distanceToBorder()
   get the distance from this to the closer border
 *********************************************************************************************/
 double Node::distanceToBorder() const
 {
-	const double X = info_.x_, Y = info_.y_;
+	const double X = x_, Y = y_;
 	const double MaxX = params_->maxX_, MaxY = params_->maxY_;
 	return std::min({X, MaxX - X, Y, MaxY - Y});
 }
@@ -164,10 +179,10 @@ double SphericEffect()
 *********************************************************************************************/
 double Node::sphericEffect() const
 {
-	return sqrt(info_.surf_ / std::numbers::pi);
+	return sqrt(surf_ / std::numbers::pi);
 	//volume of a sphere is 4/3 * PI *r^3, surface is PI * r^2
-	//if constexpr (Parameters::N_DIM == 2) { return sqrt(info_.surf_ / std::numbers::pi); }
-	//else { return pow(info_.GetVolume() * 3.0 / 4.0 / std::numbers::pi, 1.0 / 3.0); }
+	//if constexpr (Parameters::N_DIM == 2) { return sqrt(surf_ / std::numbers::pi); }
+	//else { return pow(GetVolume() * 3.0 / 4.0 / std::numbers::pi, 1.0 / 3.0); }
 }
 
 //==================== likeness ====================
@@ -204,8 +219,8 @@ double Node::likenessMeanIntensity(Node* n)
 *********************************************************************************************/
 double Node::likenessMeanIntensity(const Node* n) const
 {
-	if (!n) { return getLikeness(info_.mean_, params_->stdMean_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder())); }
-	return getLikeness(info_.mean_ - n->info_.mean_, params_->stdMean_);
+	if (!n) { return getLikeness(mean_, params_->stdMean_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder())); }
+	return getLikeness(mean_ - n->mean_, params_->stdMean_);
 }
 
 /*********************************************************************************************
@@ -217,9 +232,9 @@ double Node::likenessMeanIntensityFusion(Node* n1, Node* n2)
 double Node::likenessMeanIntensityFusion(const Node* n1, const Node* n2) const
 {
 	if (!n1 || !n2) { return 0.; } //Error ???
-	return getLikeness(info_.mean_ - (n1->info_.intensity_ + n2->info_.intensity_) / (n1->info_.surf_ + n2->info_.surf_), params_->stdMean_);
-	//if (Parameters::N_DIM == 2) { return getLikeness(info_.mean_ - (n1->info_.intensity_ + n2->info_.intensity_) / (n1->info_.surf_ + n2->info_.surf_), params_->stdMean_);}
-	//else { return getLikeness(info_.mean_ - (n1->info_.intensity_ + n2->info_.intensity_) / (n1->info_.GetVolume() + n2->info_.GetVolume()), params_->stdMean_);}
+	return getLikeness(mean_ - (n1->intensity_ + n2->intensity_) / (n1->surf_ + n2->surf_), params_->stdMean_);
+	//if (Parameters::N_DIM == 2) { return getLikeness(mean_ - (n1->intensity_ + n2->intensity_) / (n1->surf_ + n2->surf_), params_->stdMean_);}
+	//else { return getLikeness(mean_ - (n1->intensity_ + n2->intensity_) / (n1->GetVolume() + n2->GetVolume()), params_->stdMean_);}
 }
 
 /*********************************************************************************************
@@ -231,8 +246,8 @@ double Node::likenessIntensity(Node* n)
 *********************************************************************************************/
 double Node::likenessIntensity(const Node* n) const
 {
-	if (!n) { return getLikeness(info_.intensity_, params_->stdIntensity_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder())); }
-	return getLikeness(info_.intensity_ - n->info_.intensity_, params_->stdIntensity_);
+	if (!n) { return getLikeness(intensity_, params_->stdIntensity_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder())); }
+	return getLikeness(intensity_ - n->intensity_, params_->stdIntensity_);
 }
 
 /*********************************************************************************************
@@ -245,7 +260,7 @@ double Node::likenessIntensityFusion(Node* n1, Node* n2
 double Node::likenessIntensityFusion(const Node* n1, const Node* n2) const
 {
 	if (!n1 || !n2) { return 0.; } //inutil
-	return getLikeness(info_.intensity_ - n1->info_.intensity_ - n2->info_.intensity_, params_->stdIntensity_);
+	return getLikeness(intensity_ - n1->intensity_ - n2->intensity_, params_->stdIntensity_);
 }
 
 /*********************************************************************************************
@@ -309,8 +324,8 @@ void Node::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, 
 
 
 	if (nMax) {
-		intensity += (info_.intensity_ - nMax->info_.intensity_) * (info_.intensity_ - nMax->info_.intensity_);
-		mean += (info_.mean_ - nMax->info_.mean_) * (info_.mean_ - nMax->info_.mean_);
+		intensity += (intensity_ - nMax->intensity_) * (intensity_ - nMax->intensity_);
+		mean += (mean_ - nMax->mean_) * (mean_ - nMax->mean_);
 		distance += Distance(*nMax) * Distance(*nMax);
 		nInt++;
 		nMean++;
@@ -480,8 +495,8 @@ double Node::fissionCreate(const double limit)
 	if (Distance(*n) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
 
 	const double DeltaE = likenessFusion(n, future_)
-		+ (!n->past_ ? 0. : n->past_->Likeness())
-		- Likeness(future_) - n->Likeness(n->past_);
+	                      + (!n->past_ ? 0. : n->past_->Likeness())
+	                      - Likeness(future_) - n->Likeness(n->past_);
 	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness < limit // if the new solution is too bad
 	// change the configuration
 	fission1Future_ = future_;

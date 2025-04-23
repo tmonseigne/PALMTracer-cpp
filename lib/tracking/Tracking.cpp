@@ -79,13 +79,13 @@ void Tracking::printConnectionsASCII_trc()
 				for (const Node* nodeConnection = &N; nodeConnection != nullptr; nodeConnection = nodeConnection->future_) {
 					tracks_[idx++] = static_cast<double>(N.trackedIndex_);
 					tracks_[idx++] = static_cast<double>(nodeConnection->time_ + 1);
-					tracks_[idx++] = nodeConnection->info_.x_;
-					tracks_[idx++] = nodeConnection->info_.y_;
-					tracks_[idx++] = nodeConnection->info_.surf_;
-					tracks_[idx++] = nodeConnection->info_.intensity_;
-					tracks_[idx++] = nodeConnection->info_.z_;
-					tracks_[idx++] = nodeConnection->info_.color_;
-					tracks_[idx++] = nodeConnection->info_.molId_;
+					tracks_[idx++] = nodeConnection->x_;
+					tracks_[idx++] = nodeConnection->y_;
+					tracks_[idx++] = nodeConnection->surf_;
+					tracks_[idx++] = nodeConnection->intensity_;
+					tracks_[idx++] = nodeConnection->z_;
+					tracks_[idx++] = nodeConnection->color_;
+					tracks_[idx++] = nodeConnection->molId_;
 
 					// The number of trajectory
 					nTraj_ = N.trackedIndex_;
@@ -117,7 +117,7 @@ void Tracking::readPointsList()
 		for (size_t i = 0; i < timeNodes_[t].nNodes_; ++i) {
 			const size_t Idx = index + i * Parameters::N_SEG_PARAMS;
 			// Just for the case of '2D'
-			InfoNode& str = timeNodes_[t][i].info_;
+			Node& str = timeNodes_[t][i];
 			// version correcte
 			str.x_ = points_[Idx + 3];
 			str.y_ = points_[Idx + 4];
@@ -131,8 +131,8 @@ void Tracking::readPointsList()
 			str.surf_ = points_[Idx + 9];
 			str.mean_ = points_[Idx + 8] / points_[Idx + 9];
 
-			params_->maxX_ = std::max(params_->maxX_, timeNodes_[t][i].info_.x_);
-			params_->maxY_ = std::max(params_->maxY_, timeNodes_[t][i].info_.y_);
+			params_->maxX_ = std::max(params_->maxX_, timeNodes_[t][i].x_);
+			params_->maxY_ = std::max(params_->maxY_, timeNodes_[t][i].y_);
 		}
 
 		//Sorting the nodes by the intensity for one time
@@ -140,8 +140,8 @@ void Tracking::readPointsList()
 		for (size_t i = 0; i < timeNodes_[t].nNodes_ - 1; ++i) {
 			double maxIntensity = -1.;
 			for (size_t j = i; j < timeNodes_[t].nNodes_; ++j) {
-				if (maxIntensity < timeNodes_[t][j].info_.intensity_) {
-					maxIntensity = timeNodes_[t][j].info_.intensity_;
+				if (maxIntensity < timeNodes_[t][j].intensity_) {
+					maxIntensity = timeNodes_[t][j].intensity_;
 					indexMax = j;
 				}
 			}
@@ -348,12 +348,12 @@ void Tracking::updateConstantes() const
 		for (const auto& Node : T.nodes_) {
 			if (Node.future_ != nullptr) {
 				params_->stdDistance_ += Node.Distance(*Node.future_) * Node.Distance(*Node.future_);
-				params_->stdIntensity_ += (Node.info_.intensity_ - Node.future_->info_.intensity_)
-					* (Node.info_.intensity_ - Node.future_->info_.intensity_);
-				params_->stdMean_ += (Node.info_.mean_ - Node.future_->info_.mean_)
-					* (Node.info_.mean_ - Node.future_->info_.mean_);
-				params_->covMeanIntensity_ += (Node.info_.intensity_ - Node.future_->info_.intensity_)
-					* (Node.info_.mean_ - Node.future_->info_.mean_);
+				params_->stdIntensity_ += (Node.intensity_ - Node.future_->intensity_)
+					* (Node.intensity_ - Node.future_->intensity_);
+				params_->stdMean_ += (Node.mean_ - Node.future_->mean_)
+					* (Node.mean_ - Node.future_->mean_);
+				params_->covMeanIntensity_ += (Node.intensity_ - Node.future_->intensity_)
+					* (Node.mean_ - Node.future_->mean_);
 				cpt++;
 			}
 		}
