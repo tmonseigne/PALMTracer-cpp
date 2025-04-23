@@ -290,8 +290,7 @@ void Node::computeConstantSigmas(double &intensity,
   Find in the vicinity of each node the one with the biggest likeness to compute the constant
   kInt and kMean and kDist
 *********************************************************************************************/
-void Node::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance, size_t& nDist,
-                                 const bool clipping, long* hist) const
+void Node::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance, size_t& nDist) const
 {
 	const Node* nMax = nullptr;
 	double likenessMax = -1e10;
@@ -306,32 +305,12 @@ void Node::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, 
 
 
 	if (nMax != nullptr) {
-		if (hist != nullptr) { hist[static_cast<size_t>(Distance(*nMax))]++; }
-		else {
-			if (clipping) {
-				if (fabs(info_.intensity_ - nMax->info_.intensity_) < 3. * params_->stdIntensity_) {
-					intensity += (info_.intensity_ - nMax->info_.intensity_) * (info_.intensity_ - nMax->info_.intensity_);
-					nInt++;
-				}
-				if (fabs(info_.mean_ - nMax->info_.mean_) < 3. * params_->stdMean_) {
-					mean += (info_.mean_ - nMax->info_.mean_) * (info_.mean_ - nMax->info_.mean_);
-					nMean++;
-				}
-
-				if (Distance(*nMax) < 3. * params_->stdDistance_) {
-					distance += Distance(*nMax) * Distance(*nMax);
-					nDist++;
-				}
-			}
-			else {
-				intensity += (info_.intensity_ - nMax->info_.intensity_) * (info_.intensity_ - nMax->info_.intensity_);
-				mean += (info_.mean_ - nMax->info_.mean_) * (info_.mean_ - nMax->info_.mean_);
-				distance += Distance(*nMax) * Distance(*nMax);
-				nInt++;
-				nMean++;
-				nDist++;
-			}
-		}
+		intensity += (info_.intensity_ - nMax->info_.intensity_) * (info_.intensity_ - nMax->info_.intensity_);
+		mean += (info_.mean_ - nMax->info_.mean_) * (info_.mean_ - nMax->info_.mean_);
+		distance += Distance(*nMax) * Distance(*nMax);
+		nInt++;
+		nMean++;
+		nDist++;
 	}
 }
 
@@ -429,9 +408,9 @@ double Node::makeChangeFission1(const double limit, Node* node)
 	//NULL------------5
 
 	if (node->Distance(*fission2Future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-	if (node->fission1Future_ != nullptr) { return 0; }                       // cRand is already implicated in a fission.
-	if (node->fusionFuture_ != nullptr) { return 0; }                         // cRand is already implicated in a fusion.
-	if (node->blinkFuture_ != nullptr) { return 0.; }                         // crand is already implicated in a future blink.
+	if (node->fission1Future_ != nullptr) { return 0; }                        // cRand is already implicated in a fission.
+	if (node->fusionFuture_ != nullptr) { return 0; }                          // cRand is already implicated in a fusion.
+	if (node->blinkFuture_ != nullptr) { return 0.; }                          // crand is already implicated in a future blink.
 
 	const double DeltaE = Likeness(fission1Future_) + node->Likeness(fission2Future_)
 	                      + (node->future_ == nullptr ? 0 : node->future_->Likeness(nullptr))
@@ -542,7 +521,7 @@ double Node::makeChangeFission5(const double limit, Node* node)
 	//4(cRand)--/-----5
 
 	if (node->Distance(*fission2Future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-	if (node->blinkFuture_ != nullptr) { return 0.; }                         // crand is already implicated in a future blink.
+	if (node->blinkFuture_ != nullptr) { return 0.; }                          // crand is already implicated in a future blink.
 
 	const double DeltaE = Likeness(fission1Future_) + node->likenessFusion(fission2Future_, node->future_) -
 	                      likenessFusion(fission1Future_, fission2Future_) - node->Likeness(node->future_);
@@ -577,7 +556,7 @@ double Node::makeChangeFission8(const double limit, Node* node)
 	//4(cRand)--/-----5
 
 	if (node->Distance(*fission1Future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-	if (node->blinkFuture_ != nullptr) { return 0.; }                         // crand is already implicated in a future blink.
+	if (node->blinkFuture_ != nullptr) { return 0.; }                          // crand is already implicated in a future blink.
 
 	const double DeltaE = Likeness(fission2Future_) + node->likenessFusion(fission1Future_, node->future_)
 	                      - likenessFusion(fission1Future_, fission2Future_) - node->Likeness(node->future_);
@@ -610,10 +589,10 @@ double Node::makeChangeFission9(const double limit, Node* node)
 	//1(this)---------5
 	//           /----2(fission1Future_)
 	//4(cRand)--/-----3(fission2Future_)
-	if (node->blinkFuture_ != nullptr) { return 0.; } // crand is already implicated in a future blink.
+	if (node->blinkFuture_ != nullptr) { return 0.; }                                                    // crand is already implicated in a future blink.
 	if (node->future_ != nullptr) { if (Distance(*node->future_) >= params_->maxSpeed_) { return 0.; } } // Distance is not respected
-	if (node->Distance(*fission1Future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-	if (node->Distance(*fission2Future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
+	if (node->Distance(*fission1Future_) >= params_->maxSpeed_) { return 0.; }                           // Distance is not respected
+	if (node->Distance(*fission2Future_) >= params_->maxSpeed_) { return 0.; }                           // Distance is not respected
 	if (node->fission1Future_ != nullptr) { return 0.; }
 	if (node->fusionFuture_ != nullptr) { return 0.; }
 
@@ -647,9 +626,9 @@ double Node::makeChangeFission6(const double limit, Node* node)
 	//          \-----5
 	//4(cRand)--------3(fission2Future_)
 
-	if (node->blinkFuture_ != nullptr) { return 0.; } // crand is already implicated in a future blink.
+	if (node->blinkFuture_ != nullptr) { return 0.; }                                                    // crand is already implicated in a future blink.
 	if (node->future_ != nullptr) { if (Distance(*node->future_) >= params_->maxSpeed_) { return 0.; } } // Distance is not respected
-	if (node->Distance(*fission2Future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
+	if (node->Distance(*fission2Future_) >= params_->maxSpeed_) { return 0.; }                           // Distance is not respected
 
 	const double DeltaE = likenessFusion(fission1Future_, node->future_) + node->Likeness(fission2Future_)
 	                      - likenessFusion(fission1Future_, fission2Future_) - node->Likeness(node->future_);
@@ -679,9 +658,9 @@ double Node::makeChangeFission7(const double limit, Node* node)
 	//          \-----5
 	//4(cRand)--------2(fission1Future_)
 
-	if (node->blinkFuture_ != nullptr) { return 0.; } // crand is already implicated in a future blink.
+	if (node->blinkFuture_ != nullptr) { return 0.; }                                                    // crand is already implicated in a future blink.
 	if (node->future_ != nullptr) { if (Distance(*node->future_) >= params_->maxSpeed_) { return 0.; } } // Distance is not respected
-	if (node->Distance(*fission1Future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
+	if (node->Distance(*fission1Future_) >= params_->maxSpeed_) { return 0.; }                           // Distance is not respected
 
 	const double DeltaE = likenessFusion(fission2Future_, node->future_) + node->Likeness(fission1Future_)
 	                      - likenessFusion(fission2Future_, fission1Future_) - node->Likeness(node->future_);
@@ -1135,7 +1114,7 @@ double Node::makeChangeFusion8(const double limit, Node* node)
 	if (node->past_ == nullptr) { return 0; } // not possible to reconnection the fusion.
 
 	if (Distance(*node) >= params_->maxSpeed_) { return 0.; }                       // Distance is not respected
-	if (tmp->Distance(*node) >= params_->maxSpeed_) { return 0.; }                 // Distance is not respected
+	if (tmp->Distance(*node) >= params_->maxSpeed_) { return 0.; }                  // Distance is not respected
 	if (node->past_->Distance(*fusionFuture_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
 
 	const double DeltaE = node->past_->Likeness(fusionFuture_) + node->likenessFusion(this, tmp)
@@ -1459,7 +1438,7 @@ double Node::makeChangeSimpleLinkage2(const double limit, Node* node)
 	//return(0.);
 }
 
-double Node::makeChangeSimpleLinkage3(const double limit, Node* node, const size_t  count)
+double Node::makeChangeSimpleLinkage3(const double limit, Node* node, const size_t count)
 {
 	//	From
 	//	Present		Future
@@ -1469,7 +1448,7 @@ double Node::makeChangeSimpleLinkage3(const double limit, Node* node, const size
 
 	//find a random one
 	const size_t IdRandNeighbor = params_->RandomModulo(count);
-	size_t  iCount = 0;
+	size_t iCount = 0;
 
 	const ChainNeighbor* c = node->past_->neighborsFuture_;
 	do {
@@ -1494,8 +1473,8 @@ double Node::makeChangeSimpleLinkage3(const double limit, Node* node, const size
 	if (c->neighbor_ != future_) { if (c->neighbor_->past_ != nullptr) { return -1; } } //ERROR 	
 
 	if (Distance(*node) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-	if (node->blinkPast_ != nullptr) { return 0; }           // cRand is already implicated in a blink connection
-	if (c->neighbor_->blinkPast_ != nullptr) { return 0; }               // c is already implicated in a blink connection
+	if (node->blinkPast_ != nullptr) { return 0; }            // cRand is already implicated in a blink connection
+	if (c->neighbor_->blinkPast_ != nullptr) { return 0; }    // c is already implicated in a blink connection
 	if (node->past_ != nullptr) {
 		if (node->past_->Distance(*c->neighbor_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
 	}
@@ -1931,7 +1910,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 			}
 			if (!exitFor) { cRand = cRand->next_; }
 		}
-		if (cRand == nullptr) { return -1.; }                                             //ERROR 
+		if (cRand == nullptr) { return -1.; }                                              //ERROR 
 		if (blinkFuture_->Distance(*cRand->neighbor_) >= params_->maxSpeed_) { return 0; } //cRand not linked to blinkFuture_!
 		if (Distance(*cRand->neighbor_->future_) >= params_->maxSpeed_) { return 0; }      //this is not linked to cRand->neighbor_->future_!
 
@@ -1951,7 +1930,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 		}
 		if (!exitFor) { cRand2 = cRand2->next_; }
 	}
-	if (cRand2 == nullptr) { return -1.; }                                             //ERROR 
+	if (cRand2 == nullptr) { return -1.; }                                              //ERROR 
 	if (blinkFuture_->Distance(*cRand2->neighbor_) >= params_->maxSpeed_) { return 0; } //cRand2 not linked to blinkFuture_!
 	return makeChangeBlinkLinkage5(limit, cRand2->neighbor_);
 }

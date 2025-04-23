@@ -319,7 +319,7 @@ void Tracking::computeConstantes() const
 		size_t nInt = 0, nMean = 0, nDist = 0;
 		double mean = 0, distance = 0, intensity = 0;
 
-		for (size_t t = 0; t < nbTimes_ - 1; ++t) { timeNodes_[t].ComputeConstantSigmas(intensity, nInt, mean, nMean, distance, nDist, false); }
+		for (size_t t = 0; t < nbTimes_ - 1; ++t) { timeNodes_[t].ComputeConstantSigmas(intensity, nInt, mean, nMean, distance, nDist); }
 
 		if (intensity > 1e-8 && nInt > 0) { params_->stdIntensity_ = intensity / static_cast<double>(nInt); } //*1.0275;//3.4352;
 		params_->stdIntensity_ = sqrt(params_->stdIntensity_);

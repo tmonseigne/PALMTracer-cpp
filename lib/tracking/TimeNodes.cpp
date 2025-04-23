@@ -20,12 +20,6 @@ TimeNodes::TimeNodes(const size_t time, const size_t nNodes, Parameters* params)
 }
 
 /********************************************************************************************************************
-Destructuor() of TimeNodes class. 
-Delete all objets Node.
-********************************************************************************************************************/
-TimeNodes::~TimeNodes() { nodes_.clear(); }
-
-/********************************************************************************************************************
 linkBeforeAndAfter() for each structure at the time_ t, it builds the chained list of all the structures of the next 
 time_ (t+1) close to it. 
 ********************************************************************************************************************/
@@ -77,10 +71,9 @@ void TimeNodes::SortByIntensityAllNeighbors()
 void computeConstantSigmas(double &intensity, double &mean,
 	double &distance, long &countStd) compute the constant kMean and kIntensity
 ********************************************************************************************************************/
-void TimeNodes::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance, size_t& nDist,
-                                      const bool clipping, long* hist) const
+void TimeNodes::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance, size_t& nDist) const
 {
-	for (const auto& N : nodes_) { N.ComputeConstantSigmas(intensity, nInt, mean, nMean, distance, nDist, clipping, hist); }
+	for (const auto& N : nodes_) { N.ComputeConstantSigmas(intensity, nInt, mean, nMean, distance, nDist); }
 }
 
 
