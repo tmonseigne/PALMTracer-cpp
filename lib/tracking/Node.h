@@ -55,42 +55,42 @@ private:
 
 	double makeChangeSimpleLinkage(double limit);
 	double makeChangeSimpleLinkage0(double limit) const;
-	double makeChangeSimpleLinkage1(double limit, const ChainNeighbor* cRand);
-	double makeChangeSimpleLinkage2(double limit, const ChainNeighbor* cRand);
-	double makeChangeSimpleLinkage3(double limit, const ChainNeighbor* cRand, size_t count);
-	double makeChangeSimpleLinkage4(double limit, const ChainNeighbor* cRand);
+	double makeChangeSimpleLinkage1(double limit, Node* node);
+	double makeChangeSimpleLinkage2(double limit, Node* node);
+	double makeChangeSimpleLinkage3(double limit, Node* node, size_t count);
+	double makeChangeSimpleLinkage4(double limit, Node* node);
 
 	double makeChangeFusion(double limit);
 	double makeChangeFusion0(double limit);
-	double makeChangeFusion1(double limit, const ChainNeighbor* cRand);
-	double makeChangeFusion2(double limit, const ChainNeighbor* cRand);
+	double makeChangeFusion1(double limit, Node* node);
+	double makeChangeFusion2(double limit, Node* node);
 	double makeChangeFusion3(double limit);
 	double makeChangeFusion4(double limit);
-	double makeChangeFusion5(double limit, const ChainNeighbor* cRand);
-	double makeChangeFusion6(double limit, const ChainNeighbor* cRand) const;
-	double makeChangeFusion7(double limit, const ChainNeighbor* cRand);
-	double makeChangeFusion8(double limit, const ChainNeighbor* cRand);
-	double makeChangeFusion9(double limit, const ChainNeighbor* cRand);
+	double makeChangeFusion5(double limit, Node* node);
+	double makeChangeFusion6(double limit, Node* node) const;
+	double makeChangeFusion7(double limit, Node* node);
+	double makeChangeFusion8(double limit, Node* node);
+	double makeChangeFusion9(double limit, Node* node);
 
 	double makeChangeFission(double limit);
 	double makeChangeFission0(double limit);
-	double makeChangeFission1(double limit, const ChainNeighbor* cRand);
-	double makeChangeFission2(double limit, const ChainNeighbor* cRand);
+	double makeChangeFission1(double limit, Node* node);
+	double makeChangeFission2(double limit, Node* node);
 	double makeChangeFission3(double limit);
 	double makeChangeFission4(double limit);
-	double makeChangeFission5(double limit, const ChainNeighbor* cRand);
-	double makeChangeFission6(double limit, const ChainNeighbor* cRand);
-	double makeChangeFission7(double limit, const ChainNeighbor* cRand);
-	double makeChangeFission8(double limit, const ChainNeighbor* cRand);
-	double makeChangeFission9(double limit, const ChainNeighbor* cRand);
+	double makeChangeFission5(double limit, Node* node);
+	double makeChangeFission6(double limit, Node* node);
+	double makeChangeFission7(double limit, Node* node);
+	double makeChangeFission8(double limit, Node* node);
+	double makeChangeFission9(double limit, Node* node);
 
 	double makeChangeBlinkLinkage(double limit);
 	double makeChangeBlinkLinkage0(double limit);
 	double makeChangeBlinkLinkage1(double limit);
-	double makeChangeBlinkLinkage2(double limit, const ChainNeighbor* cRand);
-	double makeChangeBlinkLinkage3(double limit, const ChainNeighbor* cRand);
-	double makeChangeBlinkLinkage4(double limit, const ChainNeighbor* cRand);
-	double makeChangeBlinkLinkage5(double limit, const ChainNeighbor* cRand);
+	double makeChangeBlinkLinkage2(double limit, Node* node);
+	double makeChangeBlinkLinkage3(double limit, Node* node);
+	double makeChangeBlinkLinkage4(double limit, Node* node);
+	double makeChangeBlinkLinkage5(double limit, Node* node);
 
 	bool metropolis(double deltaE, double temperature) const;
 	double sphericEffect() const;
