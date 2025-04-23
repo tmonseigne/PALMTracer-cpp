@@ -33,7 +33,7 @@ public:
 	Node(size_t time, Parameters* params);
 	~Node();
 
-	double Distance(const Node* node) const { return info_.Distance(node->info_); }
+	double Distance(const Node& node) const { return info_.Distance(node.info_); }
 	double Likeness(const Node* n) const;
 	void ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance,
 	                           size_t& nDist, bool clipping, long* hist) const;
@@ -94,7 +94,7 @@ private:
 
 	bool metropolis(double deltaE, double temperature) const;
 	double sphericEffect() const;
-	static double sphericEffect(const Node* n1, const Node* n2) { return n1->sphericEffect() + n2->sphericEffect(); }
-	double distance(const Node* n1, const Node* n2) const { return info_.Distance(n1->info_, n2->info_); }
+	static double sphericEffect(const Node& n1, const Node& n2) { return n1.sphericEffect() + n2.sphericEffect(); }
+	double distance(const Node& n1, const Node& n2) const { return info_.Distance(n1.info_, n2.info_); }
 	double distanceToBorder() const;
 };
