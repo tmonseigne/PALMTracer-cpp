@@ -43,13 +43,13 @@ Delete all the linkage objets.
 Node::~Node()
 {
 	ChainNeighbor* l;
-	while (neighborsFuture_ != nullptr) {
+	while (neighborsFuture_) {
 		l = neighborsFuture_->next_;
 		delete neighborsFuture_;
 		neighborsFuture_ = l;
 	}
 
-	while (neighborsPast_ != nullptr) {
+	while (neighborsPast_) {
 		l = neighborsPast_->next_;
 		delete neighborsPast_;
 		neighborsPast_ = l;
@@ -72,8 +72,8 @@ void Node::MakeInitializationConnection()
 	Node* nMax = nullptr;
 	double max = -1e10;
 
-	for (const ChainNeighbor* c = neighborsFuture_; c != nullptr; c = c->next_) {
-		if (c->neighbor_->past_ == nullptr) {
+	for (const ChainNeighbor* c = neighborsFuture_; c; c = c->next_) {
+		if (!c->neighbor_->past_) {
 			const double Val = Likeness(c->neighbor_);
 
 			if (Val > max) {
@@ -82,7 +82,7 @@ void Node::MakeInitializationConnection()
 			}
 		}
 	}
-	if (nMax != nullptr) {
+	if (nMax) {
 		nMax->past_ = this;
 		future_ = nMax;
 	}
@@ -94,17 +94,17 @@ intensity.
 ********************************************************************************************************************/
 void Node::SortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 {
-	if (*neighborsHead != nullptr) {
-		if ((*neighborsHead)->next_ != nullptr) {
+	if (*neighborsHead) {
+		if ((*neighborsHead)->next_) {
 			bool change;
 			do {
 				change = false;
 				ChainNeighbor* l = *neighborsHead;
 				ChainNeighbor* lOld = nullptr;
-				while (l->next_ != nullptr) {
+				while (l->next_) {
 					if (l->next_->neighbor_->info_.intensity_ > l->neighbor_->info_.intensity_) {
 						ChainNeighbor* l2 = l->next_;
-						if (lOld == nullptr) { *neighborsHead = l2; }
+						if (!lOld) { *neighborsHead = l2; }
 						else { lOld->next_ = l2; }
 						l->next_ = l2->next_;
 						l2->next_ = l;
@@ -113,7 +113,7 @@ void Node::SortByIntersityNeighbors(ChainNeighbor** neighborsHead)
 					}
 					else {
 						l = l->next_;
-						if (lOld == nullptr) { lOld = *neighborsHead; }
+						if (!lOld) { lOld = *neighborsHead; }
 					}
 				}
 			}
@@ -179,7 +179,7 @@ double Node::likenessDistance(Node* n)
 double Node::likenessDistance(const Node* n) const
 {
 	// attention je rajoute le *3 pour les donn�es d'aqi(autoquant)
-	if (n == nullptr) { return getLikeness(std::min(distanceToBorder(), params_->stdDistance_), params_->stdDistance_); }
+	if (!n) { return getLikeness(std::min(distanceToBorder(), params_->stdDistance_), params_->stdDistance_); }
 	return getLikeness(Distance(*n), params_->stdDistance_);
 }
 
@@ -190,9 +190,7 @@ double Node::likenessDistanceFusion(Node* n1, Node* n2)
 *********************************************************************************************/
 double Node::likenessDistanceFusion(const Node* n1, const Node* n2) const
 {
-	if (n1 == nullptr) { return 0.; }
-	if (n2 == nullptr) { return 0.; }
-
+	if (!n1 || !n2) { return 0.; }
 	return getLikeness(fabs(distance(*n1, *n2) + n1->Distance(*n2) - sphericEffect(*n1, *n2)), params_->stdDistance_);
 }
 
@@ -206,7 +204,7 @@ double Node::likenessMeanIntensity(Node* n)
 *********************************************************************************************/
 double Node::likenessMeanIntensity(const Node* n) const
 {
-	if (n == nullptr) { return getLikeness(info_.mean_, params_->stdMean_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder())); }
+	if (!n) { return getLikeness(info_.mean_, params_->stdMean_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder())); }
 	return getLikeness(info_.mean_ - n->info_.mean_, params_->stdMean_);
 }
 
@@ -218,7 +216,7 @@ double Node::likenessMeanIntensityFusion(Node* n1, Node* n2)
 *********************************************************************************************/
 double Node::likenessMeanIntensityFusion(const Node* n1, const Node* n2) const
 {
-	if (n1 == nullptr || n2 == nullptr) { return 0.; } //Error ???
+	if (!n1 || !n2) { return 0.; } //Error ???
 	return getLikeness(info_.mean_ - (n1->info_.intensity_ + n2->info_.intensity_) / (n1->info_.surf_ + n2->info_.surf_), params_->stdMean_);
 	//if (Parameters::N_DIM == 2) { return getLikeness(info_.mean_ - (n1->info_.intensity_ + n2->info_.intensity_) / (n1->info_.surf_ + n2->info_.surf_), params_->stdMean_);}
 	//else { return getLikeness(info_.mean_ - (n1->info_.intensity_ + n2->info_.intensity_) / (n1->info_.GetVolume() + n2->info_.GetVolume()), params_->stdMean_);}
@@ -233,7 +231,7 @@ double Node::likenessIntensity(Node* n)
 *********************************************************************************************/
 double Node::likenessIntensity(const Node* n) const
 {
-	if (n == nullptr) { return getLikeness(info_.intensity_, params_->stdIntensity_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder())); }
+	if (!n) { return getLikeness(info_.intensity_, params_->stdIntensity_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder())); }
 	return getLikeness(info_.intensity_ - n->info_.intensity_, params_->stdIntensity_);
 }
 
@@ -246,8 +244,7 @@ double Node::likenessIntensityFusion(Node* n1, Node* n2
 *********************************************************************************************/
 double Node::likenessIntensityFusion(const Node* n1, const Node* n2) const
 {
-	if (n1 == nullptr) { return 0.; } //inutil
-	if (n2 == nullptr) { return 0.; } //inutil
+	if (!n1 || !n2) { return 0.; } //inutil
 	return getLikeness(info_.intensity_ - n1->info_.intensity_ - n2->info_.intensity_, params_->stdIntensity_);
 }
 
@@ -259,7 +256,7 @@ double Node::likeness(Node* n)
 double Node::Likeness(const Node* n) const
 {
 	// the /2 is because the sum of the likeness of 2 unconnected nodes has to be compared to the likeness of the connection between those two nodes.
-	if (n == nullptr) {
+	if (!n) {
 		return (WEIGHT_DISTANCE * likenessDistance(n) + WEIGHT_INTENSITY * likenessIntensity(n)
 		        + WEIGHT_MEAN_INTENSITY * likenessMeanIntensity(n)) / 2. - params_->costBirthDeath_;
 	}
@@ -274,7 +271,7 @@ double Node::likeness(Node* n)
 double Node::likenessBlink(const Node* n) const
 {
 	constexpr double Alpha = 0.7;
-	return Likeness(n) * Alpha + (Likeness(nullptr) + n->Likeness(nullptr)) * (1. - Alpha / 2.);
+	return Likeness(n) * Alpha + (Likeness() + n->Likeness()) * (1. - Alpha / 2.);
 }
 
 /*********************************************************************************************
@@ -284,8 +281,8 @@ double Node::likenessFusion(Node* n1, Node* n2)
 *********************************************************************************************/
 double Node::likenessFusion(const Node* n1, const Node* n2) const
 {
-	if (n1 == nullptr) { return Likeness(n2); }
-	if (n2 == nullptr) { return Likeness(n1); }
+	if (!n1) { return Likeness(n2); }
+	if (!n2) { return Likeness(n1); }
 	return (WEIGHT_DISTANCE * likenessDistanceFusion(n1, n2) + WEIGHT_INTENSITY * likenessIntensityFusion(n1, n2)
 	        + WEIGHT_MEAN_INTENSITY * likenessMeanIntensityFusion(n1, n2) + MIN_ENERGY_FUSION) * 3. / 2.;
 	// the *3/2 is because the sum of the likeness of 1 unconnected node and 2 linked nodes has to be compared to the likeness of the fusion connection between those 3 nodes.
@@ -302,7 +299,7 @@ void Node::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, 
 	const Node* nMax = nullptr;
 	double likenessMax = -1e10;
 
-	for (const ChainNeighbor* c = neighborsFuture_; c != nullptr; c = c->next_) {
+	for (const ChainNeighbor* c = neighborsFuture_; c; c = c->next_) {
 		const double LikenessVal = Likeness(c->neighbor_);
 		if (LikenessVal > likenessMax) {
 			likenessMax = LikenessVal;
@@ -311,7 +308,7 @@ void Node::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, 
 	}
 
 
-	if (nMax != nullptr) {
+	if (nMax) {
 		intensity += (info_.intensity_ - nMax->info_.intensity_) * (info_.intensity_ - nMax->info_.intensity_);
 		mean += (info_.mean_ - nMax->info_.mean_) * (info_.mean_ - nMax->info_.mean_);
 		distance += Distance(*nMax) * Distance(*nMax);
@@ -330,7 +327,7 @@ double Node::MakeChange(const double limit)
 	//strucutre dissociation
 
 	if (params_->allowFusionAndFission_) {
-		if (future_ != nullptr) {
+		if (future_) {
 			switch (params_->RandomModulo(4)) {
 				case 0: return makeChangeFusion(limit);
 				case 1: return makeChangeFission(limit);
@@ -338,16 +335,16 @@ double Node::MakeChange(const double limit)
 			}
 		}
 
-		if constexpr (Parameters::N_TEMPORAL_WINDOWS > 1 && blinkFuture_ != nullptr) { return makeChangeBlinkLinkage(limit); }
-		if (fission1Future_ != nullptr) { return makeChangeFission(limit); }
-		if (fusionFuture_ != nullptr) { return makeChangeFusion(limit); }
+		if constexpr (Parameters::N_TEMPORAL_WINDOWS > 1 && blinkFuture_) { return makeChangeBlinkLinkage(limit); }
+		if (fission1Future_) { return makeChangeFission(limit); }
+		if (fusionFuture_) { return makeChangeFusion(limit); }
 		if constexpr (Parameters::N_TEMPORAL_WINDOWS > 1 && params_->RandomModulo(2) == 0) { return makeChangeBlinkLinkage(limit); }
 
 		return makeChangeSimpleLinkage(limit);
 	}
 
-	if (future_ != nullptr) { return makeChangeSimpleLinkage(limit); }
-	if (blinkFuture_ != nullptr) { return makeChangeBlinkLinkage(limit); }
+	if (future_) { return makeChangeSimpleLinkage(limit); }
+	if (blinkFuture_) { return makeChangeBlinkLinkage(limit); }
 	if constexpr (Parameters::N_TEMPORAL_WINDOWS > 2 && params_->RandomModulo(2) == 0) { return makeChangeBlinkLinkage(limit); }
 
 	return makeChangeSimpleLinkage(limit);
@@ -357,9 +354,9 @@ double Node::MakeChange(const double limit)
 double Node::makeChangeFission(const double limit)
 {
 	//is the node already makes a Fission with another structure
-	if (future_ == nullptr && fission1Future_ == nullptr) { return 0.; } //nothing connected in the future!
-	if (blinkFuture_ != nullptr) { return 0.; }                          // crand is already implicated in a future blink.
-	if (fusionFuture_ != nullptr) { return 0.; }                         //already implicated in a Fusion
+	if (!future_ && !fission1Future_) { return 0.; } //nothing connected in the future!
+	if (blinkFuture_) { return 0.; }                 // crand is already implicated in a future blink.
+	if (fusionFuture_) { return 0.; }                //already implicated in a Fusion
 
 	//no fission in old configuration
 	//try to find 2 structures to make fission:
@@ -370,7 +367,7 @@ double Node::makeChangeFission(const double limit)
 	//1(this)-------2
 	//        \-----3(cRand)
 	//4-------------NULL
-	if (fission1Future_ == nullptr) { return makeChangeFission0(limit); }
+	if (!fission1Future_) { return makeChangeFission0(limit); }
 
 	//there is a fission in old configuration
 	//Try to break or change the fission:
@@ -437,10 +434,10 @@ double Node::makeChangeFission(const double limit)
 	const ChainNeighbor* cRand = getRandomNeighbor(fission2Future_->neighborsPast_, fission2Future_->neighborsPastCount_);
 	//test if the node is good
 
-	if (cRand->neighbor_ == this) { return 0; }                   // nothing to do, the new random link is the same as this.
-	if (cRand->neighbor_->blinkFuture_ != nullptr) { return 0.; } // crand is already implicated in a future blink.
+	if (cRand->neighbor_ == this) { return 0; }        // nothing to do, the new random link is the same as this.
+	if (cRand->neighbor_->blinkFuture_) { return 0.; } // crand is already implicated in a future blink.
 
-	if (cRand->neighbor_->future_ != nullptr) {
+	if (cRand->neighbor_->future_) {
 		switch (params_->RandomModulo(7)) {
 			case 0: return makeChangeFissionReassignBoth(limit, cRand->neighbor_, fission1Future_);
 			case 1: return makeChangeFissionSwapFuture(limit, cRand->neighbor_, fission2Future_);
@@ -462,7 +459,7 @@ double Node::makeChangeFissionSymmetric(const double limit, Node* keep)
 	// Old makeChangeFission3 & makeChangeFission4
 	Node* tmp = (keep == fission1Future_) ? fission2Future_ : fission1Future_;
 
-	const double DeltaE = Likeness(keep) + tmp->Likeness(nullptr) - likenessFusion(fission1Future_, fission2Future_);
+	const double DeltaE = Likeness(keep) + tmp->Likeness() - likenessFusion(fission1Future_, fission2Future_);
 	if (!metropolis(DeltaE, limit)) { return 0.; }
 
 	future_ = keep;
@@ -479,7 +476,7 @@ double Node::makeChangeFissionReassignBoth(const double limit, Node* node, Node*
 {
 	// Old makeChangeFission5 & makeChangeFission8
 	Node* give = (keep == fission1Future_) ? fission2Future_ : fission1Future_;
-	if (node->Distance(*give) >= params_->maxSpeed_ || node->blinkFuture_ != nullptr) { return 0.; }
+	if (node->Distance(*give) >= params_->maxSpeed_ || node->blinkFuture_) { return 0.; }
 
 	const double DeltaE = Likeness(keep) + node->likenessFusion(give, node->future_)
 	                      - likenessFusion(fission1Future_, fission2Future_) - node->Likeness(node->future_);
@@ -507,8 +504,8 @@ double Node::makeChangeFissionReassignBoth(const double limit, Node* node, Node*
 double Node::makeChangeFissionSwapFuture(const double limit, Node* node, Node* swap)
 {
 	// Old makeChangeFission6 & makeChangeFission7
-	if (node->blinkFuture_ != nullptr ||
-	    (node->future_ != nullptr && Distance(*node->future_) >= params_->maxSpeed_) ||
+	if (node->blinkFuture_ ||
+	    (node->future_ && Distance(*node->future_) >= params_->maxSpeed_) ||
 	    node->Distance(*swap) >= params_->maxSpeed_) { return 0.; }
 
 	const double DeltaE = likenessFusion(swap, node->future_)
@@ -565,7 +562,7 @@ double Node::makeChangeFissionTransferToNode(const double limit, Node* node, con
 		const Node* keep = (type == TransferType::KeepFirst ? f1 : f2);
 		const Node* give = (type == TransferType::KeepFirst ? f2 : f1);
 		DeltaE = Likeness(keep) + node->Likeness(give)
-		         + (node->future_ ? node->future_->Likeness(nullptr) : 0.)
+		         + (node->future_ ? node->future_->Likeness() : 0.)
 		         - likenessFusion(f1, f2) - node->Likeness(node->future_);
 	}
 
@@ -613,34 +610,35 @@ double Node::makeChangeFission0(const double limit)
 	//        \-----3(cRand)
 	//4-------------NULL
 
-	if (blinkFuture_ != nullptr) { return -1; }   //ERROR
+	if (blinkFuture_) { return -1; }              //ERROR
 	if (neighborsFutureCount_ < 2) { return 0.; } //no neighbors like 3
 
 	//set the node cRand
 	const ChainNeighbor* cRand = getRandomNeighbor(neighborsFuture_, neighborsFutureCount_);
 	//test if the node is good
-	if (cRand == nullptr) { return -1.; }                         //ERROR 
-	if (cRand->neighbor_ == future_) { return 0.; }               // nothing to do, the new random link is the same as future_.
-	if (cRand->neighbor_->fusion1Past_ != nullptr) { return 0.; } // crand is already implicated in a fusion.
-	if (cRand->neighbor_->fissionPast_ != nullptr) { return 0.; } // crand is already implicated in a fission.
-	if (cRand->neighbor_->blinkPast_ != nullptr) { return 0.; }   // crand is already implicated in a past blink.
+	if (!cRand) { return -1.; }                        //ERROR
+	Node* n = cRand->neighbor_;
+	if (n == future_) { return 0.; }    // nothing to do, the new random link is the same as future_.
+	if (n->fusion1Past_) { return 0.; } // crand is already implicated in a fusion.
+	if (n->fissionPast_) { return 0.; } // crand is already implicated in a fission.
+	if (n->blinkPast_) { return 0.; }   // crand is already implicated in a past blink.
 
-	if (Distance(*cRand->neighbor_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
+	if (Distance(*n) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
 
-	const double DeltaE = likenessFusion(cRand->neighbor_, future_)
-	                      + (cRand->neighbor_->past_ == nullptr ? 0. : cRand->neighbor_->past_->Likeness(nullptr))
-	                      - Likeness(future_) - cRand->neighbor_->Likeness(cRand->neighbor_->past_);
+	const double DeltaE = likenessFusion(n, future_)
+	                      + (!n->past_ ? 0. : n->past_->Likeness())
+	                      - Likeness(future_) - n->Likeness(n->past_);
 	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness < limit // if the new solution is too bad
 	// change the configuration
 	fission1Future_ = future_;
-	fission2Future_ = cRand->neighbor_;
+	fission2Future_ = n;
 	future_->fissionPast_ = this;
-	cRand->neighbor_->fissionPast_ = this;
+	n->fissionPast_ = this;
 	future_->past_ = nullptr;
 	future_ = nullptr;
 
-	if (cRand->neighbor_->past_ != nullptr) { cRand->neighbor_->past_->future_ = nullptr; }
-	cRand->neighbor_->past_ = nullptr;
+	if (n->past_) { n->past_->future_ = nullptr; }
+	n->past_ = nullptr;
 
 	return DeltaE;
 }
@@ -650,8 +648,8 @@ double Node::makeChangeFission0(const double limit)
 double Node::makeChangeFusion(const double limit)
 {
 	//is the node already making a Fusion with another structure
-	if (future_ == nullptr && fusionFuture_ == nullptr) { return 0.; } //nothing connected in the future!
-	if (fission1Future_ != nullptr) { return 0.; }                     //already implicated in a Fission
+	if (!future_ && !fusionFuture_) { return 0.; } //nothing connected in the future!
+	if (fission1Future_) { return 0.; }                                //already implicated in a Fission
 	//no fusion in old configuration
 	//try to find 2 structures to make fusion:
 	//From
@@ -661,7 +659,7 @@ double Node::makeChangeFusion(const double limit)
 	//1-------------2
 	//3-------/
 	//NULL----------4(cRand)
-	if (fusionFuture_ == nullptr) { return makeChangeFusionCreate(limit); }
+	if (!fusionFuture_) { return makeChangeFusionCreate(limit); }
 	//there is a fusion in old configuration
 	//Try to break the fusion:
 	//From
@@ -715,43 +713,43 @@ double Node::makeChangeFusion(const double limit)
 
 	//just unlink the fusion
 	switch (params_->RandomModulo(8)) {
-	case 0: return makeChangeFusionSymmetric(limit, fusionFuture_->fusion1Past_);
-	case 1: return makeChangeFusionSymmetric(limit, fusionFuture_->fusion2Past_);
-	default:;
+		case 0: return makeChangeFusionSymmetric(limit, fusionFuture_->fusion1Past_);
+		case 1: return makeChangeFusionSymmetric(limit, fusionFuture_->fusion2Past_);
+		default: ;
 	}
 
 
 	//get the cRand
 	if (neighborsFutureCount_ < 2) { //no neighbors like "4", no cRand
 		switch (params_->RandomModulo(2)) {
-		case 0: return makeChangeFusionSymmetric(limit, fusionFuture_->fusion1Past_);
-		case 1: return makeChangeFusionSymmetric(limit, fusionFuture_->fusion2Past_);
-		default:;
+			case 0: return makeChangeFusionSymmetric(limit, fusionFuture_->fusion1Past_);
+			case 1: return makeChangeFusionSymmetric(limit, fusionFuture_->fusion2Past_);
+			default: ;
 		}
 	}
 
 	const ChainNeighbor* cRand = getRandomNeighbor(neighborsFuture_, neighborsFutureCount_);
 	//test if the node is good
-	if (cRand == nullptr) { return -1.; } //ERROR
+	if (!cRand) { return -1.; } //ERROR
 	Node* n = cRand->neighbor_;
 
-	if (n->fissionPast_ != nullptr) { return makeChangeFusionTransferFull(limit, n); }
-	if (n->blinkPast_ != nullptr) { return 0; } // cRand is already implicated in a blink connection
+	if (n->fissionPast_) { return makeChangeFusionTransferFull(limit, n); }
+	if (n->blinkPast_) { return 0; } // cRand is already implicated in a blink connection
 
-	if (n->past_ != nullptr) {
+	if (n->past_) {
 		switch (params_->RandomModulo(7)) {
-		case 0: return makeChangeFusionReassignBoth(limit, n, fusionFuture_->fusion1Past_);
-		case 1:
-		case 2: return makeChangeFusionSwapFuture(limit, n, fusionFuture_->fusion2Past_);
-		case 3: return makeChangeFusionSwapFuture(limit, n, fusionFuture_->fusion1Past_);
-		case 4: return makeChangeFusionReassignBoth(limit, n, fusionFuture_->fusion2Past_);
-		default:;
+			case 0: return makeChangeFusionReassignBoth(limit, n, fusionFuture_->fusion1Past_);
+			case 1:
+			case 2: return makeChangeFusionSwapFuture(limit, n, fusionFuture_->fusion2Past_);
+			case 3: return makeChangeFusionSwapFuture(limit, n, fusionFuture_->fusion1Past_);
+			case 4: return makeChangeFusionReassignBoth(limit, n, fusionFuture_->fusion2Past_);
+			default: ;
 		}
 	}
 
 	switch (params_->RandomModulo(2)) {
-	case 0: return makeChangeFusionTransferToNode(limit, n, TransferType::KeepFirst);
-	default: return makeChangeFusionTransferToNode(limit, n, TransferType::KeepSecond);
+		case 0: return makeChangeFusionTransferToNode(limit, n, TransferType::KeepFirst);
+		default: return makeChangeFusionTransferToNode(limit, n, TransferType::KeepSecond);
 	}
 }
 
@@ -774,12 +772,12 @@ double Node::makeChangeFusionCreate(const double limit)
 	if (!cRand) { return -1.; } //ERROR
 	Node* n = cRand->neighbor_;
 	// n is the same or already implicated in a fission/fusion/blink.
-	if (n == this || n->fission1Future_ != nullptr || n->fusionFuture_ != nullptr || n->blinkFuture_ != nullptr) { return 0; }
+	if (n == this || n->fission1Future_ || n->fusionFuture_ || n->blinkFuture_) { return 0; }
 
 	if (future_->Distance(*n) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
 
 	const double DeltaE = future_->likenessFusion(n, this)
-	                      + (n->future_ != nullptr ? n->future_->Likeness(nullptr) : 0.)
+	                      + (n->future_ ? n->future_->Likeness() : 0.)
 	                      - Likeness(future_) - n->Likeness(n->future_);
 
 	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
@@ -791,7 +789,7 @@ double Node::makeChangeFusionCreate(const double limit)
 	n->fusionFuture_ = future_;
 	future_->fusion2Past_ = n;
 
-	if (n->future_ != nullptr) { n->future_->past_ = nullptr; }
+	if (n->future_) { n->future_->past_ = nullptr; }
 
 	n->future_ = nullptr;
 	future_ = nullptr;
@@ -804,7 +802,7 @@ double Node::makeChangeFusionSymmetric(const double limit, const Node* keep)
 {
 	// Old makeChangeFusion3 & makeChangeFusion4
 	Node* tmp = (keep == fusionFuture_->fusion1Past_) ? fusionFuture_->fusion2Past_ : fusionFuture_->fusion1Past_;
-	const double DeltaE = Likeness(keep) + tmp->Likeness(nullptr) - fusionFuture_->likenessFusion(tmp, this);
+	const double DeltaE = Likeness(keep) + tmp->Likeness() - fusionFuture_->likenessFusion(tmp, this);
 	if (!metropolis(DeltaE, limit)) { return 0.; }
 
 	fusionFuture_->past_ = (keep == this) ? this : tmp;
@@ -876,7 +874,7 @@ double Node::makeChangeFusionTransferToNode(const double limit, Node* node, cons
 	if (node->Distance(*give) >= params_->maxSpeed_) { return 0.; }
 
 	const double DeltaE = Likeness(keep) + node->Likeness(give)
-	                      + (node->past_ ? node->past_->Likeness(nullptr) : 0.)
+	                      + (node->past_ ? node->past_->Likeness() : 0.)
 	                      - fusionFuture_->likenessFusion(f1, f2) - node->Likeness(node->past_);
 	if (!metropolis(DeltaE, limit)) { return 0.; }
 
@@ -927,6 +925,89 @@ double Node::makeChangeFusionTransferFull(const double limit, Node* node)
 }
 
 //==================== Linkage ====================
+double Node::makeChangeSimpleLinkage(const double limit)
+{
+	if (!future_ || params_->RandomModulo(2) == 0) {
+		if (neighborsFutureCount_ == 0) { return 0.; } //no neighbors
+		//cRand is a random node in the vicinity of "this" in the future.
+		const ChainNeighbor* cRand = getRandomNeighbor(neighborsFuture_, neighborsFutureCount_);
+		//test if the node is good
+		if (!cRand) { return -1.; } //ERROR
+		Node* target = cRand->neighbor_;
+		// the new random link is the same as future_.
+		if (target == future_) { return makeChangeSimpleLinkage0(limit); } //try simple deconnection
+		// target already implicated in a fission / fusion / blink connection
+		if (target->fissionPast_ || target->fusion1Past_ || target->blinkPast_) { return 0; }
+
+		//is there a conflict between this and the pastConnextion of target?
+		if (!target->past_) { //no conflict target can be linked with this.
+			//	From
+			//	Present		Future
+			//	1(this)-----2
+			//	NULL--------3(cRand)
+			//	To
+			//	Present		Future
+			//	1(this)-----3(cRand)
+			//	NULL--------2
+
+			return makeChangeSimpleLinkage1(limit, target);
+		}
+		//there is a conflict, the node target is already connected to a node at the same time_ than this
+		if (params_->RandomModulo(2) && future_) { //just flip the 2 nodes
+			//	From
+			//	Present		Future
+			//	1(this)-----2
+			//	4-----------3(cRand)
+			//	To
+			//	Present		Future
+			//	1-----------3(cRand)
+			//	4-----------2
+			return makeChangeSimpleLinkage4(limit, target);
+		}
+		//find a new node to be connected
+		// try to find a free node to connect the past_ of the conflict node.
+		//count the number of free node
+		//	From
+		//	Present		Future
+		//	1(this)-----2
+		//	4-----------3(cRand)
+		int count = 0;
+		for (const ChainNeighbor* c = target->past_->neighborsFuture_; c; c = c->next_) {
+			if (!c->neighbor_->fusion1Past_ && !c->neighbor_->fissionPast_) {
+				if (!c->neighbor_->past_) { count++; }
+				else { if (c->neighbor_ == future_) { count++; } }
+			}
+		}
+		if (count == 0) { //no node available to relink the conflicted node
+			// try to break the link
+			//	From
+			//	Present		Future
+			//	1(this)-----2
+			//	4-----------3(cRand)
+			//	To
+			//	Present		Future
+			//	1-----------3(cRand)
+			//	NULL--------2
+			//	4-----------NULL
+			return makeChangeSimpleLinkage2(limit, target);
+		}
+		//there is several available nodes to relink the conflicted node
+		//	From
+		//	Present		Future
+		//	1-----------2
+		//	4-----------3(cRand)
+		//	NULL--------5(c)
+
+		//	To
+		//	Present		Future
+		//	1-----------3(cRand)
+		//	4-----------5(c)
+		//	NULL--------2
+		return makeChangeSimpleLinkage3(limit, target, count);
+	}
+	return makeChangeSimpleLinkage0(limit);
+}
+
 double Node::makeChangeSimpleLinkage0(const double limit) const
 { //simple deconnection
 
@@ -938,7 +1019,7 @@ double Node::makeChangeSimpleLinkage0(const double limit) const
 	//1(this)-----NULL
 	//NULL--------2(future_)
 
-	const double DeltaE = Likeness(nullptr) + future_->Likeness(nullptr) - Likeness(future_);
+	const double DeltaE = Likeness() + future_->Likeness() - Likeness(future_);
 	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
 	return 0.;
 }
@@ -955,17 +1036,17 @@ double Node::makeChangeSimpleLinkage1(const double limit, Node* node)
 	//	1(this)-----3(cRand)
 	//	NULL--------2
 
-	if (node->blinkPast_ != nullptr) { return 0; } // cRand is already implicated in a blink connection
+	if (node->blinkPast_) { return 0; } // cRand is already implicated in a blink connection
 
 	if (Distance(*node) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
 
 
-	const double DeltaE = Likeness(node) + (future_ != nullptr ? future_->Likeness(nullptr) : 0)
-	                      - node->Likeness(nullptr) - Likeness(future_);
+	const double DeltaE = Likeness(node) + (future_ ? future_->Likeness() : 0)
+	                      - node->Likeness() - Likeness(future_);
 	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
 	// change the configuration
 	//unlink future_
-	if (future_ != nullptr) { future_->past_ = nullptr; }
+	if (future_) { future_->past_ = nullptr; }
 	future_ = node;
 	future_->past_ = this;
 
@@ -988,15 +1069,15 @@ double Node::makeChangeSimpleLinkage2(const double limit, Node* node)
 
 	if (Distance(*node) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
 
-	const double DeltaE = Likeness(node) + (future_ == nullptr ? 0 : future_->Likeness(nullptr))
-	                      + (node->past_ == nullptr ? 0 : node->past_->Likeness(nullptr))
+	const double DeltaE = Likeness(node) + (!future_ ? 0 : future_->Likeness())
+	                      + (!node->past_ ? 0 : node->past_->Likeness())
 	                      - Likeness(future_) - node->Likeness(node->past_);
 	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
 	// change the configuration
 	//unlink future_
 
 
-	if (future_ != nullptr) { future_->past_ = nullptr; }
+	if (future_) { future_->past_ = nullptr; }
 	future_ = node;
 	future_->past_->future_ = nullptr;
 	future_->past_ = this;
@@ -1035,24 +1116,24 @@ double Node::makeChangeSimpleLinkage3(const double limit, Node* node, const size
 	//	NULL--------2
 	if (c == nullptr) { return -1; } //ERROR 
 
-	if (c->neighbor_->fusion1Past_ != nullptr) { return -1; }                           //ERROR 
-	if (c->neighbor_->fissionPast_ != nullptr) { return -1; }                           //ERROR 
-	if (c->neighbor_ != future_) { if (c->neighbor_->past_ != nullptr) { return -1; } } //ERROR 	
+	if (c->neighbor_->fusion1Past_) { return -1; }                           //ERROR 
+	if (c->neighbor_->fissionPast_) { return -1; }                           //ERROR 
+	if (c->neighbor_ != future_) { if (c->neighbor_->past_) { return -1; } } //ERROR 	
 
 	if (Distance(*node) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-	if (node->blinkPast_ != nullptr) { return 0; }            // cRand is already implicated in a blink connection
-	if (c->neighbor_->blinkPast_ != nullptr) { return 0; }    // c is already implicated in a blink connection
-	if (node->past_ != nullptr) {
+	if (node->blinkPast_) { return 0; }                       // cRand is already implicated in a blink connection
+	if (c->neighbor_->blinkPast_) { return 0; }               // c is already implicated in a blink connection
+	if (node->past_) {
 		if (node->past_->Distance(*c->neighbor_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
 	}
 
-	const double DeltaE = Likeness(node) + node->past_->Likeness(c->neighbor_) + (future_ == nullptr ? 0 : future_->Likeness(nullptr))
-	                      - Likeness(future_) - node->Likeness(node->past_) - c->neighbor_->Likeness(nullptr);
+	const double DeltaE = Likeness(node) + node->past_->Likeness(c->neighbor_) + (!future_ ? 0 : future_->Likeness())
+	                      - Likeness(future_) - node->Likeness(node->past_) - c->neighbor_->Likeness();
 	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
 	// change the configuration
 	//unlink future_
 
-	if (future_ != nullptr) {
+	if (future_) {
 		future_->past_ = nullptr; //????
 	}
 	future_ = node;
@@ -1076,7 +1157,7 @@ double Node::makeChangeSimpleLinkage4(const double limit, Node* node)
 	//	4-----------2
 
 
-	if (node->past_ != nullptr) {
+	if (node->past_) {
 		if (node->past_->Distance(*future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
 	}
 	if (Distance(*node) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
@@ -1113,7 +1194,7 @@ double Node::makeChangeBlinkLinkage0(const double limit)
 	size_t nbNodeAtGoodTime = 0;
 	ChainNeighbor* cRand;
 
-	for (cRand = neighborsBlinkFuture_; cRand != nullptr; cRand = cRand->next_) {
+	for (cRand = neighborsBlinkFuture_; cRand; cRand = cRand->next_) {
 		if (cRand->neighbor_->time_ - time_ == Dt && cRand->neighbor_->past_ == nullptr && cRand->neighbor_->blinkPast_ == nullptr && cRand->neighbor_->
 		    fissionPast_
 		    == nullptr && cRand->neighbor_->fusion1Past_ == nullptr) { nbNodeAtGoodTime++; }
@@ -1123,7 +1204,7 @@ double Node::makeChangeBlinkLinkage0(const double limit)
 	const size_t IdRandNeighbor = params_->RandomModulo(nbNodeAtGoodTime);
 	size_t i = 0;
 	bool exitFor = false;
-	for (cRand = neighborsBlinkFuture_; !exitFor && cRand != nullptr;) {
+	for (cRand = neighborsBlinkFuture_; !exitFor && cRand;) {
 		if (cRand->neighbor_->time_ - time_ == Dt && cRand->neighbor_->past_ == nullptr && cRand->neighbor_->blinkPast_ == nullptr && cRand->neighbor_->
 		    fissionPast_
 		    == nullptr && cRand->neighbor_->fusion1Past_ == nullptr) {
@@ -1134,9 +1215,9 @@ double Node::makeChangeBlinkLinkage0(const double limit)
 	}
 
 
-	if (cRand == nullptr) { return -1.; } //ERROR 
+	if (!cRand) { return -1.; } //ERROR 
 
-	const double DeltaE = likenessBlink(cRand->neighbor_) - cRand->neighbor_->Likeness(nullptr) - Likeness(nullptr);
+	const double DeltaE = likenessBlink(cRand->neighbor_) - cRand->neighbor_->Likeness() - Likeness();
 	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
 	// change the configuration
 	cRand->neighbor_->blinkPast_ = this;
@@ -1156,7 +1237,7 @@ double Node::makeChangeBlinkLinkage1(const double limit)
 	//	t			t+1		t+2
 	//	1(this)-------------NULL
 	//	NULL----------------2
-	const double DeltaE = blinkFuture_->Likeness(nullptr) + Likeness(nullptr) - likenessBlink(blinkFuture_);
+	const double DeltaE = blinkFuture_->Likeness() + Likeness() - likenessBlink(blinkFuture_);
 	if (!metropolis(DeltaE, limit)) { return 0.; } // deltaLikeness<limit // if the new solution is too bad
 	// change the configuration
 
@@ -1253,7 +1334,7 @@ double Node::makeChangeBlinkLinkage4(const double limit, Node* node)
 	//	1(this)---3(cRand2)----...
 	//  makeChangeBlinkLinkage4
 
-	const double DeltaE = Likeness(node) + blinkFuture_->Likeness(nullptr) - likenessBlink(blinkFuture_) - node->Likeness(nullptr);
+	const double DeltaE = Likeness(node) + blinkFuture_->Likeness() - likenessBlink(blinkFuture_) - node->Likeness();
 	if (!metropolis(DeltaE, limit)) { return 0.; } // deltaLikeness<limit // if the new solution is too bad
 	// change the configuration
 	blinkFuture_->blinkPast_ = nullptr;
@@ -1283,7 +1364,7 @@ double Node::makeChangeBlinkLinkage5(const double limit, Node* node)
 	//  makeChangeBlinkLinkage5
 
 
-	const double DeltaE = Likeness(nullptr) + node->Likeness(blinkFuture_) - likenessBlink(blinkFuture_) - node->Likeness(nullptr);
+	const double DeltaE = Likeness() + node->Likeness(blinkFuture_) - likenessBlink(blinkFuture_) - node->Likeness();
 	if (!metropolis(DeltaE, limit)) { return 0.; } // deltaLikeness<limit // if the new solution is too bad
 	// change the configuration
 
@@ -1403,9 +1484,9 @@ double Node::makeChangeBlinkLinkage(const double limit)
 		size_t nbNodeAtGoodTime = 0, nbNodeAtGoodTime2 = 0, idRandNeighbor;
 		ChainNeighbor* cRand;
 
-		for (cRand = neighborsFuture_; cRand != nullptr; cRand = cRand->next_) {
+		for (cRand = neighborsFuture_; cRand; cRand = cRand->next_) {
 			if (cRand->neighbor_->time_ - time_ == 1) {
-				if (cRand->neighbor_->past_ != nullptr) { nbNodeAtGoodTime++; }
+				if (cRand->neighbor_->past_) { nbNodeAtGoodTime++; }
 				else {
 					if (cRand->neighbor_->fusion1Past_ == nullptr && cRand->neighbor_->fissionPast_ == nullptr && cRand->neighbor_->blinkPast_ == nullptr) {
 						nbNodeAtGoodTime2++;
@@ -1419,14 +1500,14 @@ double Node::makeChangeBlinkLinkage(const double limit)
 			idRandNeighbor = params_->RandomModulo(nbNodeAtGoodTime);
 			i = 0;
 			bool exitFor = false;
-			for (cRand = neighborsFuture_; !exitFor && cRand != nullptr;) {
-				if (cRand->neighbor_->time_ - time_ == 1 && cRand->neighbor_->past_ != nullptr) {
+			for (cRand = neighborsFuture_; !exitFor && cRand;) {
+				if (cRand->neighbor_->time_ - time_ == 1 && cRand->neighbor_->past_) {
 					if (i == idRandNeighbor) { exitFor = true; }
 					i++;
 				}
 				if (!exitFor) { cRand = cRand->next_; }
 			}
-			if (cRand == nullptr) { return -1.; } //ERROR 
+			if (!cRand) { return -1.; } //ERROR 
 
 			if (Distance(*cRand->neighbor_) >= params_->maxSpeed_) { return 0; } //cRand not linked to this!
 			if (blinkFuture_->Distance(*cRand->neighbor_->past_) >= params_->maxSpeed_) { return 0; }
@@ -1437,7 +1518,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 		idRandNeighbor = params_->RandomModulo(nbNodeAtGoodTime2);
 		i = 0;
 		bool exitFor = false;
-		for (cRand2 = neighborsFuture_; !exitFor && cRand2 != nullptr;) {
+		for (cRand2 = neighborsFuture_; !exitFor && cRand2;) {
 			if (cRand2->neighbor_->time_ - time_ == 1 && cRand2->neighbor_->past_ == nullptr && cRand2->neighbor_->fusion1Past_ == nullptr && cRand2->
 			    neighbor_->fissionPast_ == nullptr && cRand2->neighbor_->blinkPast_ == nullptr) {
 				if (i == idRandNeighbor) { exitFor = true; }
@@ -1455,9 +1536,9 @@ double Node::makeChangeBlinkLinkage(const double limit)
 	size_t nbNodeAtGoodTime = 0, nbNodeAtGoodTime2 = 0, idRandNeighbor;
 	ChainNeighbor* cRand;
 
-	for (cRand = blinkFuture_->neighborsPast_; cRand != nullptr; cRand = cRand->next_) {
+	for (cRand = blinkFuture_->neighborsPast_; cRand; cRand = cRand->next_) {
 		if (blinkFuture_->time_ - cRand->neighbor_->time_ == 1) {
-			if (cRand->neighbor_->future_ != nullptr) { nbNodeAtGoodTime++; }
+			if (cRand->neighbor_->future_) { nbNodeAtGoodTime++; }
 			else {
 				if (cRand->neighbor_->fission1Future_ == nullptr && cRand->neighbor_->fusionFuture_ == nullptr && cRand->neighbor_->blinkFuture_ ==
 				    nullptr) { nbNodeAtGoodTime2++; }
@@ -1470,14 +1551,14 @@ double Node::makeChangeBlinkLinkage(const double limit)
 		idRandNeighbor = params_->RandomModulo(nbNodeAtGoodTime);
 		i = 0;
 		bool exitFor = false;
-		for (cRand = blinkFuture_->neighborsPast_; !exitFor && cRand != nullptr;) {
-			if (blinkFuture_->time_ - cRand->neighbor_->time_ == 1 && cRand->neighbor_->future_ != nullptr) {
+		for (cRand = blinkFuture_->neighborsPast_; !exitFor && cRand;) {
+			if (blinkFuture_->time_ - cRand->neighbor_->time_ == 1 && cRand->neighbor_->future_) {
 				if (i == idRandNeighbor) { exitFor = true; }
 				i++;
 			}
 			if (!exitFor) { cRand = cRand->next_; }
 		}
-		if (cRand == nullptr) { return -1.; }                                              //ERROR 
+		if (!cRand) { return -1.; }                                              //ERROR 
 		if (blinkFuture_->Distance(*cRand->neighbor_) >= params_->maxSpeed_) { return 0; } //cRand not linked to blinkFuture_!
 		if (Distance(*cRand->neighbor_->future_) >= params_->maxSpeed_) { return 0; }      //this is not linked to cRand->neighbor_->future_!
 
@@ -1488,7 +1569,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 	idRandNeighbor = params_->RandomModulo(nbNodeAtGoodTime2);
 	i = 0;
 	bool exitFor = false;
-	for (cRand2 = blinkFuture_->neighborsPast_; !exitFor && cRand2 != nullptr;) {
+	for (cRand2 = blinkFuture_->neighborsPast_; !exitFor && cRand2;) {
 		if (blinkFuture_->time_ - cRand2->neighbor_->time_ == 1 && cRand2->neighbor_->future_ == nullptr && cRand2->neighbor_->fission1Future_ ==
 		    nullptr
 		    && cRand2->neighbor_->fusionFuture_ == nullptr && cRand2->neighbor_->blinkFuture_ == nullptr) {
@@ -1500,94 +1581,4 @@ double Node::makeChangeBlinkLinkage(const double limit)
 	if (cRand2 == nullptr) { return -1.; }                                              //ERROR 
 	if (blinkFuture_->Distance(*cRand2->neighbor_) >= params_->maxSpeed_) { return 0; } //cRand2 not linked to blinkFuture_!
 	return makeChangeBlinkLinkage5(limit, cRand2->neighbor_);
-}
-
-double Node::makeChangeSimpleLinkage(const double limit)
-{
-	if (future_ == nullptr || params_->RandomModulo(2) == 0) {
-		//cRand is a random node in the vicinity of "this" in the future.
-
-		//compute index of cRand
-		if (neighborsFutureCount_ == 0) { return 0.; } //no neighbors
-		//set the node cRand
-		const ChainNeighbor* cRand = getRandomNeighbor(neighborsFuture_, neighborsFutureCount_);
-		//test if the node is good
-		if (cRand == nullptr) { return -1.; } //ERROR 
-		// the new random link is the same as future_.
-		if (cRand->neighbor_ == future_) { return makeChangeSimpleLinkage0(limit); } //try simple deconnection
-
-
-		if (cRand->neighbor_->fissionPast_ != nullptr) { return 0; } // cRand already implicated in a fission
-		if (cRand->neighbor_->fusion1Past_ != nullptr) { return 0; } // cRand already implicated in a fusion
-		if (cRand->neighbor_->blinkPast_ != nullptr) { return 0; }   // cRand is already implicated in a blink connection
-
-
-		//is there a conflict between this and the pastConnextion of cRand->neighbor_?
-		if (cRand->neighbor_->past_ == nullptr) { //no conflict cRand->neighbor_ can be linked with this.
-			//	From
-			//	Present		Future
-			//	1(this)-----2
-			//	NULL--------3(cRand)
-
-			//	To
-			//	Present		Future
-			//	1(this)-----3(cRand)
-			//	NULL--------2
-
-			return makeChangeSimpleLinkage1(limit, cRand->neighbor_);
-		}
-		//there is a conflict, the node cRand->neighbor_ is already connected to a node at the same time_ than this
-		if (params_->RandomModulo(2) && future_ != nullptr) { //just flip the 2 nodes
-			//	From
-			//	Present		Future
-			//	1(this)-----2
-			//	4-----------3(cRand)
-			//	To
-			//	Present		Future
-			//	1-----------3(cRand)
-			//	4-----------2
-			return makeChangeSimpleLinkage4(limit, cRand->neighbor_);
-		}
-		//find a new node to be connected
-		// try to find a free node to connect the past_ of the conflict node.
-		//count the number of free node
-		//	From
-		//	Present		Future
-		//	1(this)-----2
-		//	4-----------3(cRand)
-		int count = 0;
-		for (const ChainNeighbor* c = cRand->neighbor_->past_->neighborsFuture_; c != nullptr; c = c->next_) {
-			if (c->neighbor_->fusion1Past_ == nullptr && c->neighbor_->fissionPast_ == nullptr) {
-				if (c->neighbor_->past_ == nullptr) { count++; }
-				else { if (c->neighbor_ == future_) { count++; } }
-			}
-		}
-		if (count == 0) { //no node available to relink the conflicted node
-			// try to break the link
-			//	From
-			//	Present		Future
-			//	1(this)-----2
-			//	4-----------3(cRand)
-			//	To
-			//	Present		Future
-			//	1-----------3(cRand)
-			//	NULL--------2
-			//	4-----------NULL
-			return makeChangeSimpleLinkage2(limit, cRand->neighbor_);
-		}
-		//there is several available nodes to relink the conflicted node
-		//	From
-		//	Present		Future
-		//	1-----------2
-		//	4-----------3(cRand)
-		//	NULL--------5(c)
-
-		//	To
-		//	Present		Future
-		//	1-----------3(cRand)
-		//	4-----------5(c)
-		//	NULL--------2
-		return makeChangeSimpleLinkage3(limit, cRand->neighbor_, count);
-	}
-	return makeChangeSimpleLinkage0(limit);
 }

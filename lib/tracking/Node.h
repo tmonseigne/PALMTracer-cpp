@@ -40,7 +40,7 @@ public:
 	~Node();
 
 	double Distance(const Node& node) const { return info_.Distance(node.info_); }
-	double Likeness(const Node* n) const;
+	double Likeness(const Node* n = nullptr) const;
 	void ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance, size_t& nDist) const;
 
 	void MakeInitializationConnection();
