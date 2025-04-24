@@ -11,13 +11,11 @@ links to the current objet.
 #include "Node.h"
 
 #include <algorithm>
-#include <iostream>
 #include <numbers>
 
 constexpr double WEIGHT_DISTANCE = 0.6;
 constexpr double WEIGHT_INTENSITY = 0.2;
 constexpr double WEIGHT_MEAN_INTENSITY = 0.2;
-constexpr double MIN_ENERGY_FUSION = 0;
 
 //=================================================================
 //==================== Constructor, Destructor ====================
@@ -28,11 +26,8 @@ The current objets is at the time "time".
 ********************************************************************************************************************/
 Node::Node(const size_t time, Parameters* params)
 	: x_(0), y_(0), z_(0), intensity_(0), mean_(0), surf_(0), color_(0), molId_(0),
-	  params_(params), time_(time),
-	  future_(nullptr), past_(nullptr),
-	  fission1Future_(nullptr), fission2Future_(nullptr), fissionPast_(nullptr),
-	  fusion1Past_(nullptr), fusion2Past_(nullptr), fusionFuture_(nullptr),
-	  trackedIndex_(0), colorIndex_{} { }
+	  params_(params), time_(time), future_(nullptr), past_(nullptr), trackedIndex_(0), colorIndex_{},
+	  distanceToBorder_(0), likeness_(0), likenessDistance_(0), likenessIntensity_(0), likenessMean_(0) { }
 
 /********************************************************************************************************************
 Destructuor() of Node class.
@@ -224,8 +219,6 @@ double Node::makeChangeSimpleLinkage(const double limit)
 		Node* target = getRandomNeighbor(1);
 		// the new random link is the same as future_,try simple deconnection
 		if (target == future_) { return simpleLinkageDisconnection(limit); }
-		// target already implicated in a fission / fusion / blink connection
-		if (!isBlinkLinkageAvailable(target)) { return 0; }
 
 		//is there a conflict between this and the pastConnextion of target?
 		//no conflict target can be linked with this.
@@ -290,8 +283,7 @@ double Node::makeChangeSimpleLinkage(const double limit)
 	return simpleLinkageDisconnection(limit);
 }
 
-bool Node::isSimpleLinkageAvailable(const Node* node) const { return !node->fusion1Past_ && !node->fissionPast_ && (!node->past_ || node == future_); }
-bool Node::isBlinkLinkageAvailable(const Node* node) { return !node->fusion1Past_ && !node->fissionPast_; }
+bool Node::isSimpleLinkageAvailable(const Node* node) const { return (!node->past_ || node == future_); }
 
 double Node::simpleLinkageDisconnection(const double limit) const
 {

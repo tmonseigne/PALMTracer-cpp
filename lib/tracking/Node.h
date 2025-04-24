@@ -18,8 +18,6 @@ public:
 
 	size_t time_;
 	Node *future_, *past_;
-	Node *fission1Future_, *fission2Future_, *fissionPast_;
-	Node *fusion1Past_, *fusion2Past_, *fusionFuture_;
 	size_t trackedIndex_;
 	size_t colorIndex_[2];
 
@@ -58,7 +56,6 @@ private:
 	//==================== Linkage ====================
 	double makeChangeSimpleLinkage(double limit);
 	bool isSimpleLinkageAvailable(const Node* node) const;
-	static bool isBlinkLinkageAvailable(const Node* node);
 	double simpleLinkageDisconnection(double limit) const;
 	double simpleLinkageReassignment(double limit, Node* node);
 	double simpleLinkageBreakAndReconnect(double limit, Node* node);

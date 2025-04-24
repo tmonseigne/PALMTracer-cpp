@@ -159,93 +159,21 @@ void setColorToTrackedStructures() set a color index to each tracked structures
 ********************************************************************************************************************/
 void Tracking::setColorToTrackedStructures()
 {
-	Node *nodePastFission, *nodePastFission2;
 	int idx = 1;
 	for (auto& T : timeNodes_) {
 		for (auto& node : T.nodes_) {
 			if (node.trackedIndex_ != 0) {
 				if (!node.past_) {
-					if (node.fusion1Past_) {
-						if (node.Likeness(node.fusion1Past_) > node.Likeness(node.fusion2Past_)) {
-							node.colorIndex_[0] = node.fusion1Past_->colorIndex_[0];
-							node.colorIndex_[1] = node.fusion2Past_->colorIndex_[0];
-						}
-						else {
-							node.colorIndex_[0] = node.fusion2Past_->colorIndex_[0];
-							node.colorIndex_[1] = node.fusion1Past_->colorIndex_[0];
-						}
-					}
-					else { //node.fusion1Past_==NULL
-						if (node.fissionPast_) {
-							Node* node2 = &node == node.fissionPast_->fission1Future_
-								              ? node.fissionPast_->fission2Future_
-								              : node.fissionPast_->fission1Future_;
-
-							nodePastFission2 = node.fissionPast_;
-							for (nodePastFission = node.fissionPast_; nodePastFission; nodePastFission = nodePastFission->past_) {
-								nodePastFission2 = nodePastFission;
-							}
-							if (nodePastFission2->fusion1Past_) {
-								const Node* nodePastFission3 = nodePastFission2->fusion1Past_;
-								const Node* nodePastFission4 = nodePastFission2->fusion2Past_;
-								if (node.Likeness(nodePastFission3) + node2->Likeness(nodePastFission4) > node2->Likeness(nodePastFission3) + node.
-								    Likeness(nodePastFission4)) {
-									node.colorIndex_[0] = nodePastFission3->colorIndex_[0];
-									node.colorIndex_[1] = nodePastFission3->colorIndex_[0];
-									node2->colorIndex_[0] = nodePastFission4->colorIndex_[0];
-									node2->colorIndex_[1] = nodePastFission4->colorIndex_[0];
-								}
-								else {
-									node2->colorIndex_[0] = nodePastFission3->colorIndex_[0];
-									node2->colorIndex_[1] = nodePastFission3->colorIndex_[0];
-									node.colorIndex_[0] = nodePastFission4->colorIndex_[0];
-									node.colorIndex_[1] = nodePastFission4->colorIndex_[0];
-								}
-							}
-							else {
-								if (node.fissionPast_->Likeness(&node) > node.fissionPast_->Likeness(node2)) {
-									node.colorIndex_[0] = node.fissionPast_->colorIndex_[0];
-									node.colorIndex_[1] = node.fissionPast_->colorIndex_[0];
-								}
-								else {
-									node.colorIndex_[0] = node.fissionPast_->colorIndex_[1];
-									node.colorIndex_[1] = node.fissionPast_->colorIndex_[1];
-								}
-							}
-						}
-						else { //node.fissionPast_==NULL  and node.fusion1Past_==NULL
-							if (node.fission1Future_) {
-								node.colorIndex_[0] = idx;
-								idx++;
-								node.colorIndex_[1] = idx;
-								idx++;
-							}
-							else {
-								node.colorIndex_[0] = idx;
-								node.colorIndex_[1] = idx;
-								idx++;
-							}
-						}
-					}
+					node.colorIndex_[0] = idx;
+					node.colorIndex_[1] = idx;
+					idx++;
 				}
 				else { //node.past_!=NULL
 					node.colorIndex_[0] = node.past_->colorIndex_[0];
 					node.colorIndex_[1] = node.past_->colorIndex_[0];
 				}
-				if (node.fission1Future_) {
-					nodePastFission2 = &node;
-					for (nodePastFission = &node; nodePastFission; nodePastFission = nodePastFission->past_) { nodePastFission2 = nodePastFission; }
-					if (nodePastFission2->fusion1Past_) {
-						node.colorIndex_[0] = nodePastFission2->fusion1Past_->colorIndex_[0];
-						node.colorIndex_[1] = nodePastFission2->fusion2Past_->colorIndex_[0];
-					}
-					else {
-						node.colorIndex_[1] = idx;
-						idx++;
-					}
-				}
 			}
-			else { //node.trackedIndex_==0
+			else {
 				node.colorIndex_[0] = 0;
 				node.colorIndex_[1] = 0;
 			}
@@ -256,19 +184,12 @@ void Tracking::setColorToTrackedStructures()
 void Tracking::setIndexToTrackedStructures()
 {
 	size_t idx = 1, nNodes;
-	Node *node, *oldNode;
+	Node* node;
 	for (auto& T : timeNodes_) {
 		for (size_t i = 0; i < T.nNodes_; ++i) {
 			if (!T.nodes_[i].past_) {
-				for (node = &T.nodes_[i], oldNode = nullptr, nNodes = 0; node && nNodes < minLife_; node = node->future_, ++nNodes) {
-					oldNode = node;
-					node->trackedIndex_ = 0;
-				}
-				bool change = false;
-				if (nNodes >= minLife_ || T.nodes_[i].fissionPast_ || T.nodes_[i].fusion1Past_) { change = true; }
-				if (oldNode && (oldNode->fission1Future_ || oldNode->fusionFuture_)) { change = true; }
-
-				if (change) {
+				for (node = &T.nodes_[i], nNodes = 0; node && nNodes < minLife_; node = node->future_, ++nNodes) { node->trackedIndex_ = 0; }
+				if (nNodes >= minLife_) {
 					T.nodes_[i].trackedIndex_ = idx;
 					idx++;
 				}
@@ -305,7 +226,7 @@ void Tracking::computeConstants()
 		if (distance > 1e-8 && nDist > 0) { params_->stdDistance_ = distance / static_cast<double>(nDist); } //*1.0275;//3.4352;
 		params_->stdDistance_ = sqrt(params_->stdDistance_);
 	}
-	params_->stdDistance_ /= 3; //attention au /3 c'est juste pour augmenter l'influence de la distance
+	params_->stdDistance_ /= 3; //attention au / 3 c'est juste pour augmenter l'influence de la distance
 	for (auto& t : timeNodes_) { for (auto& n : t.nodes_) { n.UpdateConstants(); } }
 }
 
