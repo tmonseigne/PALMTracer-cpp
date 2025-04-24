@@ -75,14 +75,3 @@ void TimeNodes::ComputeConstantSigmas(double& intensity, size_t& nInt, double& m
 {
 	for (const auto& N : nodes_) { N.ComputeConstantSigmas(intensity, nInt, mean, nMean, distance, nDist); }
 }
-
-/********************************************************************************************************************
-tryRandomChange() take a random node at this time_ and try to apply a change
-It returns the gain in likeness computed with this change
-********************************************************************************************************************/
-double TimeNodes::TryRandomChange(const double limit)
-{
-	if (nNodes_ < 1) { return 0.; } //<=
-	if (nNodes_ == 1) { return nodes_[0].MakeChange(limit); }
-	return nodes_[params_->RandomModulo(nNodes_)].MakeChange(limit);
-}

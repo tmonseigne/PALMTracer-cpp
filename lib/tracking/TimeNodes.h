@@ -27,5 +27,5 @@ public:
 
 	void ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance, size_t& nDist) const;
 	void MakeAllInitializationConnections() { for (auto& node : nodes_) { node.MakeInitializationConnection(); } }
-	double TryRandomChange(double limit);
+	double TryRandomChange(const double limit) { return nNodes_ == 0 ? 0 : nodes_[params_->RandomModulo(nNodes_)].MakeChange(limit); }
 };
