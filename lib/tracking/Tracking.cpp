@@ -10,21 +10,40 @@ Class Tracking contains several Tracking objets for each time (nbTimes).
 
 #include "Tracking.h"
 #include <algorithm>
+#include <chrono>
+#include <ctime>
+#include <iomanip>
+#include <iostream>
+
+void logTime(const std::string& message)
+{
+	const auto now = std::chrono::system_clock::now();
+	const std::time_t t_c = std::chrono::system_clock::to_time_t(now);
+	std::tm local_tm = *std::localtime(&t_c);
+
+	std::cout << "[" << std::put_time(&local_tm, "%H:%M:%S") << "] " << message << std::endl;
+}
+
 
 void Tracking::Processing()
 {
+	logTime("Processing Start");
+	logTime("readPointsList Start");
 	// Initialisation
 	readPointsList();
+	logTime("linkNeighborsBeforeAndAfter Start");
 	linkNeighborsBeforeAndAfter();
+	logTime("sortByIntensityAllNeighbors Start");
 	sortByIntensityAllNeighbors();
+	logTime("linkNeighborsBlinkBeforeAndAfter Start");
 	if constexpr (Parameters::N_TEMPORAL_WINDOWS > 1) { linkNeighborsBlinkBeforeAndAfter(); }
 
 	// Process
 	double error;
-	constexpr size_t MaxStep = 5;
 
-	for (size_t step = 0; step < MaxStep; ++step) {
-		if (step == MaxStep - 1) { error = 20; }
+	for (size_t step = 0; step < Parameters::N_STEPS; ++step) {
+		logTime("Loop Step : " + std::to_string(step));
+		if (step == Parameters::N_STEPS - 1) { error = 20; }
 		else { error = 0; }
 		long cpt = 0;
 
@@ -37,7 +56,7 @@ void Tracking::Processing()
 		int nbInt = 0;
 		int bcl = 0;
 		do {
-			if (step == MaxStep - 1) { error *= 1. - decrease_; }
+			if (step == Parameters::N_STEPS - 1) { error *= 1. - decrease_; }
 
 			nbInt++;
 
@@ -55,8 +74,11 @@ void Tracking::Processing()
 	}
 
 	// Result
+	logTime("setIndexToTrackedStructures Start");
 	setIndexToTrackedStructures();
+	logTime("setColorToTrackedStructures Start");
 	setColorToTrackedStructures();
+	logTime("printConnectionsASCII_trc Start");
 	printConnectionsASCII_trc();
 }
 
@@ -75,7 +97,7 @@ void Tracking::printConnectionsASCII_trc()
 	size_t idx = 0;
 	for (const auto& T : timeNodes_) {
 		for (const auto& N : T.nodes_) {
-			if (N.past_ == nullptr && N.trackedIndex_ > 0) {
+			if (!N.past_ && N.trackedIndex_ > 0) {
 				for (const Node* node = &N; node; node = node->future_) {
 					tracks_[idx++] = static_cast<double>(N.trackedIndex_);
 					tracks_[idx++] = static_cast<double>(node->time_ + 1);
@@ -175,8 +197,8 @@ void Tracking::setColorToTrackedStructures()
 	for (auto& T : timeNodes_) {
 		for (auto& node : T.nodes_) {
 			if (node.trackedIndex_ != 0) {
-				if (node.past_ == nullptr) {
-					if (node.blinkPast_ == nullptr) {
+				if (!node.past_) {
+					if (!node.blinkPast_) {
 						if (node.fusion1Past_) {
 							if (node.Likeness(node.fusion1Past_) > node.Likeness(node.fusion2Past_)) {
 								node.colorIndex_[0] = node.fusion1Past_->colorIndex_[0];
@@ -276,7 +298,7 @@ void Tracking::setIndexToTrackedStructures()
 	Node *node, *oldNode;
 	for (auto& T : timeNodes_) {
 		for (size_t i = 0; i < T.nNodes_; ++i) {
-			if (T.nodes_[i].past_ == nullptr) {
+			if (!T.nodes_[i].past_) {
 				for (node = &T.nodes_[i], oldNode = nullptr, nNodes = 0; node && nNodes < minLife_; node = node->future_, ++nNodes) {
 					oldNode = node;
 					node->trackedIndex_ = 0;
