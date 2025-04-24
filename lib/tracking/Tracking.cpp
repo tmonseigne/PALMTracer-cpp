@@ -11,23 +11,9 @@ Class Tracking contains several Tracking objets for each time (nbTimes).
 #include "Tracking.h"
 #include <algorithm>
 #include <chrono>
-#include <ctime>
-#include <iomanip>
-#include <iostream>
-
-void logTime(const std::string& message)
-{
-	const auto now = std::chrono::system_clock::now();
-	const std::time_t t_c = std::chrono::system_clock::to_time_t(now);
-	std::tm local_tm = *std::localtime(&t_c);
-
-	std::cout << "[" << std::put_time(&local_tm, "%H:%M:%S") << "] " << message << std::endl;
-}
-
 
 void Tracking::Processing()
 {
-	logTime("Processing Start");
 	// Initialisation
 	readPointsList();
 	linkNeighborsBeforeAndAfter();
@@ -37,7 +23,6 @@ void Tracking::Processing()
 	double error;
 
 	for (size_t step = 0; step < Parameters::N_STEPS; ++step) {
-		logTime("Loop Step : " + std::to_string(step));
 		if (step == Parameters::N_STEPS - 1) { error = 20; }
 		else { error = 0; }
 		long cpt = 0;
