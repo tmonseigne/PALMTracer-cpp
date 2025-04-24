@@ -69,12 +69,12 @@ class Info3D
 public:
 	Info3D(const int index)
 	{
-		data.index = index;
-		next = nullptr;
+		data_.index = index;
+		next_ = nullptr;
 	}
 
 	~Info3D() = default;
-	Info3D* next;
+	Info3D* next_;
 
-	info_3d data;
+	info_3d data_;
 };

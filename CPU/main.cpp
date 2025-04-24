@@ -9,7 +9,7 @@ Palm* c;
 
 
 _declspec(dllexport)
-void _stdcall _OpenPALMProcessing(unsigned short* image, double* pointsList, const unsigned long pointsListSize,
+void _stdcall _OpenPALMProcessing(const unsigned short* image, double* pointsList, const unsigned long pointsListSize,
                                   const unsigned long sizeX, const unsigned long sizeY, const unsigned long waveletNo,
                                   const double thresholdVal, const double watershedRatio, const double volMin,
                                   const double intMin, const unsigned short gaussFit, const double sigmaX, const double sigmaY,
@@ -26,7 +26,7 @@ _declspec(dllexport)
 void _stdcall _closePALMProcessing() { delete c; }
 
 _declspec(dllexport)
-long _stdcall Process(unsigned short* image, double* pointsList, const unsigned long pointsListSize,
+long _stdcall Process(const unsigned short* image, double* pointsList, const unsigned long pointsListSize,
                       const unsigned long sizeX, const unsigned long sizeY, const unsigned long waveletNo,
                       const double thresholdVal, const double watershedRatio, const double volMin, const double intMin, const unsigned short gaussFit,
                       const double sigmaX, const double sigmaY, const double angle, const unsigned short roi)

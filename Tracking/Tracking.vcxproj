@@ -66,7 +66,7 @@
     </ClCompile>
     <Link>
       <OutputFile>../PALM\Tracking_PALM.dll</OutputFile>
-      <ModuleDefinitionFile>.\Tracking.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>.\Tracking_PALM.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
@@ -93,7 +93,7 @@
     <Link>
       <OutputFile>../PALM\Tracking_PALM.dll</OutputFile>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ModuleDefinitionFile>.\Tracking.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>.\Tracking_PALM.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -103,48 +103,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\lib\Constants.hpp" />
-    <ClInclude Include="..\lib\palm\Info2D.h" />
-    <ClInclude Include="..\lib\palm\Info3D.h" />
-    <ClInclude Include="..\lib\tools\allDataLib.h" />
-    <ClInclude Include="..\lib\tools\arrayType.h" />
-    <ClInclude Include="..\lib\tools\FltArray.h" />
-    <ClInclude Include="..\lib\tools\USrtArray.h" />
-    <ClInclude Include="..\lib\tracking\chain_neighbor.h" />
-    <ClInclude Include="..\lib\tracking\closerNeighbors\nodes_closer_neighbors.h" />
-    <ClInclude Include="..\lib\tracking\closerNeighbors\tab_times_closer_neighbors.h" />
-    <ClInclude Include="..\lib\tracking\closerNeighbors\time_nodes_closer_neighbors.h" />
-    <ClInclude Include="..\lib\tracking\general.h" />
-    <ClInclude Include="..\lib\tracking\info_node.h" />
-    <ClInclude Include="..\lib\tracking\likenessDistInten\nodes_dist_Inten.h" />
-    <ClInclude Include="..\lib\tracking\likenessDistInten\tab_times_dist_Inten.h" />
-    <ClInclude Include="..\lib\tracking\likenessDistInten\time_nodes_dist_Inten.h" />
-    <ClInclude Include="..\lib\tracking\nodes.h" />
-    <ClInclude Include="..\lib\tracking\tab_times.h" />
-    <ClInclude Include="..\lib\tracking\time_nodes.h" />
-    <ClInclude Include="..\lib\tracking\tracking.h" />
-    <ClInclude Include="Tracking.h" />
+    <ClInclude Include="..\lib\tracking\Parameters.h" />
+    <ClInclude Include="..\lib\tracking\Node.h" />
+    <ClInclude Include="..\lib\tracking\Tracking.h" />
+    <ClInclude Include="..\lib\tracking\TimeNodes.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\lib\tools\arrayType.cpp" />
-    <ClCompile Include="..\lib\tools\FltArray.cpp" />
-    <ClCompile Include="..\lib\tools\operators.cpp" />
-    <ClCompile Include="..\lib\tools\USrtArray.cpp" />
-    <ClCompile Include="..\lib\tracking\chain_neighbor.cpp" />
-    <ClCompile Include="..\lib\tracking\closerNeighbors\nodes_closer_neighbors.cpp" />
-    <ClCompile Include="..\lib\tracking\closerNeighbors\tab_times_closer_neighbors.cpp" />
-    <ClCompile Include="..\lib\tracking\closerNeighbors\time_nodes_closer_neighbors.cpp" />
-    <ClCompile Include="..\lib\tracking\info_node.cpp" />
-    <ClCompile Include="..\lib\tracking\likenessDistInten\nodes_dist_Inten.cpp" />
-    <ClCompile Include="..\lib\tracking\likenessDistInten\tab_times_dist_Inten.cpp" />
-    <ClCompile Include="..\lib\tracking\likenessDistInten\time_nodes_dist_Inten.cpp" />
-    <ClCompile Include="..\lib\tracking\nodes.cpp" />
-    <ClCompile Include="..\lib\tracking\tab_times.cpp" />
-    <ClCompile Include="..\lib\tracking\time_nodes.cpp" />
-    <ClCompile Include="Tracking.cpp" />
+    <ClCompile Include="..\lib\tracking\Node.cpp" />
+    <ClCompile Include="..\lib\tracking\Tracking.cpp" />
+    <ClCompile Include="..\lib\tracking\TimeNodes.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Tracking.def" />
+    <None Include="Tracking_PALM.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

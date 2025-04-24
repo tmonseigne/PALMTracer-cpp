@@ -10,7 +10,7 @@
 #include "fit/GaussianFit3D.h"
 #include "fit/GaussianFit3D_Theta.h"
 
-Palm::Palm(unsigned short* image, double* points, const size_t pointsListSize, const size_t height, const size_t width,
+Palm::Palm(const unsigned short* image, double* points, const size_t pointsListSize, const size_t height, const size_t width,
            const size_t waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin,
            const size_t gaussFit, const double sigmaX, const double sigmaY, const double theta, const size_t roi)
 	: image_(image), points_(points), height_(height), width_(width), size_(static_cast<size_t>(height) * width),

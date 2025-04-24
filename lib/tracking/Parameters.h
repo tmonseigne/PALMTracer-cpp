@@ -1,0 +1,29 @@
+#pragma once
+#include <random>
+
+class Parameters
+{
+public:
+	Parameters() = default;
+	~Parameters() = default;
+
+	// Static
+	static constexpr double DIST_MAX = 20;
+	static constexpr size_t N_STEPS = 5;
+	static constexpr size_t N_ITERATIONS = 300;
+	static constexpr size_t N_SEG_PARAMS = 13;
+	static constexpr size_t MODEL = 2; //the number of the used model
+
+	// Params
+	double maxSpeed_;
+	double costBirthDeath_;
+
+	// Computes
+	double stdIntensity_, stdMean_, stdDistance_, covMeanIntensity_;
+	double maxX_, maxY_, maxZ_;
+
+	size_t RandomModulo(const size_t n) { return rng_() % n; }
+	double Randomfloat() { return static_cast<double>(rng_()) / static_cast<double>(std::mt19937::max()); }
+
+	std::mt19937 rng_{42}; // Générateur de nombres pseudo-aléatoires, seedé avec 42
+};

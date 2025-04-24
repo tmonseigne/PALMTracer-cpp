@@ -10,7 +10,7 @@ constexpr size_t N_PLANES = 9;
 class Palm
 {
 public:
-	Palm(unsigned short* image, double* points, size_t pointsListSize, size_t height, size_t width,
+	Palm(const unsigned short* image, double* points, size_t pointsListSize, size_t height, size_t width,
 	     size_t waveletNo, double thresholdVal, double watershedRatio, double volMin, double intMin, size_t gaussFit, double sigmaX,
 	     double sigmaY, double theta, size_t roi);
 	~Palm() = default;
@@ -18,7 +18,7 @@ public:
 	int Processing();
 
 private:
-	unsigned short* image_;
+	const unsigned short* image_;
 	double* points_;
 	size_t height_, width_, size_, nPointsMaxPerPlane_, waveletNo_, currentPoint_, roi_;
 	double thresholdVal_, volMin_, intMin_, watershedRatio_;

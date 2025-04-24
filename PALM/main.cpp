@@ -29,7 +29,7 @@ class splitstring : public string
 	vector<string> flds;
 
 public:
-	splitstring(char* s) : string(s) { };
+	splitstring(const char* s) : string(s) { }
 	vector<string>& split(char delim, int rep = 0);
 };
 
@@ -57,10 +57,10 @@ vector<string>& splitstring::split(const char delim, const int rep)
 	return flds;
 }
 
-double evalFunction(const double x, const int nbPoints, vec x_sp, double* a, double* b, double* c, double* d)
+double evalFunction(const double x, const int nbPoints, vec x_sp, const double* a, const double* b, const double* c, const double* d)
 {
 	double y = -1.0;
-	for (int i = 0; i < nbPoints - 1; i++) { if (x < x_sp(i + 1) && x >= x_sp(i)) { y = a[i] * pow(x - x_sp(i), 3) + b[i] * pow(x - x_sp(i), 2) + c[i] * (x - x_sp(i)) + d[i]; } }
+	for (int i = 0; i < nbPoints - 1; ++i) { if (x < x_sp(i + 1) && x >= x_sp(i)) { y = a[i] * pow(x - x_sp(i), 3) + b[i] * pow(x - x_sp(i), 2) + c[i] * (x - x_sp(i)) + d[i]; } }
 
 	return y;
 }
@@ -181,7 +181,7 @@ int main()
 	vec M = vec(nbPoints - 2, fill::zeros);
 	vec B = vec(nbPoints - 2, fill::zeros);
 
-	for (int i = 0; i < nbPoints - 2; i++) {
+	for (int i = 0; i < nbPoints - 2; ++i) {
 		B(i) = (y_sp(i) - 2 * y_sp(i + 1) + y_sp(i + 2)) * 6 / (h * h);
 		A(i, i) = 4;
 
@@ -200,9 +200,9 @@ int main()
 
 	m[0] = 0.0;
 	m[nbPoints - 1] = 0.0;
-	for (int i = 1; i < nbPoints - 1; i++) { m[i] = M(i - 1); }
+	for (int i = 1; i < nbPoints - 1; ++i) { m[i] = M(i - 1); }
 
-	for (int i = 0; i < nbPoints - 1; i++) {
+	for (int i = 0; i < nbPoints - 1; ++i) {
 		a[i] = (m[i + 1] - m[i]) / (6 * h);
 		b[i] = m[i] / 2;
 		c[i] = (y_sp(i + 1) - y_sp(i)) / h - (m[i + 1] + 2 * m[i]) / 6 * h;
