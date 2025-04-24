@@ -28,10 +28,8 @@ void TimeNodes::LinkNeighborsBeforeAndAfter(TimeNodes& futures)
 	for (auto& present : nodes_) {
 		for (auto& future : futures.nodes_) {
 			if (present.Distance(future) < params_->maxSpeed_) {
-				present.neighborsFuture_ = new ChainNeighbor(&future, present.neighborsFuture_);
-				present.neighborsFutureCount_++;
-				future.neighborsPast_ = new ChainNeighbor(&present, future.neighborsPast_);
-				future.neighborsPastCount_++;
+				present.neighbors_[1].emplace_back(&future);
+				future.neighbors_[0].emplace_back(&present);
 			}
 		}
 	}
@@ -43,8 +41,7 @@ sortByIntensityAllNeighbors() Sort by intersity all the neighbors of each node.
 void TimeNodes::SortByIntensityAllNeighbors()
 {
 	for (auto& n : nodes_) {
-		Node::SortByIntersityNeighbors(&n.neighborsPast_);
-		Node::SortByIntersityNeighbors(&n.neighborsFuture_);
+		for (auto& neightbors : n.neighbors_) { std::ranges::sort(neightbors, [](const Node* a, const Node* b) { return a->intensity_ > b->intensity_; }); }
 	}
 }
 

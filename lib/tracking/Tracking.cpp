@@ -180,65 +180,65 @@ void Tracking::setColorToTrackedStructures()
 		for (auto& node : T.nodes_) {
 			if (node.trackedIndex_ != 0) {
 				if (!node.past_) {
-						if (node.fusion1Past_) {
-							if (node.Likeness(node.fusion1Past_) > node.Likeness(node.fusion2Past_)) {
-								node.colorIndex_[0] = node.fusion1Past_->colorIndex_[0];
-								node.colorIndex_[1] = node.fusion2Past_->colorIndex_[0];
+					if (node.fusion1Past_) {
+						if (node.Likeness(node.fusion1Past_) > node.Likeness(node.fusion2Past_)) {
+							node.colorIndex_[0] = node.fusion1Past_->colorIndex_[0];
+							node.colorIndex_[1] = node.fusion2Past_->colorIndex_[0];
+						}
+						else {
+							node.colorIndex_[0] = node.fusion2Past_->colorIndex_[0];
+							node.colorIndex_[1] = node.fusion1Past_->colorIndex_[0];
+						}
+					}
+					else { //node.fusion1Past_==NULL
+						if (node.fissionPast_) {
+							Node* node2 = &node == node.fissionPast_->fission1Future_
+								              ? node.fissionPast_->fission2Future_
+								              : node.fissionPast_->fission1Future_;
+
+							nodePastFission2 = node.fissionPast_;
+							for (nodePastFission = node.fissionPast_; nodePastFission; nodePastFission = nodePastFission->past_) {
+								nodePastFission2 = nodePastFission;
+							}
+							if (nodePastFission2->fusion1Past_) {
+								const Node* nodePastFission3 = nodePastFission2->fusion1Past_;
+								const Node* nodePastFission4 = nodePastFission2->fusion2Past_;
+								if (node.Likeness(nodePastFission3) + node2->Likeness(nodePastFission4) > node2->Likeness(nodePastFission3) + node.
+								    Likeness(nodePastFission4)) {
+									node.colorIndex_[0] = nodePastFission3->colorIndex_[0];
+									node.colorIndex_[1] = nodePastFission3->colorIndex_[0];
+									node2->colorIndex_[0] = nodePastFission4->colorIndex_[0];
+									node2->colorIndex_[1] = nodePastFission4->colorIndex_[0];
+								}
+								else {
+									node2->colorIndex_[0] = nodePastFission3->colorIndex_[0];
+									node2->colorIndex_[1] = nodePastFission3->colorIndex_[0];
+									node.colorIndex_[0] = nodePastFission4->colorIndex_[0];
+									node.colorIndex_[1] = nodePastFission4->colorIndex_[0];
+								}
 							}
 							else {
-								node.colorIndex_[0] = node.fusion2Past_->colorIndex_[0];
-								node.colorIndex_[1] = node.fusion1Past_->colorIndex_[0];
+								if (node.fissionPast_->Likeness(&node) > node.fissionPast_->Likeness(node2)) {
+									node.colorIndex_[0] = node.fissionPast_->colorIndex_[0];
+									node.colorIndex_[1] = node.fissionPast_->colorIndex_[0];
+								}
+								else {
+									node.colorIndex_[0] = node.fissionPast_->colorIndex_[1];
+									node.colorIndex_[1] = node.fissionPast_->colorIndex_[1];
+								}
 							}
 						}
-						else { //node.fusion1Past_==NULL
-							if (node.fissionPast_) {
-								Node* node2 = &node == node.fissionPast_->fission1Future_
-									              ? node.fissionPast_->fission2Future_
-									              : node.fissionPast_->fission1Future_;
-
-								nodePastFission2 = node.fissionPast_;
-								for (nodePastFission = node.fissionPast_; nodePastFission; nodePastFission = nodePastFission->past_) {
-									nodePastFission2 = nodePastFission;
-								}
-								if (nodePastFission2->fusion1Past_) {
-									const Node* nodePastFission3 = nodePastFission2->fusion1Past_;
-									const Node* nodePastFission4 = nodePastFission2->fusion2Past_;
-									if (node.Likeness(nodePastFission3) + node2->Likeness(nodePastFission4) > node2->Likeness(nodePastFission3) + node.
-									    Likeness(nodePastFission4)) {
-										node.colorIndex_[0] = nodePastFission3->colorIndex_[0];
-										node.colorIndex_[1] = nodePastFission3->colorIndex_[0];
-										node2->colorIndex_[0] = nodePastFission4->colorIndex_[0];
-										node2->colorIndex_[1] = nodePastFission4->colorIndex_[0];
-									}
-									else {
-										node2->colorIndex_[0] = nodePastFission3->colorIndex_[0];
-										node2->colorIndex_[1] = nodePastFission3->colorIndex_[0];
-										node.colorIndex_[0] = nodePastFission4->colorIndex_[0];
-										node.colorIndex_[1] = nodePastFission4->colorIndex_[0];
-									}
-								}
-								else {
-									if (node.fissionPast_->Likeness(&node) > node.fissionPast_->Likeness(node2)) {
-										node.colorIndex_[0] = node.fissionPast_->colorIndex_[0];
-										node.colorIndex_[1] = node.fissionPast_->colorIndex_[0];
-									}
-									else {
-										node.colorIndex_[0] = node.fissionPast_->colorIndex_[1];
-										node.colorIndex_[1] = node.fissionPast_->colorIndex_[1];
-									}
-								}
+						else { //node.fissionPast_==NULL  and node.fusion1Past_==NULL
+							if (node.fission1Future_) {
+								node.colorIndex_[0] = idx;
+								idx++;
+								node.colorIndex_[1] = idx;
+								idx++;
 							}
-							else { //node.fissionPast_==NULL  and node.fusion1Past_==NULL
-								if (node.fission1Future_) {
-									node.colorIndex_[0] = idx;
-									idx++;
-									node.colorIndex_[1] = idx;
-									idx++;
-								}
-								else {
-									node.colorIndex_[0] = idx;
-									node.colorIndex_[1] = idx;
-									idx++;
+							else {
+								node.colorIndex_[0] = idx;
+								node.colorIndex_[1] = idx;
+								idx++;
 							}
 						}
 					}

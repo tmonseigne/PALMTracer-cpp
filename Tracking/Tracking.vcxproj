@@ -103,7 +103,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\lib\tracking\ChainNeighbor.h" />
     <ClInclude Include="..\lib\tracking\Parameters.h" />
     <ClInclude Include="..\lib\tracking\Node.h" />
     <ClInclude Include="..\lib\tracking\Tracking.h" />

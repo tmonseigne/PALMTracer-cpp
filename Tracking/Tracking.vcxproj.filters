@@ -13,9 +13,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\lib\tracking\ChainNeighbor.h">
-      <Filter>Tracking</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\tracking\Parameters.h">
       <Filter>Tracking</Filter>
     </ClInclude>

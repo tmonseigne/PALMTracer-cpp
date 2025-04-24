@@ -32,9 +32,7 @@ Node::Node(const size_t time, Parameters* params)
 	  future_(nullptr), past_(nullptr),
 	  fission1Future_(nullptr), fission2Future_(nullptr), fissionPast_(nullptr),
 	  fusion1Past_(nullptr), fusion2Past_(nullptr), fusionFuture_(nullptr),
-	  trackedIndex_(0), colorIndex_{},
-	  neighborsPast_(nullptr), neighborsFuture_(nullptr),
-	  neighborsPastCount_(0), neighborsFutureCount_(0) { }
+	  trackedIndex_(0), colorIndex_{} { }
 
 /********************************************************************************************************************
 Destructuor() of Node class.
@@ -42,18 +40,7 @@ Delete all the linkage objets.
 ********************************************************************************************************************/
 Node::~Node()
 {
-	ChainNeighbor* l;
-	while (neighborsFuture_) {
-		l = neighborsFuture_->next_;
-		delete neighborsFuture_;
-		neighborsFuture_ = l;
-	}
-
-	while (neighborsPast_) {
-		l = neighborsPast_->next_;
-		delete neighborsPast_;
-		neighborsPast_ = l;
-	}
+	for (auto& n : neighbors_) { n.clear(); }
 	trackedIndex_ = 0;
 }
 
@@ -77,53 +64,19 @@ void Node::MakeInitializationConnection()
 	Node* nMax = nullptr;
 	double max = -1e10;
 
-	for (const ChainNeighbor* c = neighborsFuture_; c; c = c->next_) {
-		if (!c->neighbor_->past_) {
-			const double Val = Likeness(c->neighbor_);
-
+	for (Node* neighbor : neighbors_[1]) {
+		if (!neighbor->past_) {
+			const double Val = Likeness(neighbor);
 			if (Val > max) {
 				max = Val;
-				nMax = c->neighbor_;
+				nMax = neighbor;
 			}
 		}
 	}
+
 	if (nMax) {
 		nMax->past_ = this;
 		future_ = nMax;
-	}
-}
-
-/********************************************************************************************************************
-sortByIntersityNeighbors(ChainNeighbor* neighborsHead) sort the chained list begining at neighborsHead by the
-intensity.
-********************************************************************************************************************/
-void Node::SortByIntersityNeighbors(ChainNeighbor** neighborsHead)
-{
-	if (*neighborsHead) {
-		if ((*neighborsHead)->next_) {
-			bool change;
-			do {
-				change = false;
-				ChainNeighbor* l = *neighborsHead;
-				ChainNeighbor* lOld = nullptr;
-				while (l->next_) {
-					if (l->next_->neighbor_->intensity_ > l->neighbor_->intensity_) {
-						ChainNeighbor* l2 = l->next_;
-						if (!lOld) { *neighborsHead = l2; }
-						else { lOld->next_ = l2; }
-						l->next_ = l2->next_;
-						l2->next_ = l;
-						change = true;
-						lOld = l2;
-					}
-					else {
-						l = l->next_;
-						if (!lOld) { lOld = *neighborsHead; }
-					}
-				}
-			}
-			while (change);
-		}
 	}
 }
 
@@ -148,17 +101,6 @@ double Node::distance(const Node& n1, const Node& n2) const
 	const double N1N2Y = (n1.y_ * n1.intensity_ + n2.y_ * n2.intensity_) / (n1.intensity_ + n2.intensity_);
 	const double Dx = x_ - N1N2X, Dy = y_ - N1N2Y;
 	return sqrt(Dx * Dx + Dy * Dy);
-}
-
-ChainNeighbor* Node::getRandomNeighbor(ChainNeighbor* head, const size_t size) const
-{
-	const size_t Index = params_->RandomModulo(size);
-	size_t i = 0;
-	while (head && i < Index) {
-		head = head->next_;
-		++i;
-	}
-	return head;
 }
 
 /*********************************************************************************************
@@ -246,20 +188,21 @@ void Node::computeConstantSigmas(double &intensity,
 void Node::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance, size_t& nDist) const
 {
 	const Node* nMax = nullptr;
-	double likenessMax = -1e10;
+	double max = -1e10;
 
-	for (const ChainNeighbor* c = neighborsFuture_; c; c = c->next_) {
-		const double LikenessVal = Likeness(c->neighbor_);
-		if (LikenessVal > likenessMax) {
-			likenessMax = LikenessVal;
-			nMax = c->neighbor_;
+	for (const Node* neighbor : neighbors_[1]) {
+		const double Val = Likeness(neighbor);
+		if (Val > max) {
+			max = Val;
+			nMax = neighbor;
 		}
 	}
 
 	if (nMax) {
 		intensity += (intensity_ - nMax->intensity_) * (intensity_ - nMax->intensity_);
 		mean += (mean_ - nMax->mean_) * (mean_ - nMax->mean_);
-		distance += Distance(*nMax) * Distance(*nMax);
+		const double Dist = Distance(*nMax);
+		distance += Dist * Dist;
 		nInt++;
 		nMean++;
 		nDist++;
@@ -277,14 +220,10 @@ void Node::ComputeBorderDistance()
 double Node::makeChangeSimpleLinkage(const double limit)
 {
 	if (!future_ || params_->RandomModulo(2) == 0) {
-		if (neighborsFutureCount_ == 0) { return 0.; } //no neighbors
-		//cRand is a random node in the vicinity of "this" in the future.
-		const ChainNeighbor* cRand = getRandomNeighbor(neighborsFuture_, neighborsFutureCount_);
-		//test if the node is good
-		if (!cRand) { return -1.; } //ERROR
-		Node* target = cRand->neighbor_;
-		// the new random link is the same as future_.
-		if (target == future_) { return simpleLinkageDisconnection(limit); } //try simple deconnection
+		if (neighbors_[1].empty()) { return 0.; } //no neighbors
+		Node* target = getRandomNeighbor(1);
+		// the new random link is the same as future_,try simple deconnection
+		if (target == future_) { return simpleLinkageDisconnection(limit); }
 		// target already implicated in a fission / fusion / blink connection
 		if (!isBlinkLinkageAvailable(target)) { return 0; }
 
@@ -320,7 +259,7 @@ double Node::makeChangeSimpleLinkage(const double limit)
 		//	1(this)-----2
 		//	4-----------3(cRand)
 		int count = 0;
-		for (const ChainNeighbor* c = target->past_->neighborsFuture_; c; c = c->next_) { if (isSimpleLinkageAvailable(c->neighbor_)) { count++; } }
+		for (const Node* neighbor : target->past_->neighbors_[1]) { if (isSimpleLinkageAvailable(neighbor)) { count++; } }
 
 		//no node available to relink the conflicted node
 		// try to break the link
@@ -424,51 +363,6 @@ double Node::simpleLinkageBreakAndReconnect(const double limit, Node* node)
 	//return(0.);
 }
 
-double Node::simpleLinkageDoubleSwap(const double limit, Node* node, const size_t count)
-{
-	//	From
-	//	Present		Future
-	//	1-----------2
-	//	4-----------3(cRand)
-	//	NULL--------5(c)
-
-	//find a random one
-	const size_t IdRandNeighbor = params_->RandomModulo(count);
-	size_t iCount = 0;
-
-	const ChainNeighbor* c = node->past_->neighborsFuture_;
-	do {
-		if (isSimpleLinkageAvailable(c->neighbor_)) { iCount++; }
-		if (iCount <= IdRandNeighbor) { c = c->next_; }
-	}
-	while (iCount <= IdRandNeighbor);
-
-
-	//	To
-	//	Present		Future
-	//	1-----------3(cRand)
-	//	4-----------5(c)
-	//	NULL--------2
-	if (!c || !isSimpleLinkageAvailable(c->neighbor_)) { return -1; }                             //ERROR 	
-	if (Distance(*node) >= params_->maxSpeed_) { return 0.; }                                     // Distance is not respected
-	if (node->past_ && node->past_->Distance(*c->neighbor_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-
-	const double DeltaE = Likeness(node) + node->past_->Likeness(c->neighbor_) + (!future_ ? 0 : future_->Likeness())
-	                      - Likeness(future_) - node->Likeness(node->past_) - c->neighbor_->Likeness();
-	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
-	// change the configuration
-	//unlink future_
-
-	if (future_) { future_->past_ = nullptr; } //????
-	future_ = node;
-	future_->past_->future_ = c->neighbor_;
-	future_->past_->future_->past_ = future_->past_;
-	future_->past_ = this;
-
-	return DeltaE;
-	//return(0.);
-}
-
 double Node::simpleLinkageSwap(const double limit, Node* node)
 {
 	//	From
@@ -491,6 +385,55 @@ double Node::simpleLinkageSwap(const double limit, Node* node)
 	future_->past_ = node->past_;
 	future_ = node;
 	node->past_ = this;
+
+	return DeltaE;
+	//return(0.);
+}
+
+double Node::simpleLinkageDoubleSwap(const double limit, Node* node, const size_t count)
+{
+	//	From
+	//	Present		Future
+	//	1-----------2
+	//	4-----------3(cRand)
+	//	NULL--------5(c)
+
+	//find a random one
+	const size_t IdRandNeighbor = params_->RandomModulo(count);
+
+	const auto& Neighbors = node->past_->neighbors_[1];
+	Node* selected = nullptr;
+	size_t iCount = 0;
+	for (auto& N : Neighbors) {
+		if (isSimpleLinkageAvailable(N)) {
+			if (iCount == IdRandNeighbor) {
+				selected = N;
+				break;
+			}
+			++iCount;
+		}
+	}
+
+	//	To
+	//	Present		Future
+	//	1-----------3(cRand)
+	//	4-----------5(c)
+	//	NULL--------2
+	//if (!c || !isSimpleLinkageAvailable(c->neighbor_)) { return -1; }                             //ERROR 	
+	if (Distance(*node) >= params_->maxSpeed_) { return 0.; }                                 // Distance is not respected
+	if (node->past_ && node->past_->Distance(*selected) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
+
+	const double DeltaE = Likeness(node) + node->past_->Likeness(selected) + (!future_ ? 0 : future_->Likeness())
+	                      - Likeness(future_) - node->Likeness(node->past_) - selected->Likeness();
+	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
+	// change the configuration
+	//unlink future_
+
+	if (future_) { future_->past_ = nullptr; } //????
+	future_ = node;
+	future_->past_->future_ = selected;
+	future_->past_->future_->past_ = future_->past_;
+	future_->past_ = this;
 
 	return DeltaE;
 	//return(0.);

@@ -4,12 +4,10 @@
 *******************************************************************************************************************/
 #pragma once
 
+#include <array>
 #include <cmath>
 
-#include "ChainNeighbor.h"
 #include "Parameters.h"
-
-enum class transfer_type: uint8_t { keep_first, keep_second, give_all }; // ancien Fission/Fusion 1, 2 et 9
 
 class Node
 {
@@ -25,8 +23,7 @@ public:
 	size_t trackedIndex_;
 	size_t colorIndex_[2];
 
-	ChainNeighbor *neighborsPast_, *neighborsFuture_;
-	size_t neighborsPastCount_, neighborsFutureCount_;
+	std::array<std::vector<Node*>, 2> neighbors_;
 
 	//Precompute
 	double distanceToBorder_, likeness_, likenessDistance_, likenessIntensity_, likenessMean_;
@@ -41,7 +38,6 @@ public:
 	void ComputeBorderDistance();
 
 	void MakeInitializationConnection();
-	static void SortByIntersityNeighbors(ChainNeighbor** neighborsHead);
 	double MakeChange(const double limit) { return makeChangeSimpleLinkage(limit); }
 
 private:
@@ -50,7 +46,7 @@ private:
 	double sphericEffect() const;
 	static double sphericEffect(const Node& n1, const Node& n2) { return n1.sphericEffect() + n2.sphericEffect(); }
 	double distance(const Node& n1, const Node& n2) const;
-	ChainNeighbor* getRandomNeighbor(ChainNeighbor* head, size_t size) const;
+	Node* getRandomNeighbor(const size_t type = 0) const { return neighbors_[type][params_->RandomModulo(neighbors_[type].size())]; }
 
 	//==================== likeness ====================
 	static double getLikeness(const double difference, const double sigma) { return 1. - fabs(difference) / (3. * sigma); }
@@ -66,6 +62,6 @@ private:
 	double simpleLinkageDisconnection(double limit) const;
 	double simpleLinkageReassignment(double limit, Node* node);
 	double simpleLinkageBreakAndReconnect(double limit, Node* node);
-	double simpleLinkageDoubleSwap(double limit, Node* node, size_t count);
 	double simpleLinkageSwap(double limit, Node* node);
+	double simpleLinkageDoubleSwap(double limit, Node* node, size_t count);
 };
