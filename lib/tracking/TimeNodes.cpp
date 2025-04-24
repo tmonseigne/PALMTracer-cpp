@@ -38,24 +38,6 @@ void TimeNodes::LinkNeighborsBeforeAndAfter(TimeNodes& futures)
 }
 
 /********************************************************************************************************************
-linkBlinkBeforeAndAfter() for each structure at the time_ t, it builds the chained list of all the structures of the next 
-time_ (t+dt) close to it. 
-********************************************************************************************************************/
-void TimeNodes::LinkNeighborsBlinkBeforeAndAfter(TimeNodes& futures)
-{
-	for (auto& present : nodes_) {
-		for (auto& future : futures.nodes_) {
-			if (present.Distance(future) < params_->maxSpeed_) {
-				present.neighborsBlinkFuture_ = new ChainNeighbor(&future, present.neighborsBlinkFuture_);
-				present.neighborsBlinkFutureCount_++;
-				future.neighborsBlinkPast_ = new ChainNeighbor(&present, future.neighborsBlinkPast_);
-				future.neighborsBlinkPastCount_++;
-			}
-		}
-	}
-}
-
-/********************************************************************************************************************
 sortByIntensityAllNeighbors() Sort by intersity all the neighbors of each node.
 ********************************************************************************************************************/
 void TimeNodes::SortByIntensityAllNeighbors()

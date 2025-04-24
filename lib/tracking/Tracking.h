@@ -30,7 +30,6 @@ protected:
 	void updateConstants();
 	void computeConstants();
 	void linkNeighborsBeforeAndAfter() { for (size_t t = 0; t < nbTimes_ - 1; ++t) { timeNodes_[t].LinkNeighborsBeforeAndAfter(timeNodes_[t + 1]); } }
-	void linkNeighborsBlinkBeforeAndAfter();
 	void sortByIntensityAllNeighbors() { for (size_t t = 0; t < nbTimes_; ++t) { timeNodes_[t].SortByIntensityAllNeighbors(); } }
 	void readPointsList();
 	void printConnectionsASCII_trc();

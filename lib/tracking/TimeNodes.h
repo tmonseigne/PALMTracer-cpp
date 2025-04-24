@@ -22,7 +22,6 @@ public:
 
 	Node& operator[](const size_t i) { return nodes_[i]; }
 	void LinkNeighborsBeforeAndAfter(TimeNodes& futures);
-	void LinkNeighborsBlinkBeforeAndAfter(TimeNodes& futures);
 	void SortByIntensityAllNeighbors();
 
 	void ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance, size_t& nDist) const;

@@ -28,15 +28,10 @@ void logTime(const std::string& message)
 void Tracking::Processing()
 {
 	logTime("Processing Start");
-	logTime("readPointsList Start");
 	// Initialisation
 	readPointsList();
-	logTime("linkNeighborsBeforeAndAfter Start");
 	linkNeighborsBeforeAndAfter();
-	logTime("sortByIntensityAllNeighbors Start");
 	sortByIntensityAllNeighbors();
-	logTime("linkNeighborsBlinkBeforeAndAfter Start");
-	if constexpr (Parameters::N_TEMPORAL_WINDOWS > 1) { linkNeighborsBlinkBeforeAndAfter(); }
 
 	// Process
 	double error;
@@ -74,11 +69,8 @@ void Tracking::Processing()
 	}
 
 	// Result
-	logTime("setIndexToTrackedStructures Start");
 	setIndexToTrackedStructures();
-	logTime("setColorToTrackedStructures Start");
 	setColorToTrackedStructures();
-	logTime("printConnectionsASCII_trc Start");
 	printConnectionsASCII_trc();
 }
 
@@ -178,19 +170,6 @@ void Tracking::readPointsList()
 }
 
 /********************************************************************************************************************
-void linkNeighborsBlinkBeforeAndAfter() to link of the neighbors in the past and in the future of all nodes of 
-all times for blinking purpose
-********************************************************************************************************************/
-void Tracking::linkNeighborsBlinkBeforeAndAfter()
-{
-	for (size_t t = 0; t < nbTimes_; ++t) {
-		for (size_t dt = 2; dt <= Parameters::N_TEMPORAL_WINDOWS; ++dt) {
-			if (t + dt < nbTimes_) { timeNodes_[t].LinkNeighborsBlinkBeforeAndAfter(timeNodes_[t + dt]); }
-		}
-	}
-}
-
-/********************************************************************************************************************
 void setColorToTrackedStructures() set a color index to each tracked structures
 ********************************************************************************************************************/
 void Tracking::setColorToTrackedStructures()
@@ -201,7 +180,6 @@ void Tracking::setColorToTrackedStructures()
 		for (auto& node : T.nodes_) {
 			if (node.trackedIndex_ != 0) {
 				if (!node.past_) {
-					if (!node.blinkPast_) {
 						if (node.fusion1Past_) {
 							if (node.Likeness(node.fusion1Past_) > node.Likeness(node.fusion2Past_)) {
 								node.colorIndex_[0] = node.fusion1Past_->colorIndex_[0];
@@ -261,13 +239,8 @@ void Tracking::setColorToTrackedStructures()
 									node.colorIndex_[0] = idx;
 									node.colorIndex_[1] = idx;
 									idx++;
-								}
 							}
 						}
-					}
-					else {
-						node.colorIndex_[0] = node.blinkPast_->colorIndex_[0];
-						node.colorIndex_[1] = node.blinkPast_->colorIndex_[0];
 					}
 				}
 				else { //node.past_!=NULL
@@ -307,8 +280,8 @@ void Tracking::setIndexToTrackedStructures()
 					node->trackedIndex_ = 0;
 				}
 				bool change = false;
-				if (nNodes >= minLife_ || T.nodes_[i].fissionPast_ || T.nodes_[i].fusion1Past_ || T.nodes_[i].blinkPast_) { change = true; }
-				if (oldNode && (oldNode->fission1Future_ || oldNode->fusionFuture_ || oldNode->blinkFuture_)) { change = true; }
+				if (nNodes >= minLife_ || T.nodes_[i].fissionPast_ || T.nodes_[i].fusion1Past_) { change = true; }
+				if (oldNode && (oldNode->fission1Future_ || oldNode->fusionFuture_)) { change = true; }
 
 				if (change) {
 					T.nodes_[i].trackedIndex_ = idx;

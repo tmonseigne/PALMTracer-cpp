@@ -12,12 +12,10 @@ public:
 	static constexpr size_t N_STEPS = 5;
 	static constexpr size_t N_ITERATIONS = 300;
 	static constexpr size_t N_SEG_PARAMS = 13;
-	static constexpr size_t N_TEMPORAL_WINDOWS = 1;
 	static constexpr size_t MODEL = 2; //the number of the used model
 
 	// Params
 	double maxSpeed_;
-	bool allowFusionAndFission_;
 	double costBirthDeath_;
 
 	// Computes

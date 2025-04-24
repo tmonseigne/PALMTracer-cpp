@@ -5,12 +5,11 @@
 
 
 _declspec(dllexport) long _stdcall Process(const double* pointsList, double* trc, const double maxSpeed, const unsigned long minLife,
-                                           const double decrease, const unsigned long allowFusiondisso, const double costBirth, const unsigned long nbTimes)
+                                           const double decrease, const double costBirth, const unsigned long nbTimes)
 {
 	const auto Param = new Parameters();
 
 	Param->maxSpeed_ = maxSpeed;
-	Param->allowFusionAndFission_ = allowFusiondisso;
 	Param->costBirthDeath_ = costBirth;
 
 	Tracking tracking(pointsList, trc, minLife, decrease / 100.0, nbTimes, Param);
@@ -27,5 +26,5 @@ _declspec(dllexport) long _stdcall Tracking(const double* points, const unsigned
                                             const unsigned long nbTimes)
 {
 	return Process(points, trc, maxSpeed, static_cast<unsigned long>(minLife),
-	               decrease, allowFusiondisso, costBirth, nbTimes);
+	               decrease, costBirth, nbTimes);
 }
