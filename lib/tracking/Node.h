@@ -81,6 +81,7 @@ private:
 
 	//==================== Linkage ====================
 	double makeChangeSimpleLinkage(double limit);
+	bool isSimpleLinkageAvailable(const Node* node) const;
 	double simpleLinkageDisconnection(double limit) const;
 	double simpleLinkageReassignment(double limit, Node* node);
 	double simpleLinkageBreakAndReconnect(double limit, Node* node);
@@ -89,6 +90,7 @@ private:
 
 	//==================== Blink Linkage ====================
 	double makeChangeBlinkLinkage(double limit);
+	static bool isBlinkLinkageAvailable(const Node* node);
 	double blinkLinkageConnection(double limit);
 	double blinkLinkageDisconnection(double limit);
 	double blinkLinkageSwapBegin(double limit, Node* node);

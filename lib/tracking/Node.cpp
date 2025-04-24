@@ -488,7 +488,7 @@ double Node::fissionCreate(const double limit)
 	if (!cRand) { return -1.; } //ERROR
 	Node* n = cRand->neighbor_;
 	// n is the same or already implicated in a fusion / fission / past blink.
-	if (n == future_ || n->fusion1Past_ || n->fissionPast_ || n->blinkPast_) { return 0.; }
+	if (n == future_ || !isBlinkLinkageAvailable(n)) { return 0.; }
 
 	if (Distance(*n) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
 
@@ -946,7 +946,7 @@ double Node::makeChangeSimpleLinkage(const double limit)
 		// the new random link is the same as future_.
 		if (target == future_) { return simpleLinkageDisconnection(limit); } //try simple deconnection
 		// target already implicated in a fission / fusion / blink connection
-		if (target->fissionPast_ || target->fusion1Past_ || target->blinkPast_) { return 0; }
+		if (!isBlinkLinkageAvailable(target)) { return 0; }
 
 		//is there a conflict between this and the pastConnextion of target?
 		//no conflict target can be linked with this.
@@ -980,12 +980,7 @@ double Node::makeChangeSimpleLinkage(const double limit)
 		//	1(this)-----2
 		//	4-----------3(cRand)
 		int count = 0;
-		for (const ChainNeighbor* c = target->past_->neighborsFuture_; c; c = c->next_) {
-			if (!c->neighbor_->fusion1Past_ && !c->neighbor_->fissionPast_) {
-				if (!c->neighbor_->past_) { count++; }
-				else { if (c->neighbor_ == future_) { count++; } }
-			}
-		}
+		for (const ChainNeighbor* c = target->past_->neighborsFuture_; c; c = c->next_) { if (isSimpleLinkageAvailable(c->neighbor_)) { count++; } }
 
 		//no node available to relink the conflicted node
 		// try to break the link
@@ -1015,6 +1010,8 @@ double Node::makeChangeSimpleLinkage(const double limit)
 	}
 	return simpleLinkageDisconnection(limit);
 }
+
+bool Node::isSimpleLinkageAvailable(const Node* node) const { return !node->fusion1Past_ && !node->fissionPast_ && (!node->past_ || node == future_); }
 
 double Node::simpleLinkageDisconnection(const double limit) const
 {
@@ -1101,10 +1098,7 @@ double Node::simpleLinkageDoubleSwap(const double limit, Node* node, const size_
 
 	const ChainNeighbor* c = node->past_->neighborsFuture_;
 	do {
-		if (!c->neighbor_->fusion1Past_ && !c->neighbor_->fissionPast_) {
-			if (!c->neighbor_->past_) { iCount++; }
-			else { if (c->neighbor_ == future_) { iCount++; } }
-		}
+		if (isSimpleLinkageAvailable(c->neighbor_)) { iCount++; }
 		if (iCount <= IdRandNeighbor) { c = c->next_; }
 	}
 	while (iCount <= IdRandNeighbor);
@@ -1115,8 +1109,7 @@ double Node::simpleLinkageDoubleSwap(const double limit, Node* node, const size_
 	//	1-----------3(cRand)
 	//	4-----------5(c)
 	//	NULL--------2
-	if (!c || c->neighbor_->fusion1Past_ || c->neighbor_->fissionPast_ || (c->neighbor_ != future_ && c->neighbor_->past_)) { return -1; } //ERROR 	
-
+	if (!c || !isSimpleLinkageAvailable(c->neighbor_)) { return -1; }                             //ERROR 	
 	if (Distance(*node) >= params_->maxSpeed_) { return 0.; }                                     // Distance is not respected
 	if (node->blinkPast_ || c->neighbor_->blinkPast_) { return 0; }                               // node and c is already implicated in a blink connection
 	if (node->past_ && node->past_->Distance(*c->neighbor_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
@@ -1254,7 +1247,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 		for (cRand = neighborsFuture_; cRand; cRand = cRand->next_) {
 			if (cRand->neighbor_->time_ - time_ == 1) {
 				if (cRand->neighbor_->past_) { nbNodeAtGoodTime++; }
-				else { if (!cRand->neighbor_->fusion1Past_ && !cRand->neighbor_->fissionPast_ && !cRand->neighbor_->blinkPast_) { nbNodeAtGoodTime2++; } }
+				else if (isBlinkLinkageAvailable(cRand->neighbor_)) { nbNodeAtGoodTime2++; }
 			}
 		}
 		if (nbNodeAtGoodTime == 0 && nbNodeAtGoodTime2 == 0) { return blinkLinkageDisconnection(limit); }
@@ -1282,8 +1275,7 @@ double Node::makeChangeBlinkLinkage(const double limit)
 		size_t i = 0;
 		bool exitFor = false;
 		for (cRand2 = neighborsFuture_; !exitFor && cRand2;) {
-			if (cRand2->neighbor_->time_ - time_ == 1 && !cRand2->neighbor_->past_ && !cRand2->neighbor_->fusion1Past_
-			    && !cRand2->neighbor_->fissionPast_ && !cRand2->neighbor_->blinkPast_) {
+			if (cRand2->neighbor_->time_ - time_ == 1 && !cRand2->neighbor_->past_ && isBlinkLinkageAvailable(cRand2->neighbor_)) {
 				if (i == idRandNeighbor) { exitFor = true; }
 				i++;
 			}
@@ -1342,6 +1334,8 @@ double Node::makeChangeBlinkLinkage(const double limit)
 	return blinkLinkageSwapFinish(limit, cRand2->neighbor_);
 }
 
+bool Node::isBlinkLinkageAvailable(const Node* node) { return !node->fusion1Past_ && !node->fissionPast_ && !node->blinkPast_; }
+
 double Node::blinkLinkageConnection(const double limit)
 {
 	//transform : 
@@ -1359,8 +1353,7 @@ double Node::blinkLinkageConnection(const double limit)
 	ChainNeighbor* cRand;
 
 	for (cRand = neighborsBlinkFuture_; cRand; cRand = cRand->next_) {
-		if (cRand->neighbor_->time_ - time_ == Dt && !cRand->neighbor_->past_ && !cRand->neighbor_->blinkPast_
-		    && !cRand->neighbor_->fissionPast_ && !cRand->neighbor_->fusion1Past_) { nbNodeAtGoodTime++; }
+		if (cRand->neighbor_->time_ - time_ == Dt && !cRand->neighbor_->past_ && isBlinkLinkageAvailable(cRand->neighbor_)) { nbNodeAtGoodTime++; }
 	}
 	if (nbNodeAtGoodTime == 0) { return 0; }
 
@@ -1368,8 +1361,7 @@ double Node::blinkLinkageConnection(const double limit)
 	size_t i = 0;
 	bool exitFor = false;
 	for (cRand = neighborsBlinkFuture_; !exitFor && cRand;) {
-		if (cRand->neighbor_->time_ - time_ == Dt && !cRand->neighbor_->past_ && !cRand->neighbor_->blinkPast_
-		    && !cRand->neighbor_->fissionPast_ && !cRand->neighbor_->fusion1Past_) {
+		if (cRand->neighbor_->time_ - time_ == Dt && !cRand->neighbor_->past_ && isBlinkLinkageAvailable(cRand->neighbor_)) {
 			if (i == IdRandNeighbor) { exitFor = true; }
 			i++;
 		}
