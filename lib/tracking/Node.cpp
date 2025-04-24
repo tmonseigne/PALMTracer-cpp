@@ -11,6 +11,7 @@ links to the current objet.
 #include "Node.h"
 
 #include <algorithm>
+#include <iostream>
 #include <numbers>
 
 constexpr double WEIGHT_DISTANCE = 0.6;
@@ -193,9 +194,7 @@ double Node::likenessDistance(Node* n)
 *********************************************************************************************/
 double Node::likenessDistance(const Node* n) const
 {
-	// attention je rajoute le *3 pour les donn�es d'aqi(autoquant)
-	if (!n) { return getLikeness(std::min(distanceToBorder(), params_->stdDistance_), params_->stdDistance_); }
-	return getLikeness(Distance(*n), params_->stdDistance_);
+	return !n ? getLikeness(std::min(distanceToBorder_, params_->stdDistance_), params_->stdDistance_) : getLikeness(Distance(*n), params_->stdDistance_);
 }
 
 /*********************************************************************************************
@@ -210,26 +209,22 @@ double Node::likenessDistanceFusion(const Node* n1, const Node* n2) const
 }
 
 /*********************************************************************************************
-double Node::likenessMeanIntensity(Node* n)
+double Node::likenessMean(Node* n)
   Compute the likeness from the mean of intensity between this and n.
   New version from 2005/01/12
 
   We use the hypothesis that
 	sigma(mean intensity) proportional to surface^-1/6 simga_noise / Mean in 2D.
 *********************************************************************************************/
-double Node::likenessMeanIntensity(const Node* n) const
-{
-	if (!n) { return getLikeness(mean_, params_->stdMean_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder())); }
-	return getLikeness(mean_ - n->mean_, params_->stdMean_);
-}
+double Node::likenessMean(const Node* n) const { return !n ? likenessMean_ : getLikeness(mean_ - n->mean_, params_->stdMean_); }
 
 /*********************************************************************************************
-double Node::likenessMeanIntensityFusion(Node* n1, Node* n2)
+double Node::likenessMeanFusion(Node* n1, Node* n2)
   Compute the likeness from the mean of intensity in fusion between this and n1 and n2 .
   New version from 2005/01/12
 
 *********************************************************************************************/
-double Node::likenessMeanIntensityFusion(const Node* n1, const Node* n2) const
+double Node::likenessMeanFusion(const Node* n1, const Node* n2) const
 {
 	if (!n1 || !n2) { return 0.; } //Error ???
 	return getLikeness(mean_ - (n1->intensity_ + n2->intensity_) / (n1->surf_ + n2->surf_), params_->stdMean_);
@@ -244,11 +239,7 @@ double Node::likenessIntensity(Node* n)
 
   We use the hypothesis that sigma(intensity) proportional to simga_noise/Mean.
 *********************************************************************************************/
-double Node::likenessIntensity(const Node* n) const
-{
-	if (!n) { return getLikeness(intensity_, params_->stdIntensity_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder())); }
-	return getLikeness(intensity_ - n->intensity_, params_->stdIntensity_);
-}
+double Node::likenessIntensity(const Node* n) const { return !n ? likenessIntensity_ : getLikeness(intensity_ - n->intensity_, params_->stdIntensity_); }
 
 /*********************************************************************************************
 double Node::likenessIntensityFusion(Node* n1, Node* n2
@@ -270,12 +261,20 @@ double Node::likeness(Node* n)
 *********************************************************************************************/
 double Node::Likeness(const Node* n) const
 {
-	// the /2 is because the sum of the likeness of 2 unconnected nodes has to be compared to the likeness of the connection between those two nodes.
-	if (!n) {
-		return (WEIGHT_DISTANCE * likenessDistance(n) + WEIGHT_INTENSITY * likenessIntensity(n)
-		        + WEIGHT_MEAN_INTENSITY * likenessMeanIntensity(n)) / 2. - params_->costBirthDeath_;
-	}
-	return WEIGHT_DISTANCE * likenessDistance(n) + WEIGHT_INTENSITY * likenessIntensity(n) + WEIGHT_MEAN_INTENSITY * likenessMeanIntensity(n);
+	return !n
+		       ? (WEIGHT_DISTANCE * likenessDistance() + WEIGHT_INTENSITY * likenessIntensity()
+		          + WEIGHT_MEAN_INTENSITY * likenessMean()) / 2. - params_->costBirthDeath_
+		       : WEIGHT_DISTANCE * likenessDistance(n) + WEIGHT_INTENSITY * likenessIntensity(n) + WEIGHT_MEAN_INTENSITY * likenessMean(n);
+}
+
+void Node::UpdateConstants()
+{
+	// compute n->likeness, distance to border....
+	likenessDistance_ = getLikeness(std::min(distanceToBorder_, params_->stdDistance_), params_->stdDistance_);
+	likenessMean_ = getLikeness(mean_, params_->stdMean_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder_));
+	likenessIntensity_ = getLikeness(intensity_, params_->stdIntensity_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder_));
+	likeness_ = (WEIGHT_DISTANCE * likenessDistance() + WEIGHT_INTENSITY * likenessIntensity()
+	             + WEIGHT_MEAN_INTENSITY * likenessMean()) / 2. - params_->costBirthDeath_;
 }
 
 /*********************************************************************************************
@@ -299,7 +298,7 @@ double Node::likenessFusion(const Node* n1, const Node* n2) const
 	if (!n1) { return Likeness(n2); }
 	if (!n2) { return Likeness(n1); }
 	return (WEIGHT_DISTANCE * likenessDistanceFusion(n1, n2) + WEIGHT_INTENSITY * likenessIntensityFusion(n1, n2)
-	        + WEIGHT_MEAN_INTENSITY * likenessMeanIntensityFusion(n1, n2) + MIN_ENERGY_FUSION) * 3. / 2.;
+	        + WEIGHT_MEAN_INTENSITY * likenessMeanFusion(n1, n2) + MIN_ENERGY_FUSION) * 3. / 2.;
 	// the *3/2 is because the sum of the likeness of 1 unconnected node and 2 linked nodes has to be compared to the likeness of the fusion connection between those 3 nodes.
 }
 
@@ -330,6 +329,13 @@ void Node::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, 
 		nMean++;
 		nDist++;
 	}
+}
+
+void Node::ComputeBorderDistance()
+{
+	const double X = x_, Y = y_;
+	const double MaxX = params_->maxX_, MaxY = params_->maxY_;
+	distanceToBorder_ = std::min({X, MaxX - X, Y, MaxY - Y});
 }
 
 //==================== Make Change ====================

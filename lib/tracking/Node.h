@@ -31,12 +31,17 @@ public:
 	ChainNeighbor *neighborsBlinkPast_, *neighborsBlinkFuture_;
 	size_t neighborsBlinkPastCount_, neighborsBlinkFutureCount_;
 
+	//Precompute
+	double distanceToBorder_, likeness_, likenessDistance_, likenessIntensity_, likenessMean_;
+
 	Node(size_t time, Parameters* params);
 	~Node();
 
 	double Distance(const Node& node) const;
 	double Likeness(const Node* n = nullptr) const;
+	void UpdateConstants();
 	void ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance, size_t& nDist) const;
+	void ComputeBorderDistance();
 
 	void MakeInitializationConnection();
 	static void SortByIntersityNeighbors(ChainNeighbor** neighborsHead);
@@ -53,14 +58,14 @@ private:
 
 	//==================== likeness ====================
 	static double getLikeness(const double difference, const double sigma) { return 1. - fabs(difference) / (3. * sigma); }
-	double likenessBlink(const Node* n) const;
-	double likenessDistance(const Node* n) const;
+	double likenessBlink(const Node* n = nullptr) const;
+	double likenessDistance(const Node* n = nullptr) const;
 	double likenessDistanceFusion(const Node* n1, const Node* n2) const;
 	double likenessFusion(const Node* n1, const Node* n2) const;
-	double likenessIntensity(const Node* n) const;
+	double likenessIntensity(const Node* n = nullptr) const;
 	double likenessIntensityFusion(const Node* n1, const Node* n2) const;
-	double likenessMeanIntensity(const Node* n) const;
-	double likenessMeanIntensityFusion(const Node* n1, const Node* n2) const;
+	double likenessMean(const Node* n = nullptr) const;
+	double likenessMeanFusion(const Node* n1, const Node* n2) const;
 
 	//==================== Fission ====================
 	double makeChangeFission(double limit);

@@ -48,10 +48,10 @@ void Tracking::Processing()
 		long cpt = 0;
 
 		if (step == 0) {
-			computeConstantes();
+			computeConstants();
 			for (size_t t = 0; t < nbTimes_ - 1; ++t) { timeNodes_[t].MakeAllInitializationConnections(); }
 		}
-		else { updateConstantes(); }
+		else { updateConstants(); }
 
 		int nbInt = 0;
 		int bcl = 0;
@@ -172,6 +172,9 @@ void Tracking::readPointsList()
 
 		index += (nNodes + 1) * Parameters::N_SEG_PARAMS; //(A vérifier)
 	}
+
+	//Precompute distance to border
+	for (auto& t : timeNodes_) { for (auto& node : t.nodes_) { node.ComputeBorderDistance(); } }
 }
 
 /********************************************************************************************************************
@@ -318,12 +321,12 @@ void Tracking::setIndexToTrackedStructures()
 }
 
 /********************************************************************************************************************
-computeConstantes() compute by convergence the values
+computeConstants() compute by convergence the values
 params_->stdIntensity
 params_->stdMean
 params_->stdDistance
 ********************************************************************************************************************/
-void Tracking::computeConstantes() const
+void Tracking::computeConstants()
 {
 	params_->stdIntensity_ = 1000;
 	params_->stdMean_ = 1000;
@@ -345,12 +348,13 @@ void Tracking::computeConstantes() const
 		params_->stdDistance_ = sqrt(params_->stdDistance_);
 	}
 	params_->stdDistance_ /= 3; //attention au /3 c'est juste pour augmenter l'influence de la distance
+	for (auto& t : timeNodes_) { for (auto& n : t.nodes_) { n.UpdateConstants(); } }
 }
 
 /********************************************************************************************************************
-updateConstantes() ones the Tracking in compute, compute the constant
+updateConstants() ones the Tracking in compute, compute the constant
 ********************************************************************************************************************/
-void Tracking::updateConstantes() const
+void Tracking::updateConstants()
 {
 	long cpt = 0;
 	params_->stdDistance_ = 0;
@@ -376,4 +380,5 @@ void Tracking::updateConstantes() const
 	params_->stdIntensity_ = sqrt(params_->stdIntensity_);
 	params_->stdDistance_ = sqrt(params_->stdDistance_);
 	params_->stdMean_ = sqrt(params_->stdMean_);
+	for (auto& t : timeNodes_) { for (auto& n : t.nodes_) { n.UpdateConstants(); } }
 }

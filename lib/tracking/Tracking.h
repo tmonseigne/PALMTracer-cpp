@@ -27,8 +27,8 @@ protected:
 	Parameters* params_;
 	std::vector<TimeNodes> timeNodes_;
 
-	void updateConstantes() const;
-	void computeConstantes() const;
+	void updateConstants();
+	void computeConstants();
 	void linkNeighborsBeforeAndAfter() { for (size_t t = 0; t < nbTimes_ - 1; ++t) { timeNodes_[t].LinkNeighborsBeforeAndAfter(timeNodes_[t + 1]); } }
 	void linkNeighborsBlinkBeforeAndAfter();
 	void sortByIntensityAllNeighbors() { for (size_t t = 0; t < nbTimes_; ++t) { timeNodes_[t].SortByIntensityAllNeighbors(); } }
