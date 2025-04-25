@@ -2,18 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="..\lib\fit\GaussianFit2D.cpp">
-      <Filter>Fit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\fit\GaussianFit2D_Sigma.cpp">
-      <Filter>Fit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\fit\GaussianFit3D.cpp">
-      <Filter>Fit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\fit\GaussianFit3D_Theta.cpp">
-      <Filter>Fit</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\palm\ATrous.cpp">
       <Filter>Palm</Filter>
     </ClCompile>
@@ -29,18 +17,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\fit\GaussianFit.h">
-      <Filter>Fit</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\fit\GaussianFit2D.h">
-      <Filter>Fit</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\fit\GaussianFit2D_Sigma.h">
-      <Filter>Fit</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\fit\GaussianFit3D.h">
-      <Filter>Fit</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\fit\GaussianFit3D_Theta.h">
       <Filter>Fit</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\palm\ATrous.h">

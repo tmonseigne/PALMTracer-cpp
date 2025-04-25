@@ -5,10 +5,7 @@
 #include <omp.h>
 #include <thread>
 
-#include "fit/GaussianFit2D.h"
-#include "fit/GaussianFit2D_Sigma.h"
-#include "fit/GaussianFit3D.h"
-#include "fit/GaussianFit3D_Theta.h"
+#include "fit/GaussianFit.h"
 
 Palm::Palm(const unsigned short* image, double* points, const size_t pointsListSize, const size_t height, const size_t width,
            const size_t waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin,
@@ -86,8 +83,8 @@ int Palm::Processing()
 
 		switch (gaussFit_) {
 			case 1: { // Gaussian fit of 2D Sigma is constant
-				GaussianFit2D fit;
-				fit.Run(image_, width_, height_, x, y, intensity, sigmaX, offset, rss, roi_);
+				GaussianFit fit(fit_mode::gauss_2d);
+				fit.Run(image_, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
 				sigmaX = initSigmaX_;
 				sigmaY = initSigmaX_;
 				theta = 0;
@@ -95,21 +92,21 @@ int Palm::Processing()
 			}
 
 			case 2: { // Gaussian fit of 2D
-				GaussianFit2D_Sigma fit;
-				fit.Run(image_, width_, height_, x, y, intensity, sigmaX, offset, rss, roi_);
+				GaussianFit fit(fit_mode::gauss_2d_sigma);
+				fit.Run(image_, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
 				sigmaY = sigmaX;
 				theta = 0;
 				break;
 			}
 
 			case 3: { // Gaussian fit of 3D Theta is constant
-				GaussianFit3D fit;
+				GaussianFit fit(fit_mode::gauss_3d);
 				fit.Run(image_, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
 				break;
 			}
 
 			case 4: { // Gaussian fit of 3D
-				GaussianFit3D_Theta fit;
+				GaussianFit fit(fit_mode::gauss_3d_theta);
 				fit.Run(image_, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
 				break;
 			}
