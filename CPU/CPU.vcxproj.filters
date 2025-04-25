@@ -28,7 +28,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="main.h" />
     <ClInclude Include="..\lib\fit\GaussianFit.h">
       <Filter>Fit</Filter>
     </ClInclude>

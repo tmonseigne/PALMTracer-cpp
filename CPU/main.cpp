@@ -1,8 +1,3 @@
-// PALM.cpp : définit le point d'entrée pour l'application DLL.
-//
-
-
-#include "main.h"
 #include "palm/Palm.h"
 
 Palm* c;
