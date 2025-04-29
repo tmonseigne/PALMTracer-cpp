@@ -1,0 +1,4 @@
+LIBRARY "CPU_PALM.dll"
+
+EXPORTS
+	Process

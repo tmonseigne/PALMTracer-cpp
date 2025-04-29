@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Live", "..\Live\Live.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GPU", "..\GPU\GPU.vcxproj", "{7F85BC5D-B680-4529-B00A-83549239A332}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CudaRuntime1", "..\CudaRuntime1\CudaRuntime1.vcxproj", "{F8F977E1-8FFB-710E-4DF8-46AA269C6A20}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -37,6 +39,10 @@ Global
 		{7F85BC5D-B680-4529-B00A-83549239A332}.Debug|x64.Build.0 = Debug|x64
 		{7F85BC5D-B680-4529-B00A-83549239A332}.Release|x64.ActiveCfg = Release|x64
 		{7F85BC5D-B680-4529-B00A-83549239A332}.Release|x64.Build.0 = Release|x64
+		{F8F977E1-8FFB-710E-4DF8-46AA269C6A20}.Debug|x64.ActiveCfg = Debug|x64
+		{F8F977E1-8FFB-710E-4DF8-46AA269C6A20}.Debug|x64.Build.0 = Debug|x64
+		{F8F977E1-8FFB-710E-4DF8-46AA269C6A20}.Release|x64.ActiveCfg = Release|x64
+		{F8F977E1-8FFB-710E-4DF8-46AA269C6A20}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
