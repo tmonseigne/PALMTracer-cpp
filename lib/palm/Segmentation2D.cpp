@@ -439,9 +439,9 @@ return value: number of detected structures
 ********************************************************************************************************************/
 void Segmentation2D::WatershedIntelligent(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double thresholdRatio)
 {
-	getLocalMax(potential, seg);                           //first, find the local maximum to set the different germinates
-	watershed(potential, seg);                             //first watershed
+	getLocalMax(potential, seg);                           // first, find the local maximum to set the different germinates
+	watershed(potential, seg);                             // first watershed
 	if (static_cast<int>(thresholdRatio) == 0) { return; } // Ratio test
-	filterStructureWS(potential, seg, thresholdRatio);     //filter the germinates to minimize the oversegmentation
-	watershed(potential, seg);                             //second watershed
+	filterStructureWS(potential, seg, thresholdRatio);     // filter the germinates to minimize the oversegmentation
+	watershed(potential, seg);                             // second watershed
 }
