@@ -57,20 +57,20 @@ void ATrous::b3SplineFiltering2D(const std::vector<double>& in, std::vector<doub
 
 	// Convolution horizontale (Y-axis)
 	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(height_); ++i) {
-		for (int j = 0; j < static_cast<int>(width_); ++j) {
-			const size_t Idx = offset(i, j);
-			tmp_[Idx] = convolutionY(Idx, i, j);
-		}
+	for (int idx = 0; idx < size_; ++idx) {
+			tmp_[idx] = convolutionY(idx, idx / static_cast<int>(width_), idx % static_cast<int>(width_));
 	}
+	//for (int i = 0; i < static_cast<int>(height_); ++i) {
+	//	for (int j = 0; j < static_cast<int>(width_); ++j) {
+	//		const size_t Idx = offset(i, j);
+	//		tmp_[Idx] = convolutionY(Idx, i, j);
+	//	}
+	//}
 
 	// Convolution verticale (X-axis)
 	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(height_); ++i) {
-		for (int j = 0; j < static_cast<int>(width_); ++j) {
-			const size_t Idx = offset(i, j);
-			out[Idx] = convolutionX(Idx, i, j);
-		}
+	for (int idx = 0; idx < size_; ++idx) {
+		out[idx] = convolutionX(idx, idx / static_cast<int>(width_), idx % static_cast<int>(width_));
 	}
 }
 

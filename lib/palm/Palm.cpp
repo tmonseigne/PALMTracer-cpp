@@ -48,20 +48,21 @@ Palm::Palm(const unsigned short* image, double* points, const size_t pointsListS
 
 int Palm::Processing()
 {
-	omp_set_dynamic(1);                                                         // Autorise l’adaptation automatique
-	omp_set_num_threads(static_cast<int>(std::thread::hardware_concurrency())); // Fixe un max
+	omp_set_dynamic(1); // Autorise l’adaptation automatique
+	//omp_set_num_threads(static_cast<int>(std::thread::hardware_concurrency())); // Fixe un max
 
 	int ret;
 	if ((ret = aTrousPub_.ATrousDecomposition2D(image_, height_, width_, planesToUseB_.data(), nbPlane_)) < 0) { return ret; }
 
-	for (size_t j = 0; j < size_; ++j) {
-		if (aTrousPub_.wDecomp_[waveletNo_][j] > thresholdVal_) {
-			outputPub_[j] = aTrousPub_.wDecomp_[waveletNo_][j];
-			segPub_[j] = 1;
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(size_); ++i) {
+		if (aTrousPub_.wDecomp_[waveletNo_][i] > thresholdVal_) {
+			outputPub_[i] = aTrousPub_.wDecomp_[waveletNo_][i];
+			segPub_[i] = 1;
 		}
 		else {
-			segPub_[j] = 0;
-			outputPub_[j] = 0;
+			segPub_[i] = 0;
+			outputPub_[i] = 0;
 		}
 	}
 

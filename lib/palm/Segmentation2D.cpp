@@ -109,7 +109,7 @@ void Segmentation2D::ComputeStatistics(const std::vector<double>& data, const st
 
 	for (auto& info : infos_) { info.Reset(height_, width_); }
 
-	// Accumulation des mesures
+	// Accumulation des mesures ne pas paralléliser
 	for (size_t i = 0, idx = 0; i < height_; ++i) {
 		for (size_t j = 0; j < width_; ++j, ++idx) {
 			const unsigned short s = seg[idx];
@@ -135,16 +135,8 @@ void Segmentation2D::ComputeStatistics(const std::vector<double>& data, const st
 			info.boundingBox_.xMin = std::min(info.boundingBox_.xMin, i);
 			info.boundingBox_.yMin = std::min(info.boundingBox_.yMin, j);
 
-			if (val > info.max_.val || static_cast<int>(info.surf_) == 1) {
-				info.max_.val = val;
-				info.max_.x = i;
-				info.max_.y = j;
-			}
-			if (val < info.min_.val || static_cast<int>(info.surf_) == 1) {
-				info.min_.val = val;
-				info.min_.x = i;
-				info.min_.y = j;
-			}
+			if (val > info.max_.val || static_cast<int>(info.surf_) == 1) { info.max_ = {.val = val, .x = i, .y = j}; }
+			if (val < info.min_.val || static_cast<int>(info.surf_) == 1) { info.min_ = {.val = val, .x = i, .y = j}; }
 
 			// Bordure
 			if (i == 0 || i == height_ - 1 || j == 0 || j == width_ - 1) { info.peri_++; }
@@ -244,7 +236,7 @@ void Segmentation2D::filterStructureWS(const std::vector<double>& potential, std
 					s.y = static_cast<int>(j);
 				}
 
-				// Recherche voisin
+				// Recherche des voisins
 				for (size_t ii = std::max(i, static_cast<size_t>(1)) - 1; ii <= std::min(i + 1, height_ - 1); ++ii) {
 					for (size_t jj = std::max(j, static_cast<size_t>(1)) - 1; jj <= std::min(j + 1, width_ - 1); ++jj) {
 						if (ii == i && jj == j) { continue; }
