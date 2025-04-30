@@ -147,7 +147,7 @@ void Tracking::readPointsList()
 			std::swap(timeNodes_[t].nodes_[indexMax], timeNodes_[t].nodes_[i]);
 		}
 
-		index += (nNodes + 1) * Parameters::N_SEG_PARAMS; //(A vérifier)
+		index += (nNodes + 1) * Parameters::N_SEG_PARAMS; //(À vérifier)
 	}
 
 	//Precompute distance to border

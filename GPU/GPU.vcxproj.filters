@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="..\lib\palm\Segmentation2D.cpp">
+      <Filter>Palm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\palm\Palm.cpp">
+      <Filter>Palm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\cuda\GaussianFit.cpp">
+      <Filter>Fit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\cuda\ATrous.cpp">
+      <Filter>Palm</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\lib\fit\GaussianFit.h">
+      <Filter>Fit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\palm\ATrous.h">
+      <Filter>Palm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\palm\Info2D.h">
+      <Filter>Palm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\palm\Palm.h">
+      <Filter>Palm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\palm\Segmentation2D.h">
+      <Filter>Palm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\Constants.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="GPU_PALM.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Fit">
+      <UniqueIdentifier>{c74675e3-662a-49e2-b547-068d9686f118}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Palm">
+      <UniqueIdentifier>{e5a11116-d4db-43a9-a04f-722064d18fe7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Cuda">
+      <UniqueIdentifier>{7870960e-8f73-41a6-8892-3ea2cd2ddf18}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\lib\cuda\GaussianFit_256.cu">
+      <Filter>Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\lib\cuda\WavelettProjection.cu">
+      <Filter>Cuda</Filter>
+    </CudaCompile>
+  </ItemGroup>
+</Project>

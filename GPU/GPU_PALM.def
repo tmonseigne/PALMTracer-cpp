@@ -1,0 +1,4 @@
+LIBRARY "GPU_PALM.dll"
+
+EXPORTS
+	Process
