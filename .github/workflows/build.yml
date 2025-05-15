@@ -1,0 +1,39 @@
+name: Build DLLs
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      # - name: Setup CUDA (optional) # trop long et version à vérifier
+      #   run: choco install cuda -y
+
+      - name: Build solution
+        run: cmd /c "msbuild PALM.sln /t:CPU;Tracking /p:Configuration=Release /p:Platform=x64"
+  
+      - name: List output DLLs
+        run: |
+          echo "Listing DLLs in Output folder:"
+          dir Output\*.dll
+  
+      - name: Upload DLLs as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dll-artifacts
+          path: Output/*.dll
