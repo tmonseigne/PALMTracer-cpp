@@ -1,4 +1,0 @@
-LIBRARY "Test_CUDA_PALM.dll"
-
-EXPORTS
-	Process
