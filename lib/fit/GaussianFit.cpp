@@ -10,7 +10,7 @@
 #include <ranges>
 #include <vector>
 
-//==================== Constructor ====================
+//-------------------------------------------------------------------------------------------------
 GaussianFit::GaussianFit(const fit_mode mode)
 	: mode_(mode), n_(0), nParams_(4), sigma_(1), theta_(0)
 {
@@ -30,7 +30,7 @@ GaussianFit::GaussianFit(const fit_mode mode)
 	pMax_.resize(nParams_);
 }
 
-//==================== Run ====================
+//-------------------------------------------------------------------------------------------------
 void GaussianFit::Run(const unsigned short* image, size_t sizeX, size_t sizeY, double& x, double& y, double& intensity, double& sigmaX,
                       double& sigmaY, double& theta, double& offset, double& rss, size_t roi)
 {
@@ -144,6 +144,9 @@ void GaussianFit::Run(const unsigned short* image, size_t sizeX, size_t sizeY, d
 	}
 }
 
+
+// ==================== Run Computes ====================
+//-------------------------------------------------------------------------------------------------
 void GaussianFit::preComputeFit(double& min, double& max, const unsigned short* image, const size_t width,
                                 const size_t x, const size_t y, std::vector<double>& dat, std::vector<double>& weight, std::vector<size_t>& t,
                                 const size_t roi)
@@ -172,6 +175,7 @@ void GaussianFit::preComputeFit(double& min, double& max, const unsigned short* 
 	//}
 }
 
+//-------------------------------------------------------------------------------------------------
 void GaussianFit::initP(const double x, const double y, const double sigmaX, const double sigmaY, const double theta, const double minI, const double maxI)
 {
 	switch (mode_) {
@@ -202,6 +206,7 @@ void GaussianFit::initP(const double x, const double y, const double sigmaX, con
 	}
 }
 
+//-------------------------------------------------------------------------------------------------
 double GaussianFit::computeRSS(std::vector<double>& dat, std::vector<double>& hat) const
 {
 	// computing "dat" mean & "hat" mean
@@ -223,7 +228,8 @@ double GaussianFit::computeRSS(std::vector<double>& dat, std::vector<double>& ha
 	return std::isnan(R) ? 0 : R * R;
 }
 
-//==================== PSF ====================
+// ==================== PSF ====================
+//-------------------------------------------------------------------------------------------------
 double GaussianFit::psf(const std::vector<double>& p, const double x, const double y) const
 {
 	switch (mode_) {
@@ -235,11 +241,13 @@ double GaussianFit::psf(const std::vector<double>& p, const double x, const doub
 	return 0;
 }
 
+//-------------------------------------------------------------------------------------------------
 double GaussianFit::psf(const double x, const double y, const double i0, const double sigma, const double offset)
 {
 	return i0 * exp(-(x * x + y * y) / (2 * (sigma * sigma))) + offset;
 }
 
+//-------------------------------------------------------------------------------------------------
 double GaussianFit::psf(const double x, const double y, const double i0, const double sigmaX, const double sigmaY, const double theta, const double offset)
 {
 	const auto CosTheta = cos(theta), SinTheta = sin(theta);
@@ -249,7 +257,8 @@ double GaussianFit::psf(const double x, const double y, const double i0, const d
 	return i0 * exp(-(Factor1 * Factor1 + Factor2 * Factor2)) + offset;
 }
 
-//==================== Matrix ====================
+// ==================== Matrix ====================
+//-------------------------------------------------------------------------------------------------
 void GaussianFit::deriv(double* out, const std::vector<double>& p, const double x, const double y) const
 {
 	switch (mode_) {
@@ -260,6 +269,7 @@ void GaussianFit::deriv(double* out, const std::vector<double>& p, const double 
 	}
 }
 
+//-------------------------------------------------------------------------------------------------
 void GaussianFit::deriv(double* out, const double x, const double y, const double i0, const double sigma, const bool has_sigma)
 {
 	const auto X_2 = x * x, Y_2 = y * y, Sigma_2 = sigma * sigma;
@@ -277,8 +287,9 @@ void GaussianFit::deriv(double* out, const double x, const double y, const doubl
 	else { out[3] = 1; } // offset (quand sigma est fixe)
 }
 
-void GaussianFit::deriv(double* out, const double x, const double y, const double i0, const double sigmaX, const double sigmaY, const double theta,
-                        const bool has_theta)
+//-------------------------------------------------------------------------------------------------
+void GaussianFit::deriv(double* out, const double x, const double y, const double i0, const double sigmaX, const double sigmaY,
+                        const double theta, const bool has_theta)
 {
 	const auto X_2 = x * x, Y_2 = y * y, X_Y = x * y, SigmaX_2 = sigmaX * sigmaX, SigmaY_2 = sigmaY * sigmaY;
 	const auto CosT = cos(theta), SinT = sin(theta);
@@ -304,6 +315,7 @@ void GaussianFit::deriv(double* out, const double x, const double y, const doubl
 	else { out[5] = 1; } // offset (quand theta est fixe)	
 }
 
+//-------------------------------------------------------------------------------------------------
 double GaussianFit::chi2(std::vector<double>& alpha, std::vector<double>& beta, const std::vector<double>& dydp, const std::vector<double>& weight,
                          const std::vector<double>& deltaY) const
 {
@@ -328,14 +340,15 @@ double GaussianFit::chi2(std::vector<double>& alpha, std::vector<double>& beta, 
 	}
 
 	// Computing Chi_sq
-#ifdef __APPLE__
+	#ifdef __APPLE__
 	// Pas de support de std::execution sous macOS (Clang/libc++)
 	return std::transform_reduce(deltaY.begin(), deltaY.end(), tmp.begin(), 0.0);
-#else
+	#else
 	return std::transform_reduce(std::execution::seq, deltaY.begin(), deltaY.end(), tmp.begin(), 0.0);
-#endif
+	#endif
 }
 
+//-------------------------------------------------------------------------------------------------
 double GaussianFit::lm_matx(const std::vector<size_t>& t, const std::vector<double>& p, const std::vector<double>& dat, const std::vector<double>& weight,
                             std::vector<double>& alpha, std::vector<double>& beta, std::vector<double>& hat) const
 {
@@ -352,6 +365,7 @@ double GaussianFit::lm_matx(const std::vector<size_t>& t, const std::vector<doub
 	return chi2(alpha, beta, dydp, weight, delta);
 }
 
+//-------------------------------------------------------------------------------------------------
 void GaussianFit::inverse(std::vector<double>& in, std::vector<double>& out) const
 {
 	std::ranges::fill(out, 0.0);

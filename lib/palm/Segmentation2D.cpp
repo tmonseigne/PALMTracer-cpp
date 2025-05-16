@@ -7,18 +7,10 @@
 #include <unordered_map>
 #include <utility> // std::pair
 
+/// <summary>The epsilon</summary>
 constexpr double EPSILON = 1e-7;
 
-void Segmentation2D::alloc(const size_t nbStruct)
-{
-	desalloc();
-	infos_.resize(nbStruct);
-	for (size_t i = 0; i < nbStruct; ++i) { infos_[i].index_ = i; }
-}
-
-void Segmentation2D::desalloc() { infos_.clear(); }
-
-
+//-------------------------------------------------------------------------------------------------
 void Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double* param, const unsigned short* useParam)
 {
 	const size_t OldSize = infos_.size();
@@ -104,7 +96,8 @@ void Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double* 
 	}
 }
 
-/********************************************************************************************************************/
+
+//-------------------------------------------------------------------------------------------------
 void Segmentation2D::ComputeStatistics(const std::vector<double>& data, const std::vector<unsigned short>& seg,
                                        const std::vector<double>& waveData, const size_t gaussFit)
 {
@@ -192,13 +185,25 @@ void Segmentation2D::ComputeStatistics(const std::vector<double>& data, const st
 	}
 }
 
-/********************************************************************************************************************
-int Segmentation2D::filterStructureWS(...) filter the structure of the watershed.
-std::vector<double> &potential: input image
-std::vector<unsigned short> &localMax: local maximum
-double thresholdRatio: value to distinguish if 2 strucutres in contact have to be considered as a single structure (
-							oversegmentation)
-********************************************************************************************************************/
+//-------------------------------------------------------------------------------------------------
+void Segmentation2D::WatershedIntelligent(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double thresholdRatio)
+{
+	getLocalMax(potential, seg);                           // first, find the local maximum to set the different germinates
+	watershed(potential, seg);                             // first watershed
+	if (static_cast<int>(thresholdRatio) == 0) { return; } // Ratio test
+	filterStructureWS(potential, seg, thresholdRatio);     // filter the germinates to minimize the oversegmentation
+	watershed(potential, seg);                             // second watershed
+}
+
+//-------------------------------------------------------------------------------------------------
+void Segmentation2D::alloc(const size_t nbStruct)
+{
+	desalloc();
+	infos_.resize(nbStruct);
+	for (size_t i = 0; i < nbStruct; ++i) { infos_[i].index_ = i; }
+}
+
+//-------------------------------------------------------------------------------------------------
 void Segmentation2D::filterStructureWS(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double thresholdRatio)
 {
 	const size_t NbStruct = infos_.size();
@@ -310,13 +315,7 @@ void Segmentation2D::filterStructureWS(const std::vector<double>& potential, std
 	}
 }
 
-
-/********************************************************************************************************************
-void Segmentation2D::getLocalMax(...) compute local maximum of the image and mark them in the image seg.
-std::vector<double> &image: input image
-std::vector<unsigned short> &localMax: local maximum
-double threshold: a point to be considered as a local maximum have to be > to threshold.
-********************************************************************************************************************/
+//-------------------------------------------------------------------------------------------------
 void Segmentation2D::getLocalMax(const std::vector<double>& potential, std::vector<unsigned short>& seg)
 {
 	std::ranges::fill(seg, 0);
@@ -358,15 +357,16 @@ void Segmentation2D::getLocalMax(const std::vector<double>& potential, std::vect
 	alloc(label - 1);
 }
 
+//-------------------------------------------------------------------------------------------------
 using coord_2d = std::pair<int, int>;
 
 struct Compare
 {
-	// min-heap (priorité la plus faible d'abord)
 	bool operator()(const std::pair<double, coord_2d>& a, const std::pair<double, coord_2d>& b) const { return a.first > b.first; }
 };
 
-/********************************************************************************************************************/
+
+//-------------------------------------------------------------------------------------------------
 void Segmentation2D::watershed(const std::vector<double>& potential, std::vector<unsigned short>& seg) const
 {
 	std::priority_queue<std::pair<double, coord_2d>, std::vector<std::pair<double, coord_2d>>, Compare> heap;
@@ -419,24 +419,4 @@ void Segmentation2D::watershed(const std::vector<double>& potential, std::vector
 			}
 		}
 	}
-}
-
-/********************************************************************************************************************
-int Segmentation2D::watershedIntelligent(...) compute watershed segmentation insied the reagion upper the threshold value.
-It tries to minimize the oversegmentation.
-std::vector<double> &potential: defines the potential function the makes the watershed segmented area growing
-std::vector<unsigned short> &seg: it contains the result of the watershed segmentation.
-double threshold: define the threshold value to distinguish the segmented structures
-double thresholdRatio: value 0<= X <=1. Makes a fusion to minimize the oversegmentation
-						if X=0 simple watershed
-						if X=1 no watershed
-return value: number of detected structures
-********************************************************************************************************************/
-void Segmentation2D::WatershedIntelligent(const std::vector<double>& potential, std::vector<unsigned short>& seg, const double thresholdRatio)
-{
-	getLocalMax(potential, seg);                           // first, find the local maximum to set the different germinates
-	watershed(potential, seg);                             // first watershed
-	if (static_cast<int>(thresholdRatio) == 0) { return; } // Ratio test
-	filterStructureWS(potential, seg, thresholdRatio);     // filter the germinates to minimize the oversegmentation
-	watershed(potential, seg);                             // second watershed
 }

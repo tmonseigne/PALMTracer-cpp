@@ -4,6 +4,7 @@
 Palm* c;
 
 
+//-------------------------------------------------------------------------------------------------
 EXPORT_API
 void CALL_CONV _OpenPALMProcessing(const unsigned short* image, double* pointsList, const unsigned long pointsListSize,
                                   const unsigned long sizeX, const unsigned long sizeY, const unsigned long waveletNo,
@@ -15,12 +16,15 @@ void CALL_CONV _OpenPALMProcessing(const unsigned short* image, double* pointsLi
 	             volMin, intMin, gaussFit, sigmaX, sigmaY, angle, roi);
 }
 
+//-------------------------------------------------------------------------------------------------
 EXPORT_API
 long CALL_CONV _PALMProcessing() { return c->Processing(); }
 
+//-------------------------------------------------------------------------------------------------
 EXPORT_API
 void CALL_CONV _closePALMProcessing() { delete c; }
 
+//-------------------------------------------------------------------------------------------------
 EXPORT_API
 long CALL_CONV Process(const unsigned short* image, double* pointsList, const unsigned long pointsListSize,
                       const unsigned long sizeX, const unsigned long sizeY, const unsigned long waveletNo,

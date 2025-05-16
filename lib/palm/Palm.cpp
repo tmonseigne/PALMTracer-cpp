@@ -9,6 +9,8 @@
 
 #include "fit/GaussianFit.hpp"
 
+
+//-------------------------------------------------------------------------------------------------
 Palm::Palm(const unsigned short* image, double* points, const size_t pointsListSize, const size_t height, const size_t width,
            const size_t waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin,
            const size_t gaussFit, const double sigmaX, const double sigmaY, const double theta, const size_t roi)
@@ -48,6 +50,8 @@ Palm::Palm(const unsigned short* image, double* points, const size_t pointsListS
 	planesToUseB_[8] = false;
 }
 
+
+//-------------------------------------------------------------------------------------------------
 int Palm::Processing()
 {
 	omp_set_dynamic(1); // Autorise l’adaptation automatique

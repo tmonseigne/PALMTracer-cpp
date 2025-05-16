@@ -16,10 +16,6 @@ size_t ATrous::offsetTest(const int i, const int j) const
 }
 
 
-//Compute the offset translate   tab[i][j] to tab[i*maxSizeJ+j]
-size_t ATrous::offset(const size_t i, const size_t j) const { return i * width_ + j; }
-
-
 int ATrous::testSizes2D(bool* planesToUse, size_t& nbPlane) const
 {
 	//Test in, out, planesToUse, nbPlane
