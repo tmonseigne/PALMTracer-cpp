@@ -82,11 +82,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\Constants.hpp" />
-    <ClInclude Include="..\lib\fit\GaussianFit.h" />
-    <ClInclude Include="..\lib\palm\ATrous.h" />
-    <ClInclude Include="..\lib\palm\Palm.h" />
-    <ClInclude Include="..\lib\palm\Info2D.h" />
-    <ClInclude Include="..\lib\palm\Segmentation2D.h" />
+    <ClInclude Include="..\lib\ExportAPI.hpp" />
+    <ClInclude Include="..\lib\fit\GaussianFit.hpp" />
+    <ClInclude Include="..\lib\palm\ATrous.hpp" />
+    <ClInclude Include="..\lib\palm\Palm.hpp" />
+    <ClInclude Include="..\lib\palm\Info2D.hpp" />
+    <ClInclude Include="..\lib\palm\Segmentation2D.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

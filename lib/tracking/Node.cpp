@@ -8,7 +8,7 @@ Class Node contains the caracteristic off the node, and the chain of the other n
 links to the current objet. 
 ********************************************************************************************************************/
 
-#include "Node.h"
+#include "Node.hpp"
 
 #include <algorithm>
 #include <numbers>

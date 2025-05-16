@@ -1,10 +1,10 @@
-// Tracking.cpp : Defines the exported functions for the DLL application.
-#include "tracking/Parameters.h"
-#include "tracking/Tracking.h"
+#include "ExportAPI.hpp"
+#include "tracking/Parameters.hpp"
+#include "tracking/Tracking.hpp"
 
 
-_declspec(dllexport)
-long _stdcall Process(const double* pointsList, double* trc, const double maxSpeed, const unsigned long minLife,
+EXPORT_API
+long CALL_CONV Process(const double* pointsList, double* trc, const double maxSpeed, const unsigned long minLife,
                       const double decrease, const double costBirth, const unsigned long nbTimes)
 {
 	const auto Param = new Parameters();
@@ -20,8 +20,8 @@ long _stdcall Process(const double* pointsList, double* trc, const double maxSpe
 }
 
 
-_declspec(dllexport)
-long _stdcall Tracking(const double* points, const unsigned long nPoints, double* trc, const unsigned long nTracks,
+EXPORT_API
+long CALL_CONV Tracking(const double* points, const unsigned long nPoints, double* trc, const unsigned long nTracks,
                        const double maxSpeed, const double dZdX, const double minLife, const double decrease,
                        const unsigned long allowFusiondisso, const double costBirth, unsigned long nbDim, const unsigned long model,
                        const unsigned long nbTimes)

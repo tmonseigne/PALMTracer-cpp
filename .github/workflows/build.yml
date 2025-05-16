@@ -1,4 +1,4 @@
-name: Build DLLs
+name: Build Multi-Platform DLLs
 
 on:
   push:
@@ -11,29 +11,74 @@ on:
 
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false  # Continue other jobs if one matrix fail
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Setup MSBuild
+    
+      - name: Setup MSBuild (Windows)
+        if: matrix.os == 'windows-latest'
         uses: microsoft/setup-msbuild@v2
-
+    
       # - name: Setup CUDA (optional) # trop long et version à vérifier
       #   run: choco install cuda -y
 
-      - name: Build solution
-        run: cmd /c "msbuild PALM.sln /t:CPU;Tracking /p:Configuration=Release /p:Platform=x64"
-  
-      - name: List output DLLs
+      - name: Build solution (Windows)
+        if: matrix.os == 'windows-latest'
         run: |
-          echo "Listing DLLs in Output folder:"
-          dir Output\*.dll
-  
-      - name: Upload DLLs as artifact
+          cmd /c "msbuild PALM.sln /t:CPU;Tracking /p:Configuration=Release /p:Platform=x64"
+    
+      - name: List output DLLs (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+            echo "Listing DLLs in Output folder:"
+            dir Output\*.dll
+
+      - name: Setup CMake (Unix/macOS)
+        if: matrix.os != 'windows-latest'
+        uses: jwlawson/actions-setup-cmake@v1
+
+      - name: Install OpenMP (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew update
+          brew install llvm libomp
+          echo "Check for omp.h:"
+          find /opt/homebrew -name omp.h || true
+          echo "LDFLAGS=-L/opt/homebrew/opt/libomp/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I/opt/homebrew/opt/libomp/include" >> $GITHUB_ENV
+          echo "CXXFLAGS=-Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include" >> $GITHUB_ENV
+          echo "LIBRARY_PATH=/opt/homebrew/opt/libomp/lib" >> $GITHUB_ENV
+    
+      - name: Configure CMake (Unix/macOS)
+        if: matrix.os != 'windows-latest'
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="$CXXFLAGS" -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS"
+    
+      - name: Build CPU & Tracking (Unix/macOS)
+        if: matrix.os != 'windows-latest'
+        run: cmake --build build --target CPU Tracking --config Release
+    
+      - name: Create Output folder (Unix/macOS)
+        if: matrix.os != 'windows-latest'
+        run: mkdir -p Output && cp build/lib*.so* Output/ || true && cp build/lib*.dylib* Output/ || true
+    
+      - name: List Output files (Unix/macOS)
+        if: matrix.os != 'windows-latest'
+        run: |
+          echo "Output files:"
+          ls -la Output || dir Output
+    
+      - name: Upload compiled artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dll-artifacts
-          path: Output/*.dll
+          name: compiled-libs-${{ matrix.os }}
+          path: Output/*
+    

@@ -13,18 +13,19 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\lib\tracking\Parameters.h">
+    <ClInclude Include="..\lib\tracking\Parameters.hpp">
       <Filter>Tracking</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\Node.h">
+    <ClInclude Include="..\lib\tracking\Node.hpp">
       <Filter>Tracking</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\Tracking.h">
+    <ClInclude Include="..\lib\tracking\Tracking.hpp">
       <Filter>Tracking</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\TimeNodes.h">
+    <ClInclude Include="..\lib\tracking\TimeNodes.hpp">
       <Filter>Tracking</Filter>
     </ClInclude>
+    <ClInclude Include="..\lib\ExportAPI.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Tracking_PALM.def" />

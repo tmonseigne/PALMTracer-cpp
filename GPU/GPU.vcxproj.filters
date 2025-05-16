@@ -16,22 +16,23 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\lib\fit\GaussianFit.h">
+    <ClInclude Include="..\lib\fit\GaussianFit.hpp">
       <Filter>Fit</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\ATrous.h">
+    <ClInclude Include="..\lib\palm\ATrous.hpp">
       <Filter>Palm</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\Info2D.h">
+    <ClInclude Include="..\lib\palm\Info2D.hpp">
       <Filter>Palm</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\Palm.h">
+    <ClInclude Include="..\lib\palm\Palm.hpp">
       <Filter>Palm</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\Segmentation2D.h">
+    <ClInclude Include="..\lib\palm\Segmentation2D.hpp">
       <Filter>Palm</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\Constants.hpp" />
+    <ClInclude Include="..\lib\ExportAPI.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="GPU_PALM.def" />

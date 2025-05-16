@@ -1,6 +1,9 @@
-#include "Segmentation2D.h"
+#include "Segmentation2D.hpp"
 #include <algorithm>
+#include <cfloat>
+#include <cmath>
 #include <queue>
+#include <ranges>
 #include <unordered_map>
 #include <utility> // std::pair
 
@@ -262,7 +265,7 @@ void Segmentation2D::filterStructureWS(const std::vector<double>& potential, std
 
 			if (!s.locked && !Neighbor.locked) {
 				const double Delta = s.maxPotential - s.minPotential;
-				if (std::abs(Delta) <= DBL_EPSILON) { continue; }
+				if (std::fabs(Delta) <= DBL_EPSILON) { continue; }
 
 				const double Ratio = (s.maxPotential - s.maxPotentialWithNeighbor) / Delta;
 				if (Ratio < thresholdRatio) {

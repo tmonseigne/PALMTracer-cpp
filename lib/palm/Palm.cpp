@@ -1,11 +1,13 @@
 // PALM.cpp : définit le point d'entrée pour l'application DLL.
 //
 
-#include "Palm.h"
+#include "Palm.hpp"
+#include <algorithm>
 #include <omp.h>
+#include <ranges>
 #include <thread>
 
-#include "fit/GaussianFit.h"
+#include "fit/GaussianFit.hpp"
 
 Palm::Palm(const unsigned short* image, double* points, const size_t pointsListSize, const size_t height, const size_t width,
            const size_t waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin,

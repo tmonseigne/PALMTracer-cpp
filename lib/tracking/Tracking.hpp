@@ -4,8 +4,8 @@
 *******************************************************************************************************************/
 #pragma once
 
-#include "Parameters.h"
-#include "TimeNodes.h"
+#include "Parameters.hpp"
+#include "TimeNodes.hpp"
 
 class Tracking
 {

@@ -59,10 +59,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\lib\tracking\Parameters.h" />
-    <ClInclude Include="..\lib\tracking\Node.h" />
-    <ClInclude Include="..\lib\tracking\Tracking.h" />
-    <ClInclude Include="..\lib\tracking\TimeNodes.h" />
+    <ClInclude Include="..\lib\ExportAPI.hpp" />
+    <ClInclude Include="..\lib\tracking\Parameters.hpp" />
+    <ClInclude Include="..\lib\tracking\Node.hpp" />
+    <ClInclude Include="..\lib\tracking\Tracking.hpp" />
+    <ClInclude Include="..\lib\tracking\TimeNodes.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\lib\tracking\Node.cpp" />

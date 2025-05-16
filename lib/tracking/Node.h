@@ -7,7 +7,7 @@
 #include <array>
 #include <cmath>
 
-#include "Parameters.h"
+#include "Parameters.hpp"
 
 class Node
 {
@@ -47,7 +47,7 @@ private:
 	Node* getRandomNeighbor(const size_t type = 0) const { return neighbors_[type][params_->RandomModulo(neighbors_[type].size())]; }
 
 	//==================== likeness ====================
-	static double getLikeness(const double difference, const double sigma) { return 1. - fabs(difference) / (3. * sigma); }
+	static double getLikeness(const double difference, const double sigma) { return 1. - std::fabs(difference) / (3. * sigma); }
 	double likenessBlink(const Node* n = nullptr) const;
 	double likenessDistance(const Node* n = nullptr) const;
 	double likenessIntensity(const Node* n = nullptr) const;

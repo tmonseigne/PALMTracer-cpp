@@ -1,4 +1,4 @@
-#include "GaussianFit.h"
+#include "GaussianFit.hpp"
 
 #include <algorithm>
 #include <array>
@@ -57,7 +57,7 @@ void GaussianFit::Run(const unsigned short* image, size_t sizeX, size_t sizeY, d
 		double x2_old = x2;
 
 		// Trouver la valeur absolue maximale
-		double m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::abs(b); }));
+		double m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::fabs(b); }));
 
 		bool stop = false;
 		if (m < EPSILON_1) { stop = true; }
@@ -102,12 +102,12 @@ void GaussianFit::Run(const unsigned short* image, size_t sizeX, size_t sizeY, d
 			}
 
 			m = 0;
-			for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, abs(deltaP[i] / p_[i])); }
+			for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::fabs(deltaP[i] / p_[i])); }
 
 			if (m < EPSILON_2 && iteration > 2) { stop = true; }
 			if (x2 / static_cast<double>(n_) < EPSILON_3 && iteration > 2) { stop = true; }
 
-			m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::abs(b); }));
+			m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::fabs(b); }));
 
 			if (m < EPSILON_1 && iteration > 2) { stop = true; }
 			if (iteration >= N_ITER) { stop = true; }
@@ -328,7 +328,12 @@ double GaussianFit::chi2(std::vector<double>& alpha, std::vector<double>& beta, 
 	}
 
 	// Computing Chi_sq
+#ifdef __APPLE__
+	// Pas de support de std::execution sous macOS (Clang/libc++)
+	return std::transform_reduce(deltaY.begin(), deltaY.end(), tmp.begin(), 0.0);
+#else
 	return std::transform_reduce(std::execution::seq, deltaY.begin(), deltaY.end(), tmp.begin(), 0.0);
+#endif
 }
 
 double GaussianFit::lm_matx(const std::vector<size_t>& t, const std::vector<double>& p, const std::vector<double>& dat, const std::vector<double>& weight,

@@ -1,8 +1,8 @@
 #pragma once
 #include <array>
 
-#include "ATrous.h"
-#include "Segmentation2D.h"
+#include "ATrous.hpp"
+#include "Segmentation2D.hpp"
 
 constexpr size_t N_SEGMENTS = 13;
 constexpr size_t N_PLANES = 9;

@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <vector>
 
 enum class fit_mode: uint8_t { gauss_2d, gauss_2d_sigma, gauss_3d, gauss_3d_theta };

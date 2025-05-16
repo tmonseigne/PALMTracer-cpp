@@ -4,8 +4,8 @@
 *******************************************************************************************************************/
 #pragma once
 
-#include "Node.h"
-#include "Parameters.h"
+#include "Node.hpp"
+#include "Parameters.hpp"
 
 
 class TimeNodes

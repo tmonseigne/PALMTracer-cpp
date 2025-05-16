@@ -3,17 +3,17 @@
 *******************************************************************************************************************/
 #pragma once
 
-using val_2d = struct
+struct val_2d
 {
 	double x, y;
 };
 
-using box_2d = struct
+struct box_2d
 {
 	size_t xMin, xMax, yMin, yMax;
 };
 
-using ws_fusion_2d = struct
+struct ws_fusion_2d
 {
 	double maxPotentialWithNeighbor, minPotential, maxPotential;
 	int x, y, structInContact, structToBecome, newIndex;
@@ -21,13 +21,13 @@ using ws_fusion_2d = struct
 };
 
 
-using max_2d = struct
+struct max_2d
 {
 	double val;
 	size_t x, y;
 };
 
-using variance_2d = struct
+struct variance_2d
 {
 	double xx, yy, xy;
 };

@@ -8,9 +8,10 @@ Class Tracking contains several Tracking objets for each time (nbTimes).
 ********************************************************************************************************************/
 
 
-#include "Tracking.h"
+#include "Tracking.hpp"
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 
 void Tracking::Processing()
 {
@@ -45,7 +46,7 @@ void Tracking::Processing()
 				for (size_t t = 0; t < nbTimes_ - 1; ++t) { likeness += timeNodes_[t].TryRandomChange(error); }
 			}
 
-			if (fabs(likeness) < 1e-8) { cpt++; }
+			if (std::fabs(likeness) < 1e-8) { cpt++; }
 			else { cpt = 0; }
 
 			bcl++;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "Info2D.h"
+#include "Info2D.hpp"
 
 
 class Segmentation2D

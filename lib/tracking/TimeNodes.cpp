@@ -6,8 +6,9 @@
 /********************************************************************************************************************
 Class TimeNodes contains the Node objets for one time.
 ********************************************************************************************************************/
-
-#include "TimeNodes.h"
+#include "TimeNodes.hpp"
+#include <algorithm>
+#include <ranges>
 
 /********************************************************************************************************************
 Constructor(int _time, int _nbNodes) is run after the base constructor TimeNodes::TimeNodes
