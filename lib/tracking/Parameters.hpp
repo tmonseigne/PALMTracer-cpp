@@ -1,3 +1,14 @@
+///-------------------------------------------------------------------------------------------------
+///
+/// \file Parameters.hpp
+/// \brief
+/// \author Thibaut Monseigne (CNRS).
+/// \version 1.0.
+/// \date 16/05/2025.
+/// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
+///
+///-------------------------------------------------------------------------------------------------
+
 #pragma once
 #include <random>
 
@@ -25,5 +36,5 @@ public:
 	size_t RandomModulo(const size_t n) { return rng_() % n; }
 	double Randomfloat() { return static_cast<double>(rng_()) / static_cast<double>(std::mt19937::max()); }
 
-	std::mt19937 rng_{42}; // Générateur de nombres pseudo-aléatoires, seedé avec 42
+	std::mt19937 rng_{42}; // GÃ©nÃ©rateur de nombres pseudo-alÃ©atoires, seedÃ© avec 42
 };

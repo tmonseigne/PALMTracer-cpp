@@ -1,0 +1,14 @@
+---
+BasedOnStyle: Google
+AllowShortBlocksOnASingleLine: 'true'
+AllowShortCaseLabelsOnASingleLine: 'true'
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: Always
+AllowShortLambdasOnASingleLine: All
+AllowShortLoopsOnASingleLine: 'true'
+ColumnLimit: '200'
+NamespaceIndentation: All
+TabWidth: '4'
+UseTab: Always
+
+...

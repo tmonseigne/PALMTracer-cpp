@@ -1,5 +1,5 @@
 ///-------------------------------------------------------------------------------------------------
-/// 
+///
 /// \file Palm.hpp
 /// \brief  Classe principale pour la détection de points lumineux dans une image 2D en niveaux de gris,
 /// basée sur une décomposition en ondelettes et un post-traitement par segmentation.
@@ -7,7 +7,7 @@
 /// \version 1.0.
 /// \date 16/05/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
-/// 
+///
 ///-------------------------------------------------------------------------------------------------
 
 #pragma once
@@ -42,7 +42,7 @@ public:
 	/// <summary>Constructeur de la classe <c>Palm</c>.</summary>
 	///
 	/// Initialise les structures internes pour effectuer une détection basée sur une décomposition en ondelettes et une segmentation intelligente.
-	/// 
+	///
 	/// <param name="image">Image d'entrée au format tableau 2D (grayscale, taille height × width).</param>
 	/// <param name="points">Pointeur vers le tableau de sortie où seront stockés les points détectés (x, y, intensité, etc.).</param>
 	/// <param name="pointsListSize">Taille totale allouée pour le tableau de points (doit être un multiple de N_SEGMENTS).</param>
@@ -82,7 +82,7 @@ public:
 	/// - Remplissage du tableau `points_` avec les résultats (coordonnées, intensité, sigma, etc.).
 	///
 	/// Le tableau `points_` est rempli avec des blocs de N_SEGMENTS double, représentant les paramètres pour chaque détection. Une ligne vide (valeurs = -1) est ajoutée à la fin.
-	/// 
+	///
 	/// <returns>Le nombre total de valeurs (doubles) écrites dans `points_`, y compris la ligne finale vide. (i.e. `nb_points * N_SEGMENTS + N_SEGMENTS`) </returns>
 	int Processing();
 

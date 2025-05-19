@@ -21,8 +21,8 @@ TimeNodes::TimeNodes(const size_t time, const size_t nNodes, Parameters* params)
 }
 
 /********************************************************************************************************************
-linkBeforeAndAfter() for each structure at the time_ t, it builds the chained list of all the structures of the next 
-time_ (t+1) close to it. 
+linkBeforeAndAfter() for each structure at the time_ t, it builds the chained list of all the structures of the next
+time_ (t+1) close to it.
 ********************************************************************************************************************/
 void TimeNodes::LinkNeighborsBeforeAndAfter(TimeNodes& futures)
 {

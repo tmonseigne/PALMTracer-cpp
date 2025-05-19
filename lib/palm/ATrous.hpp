@@ -1,12 +1,12 @@
 ﻿///-------------------------------------------------------------------------------------------------
-/// 
+///
 /// \file ATrous.hpp
 /// \brief  Classe pour la décomposition en ondelettes 2D selon l’algorithme "à trous".
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.0.
 /// \date 16/05/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
-/// 
+///
 ///-------------------------------------------------------------------------------------------------
 
 #pragma once

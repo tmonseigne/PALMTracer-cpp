@@ -1,0 +1,30 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-docstring-first       # Vérifie une erreur courante consistant à placer du code avant le docstring.
+      - id: check-builtin-literals      # Exige une syntaxe littérale lors de l'initialisation de types intégrés Python vides ou nuls.
+      - id: check-case-conflict         # Recherche les fichiers dont les noms pourraient être en conflit sur un système de fichiers insensible à la casse.
+      - id: check-illegal-windows-names # Recherche les fichiers qui ne peuvent pas être créés sous Windows.
+      - id: check-json                  # Tente de charger tous les fichiers JSON pour vérifier la syntaxe.
+      - id: check-toml                  # Tente de charger tous les fichiers TOML pour vérifier la syntaxe.
+      - id: check-xml                   # Tente de charger tous les fichiers XML pour vérifier la syntaxe.
+      - id: check-yaml                  # Tente de charger tous les fichiers YAML pour vérifier la syntaxe.
+      - id: end-of-file-fixer           # Assure que les fichiers se terminent par une nouvelle ligne et uniquement par une nouvelle ligne.
+      - id: name-tests-test             # Vérifie que les fichiers de test sont nommés correctement.
+        args: [ --pytest-test-first ]   # Assure que les tests correspondent au style test_.*\.py
+      - id: trailing-whitespace         # Supprime les espaces de fin de ligne.
+        args: [ --markdown-linebreak-ext=md ] # Exception pour les fichiers Markdown
+
+
+# Formatage automatique avec clang-format good for standard....
+# fail_fast: false
+# repos:
+#   - repo: https://github.com/pocc/pre-commit-hooks
+#     rev: v1.3.5
+#     hooks:
+#       - id: clang-format
+#         args: [--style=file]
+#       - id: clang-tidy
+#       #- id: cppcheck
+#       #- id: include-what-you-use

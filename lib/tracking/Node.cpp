@@ -4,8 +4,8 @@
 *******************************************************************************************************************/
 
 /********************************************************************************************************************
-Class Node contains the caracteristic off the node, and the chain of the other nodes (time after and time before) 
-links to the current objet. 
+Class Node contains the caracteristic off the node, and the chain of the other nodes (time after and time before)
+links to the current objet.
 ********************************************************************************************************************/
 
 #include "Node.hpp"
@@ -287,7 +287,7 @@ bool Node::isSimpleLinkageAvailable(const Node* node) const { return (!node->pas
 
 double Node::simpleLinkageDisconnection(const double limit) const
 {
-	//From 
+	//From
 	//Present	Future
 	//1(this)-----2(future_)
 	//To
@@ -411,7 +411,7 @@ double Node::simpleLinkageDoubleSwap(const double limit, Node* node, const size_
 	//	1-----------3(cRand)
 	//	4-----------5(c)
 	//	NULL--------2
-	//if (!c || !isSimpleLinkageAvailable(c->neighbor_)) { return -1; }                             //ERROR 	
+	//if (!c || !isSimpleLinkageAvailable(c->neighbor_)) { return -1; }                             //ERROR
 	if (Distance(*node) >= params_->maxSpeed_) { return 0.; }                                 // Distance is not respected
 	if (node->past_ && node->past_->Distance(*selected) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
 

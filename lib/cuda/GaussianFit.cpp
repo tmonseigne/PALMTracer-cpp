@@ -23,7 +23,7 @@ GaussianFit::GaussianFit(const fit_mode mode)
 			break;
 		case fit_mode::gauss_2d_sigma: nParams_ = 5; // 5 : x, y, amplitude, sigma, offset
 			break;
-		case fit_mode::gauss_3d: nParams_ = 6; // 6 : x, y, amplitude, sigmaX, sigmaY, offset 
+		case fit_mode::gauss_3d: nParams_ = 6; // 6 : x, y, amplitude, sigmaX, sigmaY, offset
 			break;
 		case fit_mode::gauss_3d_theta: nParams_ = 7; // 7 : x, y, amplitude, sigmaX, sigmaY, theta, offset
 			break;
@@ -305,7 +305,7 @@ void GaussianFit::deriv(double* out, const double x, const double y, const doubl
 		out[5] = P * (2 * CosSinT * ((X_2 - Y_2) / SigmaX_2 + (Y_2 - X_2) / SigmaY_2) - SinT_2 * Factor4 + CosT_2 * Factor4); // theta
 		out[6] = 1;                                                                                                           // offset
 	}
-	else { out[5] = 1; } // offset (quand theta est fixe)	
+	else { out[5] = 1; } // offset (quand theta est fixe)
 }
 
 double GaussianFit::chi2(std::vector<double>& alpha, std::vector<double>& beta, const std::vector<double>& dydp, const std::vector<double>& weight,

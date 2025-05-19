@@ -1,5 +1,5 @@
 ///-------------------------------------------------------------------------------------------------
-/// 
+///
 /// \file Segmentation2D.hpp
 /// \brief  Classe de traitement d'images segmentées en 2D, permettant l'allocation de structures,
 /// le calcul de statistiques et le filtrage basé sur des critères morphologiques et d'intensité.
@@ -7,7 +7,7 @@
 /// \version 1.0.
 /// \date 16/05/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
-/// 
+///
 ///-------------------------------------------------------------------------------------------------
 
 #pragma once
@@ -49,11 +49,11 @@ public:
 	void ComputeStatistics(const std::vector<double>& data, const std::vector<unsigned short>& seg, const std::vector<double>& waveData, size_t gaussFit);
 
 	/// <summary>Filtre les structures segmentées selon divers critères fournis en paramètres.
-	/// 
+	///
 	/// Le filtrage s’effectue en deux passes :
 	/// 1. Critères morphologiques et photométriques (taille, intensité, rapport de forme…).
 	/// 2. Suppression de structures proches de structures plus brillantes (si activé via `useParam[6]`).
-	/// 
+	///
 	/// L’image segmentée est mise à jour en conséquence (réindexation des structures conservées).</summary>
 	/// <param name="seg">Référence vers l'image segmentée (vecteur de labels).</param>
 	/// <param name="param">Tableau de paramètres double (min/max de surface, intensité, morphologie...).</param>

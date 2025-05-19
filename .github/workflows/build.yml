@@ -33,11 +33,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-    
+
       - name: Setup MSBuild (Windows)
         if: matrix.os == 'windows-latest'
         uses: microsoft/setup-msbuild@v2
-    
+
       # - name: Setup CUDA (optional) # trop long et version à vérifier
       #   run: choco install cuda -y
 
@@ -45,7 +45,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           cmd /c "msbuild PALM.sln /t:CPU;Tracking /p:Configuration=Release /p:Platform=x64"
-    
+
       - name: List output DLLs (Windows)
         if: matrix.os == 'windows-latest'
         run: |
@@ -67,31 +67,31 @@ jobs:
           echo "CPPFLAGS=-I/opt/homebrew/opt/libomp/include" >> $GITHUB_ENV
           echo "CXXFLAGS=-Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include" >> $GITHUB_ENV
           echo "LIBRARY_PATH=/opt/homebrew/opt/libomp/lib" >> $GITHUB_ENV
-    
+
       - name: Configure CMake (Unix/macOS)
         if: matrix.os != 'windows-latest'
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="$CXXFLAGS" -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS"
-    
+
       - name: Build CPU & Tracking (Unix/macOS)
         if: matrix.os != 'windows-latest'
         run: cmake --build build --target CPU Tracking --config Release
-    
+
       - name: Create Output folder (Unix/macOS)
         if: matrix.os != 'windows-latest'
         run: mkdir -p Output && cp build/lib*.so* Output/ || true && cp build/lib*.dylib* Output/ || true
-    
+
       - name: List Output files (Unix/macOS)
         if: matrix.os != 'windows-latest'
         run: |
           echo "Output files:"
           ls -la Output || dir Output
-    
+
       - name: Upload compiled artifacts
         uses: actions/upload-artifact@v4
         with:
           name: compiled-libs-${{ matrix.os }}
           path: Output/*
-  
+
   Documentation:
     name: Generate & Deploy Doxygen Docs
     runs-on: ubuntu-latest
