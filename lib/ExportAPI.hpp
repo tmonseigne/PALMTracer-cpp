@@ -1,12 +1,12 @@
 ///-------------------------------------------------------------------------------------------------
 /// 
 /// \file ExportAPI.hpp
-/// \brief Définition de macros pour l’exportation des symboles de bibliothèque dynamique.
+/// \brief DÃ©finition de macros pour lâ€™exportation des symboles de bibliothÃ¨que dynamique.
 /// 
-/// Ce fichier configure la macro `EXPORT_API` en fonction du système de compilation.
-/// Elle permet de marquer les fonctions ou classes exportées depuis une DLL (sous Windows) ou
-/// d’assurer la visibilité des symboles sur d’autres plateformes (Unix, macOS).
-/// Une convention d'appel `CALL_CONV` est également définie pour garantir la compatibilité
+/// Ce fichier configure la macro `EXPORT_API` en fonction du systÃ¨me de compilation.
+/// Elle permet de marquer les fonctions ou classes exportÃ©es depuis une DLL (sous Windows) ou
+/// dâ€™assurer la visibilitÃ© des symboles sur dâ€™autres plateformes (Unix, macOS).
+/// Une convention d'appel `CALL_CONV` est Ã©galement dÃ©finie pour garantir la compatibilitÃ©
 /// avec les appels inter-langages ou inter-modules.
 /// 
 /// \author Thibaut Monseigne (CNRS).
@@ -18,7 +18,7 @@
 
 #pragma once
 
-// Détection de plateforme et définition de la macro EXPORT_API
+// DÃ©tection de plateforme et dÃ©finition de la macro EXPORT_API
 #if defined(_WIN32) || defined(_WIN64)
 #define EXPORT_API __declspec(dllexport)
 #define CALL_CONV __stdcall
