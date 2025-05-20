@@ -112,7 +112,7 @@ void Segmentation2D::FilterData(std::vector<unsigned short>& seg)
 	// Réaffectation
 	infos_ = std::move(filtered);
 
-	// Mise à jour de l’image segmentée
+	// Mise à jour de l'image segmentée
 	for (size_t i = 0; i < size_; ++i) {
 		if (seg[i] > 0) {
 			const size_t OldIndex = seg[i] - 1;
@@ -234,7 +234,7 @@ void Segmentation2D::filterStructureWS(const std::vector<double>& potential, std
 	const size_t NbStruct = infos_.size();
 	if (NbStruct == 0) { return; }
 
-	std::vector<ws_fusion_2d> wsFusions(NbStruct);
+	std::vector<WSFusion2D> wsFusions(NbStruct);
 
 	bool change = true;
 	int label = 0;
@@ -333,7 +333,7 @@ void Segmentation2D::filterStructureWS(const std::vector<double>& potential, std
 	}
 	infos_ = std::move(updatedInfos);
 
-	// Marquage d’un seul point par structure pour Watershed final
+	// Marquage d'un seul point par structure pour Watershed final
 	std::ranges::fill(seg, 0);
 	for (int i = 0; i <= static_cast<int>(wsFusions.size()); ++i) {
 		if (wsFusions[i].structToBecome == i) { seg[wsFusions[i].x * width_ + wsFusions[i].y] = static_cast<unsigned short>(wsFusions[i].newIndex); }

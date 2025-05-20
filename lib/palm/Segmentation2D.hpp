@@ -21,14 +21,13 @@
 ///
 /// Cette classe manipule des structures 2D identifiées dans une image segmentée et stockées sous forme de labels.
 /// Elle permet notamment :
-///		- L'allocation et la désallocation d’un vecteur de structures (`Info2D`).
+///		- L'allocation et la désallocation d'un vecteur de structures (`Info2D`).
 ///		- Le calcul de statistiques géométriques et photométriques par structure.
 ///		- Le filtrage de structures selon des critères définis par l'utilisateur.
 ///		- Le traitement de fusion locale par carte de potentiel (`filterStructureWS`).
 ///
-/// Elle repose sur une image segmentée (labelisée), ainsi qu’éventuellement sur des cartes de données ou de potentiels.
-class Segmentation2D
-{
+/// Elle repose sur une image segmentée (labelisée), ainsi qu'éventuellement sur des cartes de données ou de potentiels.
+class Segmentation2D {
 public:
 	/// <summary></summary>
 	/// <param name="height"></param>
@@ -38,26 +37,24 @@ public:
 	/// <summary></summary>
 	~Segmentation2D() { desalloc(); }
 
-	/// <summary>Calcule les statistiques par structure à partir de l’image d’intensité et de la segmentation.</summary>
+	/// <summary>Calcule les statistiques par structure à partir de l'image d'intensité et de la segmentation.</summary>
 	/// <param name="data">Carte de données (intensité brute ou autre).</param>
 	/// <param name="seg">Image segmentée (vecteur de labels).</param>
 	/// <param name="waveData">Données de fitting gaussien autour des maxima (optionnel, utilisé si gaussFit == 5).</param>
 	/// <param name="gaussFit">Mode de traitement du centre de gravité :
-	/// - 0 : Calcul classique à partir des moments d’intensité.
+	/// - 0 : Calcul classique à partir des moments d'intensité.
 	/// - 5 : Calcul localisé autour du maximum (fenêtre 5x5).
 	/// </param>
 	void ComputeStatistics(const std::vector<double>& data, const std::vector<unsigned short>& seg, const std::vector<double>& waveData, size_t gaussFit);
 
 	/// <summary>Filtre les structures segmentées selon divers critères fournis en paramètres.
 	///
-	/// Le filtrage s’effectue en deux passes :
+	/// Le filtrage s'effectue en deux passes :
 	/// 1. Critères morphologiques et photométriques (taille, intensité, rapport de forme…).
 	/// 2. Suppression de structures proches de structures plus brillantes (si activé via `useParam[6]`).
 	///
-	/// L’image segmentée est mise à jour en conséquence (réindexation des structures conservées).</summary>
+	/// L'image segmentée est mise à jour en conséquence (réindexation des structures conservées).</summary>
 	/// <param name="seg">Référence vers l'image segmentée (vecteur de labels).</param>
-	/// <param name="param">Tableau de paramètres double (min/max de surface, intensité, morphologie...).</param>
-	/// <param name="useParam">Tableau binaire indiquant quels paramètres sont actifs.</param>
 	void FilterData(std::vector<unsigned short>& seg);
 
 	/// <summary>Retourne la liste des structures segmentées avec leurs informations (centroïde, intensité, etc.).</summary>
@@ -66,7 +63,7 @@ public:
 
 	/// <summary> Effectue une segmentation intelligente de type watershed.
 	/// Cette méthode combine une détection des maxima locaux, un premier watershed, un filtrage morphologique optionnel, puis un second watershed.</summary>
-	/// <param name="potential">Image source (vecteur 1D) représentant le potentiel, typiquement issue d’une carte de réponse.</param>
+	/// <param name="potential">Image source (vecteur 1D) représentant le potentiel, typiquement issue d'une carte de réponse.</param>
 	/// <param name="seg">Image de sortie de la segmentation (1D, mêmes dimensions que potential), remplie par labels.</param>
 	/// <param name="thresholdRatio">Seuil relatif utilisé pour filtrer les germes faibles (si 0, le filtrage est ignoré).</param>
 	void WatershedIntelligent(const std::vector<double>& potential, std::vector<unsigned short>& seg, double thresholdRatio);
@@ -89,7 +86,7 @@ private:
 	/// Cette fonction fusionne les structures en contact si la différence de potentiel justifie une absorption locale.
 	///
 	/// </summary>
-	/// <param name="potential">Carte de potentiel (même taille que l’image).</param>
+	/// <param name="potential">Carte de potentiel (même taille que l'image).</param>
 	/// <param name="seg">Image segmentée à mettre à jour (labels).</param>
 	/// <param name="thresholdRatio">Rapport de seuil pour décider des fusions (typiquement entre 1.2 et 2.0).</param>
 	void filterStructureWS(const std::vector<double>& potential, std::vector<unsigned short>& seg, double thresholdRatio);

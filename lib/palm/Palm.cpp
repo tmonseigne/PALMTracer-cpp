@@ -10,21 +10,9 @@
 #include <ranges>
 #include <thread>
 
+#include "ATrous.hpp"
+#include "Segmentation2D.hpp"
 #include "fit/GaussianFit.hpp"
-
-
-//-------------------------------------------------------------------------------------------------
-Palm::Palm(const unsigned short* image, double* points, const size_t pointsListSize, const size_t height, const size_t width,
-           const double thresholdVal, const double watershedRatio, const size_t gaussFit, const double sigma, const double theta, const size_t roi)
-	: image_(image), points_(points), height_(height), width_(width), size_(static_cast<size_t>(height) * width),
-	  nPointsMaxPerPlane_(pointsListSize / N_SEGMENTS), currentPoint_(0), roi_(roi), thresholdVal_(thresholdVal),
-	  watershedRatio_(watershedRatio), gaussFit_(gaussFit), initSigmaX_(sigma), initSigmaY_(2 * sigma), initTheta_(theta),
-	  segmentPub_(height, width)
-{
-	operators_.fill(0);
-	segPub_.resize(size_);
-	outputPub_.resize(size_);
-}
 
 
 //-------------------------------------------------------------------------------------------------
@@ -33,26 +21,31 @@ int Palm::Processing()
 	omp_set_dynamic(1); // Autorise l’adaptation automatique
 	//omp_set_num_threads(static_cast<int>(std::thread::hardware_concurrency())); // Fixe un max
 
-	aTrousPub_.ATrousDecomposition2D(image_, height_, width_);
+	ATrous decomposition; // Objet pour la décomposition ondelettes (algorithme à trous).
+	decomposition.ATrousDecomposition2D(image_, height_, width_);
+
+	std::vector<unsigned short> segmentMap(size_); // Image segmentée (carte binaire des objets détectés).
+	std::vector<double> output(size_);             // Carte des valeurs utilisées pour la segmentation (après seuillage).
+	Segmentation2D segmentation(height_, width_);  // Objet de segmentation intelligente 2D.
 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(size_); ++i) {
-		if (aTrousPub_.wDecomp_[PLANE_ID][i] > thresholdVal_) {
-			outputPub_[i] = aTrousPub_.wDecomp_[PLANE_ID][i];
-			segPub_[i] = 1;
+		if (decomposition.wDecomp_[PLANE_ID][i] > thresholdVal_) {
+			output[i] = decomposition.wDecomp_[PLANE_ID][i];
+			segmentMap[i] = 1;
 		}
 		else {
-			segPub_[i] = 0;
-			outputPub_[i] = 0;
+			segmentMap[i] = 0;
+			output[i] = 0;
 		}
 	}
 
-	segmentPub_.WatershedIntelligent(outputPub_, segPub_, watershedRatio_);
-	segmentPub_.ComputeStatistics(outputPub_, segPub_, aTrousPub_.wDecomp_[PLANE_ID], gaussFit_);
-	//if (VOLUME_MIN > 0. || INTENSITY_MIN > 0.) { segmentPub_.FilterData(segPub_, structFiltParam_.data(), structFiltParamUse_.data()); }
-	segmentPub_.FilterData(segPub_);
+	segmentation.WatershedIntelligent(output, segmentMap, watershedRatio_);
+	segmentation.ComputeStatistics(output, segmentMap, decomposition.wDecomp_[PLANE_ID], gaussFit_);
+	//if (VOLUME_MIN > 0. || INTENSITY_MIN > 0.) { segmentation.FilterData(segmentMap, structFiltParam_.data(), structFiltParamUse_.data()); }
+	segmentation.FilterData(segmentMap);
 
-	const auto& P = segmentPub_.GetInfos();
+	const auto& P = segmentation.GetInfos();
 	std::vector<std::array<double, N_SEGMENTS>> allPoints(P.size());
 
 	#pragma omp parallel for

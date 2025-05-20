@@ -1,4 +1,4 @@
-﻿///-------------------------------------------------------------------------------------------------
+///-------------------------------------------------------------------------------------------------
 ///
 /// \file Info2D.hpp
 /// \brief  Classe de lien pour traiter les données issues de la segmentation d'images 2D.
@@ -12,24 +12,36 @@
 #pragma once
 
 /// <summary>Structure représentant une coordonnée 2D en double précision.</summary>
-struct val_2d
-{
+struct Val2D {
 	double x; ///< Coordonnée x.
 	double y; ///< Coordonnée y.
 };
 
 /// <summary>Structure représentant une boîte englobante 2D par ses bornes.</summary>
-struct box_2d
-{
+struct Box2D {
 	size_t xMin; ///< Borne minimale en x.
 	size_t xMax; ///< Borne maximale en x.
 	size_t yMin; ///< Borne minimale en y.
 	size_t yMax; ///< Borne maximale en y.
 };
 
+
+/// <summary>Structure représentant un maximum local en 2D.</summary>
+struct Max2D {
+	double val; ///< Valeur du maximum.
+	size_t x;   ///< Position x du maximum.
+	size_t y;   ///< Position y du maximum.
+};
+
+/// <summary>Structure contenant les variances et covariance dans le plan 2D.</summary>
+struct Variance2D {
+	double xx; ///< Variance selon x.
+	double yy; ///< Variance selon y.
+	double xy; ///< Covariance entre x et y.
+};
+
 /// <summary>Structure pour la fusion de régions (segmentation) avec potentiels et liens.</summary>
-struct ws_fusion_2d
-{
+struct WSFusion2D {
 	double maxPotentialWithNeighbor; ///< Potentiel maximal avec un voisin.
 	double minPotential;             ///< Potentiel minimal.
 	double maxPotential;             ///< Potentiel maximal.
@@ -42,41 +54,23 @@ struct ws_fusion_2d
 	bool locked;                     ///< Indique si verrouillé (pas modifiable).
 };
 
-
-/// <summary>Structure représentant un maximum local en 2D.</summary>
-struct max_2d
-{
-	double val; ///< Valeur du maximum.
-	size_t x;   ///< Position x du maximum.
-	size_t y;   ///< Position y du maximum.
-};
-
-/// <summary>Structure contenant les variances et covariance dans le plan 2D.</summary>
-struct variance_2d
-{
-	double xx; ///< Variance selon x.
-	double yy; ///< Variance selon y.
-	double xy; ///< Covariance entre x et y.
-};
-
 /// <summary>Classe contenant des informations descriptives sur une région segmentée 2D.</summary>
-class Info2D
-{
+class Info2D {
 public:
-	size_t index_;       ///< Index identifiant la région.
-	size_t peri_;        ///< Périmètre de la région.
-	double surf_;        ///< Surface de la région.
-	max_2d min_;         ///< Valeur minimale et sa position dans la région.
-	max_2d max_;         ///< Valeur maximale et sa position dans la région.
-	double stdev_;       ///< Écart-type des intensités dans la région.
-	val_2d moment_;      ///< Moment géométrique (centre de masse).
-	val_2d momentSurf_;  ///< Moment pondéré par la surface.
-	double mean_;        ///< Moyenne des intensités dans la région.
-	double intensity_;   ///< Intensité totale dans la région.
-	variance_2d var_;    ///< Variances et covariance géométriques.
-	val_2d sigma_;       ///< Écart-type géométrique.
-	double angle_;       ///< Angle principal d’orientation.
-	box_2d boundingBox_; ///< Boîte englobante de la région.
+	size_t index_;      ///< Index identifiant la région.
+	size_t peri_;       ///< Périmètre de la région.
+	double surf_;       ///< Surface de la région.
+	Max2D min_;         ///< Valeur minimale et sa position dans la région.
+	Max2D max_;         ///< Valeur maximale et sa position dans la région.
+	double stdev_;      ///< Écart-type des intensités dans la région.
+	Val2D moment_;      ///< Moment géométrique (centre de masse).
+	Val2D momentSurf_;  ///< Moment pondéré par la surface.
+	double mean_;       ///< Moyenne des intensités dans la région.
+	double intensity_;  ///< Intensité totale dans la région.
+	Variance2D var_;    ///< Variances et covariance géométriques.
+	Val2D sigma_;       ///< Écart-type géométrique.
+	double angle_;      ///< Angle principal d'orientation.
+	Box2D boundingBox_; ///< Boîte englobante de la région.
 
 	/// <summary>Constructeur par défaut.</summary>
 	Info2D() = default;
