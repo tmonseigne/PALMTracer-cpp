@@ -6,7 +6,7 @@
 #include "Constants.hpp"
 
 //-------------------------------------------------------------------------------------------------
-int ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t height, const size_t width, bool* planesToUse, size_t nbPlane)
+void ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t height, const size_t width)
 {
 	/**
 		WAVELET TRANSFORM WITH "A TROUS" ALGORITHM
@@ -33,23 +33,19 @@ int ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t heig
 	size_ = height_ * width_;
 	int ret;
 	tmp_.resize(size_);
-
-	//test if nbPlane is not too big !!!
-	if ((ret = testSizes2D(planesToUse, nbPlane)) < 0) { return ret; }
+	for (auto& wavelet : wDecomp_) { wavelet.resize(size_); }
 
 	//do the initialisation of multiresolution algorthm (initialisation of the first wavelet plane) signal is projected in V0 space
 	std::transform(image, image + size_, wDecomp_[0].begin(), [](const unsigned short val) { return static_cast<double>(val); });
 
 	//Projection of the input signal in each wavelet space. the signal waveletPlanes[x] is the projection of the input signal in the W(x+1) space
-	for (size_t i = 0; i < nbPlane - 1; ++i) {
+	for (size_t i = 0; i < N_PLANES - 1; ++i) {
 		//Firstly it computes in waveletPlanes[x+1] the projection of V(x) with the knowlege of the projection in V(x-1)
 		b3SplineFiltering2D(wDecomp_[i], wDecomp_[i + 1], i);
 		//Secondly it computes in waveletPlanes[x] the projection of W(x+1)
 		//As proj(W(x+1)) = proj(W(x)) - proj(W(x+1));	proj(Vx) is in waveletPlanes[x+1] and proj(Vx+1) is in waveletPlanes[x+2]
 		for (size_t j = 0; j < size_; ++j) { wDecomp_[i][j] -= wDecomp_[i + 1][j]; }
 	}
-
-	return static_cast<int>(nbPlane);
 }
 
 //-------------------------------------------------------------------------------------------------

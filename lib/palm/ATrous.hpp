@@ -1,4 +1,4 @@
-﻿///-------------------------------------------------------------------------------------------------
+///-------------------------------------------------------------------------------------------------
 ///
 /// \file ATrous.hpp
 /// \brief  Classe pour la décomposition en ondelettes 2D selon l’algorithme "à trous".
@@ -10,7 +10,10 @@
 ///-------------------------------------------------------------------------------------------------
 
 #pragma once
+#include <array>
 #include <vector>
+
+#include "Constants.hpp"
 
 /// <summary> Classe pour la décomposition en ondelettes 2D selon l’algorithme "à trous".</summary>
 /// <remarks>
@@ -24,7 +27,7 @@ public:
 	       width_,            ///< Largeur de l'image analysée.
 	       size_;             ///< Taille totale (hauteur × largeur).
 	std::vector<double> tmp_; ///< Vecteur temporaire utilisé pour les calculs intermédiaires lors de la décomposition.
-	std::vector<std::vector<double>> wDecomp_;
+	std::array<std::vector<double>, N_PLANES> wDecomp_;
 	///< Résultat de la décomposition en ondelettes : tableau des plans (chaque plan est un vecteur 2D de coefficients).
 
 	/// <summary>Constructeur de la classe <c>ATrous</c>.</summary>
@@ -37,10 +40,8 @@ public:
 	/// <param name="image">Pointeur vers l’image 2D d’entrée (tableau d'unsigned short).</param>
 	/// <param name="height">Hauteur de l’image.</param>
 	/// <param name="width">Largeur de l’image.</param>
-	/// <param name="planesToUse">Tableau booléen précisant quels plans doivent être calculés (doit être alloué).</param>
-	/// <param name="nbPlane">Nombre de plans à calculer (sera ajusté si nécessaire).</param>
 	/// <returns>Nombre de plans effectivement calculés, ou W_SIZE_ERR en cas d’erreur.</returns>
-	int ATrousDecomposition2D(const unsigned short* image, size_t height, size_t width, bool* planesToUse, size_t nbPlane);
+	void ATrousDecomposition2D(const unsigned short* image, size_t height, size_t width);
 
 private:
 	/// <summary>Calcule 2^val.</summary>
