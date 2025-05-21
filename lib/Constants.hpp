@@ -22,7 +22,7 @@ constexpr size_t VOLUME_MIN = 4;          ///< Volume minimal requis pour valide
 // Paramètres de la segmentation
 // Plane, X, Y, Z, Integrated Intensity, Sigma X, Sigma Y, Theta,
 // MSE Gaussian, MSE Z, Pair Distance, Intensity 0, Intensity Offset, Intensity, Surface, Circularity
-constexpr size_t N_SEGMENTS = 14;         ///< Nombre de paramètres à renvoyer.
+constexpr size_t N_SEGMENTS = 16;         ///< Nombre de paramètres à renvoyer.
 
 constexpr double EPSILON = 1e-7;
 

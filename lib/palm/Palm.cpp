@@ -34,7 +34,7 @@ int Palm::Processing() const
 			count += N_SEGMENTS;
 		}
 	}
-	// Blank Line
+	// Blank Line usefull ?
 	std::fill_n(points_ + count, N_SEGMENTS, -1);
 	count += N_SEGMENTS;
 
@@ -119,26 +119,28 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 			}
 		}
 		auto& p = points[i];
-		p[0] = static_cast<double>(plane + 1); // Plane
-		p[1] = x;                              // X
-		p[2] = y;                              // Y
-		p[3] = 0.0f;                           // Z
+		p[0] = 0;                              // Id
+		p[1] = static_cast<double>(plane + 1); // Plane
+		p[2] = 0;                              // Index
+		p[3] = x;                              // X
+		p[4] = y;                              // Y
+		p[5] = 0.0f;                           // Z
 
 		// Integrated intensity
-		if (fit_ == 0) { p[4] = P[i].intensity_; }
-		else { p[4] = 2.0 * std::numbers::pi * intensity * sigmaX * sigmaY; }
+		if (fit_ == 0) { p[6] = P[i].intensity_; }
+		else { p[6] = 2.0 * std::numbers::pi * intensity * sigmaX * sigmaY; }
 
-		p[5] = sigmaX;           // Sigma X
-		p[6] = sigmaY;           // Sigma Y
-		p[7] = theta;            // Theta
-		p[8] = intensity;        // Intensity 0
-		p[9] = offset;           // Intensity offset
-		p[10] = P[i].intensity_; // Intensity
-		p[11] = P[i].surf_;      // Surface
-		p[12] = rss;             // MSE Gaussian
+		p[7] = sigmaX;           // Sigma X
+		p[8] = sigmaY;           // Sigma Y
+		p[9] = theta;            // Theta
+		p[10] = intensity;       // Intensity 0
+		p[11] = offset;          // Intensity offset
+		p[12] = P[i].intensity_; // Intensity
+		p[13] = P[i].surf_;      // Surface
+		p[14] = rss;             // MSE Gaussian
 
 		// Circularity
-		if (sigmaX > EPSILON && sigmaY > EPSILON) { p[13] = std::min(sigmaX, sigmaY) / std::max(sigmaX, sigmaY); }
-		else { p[13] = 1.0; }
+		if (sigmaX > EPSILON && sigmaY > EPSILON) { p[15] = std::min(sigmaX, sigmaY) / std::max(sigmaX, sigmaY); }
+		else { p[15] = 1.0; }
 	}
 }
