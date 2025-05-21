@@ -8,6 +8,6 @@ long CALL_CONV Process(const unsigned short* image, double* pointsList, const un
                        const unsigned long width, const double thresholdVal, const double watershedRatio, const unsigned short gaussFit,
                        const double sigma, const double angle, const unsigned short roi)
 {
-	auto palm = Palm(image, pointsList, pointsListSize, height, width, thresholdVal, watershedRatio, gaussFit, sigma, angle, roi);
+	auto palm = Palm(image, pointsList, pointsListSize, height, width, 1, thresholdVal, watershedRatio, gaussFit, sigma, angle, roi);
 	return palm.Processing();
 }

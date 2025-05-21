@@ -16,13 +16,38 @@
 
 
 //-------------------------------------------------------------------------------------------------
-int Palm::Processing()
+int Palm::Processing() const
 {
 	omp_set_dynamic(1); // Autorise l’adaptation automatique
 	//omp_set_num_threads(static_cast<int>(std::thread::hardware_concurrency())); // Fixe un max
 
+	std::vector<std::vector<std::array<double, N_SEGMENTS>>> allPoints(planes_);
+
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(planes_); ++i) { processingPlane(i, allPoints[i]); }
+
+	size_t count = 0;
+	for (int i = 0; i < static_cast<int>(planes_); ++i) {
+		for (const auto& Point : allPoints[i]) {
+			std::ranges::copy(Point, points_ + count);
+			count += N_SEGMENTS;
+		}
+	}
+	// Blank Line
+	std::fill_n(points_ + count, N_SEGMENTS, -1);
+	count += N_SEGMENTS;
+
+	return static_cast<int>(count);
+}
+
+//-------------------------------------------------------------------------------------------------
+void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_SEGMENTS>>& points) const
+{
+	const unsigned short* image = image_ + (plane * size_);
+
+	//----- Décomposition en ondelette -----
 	ATrous decomposition; // Objet pour la décomposition ondelettes (algorithme à trous).
-	decomposition.ATrousDecomposition2D(image_, height_, width_);
+	decomposition.ATrousDecomposition2D(image, height_, width_);
 
 	std::vector<unsigned short> segmentMap(size_); // Image segmentée (carte binaire des objets détectés).
 	std::vector<double> output(size_);             // Carte des valeurs utilisées pour la segmentation (après seuillage).
@@ -41,12 +66,12 @@ int Palm::Processing()
 	}
 
 	segmentation.WatershedIntelligent(output, segmentMap, watershedRatio_);
-	segmentation.ComputeStatistics(output, segmentMap, decomposition.wDecomp_[PLANE_ID], gaussFit_);
+	segmentation.ComputeStatistics(output, segmentMap, decomposition.wDecomp_[PLANE_ID], fit_);
 	//if (VOLUME_MIN > 0. || INTENSITY_MIN > 0.) { segmentation.FilterData(segmentMap, structFiltParam_.data(), structFiltParamUse_.data()); }
 	segmentation.FilterData(segmentMap);
 
 	const auto& P = segmentation.GetInfos();
-	std::vector<std::array<double, N_SEGMENTS>> allPoints(P.size());
+	points.resize(P.size());
 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(std::min<size_t>(P.size(), nPointsMaxPerPlane_ - 1)); ++i) {
@@ -57,10 +82,10 @@ int Palm::Processing()
 		double theta = initTheta_;
 		double intensity = 0, offset = 0, rss = -1;
 
-		switch (gaussFit_) {
+		switch (fit_) {
 			case 1: { // Gaussian fit of 2D Sigma is constant
 				GaussianFit fit(fit_mode::gauss_2d);
-				fit.Run(image_, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
+				fit.Run(image, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
 				sigmaX = initSigmaX_;
 				sigmaY = initSigmaX_;
 				theta = 0;
@@ -69,7 +94,7 @@ int Palm::Processing()
 
 			case 2: { // Gaussian fit of 2D
 				GaussianFit fit(fit_mode::gauss_2d_sigma);
-				fit.Run(image_, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
+				fit.Run(image, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
 				sigmaY = sigmaX;
 				theta = 0;
 				break;
@@ -77,13 +102,13 @@ int Palm::Processing()
 
 			case 3: { // Gaussian fit of 3D Theta is constant
 				GaussianFit fit(fit_mode::gauss_3d);
-				fit.Run(image_, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
+				fit.Run(image, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
 				break;
 			}
 
 			case 4: { // Gaussian fit of 3D
 				GaussianFit fit(fit_mode::gauss_3d_theta);
-				fit.Run(image_, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
+				fit.Run(image, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
 				break;
 			}
 
@@ -92,29 +117,19 @@ int Palm::Processing()
 				break;
 			}
 		}
-		auto& point = allPoints[i];
-		point[0] = sigmaX;
-		point[1] = sigmaY;
-		point[2] = theta;
-		point[3] = y;
-		point[4] = x;
-		point[5] = intensity;
-		point[6] = offset;
-		point[7] = rss;
-		point[8] = P[i].intensity_;
-		point[9] = P[i].surf_;
-		point[10] = 0.0f; // Z coordinate
-		point[11] = 0.0f; // Spectral or other
-		point[12] = 0.0f; // Other
+		auto& p = points[i];
+		p[0] = sigmaX;
+		p[1] = sigmaY;
+		p[2] = theta;
+		p[3] = y;
+		p[4] = x;
+		p[5] = intensity;
+		p[6] = offset;
+		p[7] = rss;
+		p[8] = P[i].intensity_;
+		p[9] = P[i].surf_;
+		p[10] = 0.0f; // Z coordinate
+		p[11] = 0.0f; // Spectral or other
+		p[12] = 0.0f; // Other
 	}
-
-	for (const auto& Point : allPoints) {
-		std::ranges::copy(Point, points_ + currentPoint_);
-		currentPoint_ += N_SEGMENTS;
-	}
-	// Blank Line
-	std::fill_n(points_ + currentPoint_, N_SEGMENTS, -1);
-	currentPoint_ += N_SEGMENTS;
-
-	return static_cast<int>(currentPoint_);
 }
