@@ -17,8 +17,7 @@
 enum class fit_mode : uint8_t { gauss_2d, gauss_2d_sigma, gauss_3d, gauss_3d_theta };
 
 /// <summary>Classe d'ajustement gaussien.</summary>
-class GaussianFit
-{
+class GaussianFit {
 public:
 	/// <summary>Constructeur de la classe <c>GaussianFit</c>. Initialise le nombre de paramètres du modèle en fonction du mode d'ajustement choisi.</summary>
 	/// <param name="mode">Mode de fitting gaussien (2D, 2D avec sigma, 3D, 3D avec rotation).</param>
@@ -30,8 +29,8 @@ public:
 	/// <summary>Exécute un ajustement de modèle Gaussien sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.
 	/// L'algorithme utilise une méthode de Levenberg-Marquardt pour minimiser l'erreur entre le modèle et les données.</summary>
 	/// <param name="image">Pointeur vers les données brutes de l'image (niveau de gris, type unsigned short).</param>
-	/// <param name="sizeX">Largeur totale de l'image.</param>
-	/// <param name="sizeY">Hauteur totale de l'image.</param>
+	/// <param name="width">Largeur totale de l'image.</param>
+	/// <param name="height">Hauteur totale de l'image.</param>
 	/// <param name="x">Coordonnée X du centre du spot à fitter (modifié en sortie avec la valeur ajustée).</param>
 	/// <param name="y">Coordonnée Y du centre du spot à fitter (modifié en sortie avec la valeur ajustée).</param>
 	/// <param name="intensity">Intensité estimée du spot (valeur crête ajustée, modifiée en sortie).</param>
@@ -41,7 +40,7 @@ public:
 	/// <param name="offset">Niveau de fond (offset constant ajouté à la gaussienne).</param>
 	/// <param name="rss">Résidu quadratique de l'ajustement (Root Sum of Squares).</param>
 	/// <param name="roi">Taille de la région d'intérêt carrée centrée autour de (x, y) utilisée pour le fitting. Doit être impair.</param>
-	void Run(const unsigned short* image, size_t sizeX, size_t sizeY, double& x, double& y, double& intensity,
+	void Run(const unsigned short* image, size_t width, size_t height, double& x, double& y, double& intensity,
 	         double& sigmaX, double& sigmaY, double& theta, double& offset, double& rss, size_t roi);
 
 protected:
@@ -50,16 +49,16 @@ protected:
 	       nParams_,                                   ///< Nombre total de paramètres du modèle.
 	       nParams2_;                                  ///< Nombre de paramètres au carré (utile pour les matrices jacobiennes ou hessiennes).
 	double sigma_,                                     ///< Écart-type initial ou calculé du noyau Gaussien.
-	       theta_;                                     ///< Angle d’orientation (en radians) de la gaussienne si applicable.
-	std::vector<double> pMin_,                         ///< Bornes inférieures autorisées pour les paramètres du fit.
+	       theta_;                                     ///< Angle d'orientation (en radians) de la gaussienne si applicable.
+	std::vector<double> pMin_,                         ///< Bornes inférieures autorisées pour les paramètres de l'ajustement.
 	                    p_,                            ///< Valeurs courantes des paramètres du modèle.
-	                    pMax_;                         ///< Bornes supérieures autorisées pour les paramètres du fit.
-	static constexpr size_t N_ITER = 50;               ///< Nombre maximal d’itérations autorisées dans l’algorithme d’optimisation.
+	                    pMax_;                         ///< Bornes supérieures autorisées pour les paramètres de l'ajustement.
+	static constexpr size_t N_ITER = 50;               ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
 	static constexpr double EPSILON_1 = 1e-6,          ///< Seuil de convergence pour le changement de la fonction objectif.
 	                        EPSILON_2 = 1e-6,          ///< Seuil de convergence pour le gradient.
 	                        EPSILON_3 = 1e-5,          ///< Seuil de convergence pour la variation des paramètres.
 	                        EPSILON_4 = 1e-2;          ///< Tolérance utilisée pour juger la stagnation ou instabilité.
-	static constexpr double LAMBDA_0 = 1e-2,           ///< Valeur initiale du paramètre lambda dans l’algorithme de Levenberg-Marquardt.
+	static constexpr double LAMBDA_0 = 1e-2,           ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.
 	                        LAMBDA_EPSILON_MAX = 1e7,  ///< Valeur maximale autorisée pour lambda.
 	                        LAMBDA_EPSILON_MIN = 1e-7, ///< Valeur minimale autorisée pour lambda.
 	                        LAMBDA_UP = 11,            ///< Facteur multiplicatif lorsque la mise à jour est inefficace (augmentation de lambda).
@@ -172,7 +171,7 @@ protected:
 	/// <param name="p">Paramètres du modèle</param>
 	/// <param name="dat">Données observées</param>
 	/// <param name="weight">Poids pour chaque point</param>
-	/// <param name="alpha">Matrice approximative de Hessienne</param>
+	/// <param name="alpha">Matrice approximative d'Hessienne</param>
 	/// <param name="beta">Gradient du χ²</param>
 	/// <param name="hat">Vecteur des données ajustées (modifié en place).</param>
 	/// <returns>Valeur du χ²</returns>

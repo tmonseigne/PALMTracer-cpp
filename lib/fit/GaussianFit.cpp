@@ -31,8 +31,8 @@ GaussianFit::GaussianFit(const fit_mode mode)
 }
 
 //-------------------------------------------------------------------------------------------------
-void GaussianFit::Run(const unsigned short* image, size_t sizeX, size_t sizeY, double& x, double& y, double& intensity, double& sigmaX,
-                      double& sigmaY, double& theta, double& offset, double& rss, size_t roi)
+void GaussianFit::Run(const unsigned short* image, size_t width, size_t height, double& x, double& y, double& intensity,
+                      double& sigmaX, double& sigmaY, double& theta, double& offset, double& rss, size_t roi)
 {
 	if (roi % 2 == 0) { roi--; } // Not present in GPU original file why ?
 	n_ = roi * roi;
@@ -40,7 +40,7 @@ void GaussianFit::Run(const unsigned short* image, size_t sizeX, size_t sizeY, d
 	theta_ = theta;
 
 	const size_t Half = roi / 2, Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
-	if (Half <= Ux && Ux <= sizeX - Half - 1 && Half <= Uy && Uy <= sizeY - Half - 1) {
+	if (Half <= Ux && Ux <= width - Half - 1 && Half <= Uy && Uy <= height - Half - 1) {
 		// Création des variables
 		double lambda = LAMBDA_0;
 		std::vector<double> alpha(nParams2_), alphaR(nParams2_), alphaRi(nParams2_),
@@ -50,7 +50,7 @@ void GaussianFit::Run(const unsigned short* image, size_t sizeX, size_t sizeY, d
 
 		// Initialization of dat & t (A vérifier)
 		double minI, maxI; // Not present in GPU original file why ?
-		preComputeFit(minI, maxI, image, sizeX, Ux, Uy, dat, weight, t, roi);
+		preComputeFit(minI, maxI, image, width, Ux, Uy, dat, weight, t, roi);
 		initP(x, y, sigmaX, sigmaY, theta, minI, maxI);
 
 		double x2 = lm_matx(t, p_, dat, weight, alpha, beta, hat);

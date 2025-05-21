@@ -6,7 +6,7 @@
 #include "Constants.hpp"
 
 //-------------------------------------------------------------------------------------------------
-int ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t height, const size_t width, bool* planesToUse, size_t nbPlane)
+void ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t height, const size_t width)
 {
 	/**
 		WAVELET TRANSFORM WITH "A TROUS" ALGORITHM
@@ -31,25 +31,20 @@ int ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t heig
 	height_ = height;
 	width_ = width;
 	size_ = height_ * width_;
-	int ret;
 	tmp_.resize(size_);
-
-	//test if nbPlane is not too big !!!
-	if ((ret = testSizes2D(planesToUse, nbPlane)) < 0) { return ret; }
+	for (auto& wavelet : wDecomp_) { wavelet.resize(size_); }
 
 	//do the initialisation of multiresolution algorthm (initialisation of the first wavelet plane) signal is projected in V0 space
 	std::transform(image, image + size_, wDecomp_[0].begin(), [](const unsigned short val) { return static_cast<double>(val); });
 
 	//Projection of the input signal in each wavelet space. the signal waveletPlanes[x] is the projection of the input signal in the W(x+1) space
-	for (size_t i = 0; i < nbPlane - 1; ++i) {
+	for (size_t i = 0; i < N_PLANES - 1; ++i) {
 		//Firstly it computes in waveletPlanes[x+1] the projection of V(x) with the knowlege of the projection in V(x-1)
 		b3SplineFiltering2D(wDecomp_[i], wDecomp_[i + 1], i);
 		//Secondly it computes in waveletPlanes[x] the projection of W(x+1)
 		//As proj(W(x+1)) = proj(W(x)) - proj(W(x+1));	proj(Vx) is in waveletPlanes[x+1] and proj(Vx+1) is in waveletPlanes[x+2]
 		for (size_t j = 0; j < size_; ++j) { wDecomp_[i][j] -= wDecomp_[i + 1][j]; }
 	}
-
-	return static_cast<int>(nbPlane);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -86,15 +81,13 @@ void ATrous::b3SplineFiltering2D(const std::vector<double>& in, std::vector<doub
 	auto get = [&](const std::vector<double>& data, const int y, const int x) -> double { return data[offsetTest(y, x)]; };
 
 	// Lambda pour simplifier l'accès au voisinage avec ou sans test de bord
-	auto convolutionY = [&](const size_t idx, const int i, const int j) -> double
-	{
+	auto convolutionY = [&](const size_t idx, const int i, const int j) -> double {
 		return CoeffH0 * in[idx] + CoeffH1 * (get(in, i, j - IStep) + get(in, i, j + IStep)) +
 		       CoeffH2 * (get(in, i, j - IDoubleStep) + get(in, i, j + IDoubleStep));
 	};
 
 	// Lambda pour simplifier l'accès au voisinage avec ou sans test de bord
-	auto convolutionX = [&](const size_t idx, const int i, const int j) -> double
-	{
+	auto convolutionX = [&](const size_t idx, const int i, const int j) -> double {
 		return CoeffH0 * tmp_[idx] + CoeffH1 * (get(tmp_, i - IStep, j) + get(tmp_, i + IStep, j)) +
 		       CoeffH2 * (get(tmp_, i - IDoubleStep, j) + get(tmp_, i + IDoubleStep, j));
 	};

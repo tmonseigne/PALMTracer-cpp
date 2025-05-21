@@ -2,53 +2,17 @@
 //
 
 #include "Palm.hpp"
-#include <algorithm>
+
 #include <omp.h>
+
+#include <algorithm>
+#include <iostream>
 #include <ranges>
 #include <thread>
 
+#include "ATrous.hpp"
+#include "Segmentation2D.hpp"
 #include "fit/GaussianFit.hpp"
-
-
-//-------------------------------------------------------------------------------------------------
-Palm::Palm(const unsigned short* image, double* points, const size_t pointsListSize, const size_t height, const size_t width,
-           const size_t waveletNo, const double thresholdVal, const double watershedRatio, const double volMin, const double intMin,
-           const size_t gaussFit, const double sigmaX, const double sigmaY, const double theta, const size_t roi)
-	: image_(image), points_(points), height_(height), width_(width), size_(static_cast<size_t>(height) * width),
-	  nPointsMaxPerPlane_(pointsListSize / N_SEGMENTS), waveletNo_(waveletNo), currentPoint_(0), roi_(roi),
-	  thresholdVal_(thresholdVal), volMin_(volMin), intMin_(intMin), watershedRatio_(watershedRatio), gaussFit_(gaussFit),
-	  initSigmaX_(sigmaX), initSigmaY_(sigmaY), initTheta_(theta), segmentPub_(height, width)
-{
-	structFiltParam_.fill(0);
-	structFiltParamUse_.fill(0);
-	planesToUse_.fill(0);
-	operators_.fill(0);
-	threshold_.fill(0);
-
-	planesToUse_[waveletNo_] = 2;
-	threshold_[waveletNo_] = thresholdVal_;
-
-	if (volMin_ > 0.) {
-		structFiltParamUse_[0] = 1; // minimum volume
-		structFiltParam_[0] = volMin_;
-	}
-	if (intMin_ > 0.) {
-		structFiltParamUse_[2] = 1; // minimum intensity
-		structFiltParam_[2] = intMin_;
-	}
-
-	segPub_.resize(size_);
-	outputPub_.resize(size_);
-	aTrousPub_.wDecomp_.resize(waveletNo + 2);
-	for (auto& wavelet : aTrousPub_.wDecomp_) { wavelet.resize(size_); }
-
-	nbPlane_ = 0;
-	for (size_t i = 0; i < N_PLANES; ++i) {
-		planesToUseB_[i] = planesToUse_[i] != 0;
-		if (planesToUseB_[i]) { nbPlane_ = i + 2; }
-	}
-	planesToUseB_[8] = false;
-}
 
 
 //-------------------------------------------------------------------------------------------------
@@ -57,26 +21,31 @@ int Palm::Processing()
 	omp_set_dynamic(1); // Autorise l’adaptation automatique
 	//omp_set_num_threads(static_cast<int>(std::thread::hardware_concurrency())); // Fixe un max
 
-	int ret;
-	if ((ret = aTrousPub_.ATrousDecomposition2D(image_, height_, width_, planesToUseB_.data(), nbPlane_)) < 0) { return ret; }
+	ATrous decomposition; // Objet pour la décomposition ondelettes (algorithme à trous).
+	decomposition.ATrousDecomposition2D(image_, height_, width_);
+
+	std::vector<unsigned short> segmentMap(size_); // Image segmentée (carte binaire des objets détectés).
+	std::vector<double> output(size_);             // Carte des valeurs utilisées pour la segmentation (après seuillage).
+	Segmentation2D segmentation(height_, width_);  // Objet de segmentation intelligente 2D.
 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(size_); ++i) {
-		if (aTrousPub_.wDecomp_[waveletNo_][i] > thresholdVal_) {
-			outputPub_[i] = aTrousPub_.wDecomp_[waveletNo_][i];
-			segPub_[i] = 1;
+		if (decomposition.wDecomp_[PLANE_ID][i] > thresholdVal_) {
+			output[i] = decomposition.wDecomp_[PLANE_ID][i];
+			segmentMap[i] = 1;
 		}
 		else {
-			segPub_[i] = 0;
-			outputPub_[i] = 0;
+			segmentMap[i] = 0;
+			output[i] = 0;
 		}
 	}
 
-	segmentPub_.WatershedIntelligent(outputPub_, segPub_, watershedRatio_);
-	segmentPub_.ComputeStatistics(outputPub_, segPub_, aTrousPub_.wDecomp_[waveletNo_], gaussFit_);
-	if (volMin_ > 0. || intMin_ > 0.) { segmentPub_.FilterData(segPub_, structFiltParam_.data(), structFiltParamUse_.data()); }
+	segmentation.WatershedIntelligent(output, segmentMap, watershedRatio_);
+	segmentation.ComputeStatistics(output, segmentMap, decomposition.wDecomp_[PLANE_ID], gaussFit_);
+	//if (VOLUME_MIN > 0. || INTENSITY_MIN > 0.) { segmentation.FilterData(segmentMap, structFiltParam_.data(), structFiltParamUse_.data()); }
+	segmentation.FilterData(segmentMap);
 
-	const auto& P = segmentPub_.GetInfos();
+	const auto& P = segmentation.GetInfos();
 	std::vector<std::array<double, N_SEGMENTS>> allPoints(P.size());
 
 	#pragma omp parallel for

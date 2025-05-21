@@ -1,5 +1,6 @@
 #include "Segmentation2D.hpp"
 #include <algorithm>
+#include <array>
 #include <cfloat>
 #include <cmath>
 #include <queue>
@@ -7,17 +8,42 @@
 #include <unordered_map>
 #include <utility> // std::pair
 
+#include "Constants.hpp"
+
 /// <summary>The epsilon</summary>
 constexpr double EPSILON = 1e-7;
 
 //-------------------------------------------------------------------------------------------------
-void Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double* param, const unsigned short* useParam)
+namespace {
+struct Filter {
+	bool enabled;
+	double value;
+};
+
+// Création d'un tableau constexpr avec tous à false + 0.0 sauf
+constexpr std::array<Filter, N_SEGMENTS> MakeDefaultFilter()
+{
+	std::array<Filter, N_SEGMENTS> params{};
+	for (auto& p : params) { p = {.enabled = false, .value = 0.0}; }
+	// Paramètres à filtrer
+	params[0] = {.enabled = true, .value = VOLUME_MIN};
+	return params;
+}
+
+constexpr std::array<Filter, N_SEGMENTS> SEGMENTATION_FILTER = MakeDefaultFilter();
+///< Tableau de paramètres de filtre (min/max de surface, intensité, morphologie...)
+
+bool CheckFilter(const Filter& p, const double value, const bool lessThan) { return p.enabled && (lessThan ? (value <= p.value) : (value >= p.value)); }
+}
+
+//-------------------------------------------------------------------------------------------------
+void Segmentation2D::FilterData(std::vector<unsigned short>& seg)
 {
 	const size_t OldSize = infos_.size();
 
 	// Marquage des régions sur les bords
 	std::vector bounds(infos_.size(), false);
-	if (useParam[12] == 1) {
+	if (SEGMENTATION_FILTER[12].enabled == 1) {
 		for (size_t i = 0; i < height_; ++i) {
 			const auto Idx = i * width_;
 			if (seg[Idx] != 0) { bounds[seg[Idx]] = true; }
@@ -30,21 +56,20 @@ void Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double* 
 	}
 
 	// Première passe : filtrage par critère
-	auto isFiltered = [&](const Info2D& info, const size_t index)
-	{
+	auto isFiltered = [&](const Info2D& info, const size_t index) {
 		const double Mean_Surf = info.mean_ * info.surf_;
 		const double Morph_Ratio = std::min(info.sigma_.x, info.sigma_.y) / std::max(info.sigma_.x, info.sigma_.y);
 
 		return
-			(useParam[0] && info.surf_ <= param[0]) ||    // minSurf
-			(useParam[1] && info.surf_ >= param[1]) ||    // maxSurf
-			(useParam[2] && Mean_Surf <= param[2]) ||     // minInten
-			(useParam[3] && Mean_Surf >= param[3]) ||     // maxInten
-			(useParam[4] && info.max_.val <= param[4]) || // minMaxi
-			(useParam[5] && info.max_.val >= param[5]) || // maxMaxi
-			(useParam[7] && Morph_Ratio >= param[7]) ||   // minMorphParam
-			(useParam[8] && Morph_Ratio <= param[8]) ||   // maxMorphParam
-			(useParam[12] && bounds[index]);              // no struct on boundaries
+			CheckFilter(SEGMENTATION_FILTER[0], info.surf_, true) ||     // min Surf
+			CheckFilter(SEGMENTATION_FILTER[1], info.surf_, false) ||    // max Surf
+			CheckFilter(SEGMENTATION_FILTER[2], Mean_Surf, true) ||      // min Inten
+			CheckFilter(SEGMENTATION_FILTER[3], Mean_Surf, false) ||     // max Inten
+			CheckFilter(SEGMENTATION_FILTER[4], info.max_.val, true) ||  // min Maximum
+			CheckFilter(SEGMENTATION_FILTER[5], info.max_.val, false) || // max Maximum
+			CheckFilter(SEGMENTATION_FILTER[7], Morph_Ratio, true) ||    // min MorphParam
+			CheckFilter(SEGMENTATION_FILTER[8], Morph_Ratio, false) ||   // max MorphParam
+			(SEGMENTATION_FILTER[12].enabled && bounds[index]);          // no struct on boundaries
 	};
 
 	std::vector<Info2D> filtered;
@@ -62,7 +87,7 @@ void Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double* 
 	}
 
 	// Deuxième passe : filtrage des structures proches de plus brillantes (param[6])
-	if (useParam[6]) {
+	if (SEGMENTATION_FILTER[6].enabled) {
 		const size_t NewSize = filtered.size();
 		std::vector<Info2D> finalFiltered;
 		filtered.reserve(NewSize);
@@ -75,7 +100,7 @@ void Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double* 
 				             Dy = static_cast<double>(filtered[i].max_.y - filtered[j].max_.y);
 				const double Dist = std::sqrt(Dx * Dx + Dy * Dy);
 
-				if (Dist > 1.0 && Dist < param[6] && filtered[j].max_.val > filtered[i].max_.val) { unselected = true; }
+				if (Dist > 1.0 && Dist < SEGMENTATION_FILTER[6].value && filtered[j].max_.val > filtered[i].max_.val) { unselected = true; }
 			}
 
 			if (!unselected) { finalFiltered.emplace_back(filtered[i]); }
@@ -87,7 +112,7 @@ void Segmentation2D::FilterData(std::vector<unsigned short>& seg, const double* 
 	// Réaffectation
 	infos_ = std::move(filtered);
 
-	// Mise à jour de l’image segmentée
+	// Mise à jour de l'image segmentée
 	for (size_t i = 0; i < size_; ++i) {
 		if (seg[i] > 0) {
 			const size_t OldIndex = seg[i] - 1;
@@ -209,7 +234,7 @@ void Segmentation2D::filterStructureWS(const std::vector<double>& potential, std
 	const size_t NbStruct = infos_.size();
 	if (NbStruct == 0) { return; }
 
-	std::vector<ws_fusion_2d> wsFusions(NbStruct);
+	std::vector<WSFusion2D> wsFusions(NbStruct);
 
 	bool change = true;
 	int label = 0;
@@ -308,7 +333,7 @@ void Segmentation2D::filterStructureWS(const std::vector<double>& potential, std
 	}
 	infos_ = std::move(updatedInfos);
 
-	// Marquage d’un seul point par structure pour Watershed final
+	// Marquage d'un seul point par structure pour Watershed final
 	std::ranges::fill(seg, 0);
 	for (int i = 0; i <= static_cast<int>(wsFusions.size()); ++i) {
 		if (wsFusions[i].structToBecome == i) { seg[wsFusions[i].x * width_ + wsFusions[i].y] = static_cast<unsigned short>(wsFusions[i].newIndex); }
@@ -360,8 +385,7 @@ void Segmentation2D::getLocalMax(const std::vector<double>& potential, std::vect
 //-------------------------------------------------------------------------------------------------
 using coord_2d = std::pair<int, int>;
 
-struct Compare
-{
+struct Compare {
 	bool operator()(const std::pair<double, coord_2d>& a, const std::pair<double, coord_2d>& b) const { return a.first > b.first; }
 };
 

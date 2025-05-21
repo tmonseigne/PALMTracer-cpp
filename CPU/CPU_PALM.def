@@ -2,6 +2,3 @@ LIBRARY "CPU_PALM.dll"
 
 EXPORTS
 	Process
-	_OpenPALMProcessing
-	_PALMProcessing
-	_closePALMProcessing
