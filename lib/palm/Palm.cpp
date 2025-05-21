@@ -6,10 +6,12 @@
 #include <omp.h>
 
 #include <algorithm>
+#include <array>
+#include <cmath>
+#include <execution>
 #include <numbers>
-#include <iostream>
-#include <ranges>
 #include <thread>
+#include <vector>
 
 #include "ATrous.hpp"
 #include "Segmentation2D.hpp"
@@ -27,16 +29,19 @@ int Palm::Processing() const
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(planes_); ++i) { processingPlane(i, allPoints[i]); }
 
-	size_t count = 0;
+	// Copy et remplissage Remplissage de l'index global et de l'index par plan
+	size_t count = 0, global = 1;
 	for (int i = 0; i < static_cast<int>(planes_); ++i) {
+		size_t local = 1;
 		for (const auto& Point : allPoints[i]) {
 			std::ranges::copy(Point, points_ + count);
+			points_[count] = static_cast<double>(global);
+			points_[count + 2] = static_cast<double>(local);
+			++global;
+			++local;
 			count += N_SEGMENTS;
 		}
 	}
-	// Blank Line usefull ?
-	std::fill_n(points_ + count, N_SEGMENTS, -1);
-	count += N_SEGMENTS;
 
 	return static_cast<int>(count);
 }
@@ -68,7 +73,6 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 
 	segmentation.WatershedIntelligent(output, segmentMap, watershedRatio_);
 	segmentation.ComputeStatistics(output, segmentMap, decomposition.wDecomp_[PLANE_ID], fit_);
-	//if (VOLUME_MIN > 0. || INTENSITY_MIN > 0.) { segmentation.FilterData(segmentMap, structFiltParam_.data(), structFiltParamUse_.data()); }
 	segmentation.FilterData(segmentMap);
 
 	const auto& P = segmentation.GetInfos();
@@ -124,7 +128,7 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 		p[2] = 0;                              // Index
 		p[3] = x;                              // X
 		p[4] = y;                              // Y
-		p[5] = 0.0f;                           // Z
+		p[5] = 0;                              // Z
 
 		// Integrated intensity
 		if (fit_ == 0) { p[6] = P[i].intensity_; }
@@ -141,6 +145,12 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 
 		// Circularity
 		if (sigmaX > EPSILON && sigmaY > EPSILON) { p[15] = std::min(sigmaX, sigmaY) / std::max(sigmaX, sigmaY); }
-		else { p[15] = 1.0; }
+		else { p[15] = 1; }
 	}
+
+	// Tri par Y puis X (en cas peu probable de Y identique)
+	std::ranges::sort(points, [](const auto& a, const auto& b) {
+		if (std::fabs(a[4] - b[4]) > EPSILON) { return a[4] < b[4]; } // Tri sur Y (p[4])
+		return a[3] < b[3];                                           // Puis sur X (p[3])
+	});
 }
