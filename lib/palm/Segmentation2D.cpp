@@ -10,9 +10,6 @@
 
 #include "Constants.hpp"
 
-/// <summary>The epsilon</summary>
-constexpr double EPSILON = 1e-7;
-
 //-------------------------------------------------------------------------------------------------
 namespace {
 struct Filter {

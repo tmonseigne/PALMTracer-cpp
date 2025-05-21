@@ -95,7 +95,7 @@ private:
 	       watershedRatio_; ///< Rapport utilisé dans l'algorithme de Watershed.
 
 	// Gaussian fit members
-	size_t fit_,        ///< Mode de fitting gaussien à appliquer (0 = aucun, 1 à 4 = variantes 2D ou 3D).
+	size_t fit_,        ///< Mode de fitting à appliquer (0 = aucun, 1 à 4 = variantes 2D ou 3D de l'ajustement Gaussien).
 	       roi_;        ///< Taille du ROI utilisé pour le fitting gaussien (fenêtre autour du point).
 	double initSigmaX_, ///< Valeur initiale de sigmaX utilisée dans le fitting gaussien.
 	       initSigmaY_, ///< Valeur initiale de sigmaY utilisée dans le fitting gaussien.

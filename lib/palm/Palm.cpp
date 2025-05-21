@@ -6,6 +6,7 @@
 #include <omp.h>
 
 #include <algorithm>
+#include <numbers>
 #include <iostream>
 #include <ranges>
 #include <thread>
@@ -118,18 +119,26 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 			}
 		}
 		auto& p = points[i];
-		p[0] = sigmaX;
-		p[1] = sigmaY;
-		p[2] = theta;
-		p[3] = y;
-		p[4] = x;
-		p[5] = intensity;
-		p[6] = offset;
-		p[7] = rss;
-		p[8] = P[i].intensity_;
-		p[9] = P[i].surf_;
-		p[10] = 0.0f; // Z coordinate
-		p[11] = 0.0f; // Spectral or other
-		p[12] = 0.0f; // Other
+		p[0] = static_cast<double>(plane + 1); // Plane
+		p[1] = x;                              // X
+		p[2] = y;                              // Y
+		p[3] = 0.0f;                           // Z
+
+		// Integrated intensity
+		if (fit_ == 0) { p[4] = P[i].intensity_; }
+		else { p[4] = 2.0 * std::numbers::pi * intensity * sigmaX * sigmaY; }
+
+		p[5] = sigmaX;           // Sigma X
+		p[6] = sigmaY;           // Sigma Y
+		p[7] = theta;            // Theta
+		p[8] = intensity;        // Intensity 0
+		p[9] = offset;           // Intensity offset
+		p[10] = P[i].intensity_; // Intensity
+		p[11] = P[i].surf_;      // Surface
+		p[12] = rss;             // MSE Gaussian
+
+		// Circularity
+		if (sigmaX > EPSILON && sigmaY > EPSILON) { p[13] = std::min(sigmaX, sigmaY) / std::max(sigmaX, sigmaY); }
+		else { p[13] = 1.0; }
 	}
 }
