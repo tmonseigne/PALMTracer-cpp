@@ -39,7 +39,7 @@ void GaussianFit::Run(const unsigned short* image, size_t width, size_t height, 
                       double& sigmaY, double& theta, double& offset, double& rss, size_t roi)
 {
 	if (roi % 2 == 0) { roi--; } // Not present in GPU original file why ?
-	n_ = roi * roi;
+	n_     = roi * roi;
 	sigma_ = sigmaX;
 	theta_ = theta;
 
@@ -57,7 +57,7 @@ void GaussianFit::Run(const unsigned short* image, size_t width, size_t height, 
 		preComputeFit(minI, maxI, image, width, Ux, Uy, dat, weight, t, roi);
 		initP(x, y, sigmaX, sigmaY, theta, minI, maxI);
 
-		double x2 = lm_matx(t, p_, dat, weight, alpha, beta, hat);
+		double x2     = lm_matx(t, p_, dat, weight, alpha, beta, hat);
 		double x2_old = x2;
 
 		// Trouver la valeur absolue maximale
@@ -97,11 +97,11 @@ void GaussianFit::Run(const unsigned short* image, size_t width, size_t height, 
 				x2_old = x2;
 				std::copy_n(p_try.begin(), nParams_, p_.begin()); // accept p_try
 
-				x2 = lm_matx(t, p_, dat, weight, alpha, beta, hat);
+				x2     = lm_matx(t, p_, dat, weight, alpha, beta, hat);
 				lambda = std::max(lambda / LAMBDA_DN, LAMBDA_EPSILON_MIN);
 			}
-			else {           // it IS NOT better
-				x2 = x2_old; // do not accept a_try
+			else {               // it IS NOT better
+				x2     = x2_old; // do not accept a_try
 				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_EPSILON_MAX);
 			}
 
@@ -117,8 +117,8 @@ void GaussianFit::Run(const unsigned short* image, size_t width, size_t height, 
 			if (iteration >= N_ITER) { stop = true; }
 		}
 
-		x = p_[1];
-		y = p_[2];
+		x         = p_[1];
+		y         = p_[2];
 		intensity = p_[0];
 		switch (mode_) {
 			case fit_mode::gauss_2d: {
@@ -139,7 +139,7 @@ void GaussianFit::Run(const unsigned short* image, size_t width, size_t height, 
 			case fit_mode::gauss_3d_theta: {
 				sigmaX = p_[3] / std::numbers::sqrt2_v<double>;
 				sigmaY = p_[4] / std::numbers::sqrt2_v<double>;
-				theta = p_[5];
+				theta  = p_[5];
 				offset = p_[6];
 				break;
 			}
@@ -159,10 +159,10 @@ void GaussianFit::preComputeFit(double& min, double& max, const unsigned short* 
 	for (int i = -Half; i <= Half; ++i) {
 		const auto Idx = Half + (i + Half) * roi;
 		for (int j = -Half; j <= Half; ++j) {
-			dat[j + Idx] = static_cast<double>(image[x + j + (y + i) * width]);
+			dat[j + Idx]    = static_cast<double>(image[x + j + (y + i) * width]);
 			const auto TIdx = (j + Idx) * 2;
-			t[TIdx] = x + j;
-			t[TIdx + 1] = y + i;
+			t[TIdx]         = x + j;
+			t[TIdx + 1]     = y + i;
 
 			max = std::max(max, dat[j + Idx]); // Not present in GPU original file why ?
 			min = std::min(min, dat[j + Idx]); // Not present in GPU original file why ?
@@ -181,25 +181,25 @@ void GaussianFit::initP(const double x, const double y, const double sigmaX, con
 	switch (mode_) {
 		case fit_mode::gauss_2d: {
 			pMin_ = {0, x - 1, y - 1, 0};
-			p_ = {maxI - minI, x, y, minI};
+			p_    = {maxI - minI, x, y, minI};
 			pMax_ = {65535, x + 1, y + 1, 65535};
 			break;
 		}
 		case fit_mode::gauss_2d_sigma: {
 			pMin_ = {0, x - 1, y - 1, 0.1, 0.};
-			p_ = {maxI - minI, x, y, sigmaX, minI};
+			p_    = {maxI - minI, x, y, sigmaX, minI};
 			pMax_ = {65535, x + 1, y + 1, 20, 65535};
 			break;
 		}
 		case fit_mode::gauss_3d: {
 			pMin_ = {0, x - 1, y - 1, 0.1, 0.1, 0};
-			p_ = {maxI - minI, x, y, std::numbers::sqrt2_v<double> * sigmaX, std::numbers::sqrt2_v<double> * sigmaY, minI};
+			p_    = {maxI - minI, x, y, std::numbers::sqrt2_v<double> * sigmaX, std::numbers::sqrt2_v<double> * sigmaY, minI};
 			pMax_ = {65535, x + 1, y + 1, 20, 20, 65535};
 			break;
 		}
 		case fit_mode::gauss_3d_theta: {
 			pMin_ = {0, x - 1, y - 1, 0.1, 0.1, -150, 0};
-			p_ = {maxI - minI, x, y, std::numbers::sqrt2_v<double> * sigmaX, std::numbers::sqrt2_v<double> * sigmaY, theta, minI};
+			p_    = {maxI - minI, x, y, std::numbers::sqrt2_v<double> * sigmaX, std::numbers::sqrt2_v<double> * sigmaY, theta, minI};
 			pMax_ = {65535, x + 1, y + 1, 20, 20, 150, 65535};
 			break;
 		}
@@ -222,7 +222,7 @@ double GaussianFit::computeRSS(std::vector<double>& dat, std::vector<double>& ha
 	const double T1 = std::inner_product(dat.begin(), dat.end(), hat.begin(), 0.0), // dat * hat
 	             T2 = std::inner_product(dat.begin(), dat.end(), dat.begin(), 0.0), // dat * dat
 	             T3 = std::inner_product(hat.begin(), hat.end(), hat.begin(), 0.0), // hat * hat
-	             R = T1 / std::sqrt(T2 * T3);                                       // Calcul du R
+	             R  = T1 / std::sqrt(T2 * T3);                                      // Calcul du R
 
 	return std::isnan(R) ? 0 : R * R;
 }
@@ -247,8 +247,8 @@ double GaussianFit::psf(const double x, const double y, const double i0, const d
 double GaussianFit::psf(const double x, const double y, const double i0, const double sigmaX, const double sigmaY, const double theta, const double offset)
 {
 	const auto CosTheta = cos(theta), SinTheta = sin(theta);
-	const auto Factor1 = (x * CosTheta - y * SinTheta) / sigmaX,
-	           Factor2 = (x * SinTheta + y * CosTheta) / sigmaY;
+	const auto Factor1  = (x * CosTheta - y * SinTheta) / sigmaX,
+	           Factor2  = (x * SinTheta + y * CosTheta) / sigmaY;
 
 	return i0 * exp(-(Factor1 * Factor1 + Factor2 * Factor2)) + offset;
 }
@@ -268,7 +268,7 @@ void GaussianFit::deriv(double* out, const double x, const double y, const doubl
 {
 	const auto X_2 = x * x, Y_2 = y * y, Sigma_2 = sigma * sigma;
 	const auto Exp = exp(-(X_2 + Y_2) / (2 * Sigma_2));
-	const auto P = i0 * Exp;
+	const auto P   = i0 * Exp;
 
 	out[0] = Exp;             // I0
 	out[1] = P * x / Sigma_2; // x0
@@ -284,16 +284,16 @@ void GaussianFit::deriv(double* out, const double x, const double y, const doubl
 void GaussianFit::deriv(double* out, const double x, const double y, const double i0, const double sigmaX, const double sigmaY, const double theta,
                         const bool has_theta)
 {
-	const auto X_2 = x * x, Y_2 = y * y, X_Y = x * y, SigmaX_2 = sigmaX * sigmaX, SigmaY_2 = sigmaY * sigmaY;
-	const auto CosT = cos(theta), SinT = sin(theta);
-	const auto CosT_2 = CosT * CosT, SinT_2 = SinT * SinT, CosSinT = CosT * SinT,
-	           XCosT = x * CosT, XSinT = x * SinT, YCosT = y * CosT, YSinT = y * SinT;
+	const auto X_2     = x * x, Y_2          = y * y, X_Y = x * y, SigmaX_2 = sigmaX * sigmaX, SigmaY_2 = sigmaY * sigmaY;
+	const auto CosT    = cos(theta), SinT    = sin(theta);
+	const auto CosT_2  = CosT * CosT, SinT_2 = SinT * SinT, CosSinT = CosT * SinT,
+	           XCosT   = x * CosT, XSinT     = x * SinT, YCosT      = y * CosT, YSinT = y * SinT;
 	const auto Factor1 = (XCosT - YSinT) / sigmaX,
 	           Factor2 = (XSinT + YCosT) / sigmaY,
 	           Factor3 = 2 * X_Y * CosSinT,
 	           Factor4 = 2 * X_Y / SigmaX_2 - 2 * X_Y / SigmaY_2;
-	const auto Exp = exp(-(Factor1 * Factor1 + Factor2 * Factor2));
-	const auto P = i0 * Exp;
+	const auto Exp     = exp(-(Factor1 * Factor1 + Factor2 * Factor2));
+	const auto P       = i0 * Exp;
 
 	out[0] = Exp;                                                                                                      // I0
 	out[1] = P * (-((-2 * CosT_2 * x + 2 * y * CosSinT) / SigmaX_2) - (-2 * SinT_2 * x - 2 * y * CosSinT) / SigmaY_2); // x0
@@ -341,7 +341,7 @@ double GaussianFit::lm_matx(const std::vector<size_t>& t, const std::vector<doub
 	std::vector<double> delta(n_);
 	//LaunchComputeHatDelta(dat.data(), t.data(), hat.data(), delta.data(), p.data(), static_cast<int>(mode_), sigma_, theta_, n_);
 	for (size_t i = 0; i < n_; ++i) {
-		hat[i] = psf(p, static_cast<double>(t[i * 2]), static_cast<double>(t[i * 2 + 1]));
+		hat[i]   = psf(p, static_cast<double>(t[i * 2]), static_cast<double>(t[i * 2 + 1]));
 		delta[i] = dat[i] - hat[i];
 	}
 
@@ -359,7 +359,7 @@ void GaussianFit::inverse(std::vector<double>& in, std::vector<double>& out) con
 
 	// limination de Gauss-Jordan
 	for (size_t i = 0; i < nParams_; ++i) {
-		const double Pivot = in[i * nParams_ + i];
+		const double Pivot     = in[i * nParams_ + i];
 		const double Pivot_Inv = 1.0 / Pivot;
 
 		// Normalisation de la ligne i

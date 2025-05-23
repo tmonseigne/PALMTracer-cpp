@@ -13,8 +13,8 @@ links to the current objet.
 #include <algorithm>
 #include <numbers>
 
-constexpr double WEIGHT_DISTANCE = 0.6;
-constexpr double WEIGHT_INTENSITY = 0.2;
+constexpr double WEIGHT_DISTANCE       = 0.6;
+constexpr double WEIGHT_INTENSITY      = 0.2;
 constexpr double WEIGHT_MEAN_INTENSITY = 0.2;
 
 //=================================================================
@@ -63,7 +63,7 @@ void Node::MakeInitializationConnection()
 		if (!neighbor->past_) {
 			const double Val = Likeness(neighbor);
 			if (Val > max) {
-				max = Val;
+				max  = Val;
 				nMax = neighbor;
 			}
 		}
@@ -71,7 +71,7 @@ void Node::MakeInitializationConnection()
 
 	if (nMax) {
 		nMax->past_ = this;
-		future_ = nMax;
+		future_     = nMax;
 	}
 }
 
@@ -94,7 +94,7 @@ double Node::distance(const Node& n1, const Node& n2) const
 {
 	const double N1N2X = (n1.x_ * n1.intensity_ + n2.x_ * n2.intensity_) / (n1.intensity_ + n2.intensity_);
 	const double N1N2Y = (n1.y_ * n1.intensity_ + n2.y_ * n2.intensity_) / (n1.intensity_ + n2.intensity_);
-	const double Dx = x_ - N1N2X, Dy = y_ - N1N2Y;
+	const double Dx    = x_ - N1N2X, Dy = y_ - N1N2Y;
 	return sqrt(Dx * Dx + Dy * Dy);
 }
 
@@ -156,11 +156,11 @@ double Node::Likeness(const Node* n) const
 void Node::UpdateConstants()
 {
 	// compute n->likeness, distance to border....
-	likenessDistance_ = getLikeness(std::min(distanceToBorder_, params_->stdDistance_), params_->stdDistance_);
-	likenessMean_ = getLikeness(mean_, params_->stdMean_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder_));
+	likenessDistance_  = getLikeness(std::min(distanceToBorder_, params_->stdDistance_), params_->stdDistance_);
+	likenessMean_      = getLikeness(mean_, params_->stdMean_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder_));
 	likenessIntensity_ = getLikeness(intensity_, params_->stdIntensity_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder_));
-	likeness_ = (WEIGHT_DISTANCE * likenessDistance() + WEIGHT_INTENSITY * likenessIntensity()
-	             + WEIGHT_MEAN_INTENSITY * likenessMean()) / 2. - params_->costBirthDeath_;
+	likeness_          = (WEIGHT_DISTANCE * likenessDistance() + WEIGHT_INTENSITY * likenessIntensity()
+	                      + WEIGHT_MEAN_INTENSITY * likenessMean()) / 2. - params_->costBirthDeath_;
 }
 
 /*********************************************************************************************
@@ -183,12 +183,12 @@ void Node::computeConstantSigmas(double &intensity,
 void Node::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance, size_t& nDist) const
 {
 	const Node* nMax = nullptr;
-	double max = -1e10;
+	double max       = -1e10;
 
 	for (const Node* neighbor : neighbors_[1]) {
 		const double Val = Likeness(neighbor);
 		if (Val > max) {
-			max = Val;
+			max  = Val;
 			nMax = neighbor;
 		}
 	}
@@ -206,7 +206,7 @@ void Node::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, 
 
 void Node::ComputeBorderDistance()
 {
-	const double X = x_, Y = y_;
+	const double X    = x_, Y                = y_;
 	const double MaxX = params_->maxX_, MaxY = params_->maxY_;
 	distanceToBorder_ = std::min({X, MaxX - X, Y, MaxY - Y});
 }
@@ -317,7 +317,7 @@ double Node::simpleLinkageReassignment(const double limit, Node* node)
 	// change the configuration
 	//unlink future_
 	if (future_) { future_->past_ = nullptr; }
-	future_ = node;
+	future_        = node;
 	future_->past_ = this;
 
 	return DeltaE;
@@ -347,9 +347,9 @@ double Node::simpleLinkageBreakAndReconnect(const double limit, Node* node)
 
 
 	if (future_) { future_->past_ = nullptr; }
-	future_ = node;
+	future_                 = node;
 	future_->past_->future_ = nullptr;
-	future_->past_ = this;
+	future_->past_          = this;
 
 	return DeltaE;
 	//return(0.);
@@ -374,9 +374,9 @@ double Node::simpleLinkageSwap(const double limit, Node* node)
 	// change the configuration
 
 	node->past_->future_ = future_;
-	future_->past_ = node->past_;
-	future_ = node;
-	node->past_ = this;
+	future_->past_       = node->past_;
+	future_              = node;
+	node->past_          = this;
 
 	return DeltaE;
 	//return(0.);
@@ -394,8 +394,8 @@ double Node::simpleLinkageDoubleSwap(const double limit, Node* node, const size_
 	const size_t IdRandNeighbor = params_->RandomModulo(count);
 
 	const auto& Neighbors = node->past_->neighbors_[1];
-	Node* selected = nullptr;
-	size_t iCount = 0;
+	Node* selected        = nullptr;
+	size_t iCount         = 0;
 	for (auto& N : Neighbors) {
 		if (isSimpleLinkageAvailable(N)) {
 			if (iCount == IdRandNeighbor) {
@@ -422,10 +422,10 @@ double Node::simpleLinkageDoubleSwap(const double limit, Node* node, const size_
 	//unlink future_
 
 	if (future_) { future_->past_ = nullptr; } //????
-	future_ = node;
-	future_->past_->future_ = selected;
+	future_                        = node;
+	future_->past_->future_        = selected;
 	future_->past_->future_->past_ = future_->past_;
-	future_->past_ = this;
+	future_->past_                 = this;
 
 	return DeltaE;
 	//return(0.);

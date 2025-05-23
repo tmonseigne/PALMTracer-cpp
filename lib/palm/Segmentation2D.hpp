@@ -59,7 +59,8 @@ public:
 
 	/// <summary>Retourne la liste des structures segmentées avec leurs informations (centroïde, intensité, etc.).</summary>
 	/// <returns>Un vecteur d'objets Info2D contenant les caractéristiques des structures détectées.</returns>
-	std::vector<Info2D> GetInfos() const { return infos_; }
+	/// <remarks>Le mot-clé [[nodiscard]] indique que le résultat ne doit pas être ignoré.</remarks>
+	[[nodiscard]] std::vector<Info2D> GetInfos() const { return infos_; }
 
 	/// <summary> Effectue une segmentation intelligente de type watershed.
 	/// Cette méthode combine une détection des maxima locaux, un premier watershed, un filtrage morphologique optionnel, puis un second watershed.</summary>
@@ -78,6 +79,7 @@ private:
 	/// <summary>Alloue un vecteur de structures (`infos_`) pour un nombre donné de segments.</summary>
 	/// <param name="nbStruct">Nombre de structures initiales à allouer.</param>
 	void alloc(size_t nbStruct);
+
 	/// <summary>Désalloue toutes les structures actuellement contenues dans `infos_`.</summary>
 	void desalloc() { infos_.clear(); }
 

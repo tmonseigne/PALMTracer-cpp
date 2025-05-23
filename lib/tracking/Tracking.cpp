@@ -35,7 +35,7 @@ void Tracking::Processing()
 		else { updateConstants(); }
 
 		int nbInt = 0;
-		int bcl = 0;
+		int bcl   = 0;
 		do {
 			if (step == Parameters::N_STEPS - 1) { error *= 1. - decrease_; }
 
@@ -142,7 +142,7 @@ void Tracking::readPointsList()
 			for (size_t j = i; j < timeNodes_[t].nNodes_; ++j) {
 				if (maxIntensity < timeNodes_[t][j].intensity_) {
 					maxIntensity = timeNodes_[t][j].intensity_;
-					indexMax = j;
+					indexMax     = j;
 				}
 			}
 			std::swap(timeNodes_[t].nodes_[indexMax], timeNodes_[t].nodes_[i]);
@@ -209,11 +209,11 @@ params_->stdDistance
 void Tracking::computeConstants()
 {
 	params_->stdIntensity_ = 1000;
-	params_->stdMean_ = 1000;
-	params_->stdDistance_ = 1000;
+	params_->stdMean_      = 1000;
+	params_->stdDistance_  = 1000;
 
 	for (size_t k = 0; k < 20; ++k) {
-		size_t nInt = 0, nMean = 0, nDist = 0;
+		size_t nInt = 0, nMean    = 0, nDist     = 0;
 		double mean = 0, distance = 0, intensity = 0;
 
 		for (size_t t = 0; t < nbTimes_ - 1; ++t) { timeNodes_[t].ComputeConstantSigmas(intensity, nInt, mean, nMean, distance, nDist); }
@@ -236,10 +236,10 @@ updateConstants() ones the Tracking in compute, compute the constant
 ********************************************************************************************************************/
 void Tracking::updateConstants()
 {
-	long cpt = 0;
-	params_->stdDistance_ = 0;
-	params_->stdIntensity_ = 0;
-	params_->stdMean_ = 0;
+	long cpt                   = 0;
+	params_->stdDistance_      = 0;
+	params_->stdIntensity_     = 0;
+	params_->stdMean_          = 0;
 	params_->covMeanIntensity_ = 0;
 
 	for (const auto& T : timeNodes_) {
@@ -258,7 +258,7 @@ void Tracking::updateConstants()
 	params_->stdMean_ /= cpt;
 	params_->covMeanIntensity_ /= cpt;
 	params_->stdIntensity_ = sqrt(params_->stdIntensity_);
-	params_->stdDistance_ = sqrt(params_->stdDistance_);
-	params_->stdMean_ = sqrt(params_->stdMean_);
+	params_->stdDistance_  = sqrt(params_->stdDistance_);
+	params_->stdMean_      = sqrt(params_->stdMean_);
 	for (auto& t : timeNodes_) { for (auto& n : t.nodes_) { n.UpdateConstants(); } }
 }

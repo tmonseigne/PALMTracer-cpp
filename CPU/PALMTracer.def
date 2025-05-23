@@ -1,4 +1,4 @@
 LIBRARY "PALMTracer_CPU.dll"
 
 EXPORTS
-	Localisation
+	Localization

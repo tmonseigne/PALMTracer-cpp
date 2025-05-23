@@ -18,8 +18,7 @@
 #include "Parameters.hpp"
 
 
-class TimeNodes
-{
+class TimeNodes {
 protected:
 	size_t time_;
 

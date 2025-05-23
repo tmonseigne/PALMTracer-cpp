@@ -17,8 +17,7 @@
 #include "Parameters.hpp"
 #include "TimeNodes.hpp"
 
-class Tracking
-{
+class Tracking {
 public:
 	size_t nTraj_;
 

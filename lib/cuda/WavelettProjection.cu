@@ -22,14 +22,13 @@ __global__ void WaveletHorizontal(const double* in, double* tmp, const size_t wi
 	const size_t X = blockIdx.x * blockDim.x + threadIdx.x;
 	const size_t Y = blockIdx.y * blockDim.y + threadIdx.y;
 	if (X >= width || Y >= height) { return; }
-	const int Step = 1 << plane;      // 2^plane
-	const int DoubleStep = Step << 1; // 2*2^plane
+	const int Step       = 1 << plane; // 2^plane
+	const int DoubleStep = Step << 1;  // 2*2^plane
 
 	const auto Idx = Y * width + X;
 
 	// Lecture sécurisée avec bord clamping
-	auto get = [&](const size_t xx) -> double
-	{
+	auto get = [&](const size_t xx) -> double {
 		const size_t Xi = max(static_cast<size_t>(0), min(width - 1, xx));
 		return in[Y * width + Xi];
 	};
@@ -43,14 +42,13 @@ __global__ void WaveletVertical(const double* tmp, double* out, const size_t wid
 	const size_t Y = blockIdx.y * blockDim.y + threadIdx.y;
 	if (X >= width || Y >= height) { return; }
 
-	const int Step = 1 << plane;
+	const int Step       = 1 << plane;
 	const int DoubleStep = Step << 1;
 
 	const auto Idx = Y * width + X;
 
 	// Lecture sécurisée avec bord clamping
-	auto get = [&](const size_t yy) -> double
-	{
+	auto get = [&](const size_t yy) -> double {
 		const size_t Yi = max(static_cast<size_t>(0), min(height - 1, yy));
 		return tmp[Yi * width + X];
 	};
@@ -72,7 +70,7 @@ void WaveletProjections(const unsigned short* image, const size_t height, const 
 {
 	//copie de l'image dans decomp[0] en passant en double
 	//std::transform(image, image + size_, wDecomp_[0].begin(), [](const unsigned short val) { return static_cast<double>(val); });
-	const size_t Size = height * width;
+	const size_t Size      = height * width;
 	const size_t TotalSize = Size * nbPlane;
 
 	// Allocation GPU

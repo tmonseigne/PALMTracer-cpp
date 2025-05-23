@@ -19,8 +19,7 @@
 
 #include "Parameters.hpp"
 
-class Node
-{
+class Node {
 public:
 	double x_, y_, z_, intensity_, mean_, surf_, color_, molId_;
 
