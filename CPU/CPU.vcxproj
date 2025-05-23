@@ -70,6 +70,9 @@
     <ClCompile Include="..\lib\palm\ATrous.cpp" />
     <ClCompile Include="..\lib\palm\Palm.cpp" />
     <ClCompile Include="..\lib\palm\Segmentation2D.cpp" />
+    <ClCompile Include="..\lib\tracking\Node.cpp" />
+    <ClCompile Include="..\lib\tracking\TimeNodes.cpp" />
+    <ClCompile Include="..\lib\tracking\Tracking.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -83,6 +86,11 @@
     <ClInclude Include="..\lib\palm\Palm.hpp" />
     <ClInclude Include="..\lib\palm\Info2D.hpp" />
     <ClInclude Include="..\lib\palm\Segmentation2D.hpp" />
+    <ClInclude Include="..\lib\tracking\Node.h" />
+    <ClInclude Include="..\lib\tracking\Node.hpp" />
+    <ClInclude Include="..\lib\tracking\Parameters.hpp" />
+    <ClInclude Include="..\lib\tracking\TimeNodes.hpp" />
+    <ClInclude Include="..\lib\tracking\Tracking.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

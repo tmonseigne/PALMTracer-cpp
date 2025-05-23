@@ -14,6 +14,15 @@
     <ClCompile Include="..\lib\fit\GaussianFit.cpp">
       <Filter>Fit</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\tracking\Node.cpp">
+      <Filter>Tracking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tracking\TimeNodes.cpp">
+      <Filter>Tracking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tracking\Tracking.cpp">
+      <Filter>Tracking</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\fit\GaussianFit.hpp">
@@ -33,9 +42,24 @@
     </ClInclude>
     <ClInclude Include="..\lib\Constants.hpp" />
     <ClInclude Include="..\lib\ExportAPI.hpp" />
+    <ClInclude Include="..\lib\tracking\Node.h">
+      <Filter>Tracking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tracking\Node.hpp">
+      <Filter>Tracking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tracking\Parameters.hpp">
+      <Filter>Tracking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tracking\TimeNodes.hpp">
+      <Filter>Tracking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tracking\Tracking.hpp">
+      <Filter>Tracking</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="CPU_PALM.def" />
+    <None Include="PALMTracer.def" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Fit">
@@ -43,6 +67,9 @@
     </Filter>
     <Filter Include="Palm">
       <UniqueIdentifier>{e5a11116-d4db-43a9-a04f-722064d18fe7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracking">
+      <UniqueIdentifier>{000e3aa6-d21b-416d-b789-f6e82f4cdfc7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
