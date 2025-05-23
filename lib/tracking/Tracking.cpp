@@ -14,7 +14,7 @@ Class Tracking contains several Tracking objets for each time (nbTimes).
 #include <cmath>
 
 namespace palm_tracer {
-void Tracking::Processing()
+size_t Tracking::Processing()
 {
 	// Initialisation
 	readPointsList();
@@ -58,7 +58,7 @@ void Tracking::Processing()
 	// Result
 	setIndexToTrackedStructures();
 	setColorToTrackedStructures();
-	printConnectionsASCII_trc();
+	return printConnectionsASCII_trc();
 }
 
 /********************************************************************************************************************
@@ -71,7 +71,7 @@ Colonne 4         Y
 Colonne 5 ou 6         nombre de pixels de l'objet
 Colonne 6 ou 7         intensité intégrée
 ********************************************************************************************************************/
-void Tracking::printConnectionsASCII_trc()
+size_t Tracking::printConnectionsASCII_trc()
 {
 	size_t idx = 0;
 	for (const auto& T : timeNodes_) {
@@ -94,6 +94,7 @@ void Tracking::printConnectionsASCII_trc()
 			}
 		}
 	}
+	return idx;
 }
 
 /********************************************************************************************************************

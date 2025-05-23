@@ -25,8 +25,8 @@ long CALL_CONV Tracking(const double* pointsList, double* trc, const double maxS
 	Param->costBirthDeath_ = costBirth;
 
 	palm_tracer::Tracking tracking(pointsList, trc, minLife, decrease / 100.0, nbTimes, Param);
-	tracking.Processing();
+	const size_t Count = tracking.Processing();
 	delete Param;
 
-	return static_cast<long>(tracking.nTraj_);
+	return static_cast<long>(Count);
 }
