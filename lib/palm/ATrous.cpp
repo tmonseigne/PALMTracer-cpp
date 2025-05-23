@@ -5,6 +5,7 @@
 
 #include "Constants.hpp"
 
+namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
 void ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t height, const size_t width)
 {
@@ -87,4 +88,5 @@ void ATrous::b3SplineFiltering2D(const std::vector<double>& in, std::vector<doub
 	// Convolution verticale (X-axis)
 	#pragma omp parallel for
 	for (int idx = 0; idx < static_cast<int>(size_); ++idx) { out[idx] = convolutionX(idx, idx / static_cast<int>(width_), idx % static_cast<int>(width_)); }
+}
 }

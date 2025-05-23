@@ -18,6 +18,7 @@
 #include "fit/GaussianFit.hpp"
 
 
+namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
 Palm::Palm(const unsigned short* image, double* points, const size_t pointsListSize, const size_t height, const size_t width, const size_t planes,
            const double thresholdVal, const double watershedRatio, const size_t fit, const double* fit_params)
@@ -175,4 +176,5 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 		if (std::fabs(a[4] - b[4]) > EPSILON) { return a[4] < b[4]; } // Tri sur Y (p[4])
 		return a[3] < b[3];                                           // Puis sur X (p[3])
 	});
+}
 }

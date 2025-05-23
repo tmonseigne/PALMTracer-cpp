@@ -10,7 +10,7 @@
 #include <ranges>
 #include <vector>
 
-//-------------------------------------------------------------------------------------------------
+namespace palm_tracer {
 GaussianFit::GaussianFit(const fit_mode mode)
 	: mode_(mode), n_(0), nParams_(4), sigma_(1), theta_(0)
 {
@@ -341,8 +341,8 @@ double GaussianFit::chi2(std::vector<double>& alpha, std::vector<double>& beta, 
 
 	// Computing Chi_sq
 	#ifdef __APPLE__
-	// Pas de support de std::execution sous macOS (Clang/libc++)
-	return std::transform_reduce(deltaY.begin(), deltaY.end(), tmp.begin(), 0.0);
+// Pas de support de std::execution sous macOS (Clang/libc++)
+		return std::transform_reduce(deltaY.begin(), deltaY.end(), tmp.begin(), 0.0);
 	#else
 	return std::transform_reduce(std::execution::seq, deltaY.begin(), deltaY.end(), tmp.begin(), 0.0);
 	#endif
@@ -394,4 +394,5 @@ void GaussianFit::inverse(std::vector<double>& in, std::vector<double>& out) con
 			}
 		}
 	}
+}
 }

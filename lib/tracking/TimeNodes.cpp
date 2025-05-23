@@ -10,6 +10,7 @@ Class TimeNodes contains the Node objets for one time.
 #include <algorithm>
 #include <ranges>
 
+namespace palm_tracer {
 /********************************************************************************************************************
 Constructor(int _time, int _nbNodes) is run after the base constructor TimeNodes::TimeNodes
 ********************************************************************************************************************/
@@ -54,4 +55,5 @@ void computeConstantSigmas(double &intensity, double &mean,
 void TimeNodes::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance, size_t& nDist) const
 {
 	for (const auto& N : nodes_) { N.ComputeConstantSigmas(intensity, nInt, mean, nMean, distance, nDist); }
+}
 }

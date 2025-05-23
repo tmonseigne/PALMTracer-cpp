@@ -11,6 +11,7 @@
 
 #pragma once
 
+namespace palm_tracer {
 /// <summary>Structure représentant une coordonnée 2D en double précision.</summary>
 struct Val2D {
 	double x; ///< Coordonnée x.
@@ -110,3 +111,4 @@ public:
 		boundingBox_ = {.xMin = height, .xMax = 0, .yMin = width, .yMax = 0};
 	}
 };
+}

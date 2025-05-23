@@ -13,6 +13,9 @@ links to the current objet.
 #include <algorithm>
 #include <numbers>
 
+
+namespace palm_tracer {
+//-------------------------------------------------------------------------------------------------
 constexpr double WEIGHT_DISTANCE       = 0.6;
 constexpr double WEIGHT_INTENSITY      = 0.2;
 constexpr double WEIGHT_MEAN_INTENSITY = 0.2;
@@ -429,4 +432,5 @@ double Node::simpleLinkageDoubleSwap(const double limit, Node* node, const size_
 
 	return DeltaE;
 	//return(0.);
+}
 }

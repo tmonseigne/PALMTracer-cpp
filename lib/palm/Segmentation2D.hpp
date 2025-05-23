@@ -15,7 +15,7 @@
 #include <vector>
 #include "Info2D.hpp"
 
-
+namespace palm_tracer {
 /// <summary>Classe de traitement d'images segmentées en 2D, permettant l'allocation de structures,
 /// le calcul de statistiques et le filtrage basé sur des critères morphologiques et d'intensité. </summary>
 ///
@@ -105,3 +105,4 @@ private:
 	/// <param name="seg">Carte de labels (1D) contenant les germes au début, puis les régions segmentées à la fin.</param>
 	void watershed(const std::vector<double>& potential, std::vector<unsigned short>& seg) const;
 };
+}

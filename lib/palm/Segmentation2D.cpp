@@ -10,27 +10,28 @@
 
 #include "Constants.hpp"
 
+namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
 namespace {
-struct Filter {
-	bool enabled;
-	double value;
-};
+	struct Filter {
+		bool enabled;
+		double value;
+	};
 
-// Création d'un tableau constexpr avec tous à false + 0.0 sauf
-constexpr std::array<Filter, N_SEGMENTS> MakeDefaultFilter()
-{
-	std::array<Filter, N_SEGMENTS> params{};
-	for (auto& p : params) { p = {.enabled = false, .value = 0.0}; }
-	// Paramètres à filtrer
-	params[0] = {.enabled = true, .value = VOLUME_MIN};
-	return params;
-}
+	// Création d'un tableau constexpr avec tous à false + 0.0 sauf
+	constexpr std::array<Filter, N_SEGMENTS> MakeDefaultFilter()
+	{
+		std::array<Filter, N_SEGMENTS> params{};
+		for (auto& p : params) { p = {.enabled = false, .value = 0.0}; }
+		// Paramètres à filtrer
+		params[0] = {.enabled = true, .value = VOLUME_MIN};
+		return params;
+	}
 
-constexpr std::array<Filter, N_SEGMENTS> SEGMENTATION_FILTER = MakeDefaultFilter();
-///< Tableau de paramètres de filtre (min/max de surface, intensité, morphologie...)
+	constexpr std::array<Filter, N_SEGMENTS> SEGMENTATION_FILTER = MakeDefaultFilter();
+	///< Tableau de paramètres de filtre (min/max de surface, intensité, morphologie...)
 
-bool CheckFilter(const Filter& p, const double value, const bool lessThan) { return p.enabled && (lessThan ? (value <= p.value) : (value >= p.value)); }
+	bool CheckFilter(const Filter& p, const double value, const bool lessThan) { return p.enabled && (lessThan ? (value <= p.value) : (value >= p.value)); }
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -440,4 +441,5 @@ void Segmentation2D::watershed(const std::vector<double>& potential, std::vector
 			}
 		}
 	}
+}
 }

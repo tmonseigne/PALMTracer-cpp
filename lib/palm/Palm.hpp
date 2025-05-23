@@ -16,6 +16,7 @@
 
 #include "Constants.hpp"
 
+namespace palm_tracer {
 /// <summary>Classe principale pour la détection de points lumineux dans une image 2D en niveaux de gris,
 /// basée sur une décomposition en ondelettes et un post-traitement par segmentation.</summary>
 ///
@@ -126,3 +127,4 @@ private:
 	/// <param name="points">Résultat de l'analyse.</param>
 	void processingPlane(size_t plane, std::vector<std::array<double, N_SEGMENTS>>& points) const;
 };
+}

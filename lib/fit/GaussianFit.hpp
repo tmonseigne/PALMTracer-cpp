@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <vector>
 
+namespace palm_tracer {
 /// <summary>Mode d'ajustement gaussien.</summary>
 enum class fit_mode : uint8_t { gauss_2d, gauss_2d_sigma, gauss_3d, gauss_3d_theta };
 
@@ -183,3 +184,4 @@ protected:
 	/// <param name="out">Matrice résultat de l'inversion (même format).</param>
 	void inverse(std::vector<double>& in, std::vector<double>& out) const;
 };
+}

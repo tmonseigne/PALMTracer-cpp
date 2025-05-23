@@ -15,6 +15,7 @@
 
 #include "Constants.hpp"
 
+namespace palm_tracer {
 /// <summary> Classe pour la décomposition en ondelettes 2D selon l'algorithme "à trous".</summary>
 /// <remarks> Cette classe réalise la transformation en ondelettes sur une image 2D, notamment avec une décomposition multi-échelle utilisant des filtrages spline B3.
 /// Elle gère la mémoire interne, les calculs de convolutions et la gestion des plans. </remarks>
@@ -67,3 +68,4 @@ private:
 	/// <param name="plane">Indice du plan (échelle) utilisé pour ajuster les pas de la convolution.</param>
 	void b3SplineFiltering2D(const std::vector<double>& in, std::vector<double>& out, size_t plane);
 };
+}

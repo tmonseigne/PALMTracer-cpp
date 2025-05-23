@@ -13,6 +13,7 @@ Class Tracking contains several Tracking objets for each time (nbTimes).
 #include <chrono>
 #include <cmath>
 
+namespace palm_tracer {
 void Tracking::Processing()
 {
 	// Initialisation
@@ -261,4 +262,5 @@ void Tracking::updateConstants()
 	params_->stdDistance_  = sqrt(params_->stdDistance_);
 	params_->stdMean_      = sqrt(params_->stdMean_);
 	for (auto& t : timeNodes_) { for (auto& n : t.nodes_) { n.UpdateConstants(); } }
+}
 }

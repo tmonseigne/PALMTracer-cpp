@@ -12,6 +12,7 @@
 #pragma once
 #include <random>
 
+namespace palm_tracer {
 class Parameters {
 public:
 	Parameters()  = default;
@@ -37,3 +38,4 @@ public:
 
 	std::mt19937 rng_{42}; // Générateur de nombres pseudo-aléatoires, seedé avec 42
 };
+}

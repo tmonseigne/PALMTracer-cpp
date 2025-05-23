@@ -17,6 +17,7 @@
 #include "Parameters.hpp"
 #include "TimeNodes.hpp"
 
+namespace palm_tracer {
 class Tracking {
 public:
 	size_t nTraj_;
@@ -45,3 +46,4 @@ protected:
 	void setColorToTrackedStructures();
 	void setIndexToTrackedStructures();
 };
+}
