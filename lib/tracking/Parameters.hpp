@@ -22,8 +22,7 @@ public:
 	static constexpr double DIST_MAX     = 20;
 	static constexpr size_t N_STEPS      = 5;
 	static constexpr size_t N_ITERATIONS = 300;
-	static constexpr size_t N_SEG_PARAMS = 13; // Ancien systeme, ne conserver que l'utile
-	static constexpr size_t MODEL        = 2;  //the number of the used model
+	static constexpr size_t MODEL        = 2; //the number of the used model
 
 	// Params
 	double maxSpeed_;

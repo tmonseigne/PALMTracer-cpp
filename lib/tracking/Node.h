@@ -12,7 +12,7 @@
 namespace palm_tracer {
 class Node {
 public:
-	double x_, y_, z_, intensity_, mean_, surf_, color_, molId_;
+	double x_, y_, z_, intensity_, mean_, surf_, color_, id_;
 
 	Parameters* params_;
 

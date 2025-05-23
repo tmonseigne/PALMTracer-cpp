@@ -28,7 +28,7 @@ Constructuor(size_t time) of Node class.
 The current objets is at the time "time".
 ********************************************************************************************************************/
 Node::Node(const size_t time, Parameters* params)
-	: x_(0), y_(0), z_(0), intensity_(0), mean_(0), surf_(0), color_(0), molId_(0),
+	: x_(0), y_(0), z_(0), intensity_(0), mean_(0), surf_(0), color_(0), id_(0),
 	  params_(params), time_(time), future_(nullptr), past_(nullptr), trackedIndex_(0), colorIndex_{},
 	  distanceToBorder_(0), likeness_(0), likenessDistance_(0), likenessIntensity_(0), likenessMean_(0) { }
 

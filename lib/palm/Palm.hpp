@@ -28,7 +28,7 @@ namespace palm_tracer {
 ///		- Filtrage morphologique basé sur les seuils d'intensité et de volume.
 ///		- Fitting gaussien (optionnel) pour affiner la position des objets.
 ///
-/// Le résultat est un tableau de points, chacun contenant N_SEGMENTS doubles représentant
+/// Le résultat est un tableau de points, chacun contenant N_LOCALIZATIONS doubles représentant
 /// des informations telles que la position, l'intensité, les paramètres de l'ajustement, etc.
 ///
 /// Le traitement est lancé via la méthode Processing(). </remarks>
@@ -40,7 +40,7 @@ public:
 	///
 	/// <param name="image">Image d'entrée au format tableau 2D (grayscale, taille height × width).</param>
 	/// <param name="points">Pointeur vers le tableau de sortie où seront stockés les points détectés (x, y, intensité, etc.).</param>
-	/// <param name="pointsListSize">Taille totale allouée pour le tableau de points (doit être un multiple de N_SEGMENTS).</param>
+	/// <param name="pointsListSize">Taille totale allouée pour le tableau de points (doit être un multiple de N_LOCALIZATIONS).</param>
 	/// <param name="height">Hauteur d'une image (en pixels).</param>
 	/// <param name="width">Largeur d'une image (en pixels).</param>
 	/// <param name="planes">Nombre de plans de la pile</param>
@@ -81,9 +81,9 @@ public:
 	/// - Fitting gaussien optionnel autour des objets détectés.
 	/// - Remplissage du tableau `points_` avec les résultats (coordonnées, intensité, sigma, etc.).
 	///
-	/// Le tableau `points_` est rempli avec des blocs de N_SEGMENTS double, représentant les paramètres pour chaque détection. Une ligne vide (valeurs = -1) est ajoutée à la fin.
+	/// Le tableau `points_` est rempli avec des blocs de N_LOCALIZATIONS double, représentant les paramètres pour chaque détection. Une ligne vide (valeurs = -1) est ajoutée à la fin.
 	///
-	/// <returns>Le nombre total de valeurs (doubles) écrites dans `points_`, y compris la ligne finale vide. (i.e. `nb_points * N_SEGMENTS + N_SEGMENTS`) </returns>
+	/// <returns>Le nombre total de valeurs (doubles) écrites dans `points_`, y compris la ligne finale vide. (i.e. `nb_points * N_LOCALIZATIONS + N_LOCALIZATIONS`) </returns>
 	int Processing() const;
 
 private:
@@ -121,10 +121,10 @@ private:
 	/// - Application éventuelle de filtres morphologiques (volume, intensité).
 	/// - Fitting gaussien optionnel autour des objets détectés.
 	///
-	/// Le tableau `points_` est rempli avec des blocs de N_SEGMENTS double, représentant les paramètres pour chaque détection. Une ligne vide (valeurs = -1) est ajoutée à la fin.
+	/// Le tableau `points_` est rempli avec des blocs de N_LOCALIZATIONS double, représentant les paramètres pour chaque détection. Une ligne vide (valeurs = -1) est ajoutée à la fin.
 	///
 	/// <param name="plane">Index du plan à analyser.</param>
 	/// <param name="points">Résultat de l'analyse.</param>
-	void processingPlane(size_t plane, std::vector<std::array<double, N_SEGMENTS>>& points) const;
+	void processingPlane(size_t plane, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const;
 };
 }

@@ -13,6 +13,8 @@ Class Tracking contains several Tracking objets for each time (nbTimes).
 #include <chrono>
 #include <cmath>
 
+#include "Constants.hpp"
+
 namespace palm_tracer {
 size_t Tracking::Processing()
 {
@@ -78,15 +80,15 @@ size_t Tracking::printConnectionsASCII_trc()
 		for (const auto& N : T.nodes_) {
 			if (!N.past_ && N.trackedIndex_ > 0) {
 				for (const Node* node = &N; node; node = node->future_) {
-					tracks_[idx++] = static_cast<double>(N.trackedIndex_);
-					tracks_[idx++] = static_cast<double>(node->time_ + 1);
-					tracks_[idx++] = node->x_;
-					tracks_[idx++] = node->y_;
-					tracks_[idx++] = node->surf_;
-					tracks_[idx++] = node->intensity_;
-					tracks_[idx++] = node->z_;
-					tracks_[idx++] = node->color_;
-					tracks_[idx++] = node->molId_;
+					tracks_[idx++] = static_cast<double>(N.trackedIndex_); // Track
+					tracks_[idx++] = static_cast<double>(node->time_ + 1); // Plane
+					tracks_[idx++] = node->id_;                            // Id
+					tracks_[idx++] = node->x_;                             // X
+					tracks_[idx++] = node->y_;                             // Y
+					tracks_[idx++] = node->z_;                             // Z
+					tracks_[idx++] = node->intensity_;                     // Intensity
+					tracks_[idx++] = node->color_;                         // Color
+					tracks_[idx++] = node->surf_;                          // Surface
 
 					// The number of trajectory
 					nTraj_ = N.trackedIndex_;
@@ -110,31 +112,28 @@ void Tracking::readPointsList()
 	for (size_t t = 0, index = 0; t < nbTimes_; ++t) {
 		// Computing the number of nodes by frame
 		size_t nNodes = 0;
-		for (size_t i = index; ; i += Parameters::N_SEG_PARAMS) {
-			if (static_cast<int>(points_[i + 9]) != -1 && static_cast<int>(points_[i + 9]) != 0) { nNodes++; } // surface
+		for (size_t i = index; ; i += N_IN_PARAMS) {
+			if (static_cast<int>(points_[i + 6]) != -1 && static_cast<int>(points_[i + 6]) != 0) { nNodes++; } // surface
 			else { break; }
 		}
 
 		timeNodes_.emplace_back(t, nNodes, params_);
 		for (size_t i = 0; i < timeNodes_[t].nNodes_; ++i) {
-			const size_t Idx = index + i * Parameters::N_SEG_PARAMS;
+			const size_t Idx = index + i * N_IN_PARAMS;
 			// Just for the case of '2D'
 			Node& str = timeNodes_[t][i];
 			// version correcte
-			str.x_ = points_[Idx + 3];
-			str.y_ = points_[Idx + 4];
-			str.z_ = points_[Idx + 10];
+			str.id_        = points_[Idx + 0];
+			str.x_         = points_[Idx + 1];
+			str.y_         = points_[Idx + 2];
+			str.z_         = points_[Idx + 3];
+			str.intensity_ = points_[Idx + 4];
+			str.color_     = points_[Idx + 5];
+			str.surf_      = points_[Idx + 6];
+			str.mean_      = points_[Idx + 4] / points_[Idx + 6];
 
-			str.color_ = points_[Idx + 11];
-			str.molId_ = points_[Idx + 12];
-
-			str.intensity_ = points_[Idx + 8];
-
-			str.surf_ = points_[Idx + 9];
-			str.mean_ = points_[Idx + 8] / points_[Idx + 9];
-
-			params_->maxX_ = std::max(params_->maxX_, timeNodes_[t][i].x_);
-			params_->maxY_ = std::max(params_->maxY_, timeNodes_[t][i].y_);
+			params_->maxX_ = std::max(params_->maxX_, str.x_);
+			params_->maxY_ = std::max(params_->maxY_, str.y_);
 		}
 
 		//Sorting the nodes by the intensity for one time
@@ -150,7 +149,7 @@ void Tracking::readPointsList()
 			std::swap(timeNodes_[t].nodes_[indexMax], timeNodes_[t].nodes_[i]);
 		}
 
-		index += (nNodes + 1) * Parameters::N_SEG_PARAMS; //(À vérifier)
+		index += (nNodes + 1) * N_IN_PARAMS; //(À vérifier)
 	}
 
 	//Precompute distance to border
