@@ -5,6 +5,7 @@
 
 #include "Constants.hpp"
 
+namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
 void ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t height, const size_t width)
 {
@@ -29,8 +30,8 @@ void ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t hei
 	**/
 
 	height_ = height;
-	width_ = width;
-	size_ = height_ * width_;
+	width_  = width;
+	size_   = height_ * width_;
 	tmp_.resize(size_);
 	for (auto& wavelet : wDecomp_) { wavelet.resize(size_); }
 
@@ -56,27 +57,15 @@ size_t ATrous::offsetTest(const int i, const int j) const
 }
 
 //-------------------------------------------------------------------------------------------------
-int ATrous::testSizes2D(bool* planesToUse, size_t& nbPlane) const
-{
-	//Test in, out, planesToUse, nbPlane
-	std::fill(planesToUse + wDecomp_.size(), planesToUse + 9, false);
-	if (nbPlane < 2) { return W_SIZE_ERR; }
-	while (height_ <= twoToThe(nbPlane + 1) || width_ <= twoToThe(nbPlane + 1)) {
-		if (nbPlane-- <= 2) { return W_SIZE_ERR; } // s�curit� si boucle infinie
-	}
-	return static_cast<int>(nbPlane);
-}
-
-//-------------------------------------------------------------------------------------------------
 void ATrous::b3SplineFiltering2D(const std::vector<double>& in, std::vector<double>& out, const size_t plane)
 {
 	//Makes the projection in V(x) with hte knowlage of V(x-1)
 	constexpr double CoeffH0 = 3.0 / 8.0, CoeffH1 = 1.0 / 4.0, CoeffH2 = 1.0 / 16.0;
 
-	const size_t Step = twoToThe(plane);
+	const size_t Step       = twoToThe(plane);
 	const size_t DoubleStep = 2 * Step;
-	const int IStep = static_cast<int>(Step);
-	const int IDoubleStep = static_cast<int>(DoubleStep);
+	const int IStep         = static_cast<int>(Step);
+	const int IDoubleStep   = static_cast<int>(DoubleStep);
 
 	auto get = [&](const std::vector<double>& data, const int y, const int x) -> double { return data[offsetTest(y, x)]; };
 
@@ -99,4 +88,5 @@ void ATrous::b3SplineFiltering2D(const std::vector<double>& in, std::vector<doub
 	// Convolution verticale (X-axis)
 	#pragma omp parallel for
 	for (int idx = 0; idx < static_cast<int>(size_); ++idx) { out[idx] = convolutionX(idx, idx / static_cast<int>(width_), idx % static_cast<int>(width_)); }
+}
 }

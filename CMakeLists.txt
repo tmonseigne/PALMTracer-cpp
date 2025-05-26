@@ -27,6 +27,13 @@ add_library(CPU SHARED
     lib/palm/Palm.cpp
     lib/palm/Segmentation2D.hpp
     lib/palm/Segmentation2D.cpp
+    lib/tracking/Node.hpp
+    lib/tracking/Node.cpp
+    lib/tracking/Parameters.hpp
+    lib/tracking/TimeNodes.hpp
+    lib/tracking/TimeNodes.cpp
+    lib/tracking/Tracking.hpp
+    lib/tracking/Tracking.cpp
 )
 
 # === Gestion manuelle OpenMP cross-plateforme ===
@@ -46,26 +53,6 @@ elseif(UNIX)
     target_link_libraries(CPU PUBLIC OpenMP::OpenMP_CXX)
 elseif(WIN32)
     set_target_properties(CPU PROPERTIES
-        LINK_FLAGS "/DEF:${CMAKE_SOURCE_DIR}/CPU/CPU_PALM.def"
-    )
-endif()
-
-# === Tracking ===
-add_library(Tracking SHARED
-    Tracking/main.cpp
-    lib/Constants.hpp
-    lib/ExportAPI.hpp
-    lib/tracking/Node.hpp
-    lib/tracking/Node.cpp
-    lib/tracking/Parameters.hpp
-    lib/tracking/TimeNodes.hpp
-    lib/tracking/TimeNodes.cpp
-    lib/tracking/Tracking.hpp
-    lib/tracking/Tracking.cpp
-)
-
-if(WIN32)
-    set_target_properties(Tracking PROPERTIES
-        LINK_FLAGS "/DEF:${CMAKE_SOURCE_DIR}/Tracking/Tracking_PALM.def"
+        LINK_FLAGS "/DEF:${CMAKE_SOURCE_DIR}/CPU/PALMTracer.def"
     )
 endif()

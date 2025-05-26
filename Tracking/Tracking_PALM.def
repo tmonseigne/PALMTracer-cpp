@@ -1,5 +1,0 @@
-LIBRARY "Tracking_PALM.dll"
-
-EXPORTS
-	Process
-	Tracking

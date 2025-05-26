@@ -18,8 +18,8 @@ __device__ double Psf(const double x, const double y, const double i0, const dou
 __device__ double Psf(const double x, const double y, const double i0, const double sigmaX, const double sigmaY, const double theta, const double offset)
 {
 	const auto CosTheta = cos(theta), SinTheta = sin(theta);
-	const auto Factor1 = (x * CosTheta - y * SinTheta) / sigmaX,
-	           Factor2 = (x * SinTheta + y * CosTheta) / sigmaY;
+	const auto Factor1  = (x * CosTheta - y * SinTheta) / sigmaX,
+	           Factor2  = (x * SinTheta + y * CosTheta) / sigmaY;
 
 	return i0 * exp(-(Factor1 * Factor1 + Factor2 * Factor2)) + offset;
 }
@@ -42,8 +42,8 @@ __global__ void ComputeHatDelta(const double* dat, const size_t* t, double* hat,
 	const auto Idx = blockIdx.x * blockDim.x + threadIdx.x;
 	if (Idx >= n) { return; }
 	const double Val = Psf(p, static_cast<double>(t[Idx * 2]), static_cast<double>(t[Idx * 2 + 1]), mode, sigma, theta);
-	hat[Idx] = Val;
-	delta[Idx] = dat[Idx] - Val;
+	hat[Idx]         = Val;
+	delta[Idx]       = dat[Idx] - Val;
 }
 
 extern "C"

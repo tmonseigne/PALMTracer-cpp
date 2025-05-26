@@ -17,8 +17,8 @@
 #include "Parameters.hpp"
 #include "TimeNodes.hpp"
 
-class Tracking
-{
+namespace palm_tracer {
+class Tracking {
 public:
 	size_t nTraj_;
 
@@ -27,7 +27,7 @@ public:
 
 	~Tracking() { timeNodes_.clear(); }
 
-	void Processing();
+	size_t Processing();
 
 protected:
 	const double* points_;
@@ -42,7 +42,8 @@ protected:
 	void linkNeighborsBeforeAndAfter() { for (size_t t = 0; t < nbTimes_ - 1; ++t) { timeNodes_[t].LinkNeighborsBeforeAndAfter(timeNodes_[t + 1]); } }
 	void sortByIntensityAllNeighbors() { for (size_t t = 0; t < nbTimes_; ++t) { timeNodes_[t].SortByIntensityAllNeighbors(); } }
 	void readPointsList();
-	void printConnectionsASCII_trc();
+	size_t printConnectionsASCII_trc();
 	void setColorToTrackedStructures();
 	void setIndexToTrackedStructures();
 };
+}

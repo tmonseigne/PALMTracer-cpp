@@ -7,9 +7,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>CPU</ProjectName>
+    <ProjectName>PALMTracer_CPU</ProjectName>
     <ProjectGuid>{604B0055-C378-4945-86A9-DC0EBC014AAF}</ProjectGuid>
-    <RootNamespace>PALM</RootNamespace>
+    <RootNamespace>PALMTracer_CPU</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -28,7 +28,6 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</IgnoreImportLibrary>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -42,7 +41,8 @@
       <TargetEnvironment>X64</TargetEnvironment>
     </Midl>
     <ClCompile>
-      <AdditionalIncludeDirectories>../lib;</AdditionalIncludeDirectories>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_WINDOWS;_USRDLL;PALM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -51,21 +51,17 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <OpenMPSupport>true</OpenMPSupport>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>../lib;</AdditionalIncludeDirectories>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
-      <OutputFile>../Output/CPU_PALM.dll</OutputFile>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <ModuleDefinitionFile>.\CPU_PALM.def</ModuleDefinitionFile>
+      <OutputFile>../Output/PALMTracer_CPU.dll</OutputFile>
+      <ModuleDefinitionFile>.\PALMTracer.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <DataExecutionPrevention>
-      </DataExecutionPrevention>
       <TargetMachine>MachineX64</TargetMachine>
-      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -75,10 +71,13 @@
     <ClCompile Include="..\lib\palm\ATrous.cpp" />
     <ClCompile Include="..\lib\palm\Palm.cpp" />
     <ClCompile Include="..\lib\palm\Segmentation2D.cpp" />
+    <ClCompile Include="..\lib\tracking\Node.cpp" />
+    <ClCompile Include="..\lib\tracking\TimeNodes.cpp" />
+    <ClCompile Include="..\lib\tracking\Tracking.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="CPU_PALM.def" />
+    <None Include="PALMTracer.def" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\Constants.hpp" />
@@ -88,6 +87,11 @@
     <ClInclude Include="..\lib\palm\Palm.hpp" />
     <ClInclude Include="..\lib\palm\Info2D.hpp" />
     <ClInclude Include="..\lib\palm\Segmentation2D.hpp" />
+    <ClInclude Include="..\lib\tracking\Node.h" />
+    <ClInclude Include="..\lib\tracking\Node.hpp" />
+    <ClInclude Include="..\lib\tracking\Parameters.hpp" />
+    <ClInclude Include="..\lib\tracking\TimeNodes.hpp" />
+    <ClInclude Include="..\lib\tracking\Tracking.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

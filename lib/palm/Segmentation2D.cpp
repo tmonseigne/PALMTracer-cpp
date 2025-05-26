@@ -10,27 +10,28 @@
 
 #include "Constants.hpp"
 
+namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
 namespace {
-struct Filter {
-	bool enabled;
-	double value;
-};
+	struct Filter {
+		bool enabled;
+		double value;
+	};
 
-// Création d'un tableau constexpr avec tous à false + 0.0 sauf
-constexpr std::array<Filter, N_SEGMENTS> MakeDefaultFilter()
-{
-	std::array<Filter, N_SEGMENTS> params{};
-	for (auto& p : params) { p = {.enabled = false, .value = 0.0}; }
-	// Paramètres à filtrer
-	params[0] = {.enabled = true, .value = VOLUME_MIN};
-	return params;
-}
+	// Création d'un tableau constexpr avec tous à false + 0.0 sauf
+	constexpr std::array<Filter, N_LOCALIZATIONS> MakeDefaultFilter()
+	{
+		std::array<Filter, N_LOCALIZATIONS> params{};
+		for (auto& p : params) { p = {.enabled = false, .value = 0.0}; }
+		// Paramètres à filtrer
+		params[0] = {.enabled = true, .value = VOLUME_MIN};
+		return params;
+	}
 
-constexpr std::array<Filter, N_SEGMENTS> SEGMENTATION_FILTER = MakeDefaultFilter();
-///< Tableau de paramètres de filtre (min/max de surface, intensité, morphologie...)
+	constexpr std::array<Filter, N_LOCALIZATIONS> SEGMENTATION_FILTER = MakeDefaultFilter();
+	///< Tableau de paramètres de filtre (min/max de surface, intensité, morphologie...)
 
-bool CheckFilter(const Filter& p, const double value, const bool lessThan) { return p.enabled && (lessThan ? (value <= p.value) : (value >= p.value)); }
+	bool CheckFilter(const Filter& p, const double value, const bool lessThan) { return p.enabled && (lessThan ? (value <= p.value) : (value >= p.value)); }
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -54,7 +55,7 @@ void Segmentation2D::FilterData(std::vector<unsigned short>& seg)
 
 	// Première passe : filtrage par critère
 	auto isFiltered = [&](const Info2D& info, const size_t index) {
-		const double Mean_Surf = info.mean_ * info.surf_;
+		const double Mean_Surf   = info.mean_ * info.surf_;
 		const double Morph_Ratio = std::min(info.sigma_.x, info.sigma_.y) / std::max(info.sigma_.x, info.sigma_.y);
 
 		return
@@ -76,7 +77,7 @@ void Segmentation2D::FilterData(std::vector<unsigned short>& seg)
 
 	for (size_t i = 0; i < OldSize; ++i) {
 		if (!isFiltered(infos_[i], i)) {
-			oldToNew[i] = newIdx + 1;
+			oldToNew[i]      = newIdx + 1;
 			infos_[i].index_ = static_cast<int>(newIdx);
 			filtered.emplace_back(infos_[i]);
 			++newIdx;
@@ -93,8 +94,8 @@ void Segmentation2D::FilterData(std::vector<unsigned short>& seg)
 
 			for (size_t j = 0; j < NewSize && !unselected; ++j) {
 				if (i == j) { continue; }
-				const double Dx = static_cast<double>(filtered[i].max_.x - filtered[j].max_.x),
-				             Dy = static_cast<double>(filtered[i].max_.y - filtered[j].max_.y);
+				const double Dx   = static_cast<double>(filtered[i].max_.x - filtered[j].max_.x),
+				             Dy   = static_cast<double>(filtered[i].max_.y - filtered[j].max_.y);
 				const double Dist = std::sqrt(Dx * Dx + Dy * Dy);
 
 				if (Dist > 1.0 && Dist < SEGMENTATION_FILTER[6].value && filtered[j].max_.val > filtered[i].max_.val) { unselected = true; }
@@ -113,7 +114,7 @@ void Segmentation2D::FilterData(std::vector<unsigned short>& seg)
 	for (size_t i = 0; i < size_; ++i) {
 		if (seg[i] > 0) {
 			const size_t OldIndex = seg[i] - 1;
-			seg[i] = oldToNew[OldIndex] > 0 ? static_cast<unsigned short>(oldToNew[OldIndex]) : 0;
+			seg[i]                = oldToNew[OldIndex] > 0 ? static_cast<unsigned short>(oldToNew[OldIndex]) : 0;
 		}
 	}
 }
@@ -133,7 +134,7 @@ void Segmentation2D::ComputeStatistics(const std::vector<double>& data, const st
 			const unsigned short s = seg[idx];
 			if (s == 0) { continue; }
 			auto& info = infos_[s - 1];
-			val = data[idx];
+			val        = data[idx];
 
 			// Mesures
 			const double Di = static_cast<double>(i), Dj = static_cast<double>(j);
@@ -173,7 +174,7 @@ void Segmentation2D::ComputeStatistics(const std::vector<double>& data, const st
 
 		if (gaussFit == 5) {
 			info.moment_ = {.x = 0., .y = 0.};
-			double mean = 0.;
+			double mean  = 0.;
 
 			for (int ii = -2; ii <= 2; ++ii) {
 				for (int jj = -2; jj <= 2; ++jj) {
@@ -197,11 +198,11 @@ void Segmentation2D::ComputeStatistics(const std::vector<double>& data, const st
 			info.moment_.y /= info.mean_;
 			info.momentSurf_.x /= info.surf_;
 			info.momentSurf_.y /= info.surf_;
-			info.var_.xx = info.var_.xx / info.mean_ - info.moment_.x * info.moment_.x;
-			info.var_.yy = info.var_.yy / info.mean_ - info.moment_.y * info.moment_.y;
-			info.var_.xy = info.var_.xy / info.mean_ - info.moment_.x * info.moment_.y;
+			info.var_.xx    = info.var_.xx / info.mean_ - info.moment_.x * info.moment_.x;
+			info.var_.yy    = info.var_.yy / info.mean_ - info.moment_.y * info.moment_.y;
+			info.var_.xy    = info.var_.xy / info.mean_ - info.moment_.x * info.moment_.y;
 			info.intensity_ = info.mean_;
-			info.stdev_ = std::sqrt((info.stdev_ - info.mean_) / info.surf_);
+			info.stdev_     = std::sqrt((info.stdev_ - info.mean_) / info.surf_);
 			info.mean_ /= info.surf_;
 		}
 	}
@@ -234,21 +235,21 @@ void Segmentation2D::filterStructureWS(const std::vector<double>& potential, std
 	std::vector<WSFusion2D> wsFusions(NbStruct);
 
 	bool change = true;
-	int label = 0;
+	int label   = 0;
 
 	while (change) {
 		change = false;
 		// Initialisation des structures
 		for (size_t i = 0; i < NbStruct; ++i) {
-			auto& s = wsFusions[i];
+			auto& s                    = wsFusions[i];
 			s.maxPotentialWithNeighbor = -1e10;
-			s.minPotential = +1e10;
-			s.maxPotential = -1e10;
-			s.structInContact = 0;
-			s.kept = true;
-			s.locked = false;
-			s.structToBecome = static_cast<int>(i);
-			s.newIndex = 0;
+			s.minPotential             = +1e10;
+			s.maxPotential             = -1e10;
+			s.structInContact          = 0;
+			s.kept                     = true;
+			s.locked                   = false;
+			s.structToBecome           = static_cast<int>(i);
+			s.newIndex                 = 0;
 		}
 
 		// Analyse des structures
@@ -262,8 +263,8 @@ void Segmentation2D::filterStructureWS(const std::vector<double>& potential, std
 
 				if (potential[idx] > s.maxPotential) {
 					s.maxPotential = potential[idx];
-					s.x = static_cast<int>(i);
-					s.y = static_cast<int>(j);
+					s.x            = static_cast<int>(i);
+					s.y            = static_cast<int>(j);
 				}
 
 				// Recherche des voisins
@@ -275,7 +276,7 @@ void Segmentation2D::filterStructureWS(const std::vector<double>& potential, std
 						if (NeighborSid != 0 && NeighborSid != Sid) {
 							if (potential[idx] > s.maxPotentialWithNeighbor) {
 								s.maxPotentialWithNeighbor = potential[idx];
-								s.structInContact = NeighborSid - 1;
+								s.structInContact          = NeighborSid - 1;
 							}
 						}
 					}
@@ -297,10 +298,10 @@ void Segmentation2D::filterStructureWS(const std::vector<double>& potential, std
 				const double Ratio = (s.maxPotential - s.maxPotentialWithNeighbor) / Delta;
 				if (Ratio < thresholdRatio) {
 					if (s.maxPotential < Neighbor.maxPotential) {
-						s.structToBecome = s.structInContact;
+						s.structToBecome                    = s.structInContact;
 						wsFusions[s.structInContact].locked = true;
-						s.locked = true;
-						change = true;
+						s.locked                            = true;
+						change                              = true;
 					}
 				}
 			}
@@ -313,7 +314,7 @@ void Segmentation2D::filterStructureWS(const std::vector<double>& potential, std
 		for (unsigned short& s : seg) {
 			if (s != 0) {
 				const auto& Sid = wsFusions[s - 1];
-				s = static_cast<unsigned short>(wsFusions[Sid.structToBecome].newIndex);
+				s               = static_cast<unsigned short>(wsFusions[Sid.structToBecome].newIndex);
 			}
 		}
 	}
@@ -324,7 +325,7 @@ void Segmentation2D::filterStructureWS(const std::vector<double>& potential, std
 	for (size_t oldIdx = 0; oldIdx < wsFusions.size(); ++oldIdx) {
 		const auto& Fusion = wsFusions[oldIdx];
 		if (Fusion.newIndex > 0) {
-			updatedInfos[Fusion.newIndex - 1] = infos_[oldIdx];
+			updatedInfos[Fusion.newIndex - 1]        = infos_[oldIdx];
 			updatedInfos[Fusion.newIndex - 1].index_ = Fusion.newIndex - 1;
 		}
 	}
@@ -355,14 +356,14 @@ void Segmentation2D::getLocalMax(const std::vector<double>& potential, std::vect
 				}
 				if (!err) { //new maximum found
 					unsigned short maxi = 0;
-					err = false;
+					err                 = false;
 					for (size_t ii = i == 0 ? 0 : i - 1; ii <= std::min(i + 1, height_ - 1) && !err; ++ii) {
 						const size_t Idx1 = ii * width_;
 						for (size_t jj = j == 0 ? 0 : j - 1; jj <= std::min(j + 1, width_ - 1) && !err; ++jj) {
 							if (ii != i || jj != j) {
 								if (maxi < seg[Idx1 + jj]) {
 									maxi = seg[Idx1 + jj];
-									err = true;
+									err  = true;
 								}
 							}
 						}
@@ -440,4 +441,5 @@ void Segmentation2D::watershed(const std::vector<double>& potential, std::vector
 			}
 		}
 	}
+}
 }

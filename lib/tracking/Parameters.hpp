@@ -12,18 +12,17 @@
 #pragma once
 #include <random>
 
-class Parameters
-{
+namespace palm_tracer {
+class Parameters {
 public:
-	Parameters() = default;
+	Parameters()  = default;
 	~Parameters() = default;
 
 	// Static
-	static constexpr double DIST_MAX = 20;
-	static constexpr size_t N_STEPS = 5;
+	static constexpr double DIST_MAX     = 20;
+	static constexpr size_t N_STEPS      = 5;
 	static constexpr size_t N_ITERATIONS = 300;
-	static constexpr size_t N_SEG_PARAMS = 13;
-	static constexpr size_t MODEL = 2; //the number of the used model
+	static constexpr size_t MODEL        = 2; //the number of the used model
 
 	// Params
 	double maxSpeed_;
@@ -38,3 +37,4 @@ public:
 
 	std::mt19937 rng_{42}; // Générateur de nombres pseudo-aléatoires, seedé avec 42
 };
+}

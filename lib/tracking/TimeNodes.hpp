@@ -17,9 +17,8 @@
 #include "Node.hpp"
 #include "Parameters.hpp"
 
-
-class TimeNodes
-{
+namespace palm_tracer {
+class TimeNodes {
 protected:
 	size_t time_;
 
@@ -38,3 +37,4 @@ public:
 	void MakeAllInitializationConnections() { for (auto& node : nodes_) { node.MakeInitializationConnection(); } }
 	double TryRandomChange(const double limit) { return nNodes_ == 0 ? 0 : nodes_[params_->RandomModulo(nNodes_)].MakeChange(limit); }
 };
+}

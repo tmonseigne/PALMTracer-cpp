@@ -18,13 +18,36 @@
 #include "fit/GaussianFit.hpp"
 
 
+namespace palm_tracer {
+//-------------------------------------------------------------------------------------------------
+Palm::Palm(const unsigned short* image, double* points, const size_t pointsListSize, const size_t height, const size_t width, const size_t planes,
+           const double thresholdVal, const double watershedRatio, const size_t fit, const double* fit_params)
+	: image_(image), points_(points), height_(height), width_(width), planes_(planes), size_(height * width),
+	  nPointsMax_(pointsListSize / N_LOCALIZATIONS), nPointsMaxPerPlane_((pointsListSize / N_LOCALIZATIONS) / planes),
+	  thresholdVal_(thresholdVal), watershedRatio_(watershedRatio), fit_(fit)
+{
+	if (1 <= fit_ && fit_ <= 4) { // Fit Gaussien
+		roi_        = static_cast<size_t>(fit_params[0]);
+		initSigmaX_ = fit_params[1];
+		initSigmaY_ = 2 * fit_params[1];
+		initTheta_  = fit_params[2];
+	}
+	//else if (5 <= fit_ && fit_ <= XX) {} //Fit Spline
+	else { // Aucun Fit
+		roi_        = 0;
+		initSigmaX_ = 0;
+		initSigmaY_ = 0;
+		initTheta_  = 0;
+	}
+}
+
 //-------------------------------------------------------------------------------------------------
 int Palm::Processing() const
 {
 	omp_set_dynamic(1); // Autorise l’adaptation automatique
 	//omp_set_num_threads(static_cast<int>(std::thread::hardware_concurrency())); // Fixe un max
 
-	std::vector<std::vector<std::array<double, N_SEGMENTS>>> allPoints(planes_);
+	std::vector<std::vector<std::array<double, N_LOCALIZATIONS>>> allPoints(planes_);
 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(planes_); ++i) { processingPlane(i, allPoints[i]); }
@@ -35,11 +58,11 @@ int Palm::Processing() const
 		size_t local = 1;
 		for (const auto& Point : allPoints[i]) {
 			std::ranges::copy(Point, points_ + count);
-			points_[count] = static_cast<double>(global);
+			points_[count]     = static_cast<double>(global);
 			points_[count + 2] = static_cast<double>(local);
 			++global;
 			++local;
-			count += N_SEGMENTS;
+			count += N_LOCALIZATIONS;
 		}
 	}
 
@@ -47,7 +70,7 @@ int Palm::Processing() const
 }
 
 //-------------------------------------------------------------------------------------------------
-void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_SEGMENTS>>& points) const
+void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const
 {
 	const unsigned short* image = image_ + (plane * size_);
 
@@ -62,12 +85,12 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(size_); ++i) {
 		if (decomposition.wDecomp_[PLANE_ID][i] > thresholdVal_) {
-			output[i] = decomposition.wDecomp_[PLANE_ID][i];
+			output[i]     = decomposition.wDecomp_[PLANE_ID][i];
 			segmentMap[i] = 1;
 		}
 		else {
 			segmentMap[i] = 0;
-			output[i] = 0;
+			output[i]     = 0;
 		}
 	}
 
@@ -80,11 +103,11 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(std::min<size_t>(P.size(), nPointsMaxPerPlane_ - 1)); ++i) {
-		double x = P[i].moment_.y;
-		double y = P[i].moment_.x;
-		double sigmaX = initSigmaX_;
-		double sigmaY = initSigmaY_;
-		double theta = initTheta_;
+		double x         = P[i].moment_.y;
+		double y         = P[i].moment_.x;
+		double sigmaX    = initSigmaX_;
+		double sigmaY    = initSigmaY_;
+		double theta     = initTheta_;
 		double intensity = 0, offset = 0, rss = -1;
 
 		switch (fit_) {
@@ -93,7 +116,7 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 				fit.Run(image, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
 				sigmaX = initSigmaX_;
 				sigmaY = initSigmaX_;
-				theta = 0;
+				theta  = 0;
 				break;
 			}
 
@@ -101,7 +124,7 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 				GaussianFit fit(fit_mode::gauss_2d_sigma);
 				fit.Run(image, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
 				sigmaY = sigmaX;
-				theta = 0;
+				theta  = 0;
 				break;
 			}
 
@@ -123,34 +146,38 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 			}
 		}
 		auto& p = points[i];
-		p[0] = 0;                              // Id
-		p[1] = static_cast<double>(plane + 1); // Plane
-		p[2] = 0;                              // Index
-		p[3] = x;                              // X
-		p[4] = y;                              // Y
-		p[5] = 0;                              // Z
+		p[0]    = 0;                              // Id
+		p[1]    = static_cast<double>(plane + 1); // Plane
+		p[2]    = 0;                              // Index
+		p[3]    = -1;                             // Channel
+		p[4]    = x;                              // X
+		p[5]    = y;                              // Y
+		p[6]    = 0;                              // Z
 
 		// Integrated intensity
-		if (fit_ == 0) { p[6] = P[i].intensity_; }
-		else { p[6] = 2.0 * std::numbers::pi * intensity * sigmaX * sigmaY; }
+		if (fit_ == 0) { p[7] = P[i].intensity_; }
+		else { p[7] = 2.0 * std::numbers::pi * intensity * sigmaX * sigmaY; }
 
-		p[7] = sigmaX;           // Sigma X
-		p[8] = sigmaY;           // Sigma Y
-		p[9] = theta;            // Theta
-		p[10] = intensity;       // Intensity 0
-		p[11] = offset;          // Intensity offset
-		p[12] = P[i].intensity_; // Intensity
-		p[13] = P[i].surf_;      // Surface
-		p[14] = rss;             // MSE Gaussian
+		p[8]  = sigmaX;          // Sigma X
+		p[9]  = sigmaY;          // Sigma Y
+		p[10] = theta;           // Theta
+		p[11] = rss;             // MSE Gaussian
+		p[12] = -1;              // MSE Z
+		p[13] = 0;               // Pair Distance
+		p[14] = intensity;       // Intensity 0
+		p[15] = offset;          // Intensity offset
+		p[16] = P[i].intensity_; // Intensity
+		p[17] = P[i].surf_;      // Surface
 
 		// Circularity
-		if (sigmaX > EPSILON && sigmaY > EPSILON) { p[15] = std::min(sigmaX, sigmaY) / std::max(sigmaX, sigmaY); }
-		else { p[15] = 1; }
+		if (sigmaX > EPSILON && sigmaY > EPSILON) { p[18] = std::min(sigmaX, sigmaY) / std::max(sigmaX, sigmaY); }
+		else { p[18] = 1; }
 	}
 
 	// Tri par Y puis X (en cas peu probable de Y identique)
 	std::ranges::sort(points, [](const auto& a, const auto& b) {
-		if (std::fabs(a[4] - b[4]) > EPSILON) { return a[4] < b[4]; } // Tri sur Y (p[4])
-		return a[3] < b[3];                                           // Puis sur X (p[3])
+		if (std::fabs(a[5] - b[5]) > EPSILON) { return a[5] < b[5]; } // Tri sur Y (p[4])
+		return a[4] < b[4];                                           // Puis sur X (p[3])
 	});
+}
 }

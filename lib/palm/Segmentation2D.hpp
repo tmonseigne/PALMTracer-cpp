@@ -15,7 +15,7 @@
 #include <vector>
 #include "Info2D.hpp"
 
-
+namespace palm_tracer {
 /// <summary>Classe de traitement d'images segmentées en 2D, permettant l'allocation de structures,
 /// le calcul de statistiques et le filtrage basé sur des critères morphologiques et d'intensité. </summary>
 ///
@@ -59,7 +59,8 @@ public:
 
 	/// <summary>Retourne la liste des structures segmentées avec leurs informations (centroïde, intensité, etc.).</summary>
 	/// <returns>Un vecteur d'objets Info2D contenant les caractéristiques des structures détectées.</returns>
-	std::vector<Info2D> GetInfos() const { return infos_; }
+	/// <remarks>Le mot-clé [[nodiscard]] indique que le résultat ne doit pas être ignoré.</remarks>
+	[[nodiscard]] std::vector<Info2D> GetInfos() const { return infos_; }
 
 	/// <summary> Effectue une segmentation intelligente de type watershed.
 	/// Cette méthode combine une détection des maxima locaux, un premier watershed, un filtrage morphologique optionnel, puis un second watershed.</summary>
@@ -78,6 +79,7 @@ private:
 	/// <summary>Alloue un vecteur de structures (`infos_`) pour un nombre donné de segments.</summary>
 	/// <param name="nbStruct">Nombre de structures initiales à allouer.</param>
 	void alloc(size_t nbStruct);
+
 	/// <summary>Désalloue toutes les structures actuellement contenues dans `infos_`.</summary>
 	void desalloc() { infos_.clear(); }
 
@@ -103,3 +105,4 @@ private:
 	/// <param name="seg">Carte de labels (1D) contenant les germes au début, puis les régions segmentées à la fin.</param>
 	void watershed(const std::vector<double>& potential, std::vector<unsigned short>& seg) const;
 };
+}

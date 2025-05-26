@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <vector>
 
+namespace palm_tracer {
 /// <summary>Mode d'ajustement gaussien.</summary>
 enum class fit_mode : uint8_t { gauss_2d, gauss_2d_sigma, gauss_3d, gauss_3d_theta };
 
@@ -53,16 +54,16 @@ protected:
 	std::vector<double> pMin_,                         ///< Bornes inférieures autorisées pour les paramètres de l'ajustement.
 	                    p_,                            ///< Valeurs courantes des paramètres du modèle.
 	                    pMax_;                         ///< Bornes supérieures autorisées pour les paramètres de l'ajustement.
-	static constexpr size_t N_ITER = 50;               ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
-	static constexpr double EPSILON_1 = 1e-6,          ///< Seuil de convergence pour le changement de la fonction objectif.
-	                        EPSILON_2 = 1e-6,          ///< Seuil de convergence pour le gradient.
-	                        EPSILON_3 = 1e-5,          ///< Seuil de convergence pour la variation des paramètres.
-	                        EPSILON_4 = 1e-2;          ///< Tolérance utilisée pour juger la stagnation ou instabilité.
-	static constexpr double LAMBDA_0 = 1e-2,           ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.
+	static constexpr size_t N_ITER             = 50;   ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
+	static constexpr double EPSILON_1          = 1e-6, ///< Seuil de convergence pour le changement de la fonction objectif.
+	                        EPSILON_2          = 1e-6, ///< Seuil de convergence pour le gradient.
+	                        EPSILON_3          = 1e-5, ///< Seuil de convergence pour la variation des paramètres.
+	                        EPSILON_4          = 1e-2; ///< Tolérance utilisée pour juger la stagnation ou instabilité.
+	static constexpr double LAMBDA_0           = 1e-2, ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.
 	                        LAMBDA_EPSILON_MAX = 1e7,  ///< Valeur maximale autorisée pour lambda.
 	                        LAMBDA_EPSILON_MIN = 1e-7, ///< Valeur minimale autorisée pour lambda.
-	                        LAMBDA_UP = 11,            ///< Facteur multiplicatif lorsque la mise à jour est inefficace (augmentation de lambda).
-	                        LAMBDA_DN = 9;             ///< Facteur de réduction de lambda lorsque la mise à jour est réussie.
+	                        LAMBDA_UP          = 11,   ///< Facteur multiplicatif lorsque la mise à jour est inefficace (augmentation de lambda).
+	                        LAMBDA_DN          = 9;    ///< Facteur de réduction de lambda lorsque la mise à jour est réussie.
 
 	//==================== Run Computes ====================
 	/// <summary>Prépare les données nécessaires pour le fitting en extrayant les valeurs de la région d'intérêt autour de (x, y).
@@ -183,3 +184,4 @@ protected:
 	/// <param name="out">Matrice résultat de l'inversion (même format).</param>
 	void inverse(std::vector<double>& in, std::vector<double>& out) const;
 };
+}

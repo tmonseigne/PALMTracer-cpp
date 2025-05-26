@@ -1,0 +1,4 @@
+LIBRARY "PALMTracer_GPU.dll"
+
+EXPORTS
+	Process
