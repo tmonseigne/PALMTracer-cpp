@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "ATrous.hpp"
-#include "Info2D.hpp"
+#include "SegmentInfo.hpp"
 
 namespace palm_tracer {
 /// <summary>Classe de traitement d'images segmentées en 2D, permettant l'allocation de structures,
@@ -23,7 +23,7 @@ namespace palm_tracer {
 ///
 /// Cette classe manipule des structures 2D identifiées dans une image segmentée et stockées sous forme de labels.
 /// Elle permet notamment :
-///		- L'allocation et la désallocation d'un vecteur de structures (`Info2D`).
+///		- L'allocation et la désallocation d'un vecteur de structures (`SegmentInfo`).
 ///		- Le calcul de statistiques géométriques et photométriques par structure.
 ///		- Le filtrage de structures selon des critères définis par l'utilisateur.
 ///		- Le traitement de fusion locale par carte de potentiel (`filterStructureWS`).
@@ -65,9 +65,9 @@ public:
 	void FilterData();
 
 	/// <summary>Retourne la liste des structures segmentées avec leurs informations (centroïde, intensité, etc.).</summary>
-	/// <returns>Un vecteur d'objets Info2D contenant les caractéristiques des structures détectées.</returns>
+	/// <returns>Un vecteur d'objets SegmentInfo contenant les caractéristiques des structures détectées.</returns>
 	/// <remarks>Le mot-clé [[nodiscard]] indique que le résultat ne doit pas être ignoré.</remarks>
-	[[nodiscard]] std::vector<Info2D> Infos() const { return infos_; }
+	[[nodiscard]] std::vector<SegmentInfo> Infos() const { return infos_; }
 
 	/// <summary> Effectue une segmentation intelligente de type watershed.
 	/// Cette méthode combine une détection des maxima locaux, un premier watershed, un filtrage morphologique optionnel, puis un second watershed.</summary>
@@ -83,7 +83,7 @@ private:
 	       size_;                             ///< Taille totale de l'image (height_ * width_).
 	double threshold_,                        ///< Seuil de détection utilisé après la décomposition en ondelettes.
 	       ratio_;                            ///< Rapport utilisé dans l'algorithme de Watershed.
-	std::vector<Info2D> infos_;               ///< Vecteur de structures 2D analysées ou filtrées.
+	std::vector<SegmentInfo> infos_;               ///< Vecteur de structures 2D analysées ou filtrées.
 	std::vector<unsigned short> map_;         ///< Image segmentée (carte binaire des objets détectés).
 	std::vector<double> output_;              ///< Carte des valeurs utilisées pour la segmentation (après seuillage).
 

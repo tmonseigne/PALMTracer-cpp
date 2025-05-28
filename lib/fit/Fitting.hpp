@@ -77,7 +77,7 @@ protected:
 	/// <summary>sdfs</summary>
 	/// <param name="infos"></param>
 	/// <param name="point"></param>
-	virtual void fit(const Info2D& infos, std::array<double, N_LOCALIZATIONS>& point);
+	virtual void fit(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point);
 
 	/// <summary></summary>
 	/// <param name="infos"></param>
@@ -90,7 +90,7 @@ protected:
 	/// <param name="theta"></param>
 	/// <param name="rss"></param>
 	/// <param name="offset"></param>
-	void fill(const Info2D& infos, std::array<double, N_LOCALIZATIONS>& point, double x, double y, double intensity = 0,
+	void fill(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point, double x, double y, double intensity = 0,
 	          double sigmaX = 0, double sigmaY = 0, double theta = 0, double rss = 0, double offset = 0) const;
 };
 }

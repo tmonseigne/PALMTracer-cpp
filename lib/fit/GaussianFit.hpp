@@ -40,7 +40,7 @@ public:
 
 protected:
 
-	void fit(const Info2D& infos, std::array<double, N_LOCALIZATIONS>& point) override;
+	void fit(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point) override;
 
 
 	//==================== Run Computes ====================

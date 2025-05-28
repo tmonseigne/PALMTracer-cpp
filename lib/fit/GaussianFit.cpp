@@ -126,10 +126,10 @@ void GaussianFit::Run(const unsigned short* image, size_t width, size_t height, 
 }
 
 //-------------------------------------------------------------------------------------------------
-void GaussianFit::fit(const Info2D& infos, std::array<double, N_LOCALIZATIONS>& point)
+void GaussianFit::fit(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point)
 {
-	double x = infos.moment_.y;
-	double y = infos.moment_.x;
+	double x = infos.y_;
+	double y = infos.x_;
 	double sigmaX = sigmaX_;
 	double sigmaY = sigmaY_;
 	double theta = theta_;

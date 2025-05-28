@@ -42,10 +42,10 @@ void Fitting::Fit(const Segmentation2D& segmentation, std::vector<std::array<dou
 }
 
 //-------------------------------------------------------------------------------------------------
-void Fitting::fit(const Info2D& infos, std::array<double, N_LOCALIZATIONS>& point) { fill(infos, point, infos.moment_.y, infos.moment_.x); }
+void Fitting::fit(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point) { fill(infos, point, infos.y_, infos.x_); }
 
 //-------------------------------------------------------------------------------------------------
-void Fitting::fill(const Info2D& infos, std::array<double, N_LOCALIZATIONS>& point, const double x, const double y, const double intensity,
+void Fitting::fill(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point, const double x, const double y, const double intensity,
                    const double sigmaX, const double sigmaY, const double theta, const double rss, const double offset) const
 {
 	point[0] = 0;  // Id

@@ -88,23 +88,18 @@ void Segmentation2D::FilterData()
 	}
 
 	// Première passe : filtrage par critère
-	auto isFiltered = [&](const Info2D& info, const size_t index) {
-		const double Mean_Surf   = info.mean_ * info.surf_;
-		const double Morph_Ratio = std::min(info.sigma_.x, info.sigma_.y) / std::max(info.sigma_.x, info.sigma_.y);
+	auto isFiltered = [&](const SegmentInfo& info, const size_t index) {
+		const double Mean_Surf = info.mean_ * info.surf_;
 
 		return
-			CheckFilter(SEGMENTATION_FILTER[0], info.surf_, true) ||     // min Surf
-			CheckFilter(SEGMENTATION_FILTER[1], info.surf_, false) ||    // max Surf
-			CheckFilter(SEGMENTATION_FILTER[2], Mean_Surf, true) ||      // min Inten
-			CheckFilter(SEGMENTATION_FILTER[3], Mean_Surf, false) ||     // max Inten
-			CheckFilter(SEGMENTATION_FILTER[4], info.max_.val, true) ||  // min Maximum
-			CheckFilter(SEGMENTATION_FILTER[5], info.max_.val, false) || // max Maximum
-			CheckFilter(SEGMENTATION_FILTER[7], Morph_Ratio, true) ||    // min MorphParam
-			CheckFilter(SEGMENTATION_FILTER[8], Morph_Ratio, false) ||   // max MorphParam
-			(SEGMENTATION_FILTER[12].enabled && bounds[index]);          // no struct on boundaries
+			CheckFilter(SEGMENTATION_FILTER[0], info.surf_, true) ||  // min Surf
+			CheckFilter(SEGMENTATION_FILTER[1], info.surf_, false) || // max Surf
+			CheckFilter(SEGMENTATION_FILTER[2], Mean_Surf, true) ||   // min Inten
+			CheckFilter(SEGMENTATION_FILTER[3], Mean_Surf, false) ||  // max Inten
+			(SEGMENTATION_FILTER[12].enabled && bounds[index]);       // no struct on boundaries
 	};
 
-	std::vector<Info2D> filtered;
+	std::vector<SegmentInfo> filtered;
 	filtered.reserve(OldSize);
 	std::vector<size_t> oldToNew(OldSize, 0);
 	size_t newIdx = 0;
@@ -116,29 +111,6 @@ void Segmentation2D::FilterData()
 			filtered.emplace_back(infos_[i]);
 			++newIdx;
 		}
-	}
-
-	// Deuxième passe : filtrage des structures proches de plus brillantes (param[6])
-	if (SEGMENTATION_FILTER[6].enabled) {
-		const size_t NewSize = filtered.size();
-		std::vector<Info2D> finalFiltered;
-		filtered.reserve(NewSize);
-		for (size_t i = 0; i < NewSize; ++i) {
-			bool unselected = false;
-
-			for (size_t j = 0; j < NewSize && !unselected; ++j) {
-				if (i == j) { continue; }
-				const double Dx   = static_cast<double>(filtered[i].max_.x - filtered[j].max_.x),
-				             Dy   = static_cast<double>(filtered[i].max_.y - filtered[j].max_.y);
-				const double Dist = std::sqrt(Dx * Dx + Dy * Dy);
-
-				if (Dist > 1.0 && Dist < SEGMENTATION_FILTER[6].value && filtered[j].max_.val > filtered[i].max_.val) { unselected = true; }
-			}
-
-			if (!unselected) { finalFiltered.emplace_back(filtered[i]); }
-		}
-
-		filtered = std::move(finalFiltered);
 	}
 
 	// Réaffectation
@@ -156,60 +128,31 @@ void Segmentation2D::FilterData()
 //-------------------------------------------------------------------------------------------------
 void Segmentation2D::ComputeStatistics()
 {
-	double val;
-
-	for (auto& info : infos_) { info.Reset(height_, width_); }
+	for (auto& info : infos_) { info.Reset(); }
 
 	// Accumulation des mesures ne pas paralléliser
 	for (size_t i = 0, idx = 0; i < height_; ++i) {
 		for (size_t j = 0; j < width_; ++j, ++idx) {
 			const unsigned short s = map_[idx];
 			if (s == 0) { continue; }
-			auto& info = infos_[s - 1];
-			val        = output_[idx];
+			auto& info       = infos_[s - 1];
+			const double Val = output_[idx];
 
 			// Mesures
 			const double Di = static_cast<double>(i), Dj = static_cast<double>(j);
 			info.surf_++;
-			info.moment_.x += val * Di;
-			info.moment_.y += val * Dj;
-			info.momentSurf_.x += Di;
-			info.momentSurf_.y += Dj;
-			info.mean_ += val;
-			info.var_.xx += val * Di * Di;
-			info.var_.yy += val * Dj * Dj;
-			info.var_.xy += val * Di * Dj;
-			info.stdev_ += val * val;
-
-			info.boundingBox_.xMax = std::max(info.boundingBox_.xMax, i);
-			info.boundingBox_.yMax = std::max(info.boundingBox_.yMax, j);
-			info.boundingBox_.xMin = std::min(info.boundingBox_.xMin, i);
-			info.boundingBox_.yMin = std::min(info.boundingBox_.yMin, j);
-
-			if (val > info.max_.val || static_cast<int>(info.surf_) == 1) { info.max_ = {.val = val, .x = i, .y = j}; }
-			if (val < info.min_.val || static_cast<int>(info.surf_) == 1) { info.min_ = {.val = val, .x = i, .y = j}; }
-
-			// Bordure
-			if (i == 0 || i == height_ - 1 || j == 0 || j == width_ - 1) { info.peri_++; }
-			else {
-				if (map_[(i - 1) * width_ + j] != s) { info.peri_++; }
-				if (map_[(i + 1) * width_ + j] != s) { info.peri_++; }
-				if (map_[idx - 1] != s) { info.peri_++; }
-				if (map_[idx + 1] != s) { info.peri_++; }
-			}
+			info.x_ += Val * Di;
+			info.y_ += Val * Dj;
+			info.mean_ += Val;
+			info.stdev_ += Val * Val;
 		}
 	}
 
 	// Post-traitement
 	for (auto& info : infos_) {
 		if (static_cast<int>(info.surf_) == 0) { continue; }
-		info.moment_.x /= info.mean_;
-		info.moment_.y /= info.mean_;
-		info.momentSurf_.x /= info.surf_;
-		info.momentSurf_.y /= info.surf_;
-		info.var_.xx    = info.var_.xx / info.mean_ - info.moment_.x * info.moment_.x;
-		info.var_.yy    = info.var_.yy / info.mean_ - info.moment_.y * info.moment_.y;
-		info.var_.xy    = info.var_.xy / info.mean_ - info.moment_.x * info.moment_.y;
+		info.x_ /= info.mean_;
+		info.y_ /= info.mean_;
 		info.intensity_ = info.mean_;
 		info.stdev_     = std::sqrt((info.stdev_ - info.mean_) / info.surf_);
 		info.mean_ /= info.surf_;
@@ -230,7 +173,7 @@ void Segmentation2D::filterStructureWS()
 	const size_t NbStruct = infos_.size();
 	if (NbStruct == 0) { return; }
 
-	std::vector<WSFusion2D> wsFusions(NbStruct);
+	std::vector<WSFusion> wsFusions(NbStruct);
 
 	bool change = true;
 	int label   = 0;
@@ -244,7 +187,6 @@ void Segmentation2D::filterStructureWS()
 			s.minPotential             = +1e10;
 			s.maxPotential             = -1e10;
 			s.structInContact          = 0;
-			s.kept                     = true;
 			s.locked                   = false;
 			s.structToBecome           = static_cast<int>(i);
 			s.newIndex                 = 0;
@@ -318,7 +260,7 @@ void Segmentation2D::filterStructureWS()
 	}
 
 	// Nettoyage infos_ une fois les fusions terminées
-	std::vector<Info2D> updatedInfos(static_cast<size_t>(label));
+	std::vector<SegmentInfo> updatedInfos(static_cast<size_t>(label));
 
 	for (size_t oldIdx = 0; oldIdx < wsFusions.size(); ++oldIdx) {
 		const auto& Fusion = wsFusions[oldIdx];
