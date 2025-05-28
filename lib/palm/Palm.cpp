@@ -83,7 +83,7 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 	Segmentation2D segmentation(decomposition, thresholdVal_, watershedRatio_);  // Objet de segmentation intelligente 2D.
 
 	//----- Fitting -----
-	//Fitting fit(fit_mode::none, image, height_, width_, nPointsMaxPerPlane_);
+	//Fitting fit(fit_mode::none, image, height_, width_, nPointsMaxPerPlane_, roi_, initSigmaX_, initSigmaY_, initTheta_);
 	//fit.Fit(segmentation, points);
 	const auto& P = segmentation.Infos();
 	points.resize(P.size());
@@ -99,7 +99,7 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 
 		switch (fit_) {
 			case 1: { // Gaussian fit of 2D Sigma is constant
-				GaussianFit fit(fit_mode::gaussian_2d_fixed, image, height_, width_, nPointsMaxPerPlane_, initSigmaX_, initSigmaY_, initTheta_);
+				GaussianFit fit(fit_mode::gaussian_2d_fixed, image, height_, width_, nPointsMaxPerPlane_, roi_, initSigmaX_, initSigmaY_, initTheta_);
 				fit.Run(image, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
 				sigmaX = initSigmaX_;
 				sigmaY = initSigmaX_;
@@ -108,7 +108,7 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 			}
 
 			case 2: { // Gaussian fit of 2D
-				GaussianFit fit(fit_mode::gaussian_2d_sigma, image, height_, width_, nPointsMaxPerPlane_, initSigmaX_, initSigmaY_, initTheta_);
+				GaussianFit fit(fit_mode::gaussian_2d_sigma, image, height_, width_, nPointsMaxPerPlane_, roi_, initSigmaX_, initSigmaY_, initTheta_);
 				fit.Run(image, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
 				sigmaY = sigmaX;
 				theta  = 0;
@@ -116,13 +116,13 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 			}
 
 			case 3: { // Gaussian fit of 3D Theta is constant
-				GaussianFit fit(fit_mode::gaussian_3d_fixed, image, height_, width_, nPointsMaxPerPlane_, initSigmaX_, initSigmaY_, initTheta_);
+				GaussianFit fit(fit_mode::gaussian_3d_fixed, image, height_, width_, nPointsMaxPerPlane_, roi_, initSigmaX_, initSigmaY_, initTheta_);
 				fit.Run(image, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
 				break;
 			}
 
 			case 4: { // Gaussian fit of 3D
-				GaussianFit fit(fit_mode::gaussian_3d_theta, image, height_, width_, nPointsMaxPerPlane_, initSigmaX_, initSigmaY_, initTheta_);
+				GaussianFit fit(fit_mode::gaussian_3d_theta, image, height_, width_, nPointsMaxPerPlane_, roi_, initSigmaX_, initSigmaY_, initTheta_);
 				fit.Run(image, width_, height_, x, y, intensity, sigmaX, sigmaY, theta, offset, rss, roi_);
 				break;
 			}

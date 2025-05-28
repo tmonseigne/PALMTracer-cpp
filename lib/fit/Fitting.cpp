@@ -8,9 +8,9 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-Fitting::Fitting(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints,
+Fitting::Fitting(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints, const size_t roi,
                  const double sigmaX, const double sigmaY, const double theta)
-	: mode_(mode), image_(image), n_(0), nParams_(4), height_(height), width_(width), maxPoints_(maxPoints), sigmaX_(sigmaX), sigmaY_(sigmaY), theta_(theta)
+	: mode_(mode), image_(image), n_(0), nParams_(4), height_(height), width_(width), maxPoints_(maxPoints), roi_(roi), sigmaX_(sigmaX), sigmaY_(sigmaY), theta_(theta)
 {
 	switch (mode_) {
 		case fit_mode::none:
@@ -25,9 +25,9 @@ Fitting::Fitting(const fit_mode mode, const unsigned short* image, const size_t 
 		case fit_mode::spline_2d: break;
 	}
 	nParams2_ = nParams_ * nParams_;
-	pMin_.resize(nParams_);
-	p_.resize(nParams_);
-	pMax_.resize(nParams_);
+	if (roi_ % 2 == 0) { roi_--; }
+	roiHalf_ = roi_ / 2;
+	n_ = roi_ * roi_;
 }
 
 // ==================== Fit Computes ====================
@@ -40,9 +40,6 @@ void Fitting::Fit(const Segmentation2D& segmentation, std::vector<std::array<dou
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(std::min<size_t>(P.size(), maxPoints_ - 1)); ++i) { fit(P[i], points[i]); }
 }
-
-//-------------------------------------------------------------------------------------------------
-void Fitting::fit(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point) { fill(infos, point, infos.x_, infos.y_); }
 
 //-------------------------------------------------------------------------------------------------
 void Fitting::fill(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point, const double x, const double y, const double intensity,
@@ -63,7 +60,7 @@ void Fitting::fill(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>
 	point[8]  = sigmaX;           // Sigma X
 	point[9]  = sigmaY;           // Sigma Y
 	point[10] = theta;            // Theta
-	point[11] = rss;              // MSE Gaussian
+	point[11] = rss;              // MSE X, Y
 	point[12] = -1;               // MSE Z
 	point[13] = 0;                // Pair Distance
 	point[14] = intensity;        // Intensity 0

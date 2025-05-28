@@ -37,7 +37,8 @@ public:
 	/// <param name="height"></param>
 	/// <param name="width"></param>
 	/// <param name="maxPoints"></param>
-	explicit Fitting(fit_mode mode, const unsigned short* image, size_t height, size_t width, size_t maxPoints, double sigmaX, double sigmaY, double theta);
+	explicit Fitting(fit_mode mode, const unsigned short* image, size_t height, size_t width, size_t maxPoints, size_t roi, double sigmaX, double sigmaY,
+	                 double theta);
 
 	/// <summary>Destructeur de la classe <c>Fitting</c>.</summary>
 	virtual ~Fitting() = default;
@@ -55,13 +56,12 @@ protected:
 	       nParams2_,                                  ///< Nombre de paramètres au carré (utile pour les matrices jacobiennes ou hessiennes).
 	       height_,                                    ///< Hauteur de l'image.
 	       width_,                                     ///< Largeur de l'image.
-	       maxPoints_;                                 ///< Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).
+	       maxPoints_,                                 ///< Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).
+	       roi_,                                       ///< Taille de la région d'intérêt autour du point.
+	       roiHalf_;                                   ///< Demi taille de la région d'intérêt autour du point.
 	double sigmaX_,                                    ///< Écart-type initial sur X.
 	       sigmaY_,                                    ///< Écart-type initial sur Y.
 	       theta_;                                     ///< Angle d'orientation (en radians) de la gaussienne si applicable.
-	std::vector<double> pMin_,                         ///< Bornes inférieures autorisées pour les paramètres de l'ajustement.
-	                    p_,                            ///< Valeurs courantes des paramètres du modèle.
-	                    pMax_;                         ///< Bornes supérieures autorisées pour les paramètres de l'ajustement.
 	static constexpr size_t N_ITER             = 50;   ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
 	static constexpr double EPSILON_1          = 1e-6, ///< Seuil de convergence pour le changement de la fonction objectif.
 	                        EPSILON_2          = 1e-6, ///< Seuil de convergence pour le gradient.
@@ -77,7 +77,7 @@ protected:
 	/// <summary>sdfs</summary>
 	/// <param name="infos"></param>
 	/// <param name="point"></param>
-	virtual void fit(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point);
+	virtual void fit(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point) { fill(infos, point, infos.x_, infos.y_); }
 
 	/// <summary></summary>
 	/// <param name="infos"></param>

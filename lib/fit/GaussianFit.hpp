@@ -18,8 +18,9 @@ namespace palm_tracer {
 /// <summary>Classe d'ajustement gaussien.</summary>
 class GaussianFit final : Fitting {
 public:
-	explicit GaussianFit(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints, double sigmaX, double sigmaY, double theta)
-		: Fitting(mode, image, height, width, maxPoints, sigmaX, sigmaY, theta) { }
+	explicit GaussianFit(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints,
+	                     const size_t roi, const double sigmaX, const double sigmaY, const double theta)
+		: Fitting(mode, image, height, width, maxPoints, roi, sigmaX, sigmaY, theta) { }
 
 	/// <summary>Exécute un ajustement de modèle Gaussien sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.
 	/// L'algorithme utilise une méthode de Levenberg-Marquardt pour minimiser l'erreur entre le modèle et les données.</summary>
@@ -40,6 +41,8 @@ public:
 
 protected:
 
+	/// <summary>Exécute un ajustement de modèle Gaussien sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.
+	/// L'algorithme utilise une méthode de Levenberg-Marquardt pour minimiser l'erreur entre le modèle et les données.</summary>
 	void fit(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point) override;
 
 
@@ -61,6 +64,7 @@ protected:
 
 	/// <summary>Initialise les paramètres de départ pour le fitting, ainsi que leurs bornes minimale et maximale.
 	/// Les valeurs dépendent du mode de fitting utilisé.</summary>
+	/// <param name="p"></param>
 	/// <param name="x">Coordonnée X estimée du centre initial.</param>
 	/// <param name="y">Coordonnée Y estimée du centre initial.</param>
 	/// <param name="sigmaX">Valeur initiale de la largeur gaussienne en X.</param>
@@ -68,14 +72,14 @@ protected:
 	/// <param name="theta">Valeur initiale de la rotation (en radians, utilisée uniquement dans le mode 3D avec angle).</param>
 	/// <param name="minI">Intensité minimale dans la ROI (servira à initialiser l'offset).</param>
 	/// <param name="maxI">Intensité maximale dans la ROI (servira à initialiser l'amplitude).</param>
-	void initP(double x, double y, double sigmaX, double sigmaY, double theta, double minI, double maxI);
+	void initP(std::array<std::vector<double>, 3>& p, double x, double y, double sigmaX, double sigmaY, double theta, double minI, double maxI) const;
 
 	/// <summary>Calcule le coefficient de corrélation au carré (R²) entre deux vecteurs normalisés.
 	/// Cela donne une mesure de la qualité d'ajustement entre les données observées et le modèle.</summary>
 	/// <param name="dat">Vecteur des données observées (modifié en place).</param>
 	/// <param name="hat">Vecteur des données ajustées (modifié en place).</param>
 	/// <returns>Valeur de R², dans [0, 1].</returns>
-	double computeRSS(std::vector<double>& dat, std::vector<double>& hat) const;
+	double computeR2(std::vector<double>& dat, std::vector<double>& hat) const;
 
 	//==================== PSF ====================
 	/// <summary>Évalue la fonction PSF (Point Spread Function) en (x, y), selon le mode d'ajustement et les paramètres donnés.</summary>
