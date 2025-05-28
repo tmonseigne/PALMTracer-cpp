@@ -11,30 +11,12 @@
 #include <vector>
 
 namespace palm_tracer {
-GaussianFit::GaussianFit(const fit_mode mode)
-	: mode_(mode), n_(0), nParams_(4), sigma_(1), theta_(0)
-{
-	switch (mode_) {
-		case fit_mode::gauss_2d: nParams_ = 4; // 4 paramètres : x, y, amplitude, offset
-			break;
-		case fit_mode::gauss_2d_sigma: nParams_ = 5; // 5 : x, y, amplitude, sigma, offset
-			break;
-		case fit_mode::gauss_3d: nParams_ = 6; // 6 : x, y, amplitude, sigmaX, sigmaY, offset
-			break;
-		case fit_mode::gauss_3d_theta: nParams_ = 7; // 7 : x, y, amplitude, sigmaX, sigmaY, theta, offset
-			break;
-	}
-	nParams2_ = nParams_ * nParams_;
-	pMin_.resize(nParams_);
-	p_.resize(nParams_);
-	pMax_.resize(nParams_);
-}
 
 //-------------------------------------------------------------------------------------------------
 void GaussianFit::Run(const unsigned short* image, size_t width, size_t height, double& x, double& y, double& intensity,
                       double& sigmaX, double& sigmaY, double& theta, double& offset, double& rss, size_t roi)
 {
-	if (roi % 2 == 0) { roi--; } // Not present in GPU original file why ?
+	if (roi % 2 == 0) { roi--; }
 	n_     = roi * roi;
 	sigma_ = sigmaX;
 	theta_ = theta;
@@ -49,7 +31,7 @@ void GaussianFit::Run(const unsigned short* image, size_t width, size_t height, 
 		std::vector<size_t> t(2 * n_);
 
 		// Initialization of dat & t (A vérifier)
-		double minI, maxI; // Not present in GPU original file why ?
+		double minI, maxI;
 		preComputeFit(minI, maxI, image, width, Ux, Uy, dat, weight, t, roi);
 		initP(x, y, sigmaX, sigmaY, theta, minI, maxI);
 
@@ -117,28 +99,29 @@ void GaussianFit::Run(const unsigned short* image, size_t width, size_t height, 
 		y         = p_[2];
 		intensity = p_[0];
 		switch (mode_) {
-			case fit_mode::gauss_2d: {
+			case fit_mode::gaussian_2d_fixed: {
 				offset = p_[3];
 				break;
 			}
-			case fit_mode::gauss_2d_sigma: {
+			case fit_mode::gaussian_2d_sigma: {
 				sigmaX = p_[3];
 				offset = p_[4];
 				break;
 			}
-			case fit_mode::gauss_3d: {
+			case fit_mode::gaussian_3d_fixed: {
 				sigmaX = p_[3] / std::numbers::sqrt2_v<double>;
 				sigmaY = p_[4] / std::numbers::sqrt2_v<double>;
 				offset = p_[5];
 				break;
 			}
-			case fit_mode::gauss_3d_theta: {
+			case fit_mode::gaussian_3d_theta: {
 				sigmaX = p_[3] / std::numbers::sqrt2_v<double>;
 				sigmaY = p_[4] / std::numbers::sqrt2_v<double>;
 				theta  = p_[5];
 				offset = p_[6];
 				break;
 			}
+			default: break;
 		}
 		rss = computeRSS(dat, hat);
 	}
@@ -151,8 +134,8 @@ void GaussianFit::preComputeFit(double& min, double& max, const unsigned short* 
                                 const size_t x, const size_t y, std::vector<double>& dat, std::vector<double>& weight, std::vector<size_t>& t,
                                 const size_t roi)
 {
-	min = std::numeric_limits<double>::max();    // Plus grand double possible (FLT_MAX) // Not present in GPU original file why ?
-	max = std::numeric_limits<double>::lowest(); // Plus petit double possible (-FLT_MAX) // Not present in GPU original file why ?
+	min = std::numeric_limits<double>::max();    // Plus grand double possible (FLT_MAX)
+	max = std::numeric_limits<double>::lowest(); // Plus petit double possible (-FLT_MAX)
 
 	const int Half = static_cast<int>(roi / 2);
 	for (int i = -Half; i <= Half; ++i) {
@@ -163,8 +146,8 @@ void GaussianFit::preComputeFit(double& min, double& max, const unsigned short* 
 			t[TIdx]         = x + j;
 			t[TIdx + 1]     = y + i;
 
-			max = std::max(max, dat[j + Idx]); // Not present in GPU original file why ?
-			min = std::min(min, dat[j + Idx]); // Not present in GPU original file why ?
+			max = std::max(max, dat[j + Idx]);
+			min = std::min(min, dat[j + Idx]);
 		}
 	}
 
@@ -179,25 +162,25 @@ void GaussianFit::preComputeFit(double& min, double& max, const unsigned short* 
 void GaussianFit::initP(const double x, const double y, const double sigmaX, const double sigmaY, const double theta, const double minI, const double maxI)
 {
 	switch (mode_) {
-		case fit_mode::gauss_2d: {
+		case fit_mode::gaussian_2d_fixed: {
 			pMin_ = {0, x - 1, y - 1, 0};
 			p_    = {maxI - minI, x, y, minI};
 			pMax_ = {65535, x + 1, y + 1, 65535};
 			break;
 		}
-		case fit_mode::gauss_2d_sigma: {
+		case fit_mode::gaussian_2d_sigma: {
 			pMin_ = {0, x - 1, y - 1, 0.1, 0.};
 			p_    = {maxI - minI, x, y, sigmaX, minI};
 			pMax_ = {65535, x + 1, y + 1, 20, 65535};
 			break;
 		}
-		case fit_mode::gauss_3d: {
+		case fit_mode::gaussian_3d_fixed: {
 			pMin_ = {0, x - 1, y - 1, 0.1, 0.1, 0};
 			p_    = {maxI - minI, x, y, std::numbers::sqrt2_v<double> * sigmaX, std::numbers::sqrt2_v<double> * sigmaY, minI};
 			pMax_ = {65535, x + 1, y + 1, 20, 20, 65535};
 			break;
 		}
-		case fit_mode::gauss_3d_theta: {
+		case fit_mode::gaussian_3d_theta: {
 			pMin_ = {0, x - 1, y - 1, 0.1, 0.1, -150, 0};
 			p_    = {maxI - minI, x, y, std::numbers::sqrt2_v<double> * sigmaX, std::numbers::sqrt2_v<double> * sigmaY, theta, minI};
 			pMax_ = {65535, x + 1, y + 1, 20, 20, 150, 65535};
@@ -233,10 +216,12 @@ double GaussianFit::computeRSS(std::vector<double>& dat, std::vector<double>& ha
 double GaussianFit::psf(const std::vector<double>& p, const double x, const double y) const
 {
 	switch (mode_) {
-		case fit_mode::gauss_2d: return psf(x - p[1], y - p[2], p[0], sigma_, p[3]);
-		case fit_mode::gauss_2d_sigma: return psf(x - p[1], y - p[2], p[0], p[3], p[4]);
-		case fit_mode::gauss_3d: return psf(x - p[1], y - p[2], p[0], p[3], p[4], theta_, p[5]);
-		case fit_mode::gauss_3d_theta: return psf(x - p[1], y - p[2], p[0], p[3], p[4], p[5], p[6]);
+		case fit_mode::gaussian_2d_fixed: return psf(x - p[1], y - p[2], p[0], sigma_, p[3]);
+		case fit_mode::gaussian_2d_sigma: return psf(x - p[1], y - p[2], p[0], p[3], p[4]);
+		case fit_mode::gaussian_3d_fixed: return psf(x - p[1], y - p[2], p[0], p[3], p[4], theta_, p[5]);
+		case fit_mode::gaussian_3d_theta: return psf(x - p[1], y - p[2], p[0], p[3], p[4], p[5], p[6]);
+		case fit_mode::none:
+		case fit_mode::spline_2d: return 0;
 	}
 	return 0;
 }
@@ -262,10 +247,10 @@ double GaussianFit::psf(const double x, const double y, const double i0, const d
 void GaussianFit::deriv(double* out, const std::vector<double>& p, const double x, const double y) const
 {
 	switch (mode_) {
-		case fit_mode::gauss_2d: return deriv(out, x - p[1], y - p[2], p[0], sigma_, false);
-		case fit_mode::gauss_2d_sigma: return deriv(out, x - p[1], y - p[2], p[0], p[3], true);
-		case fit_mode::gauss_3d: return deriv(out, x - p[1], y - p[2], p[0], p[3], p[4], theta_, false);
-		case fit_mode::gauss_3d_theta: return deriv(out, x - p[1], y - p[2], p[0], p[3], p[4], p[5], true);
+		case fit_mode::gaussian_2d_fixed: return deriv(out, x - p[1], y - p[2], p[0], sigma_, false);
+		case fit_mode::gaussian_2d_sigma: return deriv(out, x - p[1], y - p[2], p[0], p[3], true);
+		case fit_mode::gaussian_3d_fixed: return deriv(out, x - p[1], y - p[2], p[0], p[3], p[4], theta_, false);
+		case fit_mode::gaussian_3d_theta: return deriv(out, x - p[1], y - p[2], p[0], p[3], p[4], p[5], true);
 	}
 }
 
@@ -341,7 +326,7 @@ double GaussianFit::chi2(std::vector<double>& alpha, std::vector<double>& beta, 
 
 	// Computing Chi_sq
 	#ifdef __APPLE__
-// Pas de support de std::execution sous macOS (Clang/libc++)
+		// Pas de support de std::execution sous macOS (Clang/libc++)
 		return std::transform_reduce(deltaY.begin(), deltaY.end(), tmp.begin(), 0.0);
 	#else
 	return std::transform_reduce(std::execution::seq, deltaY.begin(), deltaY.end(), tmp.begin(), 0.0);

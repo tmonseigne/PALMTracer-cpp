@@ -10,22 +10,16 @@
 ///-------------------------------------------------------------------------------------------------
 
 #pragma once
-#include <cstdint>
 #include <vector>
 
+#include "Fitting.hpp"
+
 namespace palm_tracer {
-/// <summary>Mode d'ajustement gaussien.</summary>
-enum class fit_mode : uint8_t { gauss_2d, gauss_2d_sigma, gauss_3d, gauss_3d_theta };
-
 /// <summary>Classe d'ajustement gaussien.</summary>
-class GaussianFit {
+class GaussianFit : Fitting {
 public:
-	/// <summary>Constructeur de la classe <c>GaussianFit</c>. Initialise le nombre de paramètres du modèle en fonction du mode d'ajustement choisi.</summary>
-	/// <param name="mode">Mode de fitting gaussien (2D, 2D avec sigma, 3D, 3D avec rotation).</param>
-	explicit GaussianFit(fit_mode mode = fit_mode::gauss_2d);
-
-	/// <summary>Destructeur de la classe <c>GaussianFit</c>.</summary>
-	~GaussianFit() = default;
+	explicit GaussianFit(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints)
+		: Fitting(mode, image, height, width, maxPoints) { }
 
 	/// <summary>Exécute un ajustement de modèle Gaussien sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.
 	/// L'algorithme utilise une méthode de Levenberg-Marquardt pour minimiser l'erreur entre le modèle et les données.</summary>
@@ -45,26 +39,6 @@ public:
 	         double& sigmaX, double& sigmaY, double& theta, double& offset, double& rss, size_t roi);
 
 protected:
-	fit_mode mode_;                                    ///< Mode de fitting utilisé (ex. position seulement, ou position + orientation...).
-	size_t n_,                                         ///< Nombre d'échantillons ou points de données à fitter.
-	       nParams_,                                   ///< Nombre total de paramètres du modèle.
-	       nParams2_;                                  ///< Nombre de paramètres au carré (utile pour les matrices jacobiennes ou hessiennes).
-	double sigma_,                                     ///< Écart-type initial ou calculé du noyau Gaussien.
-	       theta_;                                     ///< Angle d'orientation (en radians) de la gaussienne si applicable.
-	std::vector<double> pMin_,                         ///< Bornes inférieures autorisées pour les paramètres de l'ajustement.
-	                    p_,                            ///< Valeurs courantes des paramètres du modèle.
-	                    pMax_;                         ///< Bornes supérieures autorisées pour les paramètres de l'ajustement.
-	static constexpr size_t N_ITER             = 50;   ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
-	static constexpr double EPSILON_1          = 1e-6, ///< Seuil de convergence pour le changement de la fonction objectif.
-	                        EPSILON_2          = 1e-6, ///< Seuil de convergence pour le gradient.
-	                        EPSILON_3          = 1e-5, ///< Seuil de convergence pour la variation des paramètres.
-	                        EPSILON_4          = 1e-2; ///< Tolérance utilisée pour juger la stagnation ou instabilité.
-	static constexpr double LAMBDA_0           = 1e-2, ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.
-	                        LAMBDA_EPSILON_MAX = 1e7,  ///< Valeur maximale autorisée pour lambda.
-	                        LAMBDA_EPSILON_MIN = 1e-7, ///< Valeur minimale autorisée pour lambda.
-	                        LAMBDA_UP          = 11,   ///< Facteur multiplicatif lorsque la mise à jour est inefficace (augmentation de lambda).
-	                        LAMBDA_DN          = 9;    ///< Facteur de réduction de lambda lorsque la mise à jour est réussie.
-
 	//==================== Run Computes ====================
 	/// <summary>Prépare les données nécessaires pour le fitting en extrayant les valeurs de la région d'intérêt autour de (x, y).
 	/// Remplit les vecteurs de données, poids et coordonnées relatives. Calcule aussi les intensités minimale et maximale.</summary>

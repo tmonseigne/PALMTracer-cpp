@@ -88,7 +88,7 @@ public:
 
 private:
 	// Basic members
-	const unsigned short* image_; ///< Image 3D d'entrée (plan x hauteur x largeur) en niveaux de gris.
+	const unsigned short* stack_; ///< Image 3D d'entrée (plan x hauteur x largeur) en niveaux de gris.
 	double* points_;              ///< Tableau de points de sortie (rempli avec les résultats de détection).
 	size_t height_,               ///< Hauteur de l'image.
 	       width_,                ///< Largeur de l'image.
