@@ -18,8 +18,6 @@ void GaussianFit::Run(const unsigned short* image, size_t width, size_t height, 
 {
 	if (roi % 2 == 0) { roi--; }
 	n_     = roi * roi;
-	sigma_ = sigmaX;
-	theta_ = theta;
 
 	const size_t Half = roi / 2, Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
 	if (Half <= Ux && Ux <= width - Half - 1 && Half <= Uy && Uy <= height - Half - 1) {
@@ -127,6 +125,18 @@ void GaussianFit::Run(const unsigned short* image, size_t width, size_t height, 
 	}
 }
 
+//-------------------------------------------------------------------------------------------------
+void GaussianFit::fit(const Info2D& infos, std::array<double, N_LOCALIZATIONS>& point)
+{
+	double x = infos.moment_.y;
+	double y = infos.moment_.x;
+	double sigmaX = sigmaX_;
+	double sigmaY = sigmaY_;
+	double theta = theta_;
+	double intensity = 0, offset = 0, rss = -1;
+	Fitting::fit(infos, point);
+}
+
 
 // ==================== Run Computes ====================
 //-------------------------------------------------------------------------------------------------
@@ -216,7 +226,7 @@ double GaussianFit::computeRSS(std::vector<double>& dat, std::vector<double>& ha
 double GaussianFit::psf(const std::vector<double>& p, const double x, const double y) const
 {
 	switch (mode_) {
-		case fit_mode::gaussian_2d_fixed: return psf(x - p[1], y - p[2], p[0], sigma_, p[3]);
+		case fit_mode::gaussian_2d_fixed: return psf(x - p[1], y - p[2], p[0], sigmaX_, p[3]);
 		case fit_mode::gaussian_2d_sigma: return psf(x - p[1], y - p[2], p[0], p[3], p[4]);
 		case fit_mode::gaussian_3d_fixed: return psf(x - p[1], y - p[2], p[0], p[3], p[4], theta_, p[5]);
 		case fit_mode::gaussian_3d_theta: return psf(x - p[1], y - p[2], p[0], p[3], p[4], p[5], p[6]);
@@ -247,7 +257,7 @@ double GaussianFit::psf(const double x, const double y, const double i0, const d
 void GaussianFit::deriv(double* out, const std::vector<double>& p, const double x, const double y) const
 {
 	switch (mode_) {
-		case fit_mode::gaussian_2d_fixed: return deriv(out, x - p[1], y - p[2], p[0], sigma_, false);
+		case fit_mode::gaussian_2d_fixed: return deriv(out, x - p[1], y - p[2], p[0], sigmaX_, false);
 		case fit_mode::gaussian_2d_sigma: return deriv(out, x - p[1], y - p[2], p[0], p[3], true);
 		case fit_mode::gaussian_3d_fixed: return deriv(out, x - p[1], y - p[2], p[0], p[3], p[4], theta_, false);
 		case fit_mode::gaussian_3d_theta: return deriv(out, x - p[1], y - p[2], p[0], p[3], p[4], p[5], true);

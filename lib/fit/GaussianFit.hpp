@@ -16,10 +16,10 @@
 
 namespace palm_tracer {
 /// <summary>Classe d'ajustement gaussien.</summary>
-class GaussianFit : Fitting {
+class GaussianFit final : Fitting {
 public:
-	explicit GaussianFit(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints)
-		: Fitting(mode, image, height, width, maxPoints) { }
+	explicit GaussianFit(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints, double sigmaX, double sigmaY, double theta)
+		: Fitting(mode, image, height, width, maxPoints, sigmaX, sigmaY, theta) { }
 
 	/// <summary>Exécute un ajustement de modèle Gaussien sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.
 	/// L'algorithme utilise une méthode de Levenberg-Marquardt pour minimiser l'erreur entre le modèle et les données.</summary>
@@ -39,6 +39,10 @@ public:
 	         double& sigmaX, double& sigmaY, double& theta, double& offset, double& rss, size_t roi);
 
 protected:
+
+	void fit(const Info2D& infos, std::array<double, N_LOCALIZATIONS>& point) override;
+
+
 	//==================== Run Computes ====================
 	/// <summary>Prépare les données nécessaires pour le fitting en extrayant les valeurs de la région d'intérêt autour de (x, y).
 	/// Remplit les vecteurs de données, poids et coordonnées relatives. Calcule aussi les intensités minimale et maximale.</summary>

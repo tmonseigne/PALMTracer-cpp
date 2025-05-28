@@ -8,8 +8,9 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-Fitting::Fitting(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints)
-	: mode_(mode), image_(image), n_(0), nParams_(4), height_(height), width_(width), maxPoints_(maxPoints), sigma_(1), theta_(0)
+Fitting::Fitting(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints,
+                 const double sigmaX, const double sigmaY, const double theta)
+	: mode_(mode), image_(image), n_(0), nParams_(4), height_(height), width_(width), maxPoints_(maxPoints), sigmaX_(sigmaX), sigmaY_(sigmaY), theta_(theta)
 {
 	switch (mode_) {
 		case fit_mode::none:

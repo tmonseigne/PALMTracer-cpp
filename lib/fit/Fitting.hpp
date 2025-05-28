@@ -37,7 +37,7 @@ public:
 	/// <param name="height"></param>
 	/// <param name="width"></param>
 	/// <param name="maxPoints"></param>
-	explicit Fitting(fit_mode mode, const unsigned short* image, size_t height, size_t width, size_t maxPoints);
+	explicit Fitting(fit_mode mode, const unsigned short* image, size_t height, size_t width, size_t maxPoints, double sigmaX, double sigmaY, double theta);
 
 	/// <summary>Destructeur de la classe <c>Fitting</c>.</summary>
 	virtual ~Fitting() = default;
@@ -56,7 +56,8 @@ protected:
 	       height_,                                    ///< Hauteur de l'image.
 	       width_,                                     ///< Largeur de l'image.
 	       maxPoints_;                                 ///< Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).
-	double sigma_,                                     ///< Écart-type initial ou calculé du noyau Gaussien.
+	double sigmaX_,                                    ///< Écart-type initial sur X.
+	       sigmaY_,                                    ///< Écart-type initial sur Y.
 	       theta_;                                     ///< Angle d'orientation (en radians) de la gaussienne si applicable.
 	std::vector<double> pMin_,                         ///< Bornes inférieures autorisées pour les paramètres de l'ajustement.
 	                    p_,                            ///< Valeurs courantes des paramètres du modèle.
@@ -73,7 +74,7 @@ protected:
 	                        LAMBDA_DN          = 9;    ///< Facteur de réduction de lambda lorsque la mise à jour est réussie.
 
 
-	/// <summary></summary>
+	/// <summary>sdfs</summary>
 	/// <param name="infos"></param>
 	/// <param name="point"></param>
 	virtual void fit(const Info2D& infos, std::array<double, N_LOCALIZATIONS>& point);
