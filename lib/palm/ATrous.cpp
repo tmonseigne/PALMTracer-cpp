@@ -6,8 +6,16 @@
 #include "Constants.hpp"
 
 namespace palm_tracer {
+ATrous::ATrous(const unsigned short* image, const size_t height, const size_t width)
+	: height_(height), width_(width), size_(height * width)
+{
+	tmp_.resize(size_);
+	for (auto& wavelet : wDecomp_) { wavelet.resize(size_); }
+	decomposition2D(image);
+}
+
 //-------------------------------------------------------------------------------------------------
-void ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t height, const size_t width)
+void ATrous::decomposition2D(const unsigned short* image)
 {
 	/**
 		WAVELET TRANSFORM WITH "A TROUS" ALGORITHM
@@ -28,12 +36,6 @@ void ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t hei
 		ones have to project the signal to a Riesz basis of part of L2(R2) space (V0 basis). But you can also considere that you signal
 		is smooth enough to be already in this basis. If "realProj" is true the projection is done.
 	**/
-
-	height_ = height;
-	width_  = width;
-	size_   = height_ * width_;
-	tmp_.resize(size_);
-	for (auto& wavelet : wDecomp_) { wavelet.resize(size_); }
 
 	//do the initialisation of multiresolution algorthm (initialisation of the first wavelet plane) signal is projected in V0 space
 	std::transform(image, image + size_, wDecomp_[0].begin(), [](const unsigned short val) { return static_cast<double>(val); });

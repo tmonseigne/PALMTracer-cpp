@@ -10,60 +10,23 @@
 ///-------------------------------------------------------------------------------------------------
 
 #pragma once
-#include <cstdint>
 #include <vector>
 
+#include "Fitting.hpp"
+
 namespace palm_tracer {
-/// <summary>Mode d'ajustement gaussien.</summary>
-enum class fit_mode : uint8_t { gauss_2d, gauss_2d_sigma, gauss_3d, gauss_3d_theta };
-
 /// <summary>Classe d'ajustement gaussien.</summary>
-class GaussianFit {
+class GaussianFit final : public Fitting {
 public:
-	/// <summary>Constructeur de la classe <c>GaussianFit</c>. Initialise le nombre de paramètres du modèle en fonction du mode d'ajustement choisi.</summary>
-	/// <param name="mode">Mode de fitting gaussien (2D, 2D avec sigma, 3D, 3D avec rotation).</param>
-	explicit GaussianFit(fit_mode mode = fit_mode::gauss_2d);
-
-	/// <summary>Destructeur de la classe <c>GaussianFit</c>.</summary>
-	~GaussianFit() = default;
-
-	/// <summary>Exécute un ajustement de modèle Gaussien sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.
-	/// L'algorithme utilise une méthode de Levenberg-Marquardt pour minimiser l'erreur entre le modèle et les données.</summary>
-	/// <param name="image">Pointeur vers les données brutes de l'image (niveau de gris, type unsigned short).</param>
-	/// <param name="width">Largeur totale de l'image.</param>
-	/// <param name="height">Hauteur totale de l'image.</param>
-	/// <param name="x">Coordonnée X du centre du spot à fitter (modifié en sortie avec la valeur ajustée).</param>
-	/// <param name="y">Coordonnée Y du centre du spot à fitter (modifié en sortie avec la valeur ajustée).</param>
-	/// <param name="intensity">Intensité estimée du spot (valeur crête ajustée, modifiée en sortie).</param>
-	/// <param name="sigmaX">Largeur gaussienne en X (modifiable en fonction du mode).</param>
-	/// <param name="sigmaY">Largeur gaussienne en Y (modifiable en fonction du mode).</param>
-	/// <param name="theta">Angle de rotation du spot (modifié uniquement si mode avec rotation).</param>
-	/// <param name="offset">Niveau de fond (offset constant ajouté à la gaussienne).</param>
-	/// <param name="rss">Résidu quadratique de l'ajustement (Root Sum of Squares).</param>
-	/// <param name="roi">Taille de la région d'intérêt carrée centrée autour de (x, y) utilisée pour le fitting. Doit être impair.</param>
-	void Run(const unsigned short* image, size_t width, size_t height, double& x, double& y, double& intensity,
-	         double& sigmaX, double& sigmaY, double& theta, double& offset, double& rss, size_t roi);
+	explicit GaussianFit(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints,
+	                     const size_t roi, const double sigmaX, const double sigmaY, const double theta)
+		: Fitting(mode, image, height, width, maxPoints, roi, sigmaX, sigmaY, theta) { }
 
 protected:
-	fit_mode mode_;                                    ///< Mode de fitting utilisé (ex. position seulement, ou position + orientation...).
-	size_t n_,                                         ///< Nombre d'échantillons ou points de données à fitter.
-	       nParams_,                                   ///< Nombre total de paramètres du modèle.
-	       nParams2_;                                  ///< Nombre de paramètres au carré (utile pour les matrices jacobiennes ou hessiennes).
-	double sigma_,                                     ///< Écart-type initial ou calculé du noyau Gaussien.
-	       theta_;                                     ///< Angle d'orientation (en radians) de la gaussienne si applicable.
-	std::vector<double> pMin_,                         ///< Bornes inférieures autorisées pour les paramètres de l'ajustement.
-	                    p_,                            ///< Valeurs courantes des paramètres du modèle.
-	                    pMax_;                         ///< Bornes supérieures autorisées pour les paramètres de l'ajustement.
-	static constexpr size_t N_ITER             = 50;   ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
-	static constexpr double EPSILON_1          = 1e-6, ///< Seuil de convergence pour le changement de la fonction objectif.
-	                        EPSILON_2          = 1e-6, ///< Seuil de convergence pour le gradient.
-	                        EPSILON_3          = 1e-5, ///< Seuil de convergence pour la variation des paramètres.
-	                        EPSILON_4          = 1e-2; ///< Tolérance utilisée pour juger la stagnation ou instabilité.
-	static constexpr double LAMBDA_0           = 1e-2, ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.
-	                        LAMBDA_EPSILON_MAX = 1e7,  ///< Valeur maximale autorisée pour lambda.
-	                        LAMBDA_EPSILON_MIN = 1e-7, ///< Valeur minimale autorisée pour lambda.
-	                        LAMBDA_UP          = 11,   ///< Facteur multiplicatif lorsque la mise à jour est inefficace (augmentation de lambda).
-	                        LAMBDA_DN          = 9;    ///< Facteur de réduction de lambda lorsque la mise à jour est réussie.
+	/// <summary>Exécute un ajustement de modèle Gaussien sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.
+	/// L'algorithme utilise une méthode de Levenberg-Marquardt pour minimiser l'erreur entre le modèle et les données.</summary>
+	void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) override;
+
 
 	//==================== Run Computes ====================
 	/// <summary>Prépare les données nécessaires pour le fitting en extrayant les valeurs de la région d'intérêt autour de (x, y).
@@ -83,6 +46,7 @@ protected:
 
 	/// <summary>Initialise les paramètres de départ pour le fitting, ainsi que leurs bornes minimale et maximale.
 	/// Les valeurs dépendent du mode de fitting utilisé.</summary>
+	/// <param name="p"></param>
 	/// <param name="x">Coordonnée X estimée du centre initial.</param>
 	/// <param name="y">Coordonnée Y estimée du centre initial.</param>
 	/// <param name="sigmaX">Valeur initiale de la largeur gaussienne en X.</param>
@@ -90,14 +54,14 @@ protected:
 	/// <param name="theta">Valeur initiale de la rotation (en radians, utilisée uniquement dans le mode 3D avec angle).</param>
 	/// <param name="minI">Intensité minimale dans la ROI (servira à initialiser l'offset).</param>
 	/// <param name="maxI">Intensité maximale dans la ROI (servira à initialiser l'amplitude).</param>
-	void initP(double x, double y, double sigmaX, double sigmaY, double theta, double minI, double maxI);
+	void initP(std::array<std::vector<double>, 3>& p, double x, double y, double sigmaX, double sigmaY, double theta, double minI, double maxI) const;
 
 	/// <summary>Calcule le coefficient de corrélation au carré (R²) entre deux vecteurs normalisés.
 	/// Cela donne une mesure de la qualité d'ajustement entre les données observées et le modèle.</summary>
 	/// <param name="dat">Vecteur des données observées (modifié en place).</param>
 	/// <param name="hat">Vecteur des données ajustées (modifié en place).</param>
 	/// <returns>Valeur de R², dans [0, 1].</returns>
-	double computeRSS(std::vector<double>& dat, std::vector<double>& hat) const;
+	double computeR2(std::vector<double>& dat, std::vector<double>& hat) const;
 
 	//==================== PSF ====================
 	/// <summary>Évalue la fonction PSF (Point Spread Function) en (x, y), selon le mode d'ajustement et les paramètres donnés.</summary>
