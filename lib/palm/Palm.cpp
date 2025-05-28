@@ -79,28 +79,11 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 	//----- Décomposition en ondelette -----
 	ATrous decomposition(image, height_, width_); // Objet pour la décomposition ondelettes (algorithme à trous).
 
+	//----- Segmentation -----
+	Segmentation2D segmentation(decomposition, thresholdVal_, watershedRatio_);  // Objet de segmentation intelligente 2D.
 
-	std::vector<unsigned short> segmentMap(size_); // Image segmentée (carte binaire des objets détectés).
-	std::vector<double> output(size_);             // Carte des valeurs utilisées pour la segmentation (après seuillage).
-	Segmentation2D segmentation(height_, width_);  // Objet de segmentation intelligente 2D.
-
-	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(size_); ++i) {
-		if (decomposition.wDecomp_[PLANE_ID][i] > thresholdVal_) {
-			output[i]     = decomposition.wDecomp_[PLANE_ID][i];
-			segmentMap[i] = 1;
-		}
-		else {
-			segmentMap[i] = 0;
-			output[i]     = 0;
-		}
-	}
-
-	segmentation.WatershedIntelligent(output, segmentMap, watershedRatio_);
-	segmentation.ComputeStatistics(output, segmentMap, decomposition.wDecomp_[PLANE_ID], fit_);
-	segmentation.FilterData(segmentMap);
-
-	const auto& P = segmentation.GetInfos();
+	//----- Fitting -----
+	const auto& P = segmentation.Infos();
 	points.resize(P.size());
 
 	#pragma omp parallel for

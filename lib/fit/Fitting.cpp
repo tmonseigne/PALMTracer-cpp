@@ -33,7 +33,7 @@ Fitting::Fitting(const fit_mode mode, const unsigned short* image, const size_t 
 //-------------------------------------------------------------------------------------------------
 void Fitting::Fit(const Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points)
 {
-	const auto& P = segmentation.GetInfos();
+	const auto& P = segmentation.Infos();
 	points.resize(P.size());
 
 	#pragma omp parallel for
