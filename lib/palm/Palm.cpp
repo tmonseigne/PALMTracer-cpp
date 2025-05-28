@@ -77,8 +77,8 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 	const unsigned short* image = stack_ + (plane * size_);
 
 	//----- Décomposition en ondelette -----
-	ATrous decomposition; // Objet pour la décomposition ondelettes (algorithme à trous).
-	decomposition.ATrousDecomposition2D(image, height_, width_);
+	ATrous decomposition(image, height_, width_); // Objet pour la décomposition ondelettes (algorithme à trous).
+
 
 	std::vector<unsigned short> segmentMap(size_); // Image segmentée (carte binaire des objets détectés).
 	std::vector<double> output(size_);             // Carte des valeurs utilisées pour la segmentation (après seuillage).

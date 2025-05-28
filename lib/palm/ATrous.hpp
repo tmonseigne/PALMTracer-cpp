@@ -24,23 +24,25 @@ public:
 	size_t height_,                                     ///< Hauteur de l'image analysée.
 	       width_,                                      ///< Largeur de l'image analysée.
 	       size_;                                       ///< Taille totale (hauteur × largeur).
-	std::vector<double> tmp_;                           ///< Vecteur temporaire utilisé pour les calculs intermédiaires lors de la décomposition.
 	std::array<std::vector<double>, N_PLANES> wDecomp_; ///< Résultat de la décomposition en ondelettes : tableau des plans.
 
 	/// <summary>Constructeur de la classe <c>ATrous</c>.</summary>
-	ATrous() = default;
+	/// <param name="image">Pointeur vers l'image 2D d'entrée (tableau d'unsigned short).</param>
+	/// <param name="height">Hauteur de l'image.</param>
+	/// <param name="width">Largeur de l'image.</param>
+	ATrous(const unsigned short* image, size_t height, size_t width);
 
 	/// <summary>Destructeur de la classe <c>ATrous</c>.</summary>
 	~ATrous() = default;
 
+private:
+	std::vector<double> tmp_; ///< Vecteur temporaire utilisé pour les calculs intermédiaires lors de la décomposition.
+
 	/// <summary>Applique la décomposition en ondelettes 2D par l'algorithme à trous sur une image d'entrée.</summary>
 	/// <param name="image">Pointeur vers l'image 2D d'entrée (tableau d'unsigned short).</param>
-	/// <param name="height">Hauteur de l'image.</param>
-	/// <param name="width">Largeur de l'image.</param>
 	/// <returns>Nombre de plans effectivement calculés, ou W_SIZE_ERR en cas d'erreur.</returns>
-	void ATrousDecomposition2D(const unsigned short* image, size_t height, size_t width);
+	void decomposition2D(const unsigned short* image);
 
-private:
 	/// <summary>Calcule 2^val.</summary>
 	/// <param name="val">Exposant (taille non signée)</param>
 	/// <returns>Renvoie 2^val (2 élevé à la puissance val)</returns>
