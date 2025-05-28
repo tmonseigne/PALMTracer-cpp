@@ -42,7 +42,7 @@ void Fitting::Fit(const Segmentation2D& segmentation, std::vector<std::array<dou
 }
 
 //-------------------------------------------------------------------------------------------------
-void Fitting::fit(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point) { fill(infos, point, infos.y_, infos.x_); }
+void Fitting::fit(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point) { fill(infos, point, infos.x_, infos.y_); }
 
 //-------------------------------------------------------------------------------------------------
 void Fitting::fill(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point, const double x, const double y, const double intensity,

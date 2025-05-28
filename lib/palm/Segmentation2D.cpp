@@ -141,8 +141,8 @@ void Segmentation2D::ComputeStatistics()
 			// Mesures
 			const double Di = static_cast<double>(i), Dj = static_cast<double>(j);
 			info.surf_++;
-			info.x_ += Val * Di;
-			info.y_ += Val * Dj;
+			info.x_ += Val * Dj;
+			info.y_ += Val * Di;
 			info.mean_ += Val;
 			info.stdev_ += Val * Val;
 		}

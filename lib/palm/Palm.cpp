@@ -90,8 +90,8 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(std::min<size_t>(P.size(), nPointsMaxPerPlane_ - 1)); ++i) {
-		double x         = P[i].y_;
-		double y         = P[i].x_;
+		double x         = P[i].x_;
+		double y         = P[i].y_;
 		double sigmaX    = initSigmaX_;
 		double sigmaY    = initSigmaY_;
 		double theta     = initTheta_;
