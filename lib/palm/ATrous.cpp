@@ -6,12 +6,14 @@
 #include "Constants.hpp"
 
 namespace palm_tracer {
-ATrous::ATrous(const unsigned short* image, const size_t height, const size_t width): height_(height), width_(width), size_(height* width)
+ATrous::ATrous(const unsigned short* image, const size_t height, const size_t width)
+	: height_(height), width_(width), size_(height * width)
 {
 	tmp_.resize(size_);
 	for (auto& wavelet : wDecomp_) { wavelet.resize(size_); }
 	decomposition2D(image);
 }
+
 //-------------------------------------------------------------------------------------------------
 void ATrous::decomposition2D(const unsigned short* image)
 {

@@ -33,19 +33,23 @@ class Fitting {
 public:
 	/// <summary>Constructeur de la classe <c>Fitting</c>. Initialise le nombre de paramètres du modèle en fonction du mode d'ajustement choisi.</summary>
 	/// <param name="mode">Mode de fitting gaussien (2D, 2D avec sigma, 3D, 3D avec rotation).</param>
-	/// <param name="image"></param>
-	/// <param name="height"></param>
-	/// <param name="width"></param>
-	/// <param name="maxPoints"></param>
-	explicit Fitting(fit_mode mode, const unsigned short* image, size_t height, size_t width, size_t maxPoints, size_t roi, double sigmaX, double sigmaY,
-	                 double theta);
+	/// <param name="image">Image 2D d'entrée (hauteur x largeur) en niveaux de gris.</param>
+	/// <param name="height">Hauteur de l'image.</param>
+	/// <param name="width">Largeur de l'image.</param>
+	/// <param name="maxPoints">Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).</param>
+	/// <param name="roi">Taille de la région d'intérêt autour du point.</param>
+	/// <param name="sigmaX">Écart-type initial sur X.</param>
+	/// <param name="sigmaY">Écart-type initial sur Y.</param>
+	/// <param name="theta">Angle d'orientation (en radians) de la gaussienne si applicable.</param>
+	explicit Fitting(fit_mode mode, const unsigned short* image, size_t height, size_t width, size_t maxPoints,
+	                 size_t roi, double sigmaX, double sigmaY, double theta);
 
 	/// <summary>Destructeur de la classe <c>Fitting</c>.</summary>
 	virtual ~Fitting() = default;
 
-	/// <summary</summary>
-	/// <param name="segmentation"></param>
-	/// <param name="points"></param>
+	/// <summary>Exécute l'ajustement sur tous les points précédemments localisés par la segmentation.</summary>
+	/// <param name="segmentation">Segmentation de l'image initiale. </param>
+	/// <param name="points">Résultat de l'ajustement sur les points localisés.</param>
 	void Fit(const Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points);
 
 protected:
@@ -74,23 +78,24 @@ protected:
 	                        LAMBDA_DN          = 9;    ///< Facteur de réduction de lambda lorsque la mise à jour est réussie.
 
 
-	/// <summary>sdfs</summary>
-	/// <param name="infos"></param>
-	/// <param name="point"></param>
-	virtual void fit(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point) { fill(infos, point, infos.x_, infos.y_); }
+	/// <summary>Exécute l'ajustement selon le mode sélectionné sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.
+	/// L'algorithme utilise une méthode de Levenberg-Marquardt pour minimiser l'erreur entre le modèle et les données.</summary>
+	/// <param name="infos">Informations sur le point localisé.</param>
+	/// <param name="point">Résultat de l'ajustement sur le point localisé.</param>
+	virtual void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) { fill(infos, point, infos.x_, infos.y_); }
 
 	/// <summary></summary>
-	/// <param name="infos"></param>
-	/// <param name="point"></param>
-	/// <param name="x"></param>
-	/// <param name="y"></param>
-	/// <param name="intensity"></param>
-	/// <param name="sigmaX"></param>
-	/// <param name="sigmaY"></param>
-	/// <param name="theta"></param>
-	/// <param name="rss"></param>
-	/// <param name="offset"></param>
-	void fill(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point, double x, double y, double intensity = 0,
+	/// <param name="infos">Informations initiales sur le point localisé.</param>
+	/// <param name="point">Résultat de l'ajustement sur le point localisé.</param>
+	/// <param name="x">Nouveau X.</param>
+	/// <param name="y">Nouveau Y.</param>
+	/// <param name="intensity">Nouvelle intensité.</param>
+	/// <param name="sigmaX">Nouveau Sigma sur X.</param>
+	/// <param name="sigmaY">Nouveau Sigma sur Y.</param>
+	/// <param name="theta">Nouveau Theta.</param>
+	/// <param name="rss">Nouveau RSS.</param>
+	/// <param name="offset">Nouvel offset.</param>
+	void fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, double x, double y, double intensity = 0,
 	          double sigmaX = 0, double sigmaY = 0, double theta = 0, double rss = 0, double offset = 0) const;
 };
 }

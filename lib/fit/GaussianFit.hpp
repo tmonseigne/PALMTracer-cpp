@@ -16,34 +16,16 @@
 
 namespace palm_tracer {
 /// <summary>Classe d'ajustement gaussien.</summary>
-class GaussianFit final : Fitting {
+class GaussianFit final : public Fitting {
 public:
 	explicit GaussianFit(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints,
 	                     const size_t roi, const double sigmaX, const double sigmaY, const double theta)
 		: Fitting(mode, image, height, width, maxPoints, roi, sigmaX, sigmaY, theta) { }
 
-	/// <summary>Exécute un ajustement de modèle Gaussien sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.
-	/// L'algorithme utilise une méthode de Levenberg-Marquardt pour minimiser l'erreur entre le modèle et les données.</summary>
-	/// <param name="image">Pointeur vers les données brutes de l'image (niveau de gris, type unsigned short).</param>
-	/// <param name="width">Largeur totale de l'image.</param>
-	/// <param name="height">Hauteur totale de l'image.</param>
-	/// <param name="x">Coordonnée X du centre du spot à fitter (modifié en sortie avec la valeur ajustée).</param>
-	/// <param name="y">Coordonnée Y du centre du spot à fitter (modifié en sortie avec la valeur ajustée).</param>
-	/// <param name="intensity">Intensité estimée du spot (valeur crête ajustée, modifiée en sortie).</param>
-	/// <param name="sigmaX">Largeur gaussienne en X (modifiable en fonction du mode).</param>
-	/// <param name="sigmaY">Largeur gaussienne en Y (modifiable en fonction du mode).</param>
-	/// <param name="theta">Angle de rotation du spot (modifié uniquement si mode avec rotation).</param>
-	/// <param name="offset">Niveau de fond (offset constant ajouté à la gaussienne).</param>
-	/// <param name="rss">Résidu quadratique de l'ajustement (Root Sum of Squares).</param>
-	/// <param name="roi">Taille de la région d'intérêt carrée centrée autour de (x, y) utilisée pour le fitting. Doit être impair.</param>
-	void Run(const unsigned short* image, size_t width, size_t height, double& x, double& y, double& intensity,
-	         double& sigmaX, double& sigmaY, double& theta, double& offset, double& rss, size_t roi);
-
 protected:
-
 	/// <summary>Exécute un ajustement de modèle Gaussien sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.
 	/// L'algorithme utilise une méthode de Levenberg-Marquardt pour minimiser l'erreur entre le modèle et les données.</summary>
-	void fit(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point) override;
+	void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) override;
 
 
 	//==================== Run Computes ====================

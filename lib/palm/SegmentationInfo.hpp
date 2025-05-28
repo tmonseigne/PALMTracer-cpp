@@ -1,6 +1,6 @@
 ///-------------------------------------------------------------------------------------------------
 ///
-/// \file SegmentInfo.hpp
+/// \file SegmentationInfo.hpp
 /// \brief  Classe de lien pour traiter les données issues de la segmentation d'images 2D.
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.0.
@@ -26,7 +26,7 @@ struct WSFusion {
 };
 
 /// <summary>Classe contenant des informations descriptives sur une région segmentée 2D.</summary>
-class SegmentInfo {
+class SegmentationInfo {
 public:
 	size_t index_;     ///< Index identifiant la région.
 	double x_,         ///< Position x.
@@ -38,22 +38,22 @@ public:
 	       stdev_;     ///< Écart-type des intensités dans la région.
 
 	/// <summary>Constructeur par défaut.</summary>
-	SegmentInfo() = default;
+	SegmentationInfo() = default;
 
 	/// <summary>Destructeur par défaut.</summary>
-	~SegmentInfo() = default;
+	~SegmentationInfo() = default;
 
 	/// <summary>Constructeur de déplacement par défaut.</summary>
-	SegmentInfo(SegmentInfo&&) noexcept = default;
+	SegmentationInfo(SegmentationInfo&&) noexcept = default;
 
 	/// <summary>Opérateur d'affectation par déplacement par défaut.</summary>
-	SegmentInfo& operator=(SegmentInfo&&) noexcept = default;
+	SegmentationInfo& operator=(SegmentationInfo&&) noexcept = default;
 
 	/// <summary>Constructeur de copie par défaut.</summary>
-	SegmentInfo(const SegmentInfo&) = default;
+	SegmentationInfo(const SegmentationInfo&) = default;
 
 	/// <summary>Opérateur d'affectation par copie par défaut.</summary>
-	SegmentInfo& operator=(const SegmentInfo&) = default;
+	SegmentationInfo& operator=(const SegmentationInfo&) = default;
 
 	/// <summary> Réinitialise les données de la région.</summary>
 	void Reset()

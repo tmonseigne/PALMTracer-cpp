@@ -8,9 +8,10 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-Fitting::Fitting(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints, const size_t roi,
-                 const double sigmaX, const double sigmaY, const double theta)
-	: mode_(mode), image_(image), n_(0), nParams_(4), height_(height), width_(width), maxPoints_(maxPoints), roi_(roi), sigmaX_(sigmaX), sigmaY_(sigmaY), theta_(theta)
+Fitting::Fitting(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints,
+                 const size_t roi, const double sigmaX, const double sigmaY, const double theta)
+	: mode_(mode), image_(image), n_(0), nParams_(4), height_(height), width_(width), maxPoints_(maxPoints),
+	  roi_(roi), sigmaX_(sigmaX), sigmaY_(sigmaY), theta_(theta)
 {
 	switch (mode_) {
 		case fit_mode::none:
@@ -27,7 +28,7 @@ Fitting::Fitting(const fit_mode mode, const unsigned short* image, const size_t 
 	nParams2_ = nParams_ * nParams_;
 	if (roi_ % 2 == 0) { roi_--; }
 	roiHalf_ = roi_ / 2;
-	n_ = roi_ * roi_;
+	n_       = roi_ * roi_;
 }
 
 // ==================== Fit Computes ====================
@@ -42,7 +43,7 @@ void Fitting::Fit(const Segmentation2D& segmentation, std::vector<std::array<dou
 }
 
 //-------------------------------------------------------------------------------------------------
-void Fitting::fill(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point, const double x, const double y, const double intensity,
+void Fitting::fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, const double x, const double y, const double intensity,
                    const double sigmaX, const double sigmaY, const double theta, const double rss, const double offset) const
 {
 	point[0] = 0;  // Id

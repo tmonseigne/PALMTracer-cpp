@@ -18,11 +18,13 @@ add_library(CPU SHARED
     CPU/main.cpp
     lib/Constants.hpp
     lib/ExportAPI.hpp
+    lib/fit/Fitting.hpp
+    lib/fit/Fitting.cpp
     lib/fit/GaussianFit.hpp
     lib/fit/GaussianFit.cpp
     lib/palm/ATrous.hpp
     lib/palm/ATrous.cpp
-    lib/palm/Info2D.hpp
+    lib/palm/SegmentationInfo.hpp
     lib/palm/Palm.hpp
     lib/palm/Palm.cpp
     lib/palm/Segmentation2D.hpp

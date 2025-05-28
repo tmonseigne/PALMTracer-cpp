@@ -87,7 +87,7 @@
     <ClInclude Include="..\lib\fit\GaussianFit.hpp" />
     <ClInclude Include="..\lib\palm\ATrous.hpp" />
     <ClInclude Include="..\lib\palm\Palm.hpp" />
-    <ClInclude Include="..\lib\palm\Info2D.hpp" />
+    <ClInclude Include="..\lib\palm\SegmentationInfo.hpp" />
     <ClInclude Include="..\lib\palm\Segmentation2D.hpp" />
     <ClInclude Include="..\lib\tracking\Node.h" />
     <ClInclude Include="..\lib\tracking\Node.hpp" />

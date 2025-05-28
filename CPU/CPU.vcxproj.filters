@@ -34,7 +34,7 @@
     <ClInclude Include="..\lib\palm\ATrous.hpp">
       <Filter>Palm</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\Info2D.hpp">
+    <ClInclude Include="..\lib\palm\SegmentationInfo.hpp">
       <Filter>Palm</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\palm\Palm.hpp">

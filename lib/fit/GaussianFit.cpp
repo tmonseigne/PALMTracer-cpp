@@ -12,121 +12,7 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-void GaussianFit::Run(const unsigned short* image, size_t width, size_t height, double& x, double& y, double& intensity,
-                      double& sigmaX, double& sigmaY, double& theta, double& offset, double& rss, size_t roi)
-{
-	if (roi % 2 == 0) { roi--; }
-	n_ = roi * roi;
-
-	const size_t Half = roi / 2, Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
-	if (Half <= Ux && Ux <= width - Half - 1 && Half <= Uy && Uy <= height - Half - 1) {
-		// Création des variables
-		double lambda = LAMBDA_0;
-		std::vector<double> alpha(nParams2_), alphaR(nParams2_), alphaRi(nParams2_),
-		                    beta(nParams_), beta_l_deltaP(nParams_), p_try(nParams_), deltaP(nParams_),
-		                    dat(n_), hat(n_), weight(n_), deltaY(n_), deltaY_w(n_);
-		std::vector<size_t> t(2 * n_);
-		std::array<std::vector<double>, 3> p;
-
-		// Initialization of dat & t (A vérifier)
-		double minI, maxI;
-		preComputeFit(minI, maxI, image, width, Ux, Uy, dat, weight, t, roi);
-		initP(p, x, y, sigmaX, sigmaY, theta, minI, maxI);
-
-		double x2     = lm_matx(t, p[1], dat, weight, alpha, beta, hat);
-		double x2_old = x2;
-
-		// Trouver la valeur absolue maximale
-		double m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::fabs(b); }));
-
-		bool stop = false;
-		if (m < EPSILON_1) { stop = true; }
-
-		size_t iteration = 0;
-		while (!stop) { // Main Loop
-			iteration++;
-			std::ranges::fill(deltaP, 0.0);
-
-			std::copy_n(alpha.begin(), nParams2_, alphaR.begin()); // Copy du alpha
-			for (size_t i = 0; i < nParams_; ++i) { alphaR[i * nParams_ + i] += lambda * alpha[i * nParams_ + i]; }
-			inverse(alphaR, alphaRi);
-
-			for (size_t i = 0; i < nParams_; ++i) { for (size_t j = 0; j < nParams_; ++j) { deltaP[i] += alphaRi[i * nParams_ + j] * beta[j]; } }
-
-			for (size_t i = 0; i < nParams_; ++i) {
-				p_try[i] = p[1][i] + deltaP[i];
-				p_try[i] = std::clamp(p_try[i], p[0][i], p[2][i]);
-			}
-
-			for (size_t i = 0; i < n_; ++i) { deltaY[i] = dat[i] - psf(p_try, static_cast<double>(t[i * 2]), static_cast<double>(t[i * 2 + 1])); }
-
-			// deltaY .* weight
-			std::ranges::transform(deltaY, weight, deltaY_w.begin(), std::multiplies());
-			const double X2_Try = std::transform_reduce(deltaY.begin(), deltaY.end(), deltaY_w.begin(), 0.0, std::plus(), std::multiplies());
-
-			// lambda * deltaP + beta
-			std::ranges::transform(deltaP, beta, beta_l_deltaP.begin(), [lambda](const double d, const double b) { return lambda * d + b; });
-
-			m = std::inner_product(deltaP.begin(), deltaP.end(), beta_l_deltaP.begin(), 0.0);
-
-			if ((x2 - X2_Try) / (2 * m) > EPSILON_4) { // it IS significantly better
-				x2_old = x2;
-				std::copy_n(p_try.begin(), nParams_, p[1].begin()); // accept p_try
-
-				x2     = lm_matx(t, p[1], dat, weight, alpha, beta, hat);
-				lambda = std::max(lambda / LAMBDA_DN, LAMBDA_EPSILON_MIN);
-			}
-			else {               // it IS NOT better
-				x2     = x2_old; // do not accept a_try
-				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_EPSILON_MAX);
-			}
-
-			m = 0;
-			for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::fabs(deltaP[i] / p[1][i])); }
-
-			if (m < EPSILON_2 && iteration > 2) { stop = true; }
-			if (x2 / static_cast<double>(n_) < EPSILON_3 && iteration > 2) { stop = true; }
-
-			m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::fabs(b); }));
-
-			if (m < EPSILON_1 && iteration > 2) { stop = true; }
-			if (iteration >= N_ITER) { stop = true; }
-		}
-
-		x         = p[1][1];
-		y         = p[1][2];
-		intensity = p[1][0];
-		switch (mode_) {
-			case fit_mode::gaussian_2d_fixed: {
-				offset = p[1][3];
-				break;
-			}
-			case fit_mode::gaussian_2d_sigma: {
-				sigmaX = p[1][3];
-				offset = p[1][4];
-				break;
-			}
-			case fit_mode::gaussian_3d_fixed: {
-				sigmaX = p[1][3] / std::numbers::sqrt2_v<double>;
-				sigmaY = p[1][4] / std::numbers::sqrt2_v<double>;
-				offset = p[1][5];
-				break;
-			}
-			case fit_mode::gaussian_3d_theta: {
-				sigmaX = p[1][3] / std::numbers::sqrt2_v<double>;
-				sigmaY = p[1][4] / std::numbers::sqrt2_v<double>;
-				theta  = p[1][5];
-				offset = p[1][6];
-				break;
-			}
-			default: break;
-		}
-		rss = computeR2(dat, hat);
-	}
-}
-
-//-------------------------------------------------------------------------------------------------
-void GaussianFit::fit(const SegmentInfo& infos, std::array<double, N_LOCALIZATIONS>& point)
+void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point)
 {
 	double x         = infos.x_,
 	       y         = infos.y_,
@@ -264,9 +150,8 @@ void GaussianFit::fit(const SegmentInfo& infos, std::array<double, N_LOCALIZATIO
 
 // ==================== Run Computes ====================
 //-------------------------------------------------------------------------------------------------
-void GaussianFit::preComputeFit(double& min, double& max, const unsigned short* image, const size_t width,
-                                const size_t x, const size_t y, std::vector<double>& dat, std::vector<double>& weight, std::vector<size_t>& t,
-                                const size_t roi)
+void GaussianFit::preComputeFit(double& min, double& max, const unsigned short* image, const size_t width, const size_t x, const size_t y,
+                                std::vector<double>& dat, std::vector<double>& weight, std::vector<size_t>& t, const size_t roi)
 {
 	min = std::numeric_limits<double>::max();    // Plus grand double possible (FLT_MAX)
 	max = std::numeric_limits<double>::lowest(); // Plus petit double possible (-FLT_MAX)
@@ -288,8 +173,8 @@ void GaussianFit::preComputeFit(double& min, double& max, const unsigned short* 
 }
 
 //-------------------------------------------------------------------------------------------------
-void GaussianFit::initP(std::array<std::vector<double>, 3>& p, const double x, const double y, const double sigmaX, const double sigmaY, const double theta,
-                        const double minI, const double maxI) const
+void GaussianFit::initP(std::array<std::vector<double>, 3>& p, const double x, const double y, const double sigmaX, const double sigmaY,
+                        const double theta, const double minI, const double maxI) const
 {
 	switch (mode_) {
 		case fit_mode::none:

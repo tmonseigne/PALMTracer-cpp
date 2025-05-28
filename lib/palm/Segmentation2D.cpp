@@ -88,7 +88,7 @@ void Segmentation2D::FilterData()
 	}
 
 	// Première passe : filtrage par critère
-	auto isFiltered = [&](const SegmentInfo& info, const size_t index) {
+	auto isFiltered = [&](const SegmentationInfo& info, const size_t index) {
 		const double Mean_Surf = info.mean_ * info.surf_;
 
 		return
@@ -99,7 +99,7 @@ void Segmentation2D::FilterData()
 			(SEGMENTATION_FILTER[12].enabled && bounds[index]);       // no struct on boundaries
 	};
 
-	std::vector<SegmentInfo> filtered;
+	std::vector<SegmentationInfo> filtered;
 	filtered.reserve(OldSize);
 	std::vector<size_t> oldToNew(OldSize, 0);
 	size_t newIdx = 0;
@@ -260,7 +260,7 @@ void Segmentation2D::filterStructureWS()
 	}
 
 	// Nettoyage infos_ une fois les fusions terminées
-	std::vector<SegmentInfo> updatedInfos(static_cast<size_t>(label));
+	std::vector<SegmentationInfo> updatedInfos(static_cast<size_t>(label));
 
 	for (size_t oldIdx = 0; oldIdx < wsFusions.size(); ++oldIdx) {
 		const auto& Fusion = wsFusions[oldIdx];
