@@ -26,6 +26,9 @@
     <ClCompile Include="..\lib\fit\Fitting.cpp">
       <Filter>Fit</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\alignment\Alignment.cpp">
+      <Filter>Alignment</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\fit\GaussianFit.hpp">
@@ -63,6 +66,9 @@
     <ClInclude Include="..\lib\fit\Fitting.hpp">
       <Filter>Fit</Filter>
     </ClInclude>
+    <ClInclude Include="..\lib\alignment\Alignment.hpp">
+      <Filter>Alignment</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="PALMTracer.def" />
@@ -76,6 +82,9 @@
     </Filter>
     <Filter Include="Tracking">
       <UniqueIdentifier>{000e3aa6-d21b-416d-b789-f6e82f4cdfc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Alignment">
+      <UniqueIdentifier>{2caa0989-d4fc-4b89-b905-d7a44762da8e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
