@@ -7,6 +7,19 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
+struct AlignTestParams {
+	std::string outputPath;
+	std::array<std::array<double, 10>, 2> factors;
+	int upscale;
+	int upscaleMode;
+	bool upscaleSource;
+	bool spread;
+};
+
+//-------------------------------------------------------------------------------------------------
+class AlignmentTests : public ::testing::TestWithParam<AlignTestParams> { };
+
+//-------------------------------------------------------------------------------------------------
 TEST(AlignmentTests, BaseCreation) { Alignment align; }
 
 //-------------------------------------------------------------------------------------------------
@@ -69,6 +82,52 @@ TEST(AlignmentTests, BlankCallWithFactor)
 	delete[] Output;
 }
 
+TEST_P(AlignmentTests, AlignmentCore)
+{
+	const auto& p = GetParam();
+
+	std::vector<unsigned short> input;
+	size_t width, height, planes;
+
+	// 1. Charger
+	loadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Alignment.tiff", input, width, height, planes);
+
+	// 2. Allouer
+	std::vector<unsigned short> output(input.size(), 0);
+
+	// 3. Algorithme
+	Alignment align;
+	align.Align(input.data(), output.data(), height, width, planes, p.factors, p.upscale, p.upscaleMode, p.upscaleSource, p.spread);
+
+	// 4. Sauvegarder
+	saveTiff3D(p.outputPath.c_str(), output.data(), width, height, planes);
+
+	SUCCEED();
+}
+
+INSTANTIATE_TEST_CASE_P(
+	TestSuites, AlignmentTests,
+	::testing::Values(
+		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_1_Blank.tiff",
+		{}, 1, 0, true, true
+		},
+		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_2_Copy.tiff",
+		[] {
+		std::array<std::array<double, 10>, 2> factors = {};
+		factors[0][7] = 1.0;
+		factors[1][8] = 1.0;
+		return factors;
+		}(),
+		1, 0, true, true
+		},
+		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3.tiff",
+		{}, 1, 0, true, true
+		}
+		// Ajoute autant de cas que tu veux ici
+	)
+);
+
+
 TEST(AlignmentTests, LoadTiffAndRunBlank)
 {
 	size_t width, height, planes;
@@ -100,5 +159,4 @@ TEST(AlignmentTests, LoadTiffAndRunBlank)
 
 	SUCCEED();
 }
-
 }
