@@ -90,7 +90,7 @@ TEST_P(AlignmentTests, AlignmentCore)
 	size_t width, height, planes;
 
 	// 1. Charger
-	loadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Alignment.tiff", input, width, height, planes);
+	loadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Alignement_Reference.tiff", input, width, height, planes);
 
 	// 2. Allouer
 	std::vector<unsigned short> output(input.size(), 0);
@@ -120,12 +120,40 @@ INSTANTIATE_TEST_CASE_P(
 		}(),
 		1, 0, true, true
 		},
-		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3.tiff",
-		{}, 1, 0, true, true
+		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_integer.tiff",
+		[] {
+		std::array<std::array<double, 10>, 2> factors = {};
+		factors[0][7] = 1.0;
+		factors[0][9] = 1.0;
+		factors[1][8] = 1.0;
+		factors[1][9] = 2.0;
+		return factors;
+		}(),
+		1, 0, true, true
+		},
+		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_float_spread.tiff",
+		[] {
+		std::array<std::array<double, 10>, 2> factors = {};
+		factors[0][7] = 1.0;
+		factors[0][9] = 1.5;
+		factors[1][8] = 1.0;
+		factors[1][9] = 2.5;
+		return factors;
+		}(),
+		1, 0, true, true
+		},
+		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_float_not_spread.tiff",
+		[] {
+		std::array<std::array<double, 10>, 2> factors = {};
+		factors[0][7] = 1.0;
+		factors[0][9] = 1.5;
+		factors[1][8] = 1.0;
+		factors[1][9] = 2.5;
+		return factors;
+		}(),
+		1, 0, true, false
 		}
-		// Ajoute autant de cas que tu veux ici
-	)
-);
+	));
 
 
 TEST(AlignmentTests, LoadTiffAndRunBlank)
