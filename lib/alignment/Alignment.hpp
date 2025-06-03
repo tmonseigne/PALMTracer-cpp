@@ -11,6 +11,7 @@
 
 #pragma once
 #include <array>
+#include <vector>
 
 namespace palm_tracer {
 /// <summary> Classe pour l'alignement optique d'une pile d'images 3D avec déformation non linéaire. </summary>
@@ -95,5 +96,11 @@ protected:
 	///
 	/// Redirige chaque pixel selon la transformation non linéaire.
 	void align() const;
+
+	static std::vector<std::array<double, 2>> clipPolygon(const std::array<std::array<double, 2>, 4>& poly,
+	                                                      double xmin, double xmax, double ymin, double ymax);
+
+	static double getArea(const std::vector<std::array<double, 2>>& poly);
+
 };
 }
