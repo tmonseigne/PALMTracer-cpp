@@ -86,10 +86,10 @@ protected:
 	void computeCoord(double oldX, double oldY, double& newX, double& newY) const;
 
 	/// <summary>Convertit des coordonnées flottantes (x, y) en index linéaire dans le plan.</summary>
-	/// <param name="x">Coordonnée X (flottante).</param>
-	/// <param name="y">Coordonnée Y (flottante).</param>
+	/// <param name="x">Coordonnée X.</param>
+	/// <param name="y">Coordonnée Y.</param>
 	/// <returns>Index linéaire dans l'image 2D.</returns>
-	[[nodiscard]] size_t getCoord(double x, double y) const;
+	[[nodiscard]] size_t getCoord(size_t x, size_t y) const;
 
 	/// <summary>Applique l'alignement sur la pile d'images 3D.</summary>
 	///

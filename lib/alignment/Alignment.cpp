@@ -1,6 +1,7 @@
 # include "Alignment.hpp"
 
 #include <cmath> // pour std::lround
+#include <iostream>
 #include <stdexcept>
 
 namespace palm_tracer {
@@ -80,7 +81,7 @@ void Alignment::computeCoord(const double oldX, const double oldY, double& newX,
 }
 
 //-------------------------------------------------------------------------------------------------
-size_t Alignment::getCoord(const double x, const double y) const { return static_cast<size_t>(std::lround(y)) * width_ + static_cast<size_t>(std::lround(x)); }
+size_t Alignment::getCoord(const size_t x, const size_t y) const { return y * width_ + x; }
 
 //-------------------------------------------------------------------------------------------------
 void Alignment::align() const
@@ -98,8 +99,13 @@ void Alignment::align() const
 				             Y = static_cast<double>(y * upscale_);
 				double newX, newY;
 				computeCoord(static_cast<double>(x), static_cast<double>(y), newX, newY);
+
+				const size_t xi = static_cast<size_t>(std::lround(newX));
+				const size_t yi = static_cast<size_t>(std::lround(newY));
+				if (xi < 0 || xi >= width_ || yi < 0 || yi >= height_) { continue; }
+				if (x % 10 == 0 && y % 10 == 0) { std::cout << "(X: " << x << ", Y: " << y << "), (X': " << newX << ", Y': " << newY << ") : "<< input_[IdxLine + x] <<"\n"; }
 				// Calculer les éléments à modifier en fonction du spread
-				output_[getCoord(newX, newY) + IdxPlane] = input_[IdxLine + x];
+				output_[getCoord(xi, yi) + IdxPlane] += input_[IdxLine + x];
 			}
 		}
 	}

@@ -124,67 +124,34 @@ INSTANTIATE_TEST_CASE_P(
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
-		factors[0][9] = 1.0;
+		factors[0][9] = 25.0;
 		factors[1][8] = 1.0;
-		factors[1][9] = 2.0;
+		factors[1][9] = 50.0;
 		return factors;
 		}(),
 		1, 0, true, true
 		},
-		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_float_spread.tiff",
+		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_4_translate_float_spread.tiff",
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
-		factors[0][9] = 1.5;
+		factors[0][9] = 25.5;
 		factors[1][8] = 1.0;
-		factors[1][9] = 2.5;
+		factors[1][9] = 50.5;
 		return factors;
 		}(),
 		1, 0, true, true
 		},
-		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_float_not_spread.tiff",
+		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_5_translate_float_not_spread.tiff",
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
-		factors[0][9] = 1.5;
+		factors[0][9] = 25.5;
 		factors[1][8] = 1.0;
-		factors[1][9] = 2.5;
+		factors[1][9] = 50.5;
 		return factors;
 		}(),
 		1, 0, true, false
 		}
 	));
-
-
-TEST(AlignmentTests, LoadTiffAndRunBlank)
-{
-	size_t width, height, planes;
-	std::vector<unsigned short> input;
-
-	// 1. Charger le fichier TIFF
-	loadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Alignment.tiff", input, width, height, planes);
-
-	// 2. Allouer le buffer de sortie
-	std::vector<unsigned short> output(input.size(), 0);
-
-	// 3. Lancer l'algorithme
-	Alignment align;
-	align.Align(
-		input.data(),
-		output.data(),
-		height,
-		width,
-		planes,
-		/* Factors = */{}, // ou des valeurs si nécessaire
-		/* Upscale */ 1,
-		/* UpscaleMode */ 0,
-		/* UpscaleSource */ true,
-		/* Spread */ true
-	);
-
-	// 4. Sauvegarder le résultat
-	saveTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Output/Alignment_result.tiff", output.data(), width, height, planes);
-
-	SUCCEED();
-}
 }
