@@ -6,6 +6,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PALMTracer_CPU", "CPU\CPU.v
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PALMTracer_GPU", "GPU\GPU.vcxproj", "{7F85BC5D-B680-4529-B00A-83549239A332}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tests_CPU", "Tests_CPU\Tests_CPU.vcxproj", "{35A88C37-5CF3-4A01-AE6C-D554A029ED48}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Release|x64 = Release|x64
@@ -15,6 +17,8 @@ Global
 		{604B0055-C378-4945-86A9-DC0EBC014AAF}.Release|x64.Build.0 = Release|x64
 		{7F85BC5D-B680-4529-B00A-83549239A332}.Release|x64.ActiveCfg = Release|x64
 		{7F85BC5D-B680-4529-B00A-83549239A332}.Release|x64.Build.0 = Release|x64
+		{35A88C37-5CF3-4A01-AE6C-D554A029ED48}.Release|x64.ActiveCfg = Release|x64
+		{35A88C37-5CF3-4A01-AE6C-D554A029ED48}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

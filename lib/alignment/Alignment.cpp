@@ -5,22 +5,48 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
+void Alignment::Align(const unsigned short* highSNR, const unsigned short* lowSNR, const unsigned short* input, unsigned short* output,
+                      const size_t height, const size_t width, const size_t planes,
+                      const size_t upscale, const size_t upscaleMode, const bool upscaleSource, const bool spread)
 
-Alignment::Alignment(const unsigned short* highSNR, const unsigned short* lowSNR, const unsigned short* input, unsigned short* output,
-                     const size_t height, const size_t width, const size_t planes,
-                     const size_t upscale, const size_t upscaleMode, const bool upscaleSource, const bool spread)
-	: highSNR_(highSNR), lowSNR_(lowSNR), input_(input), output_(output), height_(height), width_(width), planes_(planes), size_(width_ * height_ * planes_),
-	  upscale_(upscale), upscaleMode_(upscaleMode), upsacleSource_(upscaleSource), spread_(spread), factors_()
 {
+	highSNR_       = highSNR;
+	lowSNR_        = lowSNR;
+	input_         = input;
+	output_        = output;
+	height_        = height;
+	width_         = width;
+	planes_        = planes;
+	size_          = width_ * height_ * planes_;
+	upscale_       = upscale;
+	upscaleMode_   = upscaleMode;
+	upsacleSource_ = upscaleSource;
+	spread_        = spread;
 	computeFactor();
 	align();
 }
 
 //-------------------------------------------------------------------------------------------------
-Alignment::Alignment(const unsigned short* input, unsigned short* output, const size_t height, const size_t width, const size_t planes,
-                     const std::array<std::array<double, 10>, 2>& factors, const size_t upscale, const size_t upscaleMode, const bool upscaleSource, const bool spread)
-	: highSNR_(nullptr), lowSNR_(nullptr), input_(input), output_(output), height_(height), width_(width), planes_(planes), size_(width_ * height_ * planes_),
-	  upscale_(upscale), upscaleMode_(upscaleMode), upsacleSource_(upscaleSource), spread_(spread), factors_(factors) { align(); }
+void Alignment::Align(const unsigned short* input, unsigned short* output, const size_t height, const size_t width, const size_t planes,
+                      const std::array<std::array<double, 10>, 2>& factors, const size_t upscale, const size_t upscaleMode, const bool upscaleSource,
+                      const bool spread)
+
+{
+	highSNR_       = nullptr;
+	lowSNR_        = nullptr;
+	input_         = input;
+	output_        = output;
+	height_        = height;
+	width_         = width;
+	planes_        = planes;
+	size_          = width_ * height_ * planes_;
+	upscale_       = upscale;
+	upscaleMode_   = upscaleMode;
+	upsacleSource_ = upscaleSource;
+	spread_        = spread;
+	factors_       = factors;
+	align();
+}
 
 //-------------------------------------------------------------------------------------------------
 void Alignment::initOutput() const { for (size_t i = 0; i < size_; ++i) { output_[i] = 0; } }

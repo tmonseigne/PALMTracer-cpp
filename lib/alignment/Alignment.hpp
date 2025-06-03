@@ -19,6 +19,11 @@ namespace palm_tracer {
 /// Elle peut soit estimer les coefficients à partir de deux images de référence (fort/faible SNR), soit appliquer des coefficients pré-calculés.
 class Alignment {
 public:
+	/// <summary>Constructeur de la classe <c>Alignment</c>.</summary>
+	Alignment() = default;
+	/// <summary>Destructeur de la classe <c>Alignment</c>.</summary>
+	~Alignment() = default;
+
 	/// <summary>Constructeur de la classe <c>Fitting</c>. Calcule les coefficients d'alignement à partir de deux images de référence et lance l'alignement.</summary>
 	/// <param name="highSNR">Image de référence (alignée) avec un haut rapport signal/bruit.</param>
 	/// <param name="lowSNR">Image de référence (désalignée) avec un haut faible signal/bruit.</param>
@@ -29,10 +34,10 @@ public:
 	/// <param name="planes">Nombre de plans (profondeur de la pile).</param>
 	/// <param name="upscale">Taux de suréchantillonnage à appliquer avant recalage.</param>
 	/// <param name="upscaleMode">Méthode de suréchantillonnage (utilisable avec OpenCV ou autre).</param>
-	/// <param name="upscaleSource"Si vrai, les coefficients sont calculés sur les images de référence suréchantillonnées.</param>
+	/// <param name="upscaleSource">Si vrai, les coefficients sont calculés sur les images de référence suréchantillonnées.</param>
 	/// <param name="spread">Si vrai, active la dispersion sub-pixellaire (ex. bilinéaire).</param>
-	explicit Alignment(const unsigned short* highSNR, const unsigned short* lowSNR, const unsigned short* input, unsigned short* output,
-	                   size_t height, size_t width, size_t planes, size_t upscale = 1, size_t upscaleMode = 0, bool upscaleSource = true, bool spread = true);
+	void Align(const unsigned short* highSNR, const unsigned short* lowSNR, const unsigned short* input, unsigned short* output,
+	           size_t height, size_t width, size_t planes, size_t upscale = 1, size_t upscaleMode = 0, bool upscaleSource = true, bool spread = true);
 
 	/// <summary>Constructeur alternatif de la classe <c>Fitting</c>. Applique directement des coefficients d'alignement fournis.</summary>
 	/// <param name="input">Données d'entrée (pile d'images à réaligner).</param>
@@ -45,12 +50,9 @@ public:
 	/// <param name="upscaleMode">Méthode de suréchantillonnage (utilisable avec OpenCV ou autre).</param>
 	/// <param name="upscaleSource">Si vrai, les coefficients sont calculés sur les images de référence suréchantillonnées.</param>
 	/// <param name="spread">Si vrai, active la dispersion sub-pixellaire (ex. bilinéaire).</param>
-	explicit Alignment(const unsigned short* input, unsigned short* output, size_t height, size_t width,
-	                   size_t planes, const std::array<std::array<double, 10>, 2>& factors,
-	                   size_t upscale = 1, size_t upscaleMode = 0, bool upscaleSource = true, bool spread = true);
-
-	/// <summary>Destructeur de la classe <c>Alignment</c>.</summary>
-	~Alignment() = default;
+	void Align(const unsigned short* input, unsigned short* output, size_t height, size_t width,
+	           size_t planes, const std::array<std::array<double, 10>, 2>& factors,
+	           size_t upscale = 1, size_t upscaleMode = 0, bool upscaleSource = true, bool spread = true);
 
 protected:
 	const unsigned short *highSNR_,                 ///< Image de référence alignée (fort SNR)

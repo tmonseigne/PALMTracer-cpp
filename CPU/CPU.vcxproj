@@ -67,6 +67,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\lib\alignment\Alignment.cpp" />
     <ClCompile Include="..\lib\fit\Fitting.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit.cpp" />
     <ClCompile Include="..\lib\palm\ATrous.cpp" />
@@ -81,6 +82,7 @@
     <None Include="PALMTracer.def" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\lib\alignment\Alignment.hpp" />
     <ClInclude Include="..\lib\Constants.hpp" />
     <ClInclude Include="..\lib\ExportAPI.hpp" />
     <ClInclude Include="..\lib\fit\Fitting.hpp" />
