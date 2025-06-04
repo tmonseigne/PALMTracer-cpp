@@ -120,38 +120,67 @@ INSTANTIATE_TEST_CASE_P(
 		}(),
 		1, 0, true, true
 		},
-		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_integer.tiff",
+		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_0.25.tiff",
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
-		factors[0][9] = 25.0;
+		factors[0][9] = 0.25;
 		factors[1][8] = 1.0;
-		factors[1][9] = 50.0;
+		factors[1][9] = 0.25;
 		return factors;
 		}(),
 		1, 0, true, true
 		},
-		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_4_translate_float_spread.tiff",
+		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_0.50.tiff",
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
-		factors[0][9] = 25.5;
+		factors[0][9] = 0.5;
 		factors[1][8] = 1.0;
-		factors[1][9] = 50.5;
+		factors[1][9] = 0.5;
 		return factors;
 		}(),
 		1, 0, true, true
 		},
-		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_5_translate_float_not_spread.tiff",
+		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_0.75.tiff",
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
-		factors[0][9] = 25.5;
+		factors[0][9] = 0.75;
 		factors[1][8] = 1.0;
-		factors[1][9] = 50.5;
+		factors[1][9] = 0.75;
 		return factors;
 		}(),
-		1, 0, true, false
+		1, 0, true, true
+		},
+		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_1.00.tiff",
+		[] {
+		std::array<std::array<double, 10>, 2> factors = {};
+		factors[0][7] = 1.0;
+		factors[0][9] = 1.0;
+		factors[1][8] = 1.0;
+		factors[1][9] = 1.0;
+		return factors;
+		}(),
+		1, 0, true, true
+		},
+		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_4_zoom.tiff",
+		[] {
+		std::array<std::array<double, 10>, 2> factors = {};
+		factors[0][7] = 2.0;
+		factors[1][8] = 2.0;
+		return factors;
+		}(),
+		1, 0, true, true
+		},
+		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_5_transpose.tiff",
+		[] {
+		std::array<std::array<double, 10>, 2> factors = {};
+		factors[0][8] = 1.0;
+		factors[1][7] = 1.0;
+		return factors;
+		}(),
+		1, 0, true, true
 		}
 	));
 }
