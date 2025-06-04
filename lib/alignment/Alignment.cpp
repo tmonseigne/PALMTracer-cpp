@@ -2,7 +2,6 @@
 
 #include <algorithm>      // std::min, std::max
 #include <cmath> // pour std::lround
-#include <initializer_list> // std::initializer_list
 #include <iostream>
 #include <stdexcept>
 
@@ -20,7 +19,8 @@ void Alignment::Align(const unsigned short* highSNR, const unsigned short* lowSN
 	height_        = height;
 	width_         = width;
 	planes_        = planes;
-	size_          = width_ * height_ * planes_;
+	sizeIm_        = width_ * height_;
+	size_          = sizeIm_ * planes_;
 	upscale_       = upscale;
 	upscaleMode_   = upscaleMode;
 	upsacleSource_ = upscaleSource;
@@ -42,7 +42,8 @@ void Alignment::Align(const unsigned short* input, unsigned short* output, const
 	height_        = height;
 	width_         = width;
 	planes_        = planes;
-	size_          = width_ * height_ * planes_;
+	sizeIm_        = width_ * height_;
+	size_          = sizeIm_ * planes_;
 	upscale_       = upscale;
 	upscaleMode_   = upscaleMode;
 	upsacleSource_ = upscaleSource;
@@ -83,69 +84,79 @@ void Alignment::computeCoord(const double oldX, const double oldY, double& newX,
 }
 
 //-------------------------------------------------------------------------------------------------
-size_t Alignment::getCoord(const size_t x, const size_t y) const { return y * width_ + x; }
-
-//-------------------------------------------------------------------------------------------------
-void Alignment::align() const
+void Alignment::align()
 {
 	initOutput();
-	const size_t SizeIm = height_ * width_;
+	precomputeTransformMap();
+	applyTransform();
+}
 
-	// Calcul d'une carte de transformation
-	struct Coord {
-		double x, y;
-	};
+//-------------------------------------------------------------------------------------------------
+void Alignment::precomputeTransformMap()
+{
+	transformMap_.resize(sizeIm_); // chaque pixel cible contiendra une liste de contributions
+	std::vector transformGrid(height_ + 1, std::vector<Coord>(width_ + 1));
 
-	std::vector transformMap(height_ + 1, std::vector<std::array<double, 2>>(width_ + 1));
-
-	#pragma omp parallel for //collapse(2) non utile de double parallelisation
+	// 1. computeCoord pour tous les coins
+	#pragma omp parallel for
 	for (int y = 0; y <= static_cast<int>(height_); ++y) {
-		for (int x = 0; x <= static_cast<int>(width_); ++x) { computeCoord(x, y, transformMap[y][x][0], transformMap[y][x][1]); }
+		for (int x = 0; x <= static_cast<int>(width_); ++x) { computeCoord(x, y, transformGrid[y][x].x, transformGrid[y][x].y); }
 	}
 
+	// 2. splatting inverse : chaque pixel source distribue à des pixels cibles
+	#pragma omp parallel for
+	for (int y = 0; y < static_cast<int>(height_); ++y) {
+		const size_t RowIdx = y * width_;
+		for (int x = 0; x < static_cast<int>(width_); ++x) {
+			const size_t SrcIdx = RowIdx + x;
 
-	for (size_t p = 0; p < planes_; ++p) {
-		// Si upscale de l'image de base à faire ici les height et width seront à changer
-		const size_t IdxPlane = p * SizeIm;
-		std::vector<double> tmp(SizeIm, 0.0);
-		for (size_t y = 0; y < height_; ++y) {
-			const size_t IdxLine = y * width_;
-			for (size_t x = 0; x < width_; ++x) {
-				const size_t Idx = IdxLine + x;
-				// Récupération des 4 points de ma nouvelle surface
-				const std::array P = {transformMap[y][x], transformMap[y][x + 1], transformMap[y + 1][x + 1], transformMap[y + 1][x]};
+			std::vector P       = {transformGrid[y][x], transformGrid[y][x + 1], transformGrid[y + 1][x + 1], transformGrid[y + 1][x]};
+			const auto [x0, x1] = std::minmax({P[0].x, P[1].x, P[2].x, P[3].x});
+			const auto [y0, y1] = std::minmax({P[0].y, P[1].y, P[2].y, P[3].y});
+			const size_t Xmin   = static_cast<size_t>(std::max(0.0, std::floor(x0)));
+			const size_t Xmax   = static_cast<size_t>(std::min(static_cast<double>(width_ - 1), std::ceil(x1)));
+			const size_t Ymin   = static_cast<size_t>(std::max(0.0, std::floor(y0)));
+			const size_t Ymax   = static_cast<size_t>(std::min(static_cast<double>(height_ - 1), std::ceil(y1)));
 
-				// Bounding box du quad
-				const auto [x0, x1] = std::minmax({P[0][0], P[1][0], P[2][0], P[3][0]});
-				const auto [y0, y1] = std::minmax({P[0][1], P[1][1], P[2][1], P[3][1]});
-				const size_t Xmin   = static_cast<size_t>(std::max(0.0, std::floor(x0))),
-				             Xmax   = static_cast<size_t>(std::min(static_cast<double>(width_ - 1), std::ceil(x1))),
-				             Ymin   = static_cast<size_t>(std::max(0.0, std::floor(y0))),
-				             Ymax   = static_cast<size_t>(std::min(static_cast<double>(height_ - 1), std::ceil(y1)));
-
-				// Splatting (distribution de l’intensité sur une grille, pondérée par aire de recouvrement de mon quadrilatere p0,p1,p2,p3)
-				for (size_t j = Ymin; j <= Ymax; ++j) {
-					for (size_t i = Xmin; i <= Xmax; ++i) {
-						if (i < 0 || i >= width_ || j < 0 || j >= height_) { continue; }
-						// Récupération de l'intersection entre le polygone et le pixel
-						auto clipped = clipPolygon(P, i, i + 1, j, j + 1);
-						if (!clipped.empty()) {
-							// Récupération de l'aire du pixel (i, j) recouverte par mon polygone p0,p1,p2,p3
-							const double Area = getArea(clipped);
-							tmp[j * width_ + i] += Area * input_[IdxPlane + Idx];
-						}
+			for (size_t j = Ymin; j <= Ymax; ++j) {
+				const size_t rowdstIdx = j * width_;
+				for (size_t i = Xmin; i <= Xmax; ++i) {
+					std::vector<Coord> clipped;
+					clipPolygon(P, clipped, static_cast<double>(i), static_cast<double>(j));
+					if (!clipped.empty()) {
+						#pragma omp critical // Evite la concurrence lors d'écriture simultanée à transformMap_[dstIdx]
+						transformMap_[rowdstIdx + i].emplace_back(Contribution{.index = SrcIdx, .weight = getArea(clipped)});
 					}
 				}
 			}
 		}
-		std::ranges::transform(tmp, output_ + IdxPlane, [](const double val) { return static_cast<unsigned short>(std::lround(val)); });
 	}
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<std::array<double, 2>> Alignment::clipPolygon(const std::array<std::array<double, 2>, 4>& poly,
-                                                          const double xmin, const double xmax, const double ymin, const double ymax)
+void Alignment::applyTransform() const
 {
+	std::vector<double> tmp(sizeIm_);
+
+	for (size_t p = 0; p < planes_; ++p) {
+		std::ranges::fill(tmp, 0.0);
+		const size_t PlaneOffset = p * sizeIm_;
+
+		#pragma omp parallel for
+		for (int i = 0; i < static_cast<int>(sizeIm_); ++i) {
+			double acc = 0.0;
+			for (const auto& [Index, Weight] : transformMap_[i]) { acc += Weight * input_[PlaneOffset + Index]; }
+			tmp[i] = acc;
+		}
+		std::ranges::transform(tmp, output_ + PlaneOffset, [](const double v) { return static_cast<unsigned short>(std::lround(v)); });
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+void Alignment::clipPolygon(const std::vector<Coord>& poly, std::vector<Coord>& clipped, const double xmin, const double ymin)
+{
+	const double Xmax = xmin + 1, Ymax = ymin + 1;
+
 	auto inside = [](const double x, const double y, const int edge, const double bound) {
 		switch (edge) {
 			case 0: return x >= bound; // left
@@ -157,51 +168,40 @@ std::vector<std::array<double, 2>> Alignment::clipPolygon(const std::array<std::
 	};
 
 	auto intersect = [](const double x0, const double y0, const double x1, const double y1, const int edge, const double bound) {
-		double x = x0, y = y0;
-		if (edge < 2) { // vertical clip
-			x = bound;
-			y = y0 + (y1 - y0) * (bound - x0) / (x1 - x0);
-		}
-		else { // horizontal clip
-			y = bound;
-			x = x0 + (x1 - x0) * (bound - y0) / (y1 - y0);
-		}
-		return std::array{x, y};
+		if (edge < 2) { return Coord{.x = bound, .y = y0 + (y1 - y0) * (bound - x0) / (x1 - x0)}; } // vertical clip
+		return Coord{.x = x0 + (x1 - x0) * (bound - y0) / (y1 - y0), .y = bound};                   // horizontal clip
 	};
 
-	std::vector<std::array<double, 2>> output;
-	output.reserve(4);
-	for (const auto& P : poly) { output.push_back(P); }
+	clipped.reserve(4);
+	for (const auto& P : poly) { clipped.push_back(P); }
 	for (int edge = 0; edge < 4; ++edge) {
-		std::vector<std::array<double, 2>> input = output;
-		output.clear();
+		std::vector<Coord> input = clipped;
+		clipped.clear();
 
 		if (input.empty()) { break; }
 
 		for (size_t i = 0; i < input.size(); ++i) {
 			const auto& A  = input[i];
 			const auto& B  = input[(i + 1) % input.size()];
-			const bool Ain = inside(A[0], A[1], edge, (edge % 2 == 0) ? (edge == 0 ? xmin : ymin) : (edge == 1 ? xmax : ymax));
-			const bool Bin = inside(B[0], B[1], edge, (edge % 2 == 0) ? (edge == 0 ? xmin : ymin) : (edge == 1 ? xmax : ymax));
+			const bool Ain = inside(A.x, A.y, edge, (edge % 2 == 0) ? (edge == 0 ? xmin : ymin) : (edge == 1 ? Xmax : Ymax));
+			const bool Bin = inside(B.x, B.y, edge, (edge % 2 == 0) ? (edge == 0 ? xmin : ymin) : (edge == 1 ? Xmax : Ymax));
 
-			if (Ain && Bin) { output.push_back(B); }
+			if (Ain && Bin) { clipped.push_back(B); }
 			else if (Ain && !Bin) {
-				output.push_back(intersect(A[0], A[1], B[0], B[1], edge,
-				                           (edge % 2 == 0) ? (edge == 0 ? xmin : ymin) : (edge == 1 ? xmax : ymax)));
+				clipped.push_back(intersect(A.x, A.y, B.x, B.y, edge,
+				                            (edge % 2 == 0) ? (edge == 0 ? xmin : ymin) : (edge == 1 ? Xmax : Ymax)));
 			}
 			else if (!Ain && Bin) {
-				output.push_back(intersect(A[0], A[1], B[0], B[1], edge,
-				                           (edge % 2 == 0) ? (edge == 0 ? xmin : ymin) : (edge == 1 ? xmax : ymax)));
-				output.push_back(B);
+				clipped.push_back(intersect(A.x, A.y, B.x, B.y, edge,
+				                            (edge % 2 == 0) ? (edge == 0 ? xmin : ymin) : (edge == 1 ? Xmax : Ymax)));
+				clipped.push_back(B);
 			}
 		}
 	}
-
-	return output;
 }
 
 //-------------------------------------------------------------------------------------------------
-double Alignment::getArea(const std::vector<std::array<double, 2>>& poly)
+double Alignment::getArea(const std::vector<Coord>& poly)
 {
 	double area    = 0.0;
 	const size_t N = poly.size();

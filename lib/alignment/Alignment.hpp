@@ -56,19 +56,31 @@ public:
 	           size_t upscale = 1, size_t upscaleMode = 0, bool upscaleSource = true, bool spread = true);
 
 protected:
-	const unsigned short *highSNR_,                 ///< Image de référence alignée (fort SNR)
-	                     *lowSNR_,                  ///< Image de référence désalignée (faible SNR)
-	                     *input_;                   ///< Données d'entrée (pile à aligner)
-	unsigned short* output_;                        ///< Résultat de l'alignement
-	size_t height_,                                 ///< Hauteur des images (pixels)
-	       width_,                                  ///< Largeur des images (pixels)
-	       planes_,                                 ///< Nombre de plans dans la pile
-	       size_,                                   ///< Nombre total de pixels (height × width × planes)
-	       upscale_,                                ///< Taux de suréchantillonnage
-	       upscaleMode_,                            ///< Méthode de suréchantillonnage
-	       upsacleSource_,                          ///< Indique si les références ont été upscalées
-	       spread_;                                 ///< Active la dispersion lors du rééchantillonnage
-	std::array<std::array<double, 10>, 2> factors_; ///< Coefficients du modèle polynomial
+	struct Contribution {
+		size_t index;
+		double weight;
+	};
+
+
+	struct Coord {
+		double x, y;
+	};
+
+	const unsigned short *highSNR_,                       ///< Image de référence alignée (fort SNR)
+	                     *lowSNR_,                        ///< Image de référence désalignée (faible SNR)
+	                     *input_;                         ///< Données d'entrée (pile à aligner)
+	unsigned short* output_;                              ///< Résultat de l'alignement
+	size_t height_,                                       ///< Hauteur des images (pixels)
+	       width_,                                        ///< Largeur des images (pixels)
+	       planes_,                                       ///< Nombre de plans dans la pile
+	       sizeIm_,                                       ///< Nombre total de pixels d'une image (height × width)
+	       size_,                                         ///< Nombre total de pixels (height × width × planes)
+	       upscale_,                                      ///< Taux de suréchantillonnage
+	       upscaleMode_,                                  ///< Méthode de suréchantillonnage
+	       upsacleSource_,                                ///< Indique si les références ont été upscalées
+	       spread_;                                       ///< Active la dispersion lors du rééchantillonnage
+	std::array<std::array<double, 10>, 2> factors_;       ///< Coefficients du modèle polynomial
+	std::vector<std::vector<Contribution>> transformMap_; ///< chaque pixel cible contiendra une liste de contributions
 
 	/// <summary>Initialise la mémoire de sortie à 0.</summary>
 	void initOutput() const;
@@ -86,21 +98,15 @@ protected:
 	/// <param name="newY">Référence vers la nouvelle coordonnée Y.</param>
 	void computeCoord(double oldX, double oldY, double& newX, double& newY) const;
 
-	/// <summary>Convertit des coordonnées flottantes (x, y) en index linéaire dans le plan.</summary>
-	/// <param name="x">Coordonnée X.</param>
-	/// <param name="y">Coordonnée Y.</param>
-	/// <returns>Index linéaire dans l'image 2D.</returns>
-	[[nodiscard]] size_t getCoord(size_t x, size_t y) const;
-
 	/// <summary>Applique l'alignement sur la pile d'images 3D.</summary>
 	///
 	/// Redirige chaque pixel selon la transformation non linéaire.
-	void align() const;
+	void align();
 
-	static std::vector<std::array<double, 2>> clipPolygon(const std::array<std::array<double, 2>, 4>& poly,
-	                                                      double xmin, double xmax, double ymin, double ymax);
+	void precomputeTransformMap();
+	void applyTransform() const;
+	static void clipPolygon(const std::vector<Coord>& poly, std::vector<Coord>& clipped, double xmin, double ymin);
 
-	static double getArea(const std::vector<std::array<double, 2>>& poly);
-
+	static double getArea(const std::vector<Coord>& poly);
 };
 }
