@@ -10,10 +10,7 @@ namespace palm_tracer {
 struct AlignTestParams {
 	std::string outputPath;
 	std::array<std::array<double, 10>, 2> factors;
-	int upscale;
-	int upscaleMode;
-	bool upscaleSource;
-	bool spread;
+	int upsampling;
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -27,17 +24,14 @@ TEST(AlignmentTests, BlankCallWithReference)
 {
 	Alignment align;
 
-	constexpr size_t Height      = 100, Width = 100, Planes = 10;
-	constexpr size_t ImSize      = Height * Width;
-	constexpr size_t Size        = ImSize * Planes;
-	constexpr size_t Upscale     = 1,
-	                 UpscaleMode = 0;
-	constexpr bool UpscaleSource = true,
-	               Spread        = true;
-	const auto HighSNR           = new unsigned short[ImSize],
-	           LowSNR            = new unsigned short[ImSize],
-	           Input             = new unsigned short[Size],
-	           Output            = new unsigned short[Size];
+	constexpr size_t Height     = 100, Width = 100, Planes = 10;
+	constexpr size_t ImSize     = Height * Width;
+	constexpr size_t Size       = ImSize * Planes;
+	constexpr size_t Upsampling = 1;
+	const auto HighSNR          = new unsigned short[ImSize],
+	           LowSNR           = new unsigned short[ImSize],
+	           Input            = new unsigned short[Size],
+	           Output           = new unsigned short[Size];
 
 	// Création et Remplissage des vecteurs
 	std::fill_n(HighSNR, ImSize, 0);
@@ -45,7 +39,7 @@ TEST(AlignmentTests, BlankCallWithReference)
 	std::fill_n(Input, Size, 0);
 	std::fill_n(Output, Size, 0);
 
-	EXPECT_THROW(align.Align(HighSNR, LowSNR, Input, Output, Height, Width, Planes, Upscale, UpscaleMode, UpscaleSource, Spread),
+	EXPECT_THROW(align.Align(HighSNR, LowSNR, Input, Output, Height, Width, Planes, Upsampling),
 	             std::runtime_error);
 
 
@@ -60,15 +54,12 @@ TEST(AlignmentTests, BlankCallWithFactor)
 {
 	Alignment align;
 
-	constexpr size_t Height      = 100, Width = 100, Planes = 10;
-	constexpr size_t ImSize      = Height * Width;
-	constexpr size_t Size        = ImSize * Planes;
-	constexpr size_t Upscale     = 1,
-	                 UpscaleMode = 0;
-	constexpr bool UpscaleSource = true,
-	               Spread        = true;
-	const auto Input             = new unsigned short[Size],
-	           Output            = new unsigned short[Size];
+	constexpr size_t Height     = 100, Width = 100, Planes = 10;
+	constexpr size_t ImSize     = Height * Width;
+	constexpr size_t Size       = ImSize * Planes;
+	constexpr size_t Upsampling = 1;
+	const auto Input            = new unsigned short[Size],
+	           Output           = new unsigned short[Size];
 
 	constexpr std::array<std::array<double, 10>, 2> Factors = {};
 
@@ -76,7 +67,7 @@ TEST(AlignmentTests, BlankCallWithFactor)
 	std::fill_n(Input, Size, 0);
 	std::fill_n(Output, Size, 0);
 
-	align.Align(Input, Output, Height, Width, Planes, Factors, Upscale, UpscaleMode, UpscaleSource, Spread);
+	align.Align(Input, Output, Height, Width, Planes, Factors, Upsampling);
 
 	delete[] Input;
 	delete[] Output;
@@ -84,7 +75,7 @@ TEST(AlignmentTests, BlankCallWithFactor)
 
 TEST_P(AlignmentTests, AlignmentCore)
 {
-	const auto& p = GetParam();
+	const auto& [outputPath, factors, upsampling] = GetParam();
 
 	std::vector<unsigned short> input;
 	size_t width, height, planes;
@@ -93,14 +84,14 @@ TEST_P(AlignmentTests, AlignmentCore)
 	loadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Alignement_Reference.tiff", input, width, height, planes);
 
 	// 2. Allouer
-	std::vector<unsigned short> output(input.size(), 0);
+	std::vector<unsigned short> output(input.size() * upsampling * upsampling, 0);
 
 	// 3. Algorithme
 	Alignment align;
-	align.Align(input.data(), output.data(), height, width, planes, p.factors, p.upscale, p.upscaleMode, p.upscaleSource, p.spread);
+	align.Align(input.data(), output.data(), height, width, planes, factors, upsampling);
 
 	// 4. Sauvegarder
-	saveTiff3D(p.outputPath.c_str(), output.data(), width, height, planes);
+	saveTiff3D(outputPath.c_str(), output.data(), width * upsampling, height * upsampling, planes);
 
 	SUCCEED();
 }
@@ -108,17 +99,14 @@ TEST_P(AlignmentTests, AlignmentCore)
 INSTANTIATE_TEST_CASE_P(
 	TestSuites, AlignmentTests,
 	::testing::Values(
-		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_1_Blank.tiff",
-		{}, 1, 0, true, true
-		},
+		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_1_Blank.tiff", {}, 1 },
 		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_2_Copy.tiff",
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
 		factors[1][8] = 1.0;
 		return factors;
-		}(),
-		1, 0, true, true
+		}(), 1
 		},
 		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_0.25.tiff",
 		[] {
@@ -128,8 +116,7 @@ INSTANTIATE_TEST_CASE_P(
 		factors[1][8] = 1.0;
 		factors[1][9] = 0.25;
 		return factors;
-		}(),
-		1, 0, true, true
+		}(), 1
 		},
 		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_0.50.tiff",
 		[] {
@@ -139,8 +126,7 @@ INSTANTIATE_TEST_CASE_P(
 		factors[1][8] = 1.0;
 		factors[1][9] = 0.5;
 		return factors;
-		}(),
-		1, 0, true, true
+		}(), 1
 		},
 		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_0.75.tiff",
 		[] {
@@ -150,8 +136,7 @@ INSTANTIATE_TEST_CASE_P(
 		factors[1][8] = 1.0;
 		factors[1][9] = 0.75;
 		return factors;
-		}(),
-		1, 0, true, true
+		}(), 1
 		},
 		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_1.00.tiff",
 		[] {
@@ -161,8 +146,7 @@ INSTANTIATE_TEST_CASE_P(
 		factors[1][8] = 1.0;
 		factors[1][9] = 1.0;
 		return factors;
-		}(),
-		1, 0, true, true
+		}(), 1
 		},
 		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_4_zoom.tiff",
 		[] {
@@ -170,8 +154,7 @@ INSTANTIATE_TEST_CASE_P(
 		factors[0][7] = 2.0;
 		factors[1][8] = 2.0;
 		return factors;
-		}(),
-		1, 0, true, true
+		}(), 1
 		},
 		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_5_transpose.tiff",
 		[] {
@@ -179,8 +162,17 @@ INSTANTIATE_TEST_CASE_P(
 		factors[0][8] = 1.0;
 		factors[1][7] = 1.0;
 		return factors;
-		}(),
-		1, 0, true, true
+		}(), 1
+		},
+		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_6_translate_0.50_up_sampling_2.tiff",
+		[] {
+		std::array<std::array<double, 10>, 2> factors = {};
+		factors[0][7] = 1.0;
+		factors[0][9] = 0.5;
+		factors[1][8] = 1.0;
+		factors[1][9] = 0.5;
+		return factors;
+		}(), 2
 		}
 	));
 }

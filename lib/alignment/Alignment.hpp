@@ -33,12 +33,9 @@ public:
 	/// <param name="height">Hauteur de chaque plan (en pixels).</param>
 	/// <param name="width">Largeur de chaque plan (en pixels).</param>
 	/// <param name="planes">Nombre de plans (profondeur de la pile).</param>
-	/// <param name="upscale">Taux de suréchantillonnage à appliquer avant recalage.</param>
-	/// <param name="upscaleMode">Méthode de suréchantillonnage (utilisable avec OpenCV ou autre).</param>
-	/// <param name="upscaleSource">Si vrai, les coefficients sont calculés sur les images de référence suréchantillonnées.</param>
-	/// <param name="spread">Si vrai, active la dispersion sub-pixellaire (ex. bilinéaire).</param>
+	/// <param name="upsampling">Taux de suréchantillonnage à appliquer avant recalage.</param>
 	void Align(const unsigned short* highSNR, const unsigned short* lowSNR, const unsigned short* input, unsigned short* output,
-	           size_t height, size_t width, size_t planes, size_t upscale = 1, size_t upscaleMode = 0, bool upscaleSource = true, bool spread = true);
+	           size_t height, size_t width, size_t planes, size_t upsampling = 1);
 
 	/// <summary>Constructeur alternatif de la classe <c>Fitting</c>. Applique directement des coefficients d'alignement fournis.</summary>
 	/// <param name="input">Données d'entrée (pile d'images à réaligner).</param>
@@ -47,21 +44,18 @@ public:
 	/// <param name="width">Largeur de chaque plan (en pixels).</param>
 	/// <param name="planes">Nombre de plans (profondeur de la pile).</param>
 	/// <param name="factors">Coefficients du modèle non linéaire (degrés 1 à 3).</param>
-	/// <param name="upscale">Taux de suréchantillonnage à appliquer avant recalage.</param>
-	/// <param name="upscaleMode">Méthode de suréchantillonnage (utilisable avec OpenCV ou autre).</param>
-	/// <param name="upscaleSource">Si vrai, les coefficients sont calculés sur les images de référence suréchantillonnées.</param>
-	/// <param name="spread">Si vrai, active la dispersion sub-pixellaire (ex. bilinéaire).</param>
+	/// <param name="upsampling">Taux de suréchantillonnage à appliquer avant recalage.</param>
 	void Align(const unsigned short* input, unsigned short* output, size_t height, size_t width,
-	           size_t planes, const std::array<std::array<double, 10>, 2>& factors,
-	           size_t upscale = 1, size_t upscaleMode = 0, bool upscaleSource = true, bool spread = true);
+	           size_t planes, const std::array<std::array<double, 10>, 2>& factors, size_t upsampling = 1);
 
 protected:
+	/// <summary> Structure permettant de stocker les contributions sur la sortie. </summary>
 	struct Contribution {
-		size_t index;
-		double weight;
+		size_t index;  ///< Index sur l'image en entrée.
+		double weight; ///< Poids du pixel.
 	};
 
-
+	/// <summary> Structure permettant de stocker les coordonnées x et y en flottant.</summary>
 	struct Coord {
 		double x, y;
 	};
@@ -75,10 +69,7 @@ protected:
 	       planes_,                                       ///< Nombre de plans dans la pile
 	       sizeIm_,                                       ///< Nombre total de pixels d'une image (height × width)
 	       size_,                                         ///< Nombre total de pixels (height × width × planes)
-	       upscale_,                                      ///< Taux de suréchantillonnage
-	       upscaleMode_,                                  ///< Méthode de suréchantillonnage
-	       upsacleSource_,                                ///< Indique si les références ont été upscalées
-	       spread_;                                       ///< Active la dispersion lors du rééchantillonnage
+	       upsampling_;                                   ///< Taux de suréchantillonnage
 	std::array<std::array<double, 10>, 2> factors_;       ///< Coefficients du modèle polynomial
 	std::vector<std::vector<Contribution>> transformMap_; ///< chaque pixel cible contiendra une liste de contributions
 
@@ -103,10 +94,31 @@ protected:
 	/// Redirige chaque pixel selon la transformation non linéaire.
 	void align();
 
+	/// <summary>Pré-calcul d’une carte de transformation inverse pour une interpolation plus rapide.</summary>
+	///
+	/// Cette carte contient, pour chaque pixel de l’image cible, les coordonnées sources correspondantes
+	/// ainsi que les poids associés à l’interpolation.
 	void precomputeTransformMap();
-	void applyTransform() const;
-	static void clipPolygon(const std::vector<Coord>& poly, std::vector<Coord>& clipped, double xmin, double ymin);
 
+	/// <summary>Applique la transformation pré-calculée à l’image d’entrée et produit l’image transformée.
+	/// Cette fonction utilise la carte générée par `precomputeTransformMap`.</summary>
+	void applyTransform() const;
+
+	/// <summary>Coupe un polygone selon un carré de taille donnée.
+	///
+	/// Le carré est défini par son coin supérieur gauche `(xmin, ymin)` et sa taille `pixelSize`.
+	/// Cette fonction utilise l’algorithme de Sutherland-Hodgman pour conserver la partie du polygone à l’intérieur du carré.</summary>
+	/// <param name="poly">Polygone initial à découper.</param>
+	/// <param name="clipped">Polygone résultant, après découpe.</param>
+	/// <param name="xmin">Coordonnée X du coin supérieur gauche du carré.</param>
+	/// <param name="ymin">Coordonnée Y du coin supérieur gauche du carré.</param>
+	/// <param name="pixelSize">Taille du carré (largeur et hauteur identiques).</param>
+	static void clipPolygon(const std::vector<Coord>& poly, std::vector<Coord>& clipped, double xmin, double ymin, const double pixelSize);
+
+	/// <summary>Calcule l’aire (signée) d’un polygone 2D.
+	/// Le polygone peut être orienté : une aire négative indique un ordre antihoraire des sommets.</summary>
+	/// <param name="poly">Liste des sommets du polygone (fermés ou non).</param>
+	/// <returns>Aire du polygone en unités carrées.</returns>
 	static double getArea(const std::vector<Coord>& poly);
 };
 }

@@ -8,47 +8,39 @@
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
 void Alignment::Align(const unsigned short* highSNR, const unsigned short* lowSNR, const unsigned short* input, unsigned short* output,
-                      const size_t height, const size_t width, const size_t planes,
-                      const size_t upscale, const size_t upscaleMode, const bool upscaleSource, const bool spread)
+                      const size_t height, const size_t width, const size_t planes, const size_t upsampling)
 
 {
-	highSNR_       = highSNR;
-	lowSNR_        = lowSNR;
-	input_         = input;
-	output_        = output;
-	height_        = height;
-	width_         = width;
-	planes_        = planes;
-	sizeIm_        = width_ * height_;
-	size_          = sizeIm_ * planes_;
-	upscale_       = upscale;
-	upscaleMode_   = upscaleMode;
-	upsacleSource_ = upscaleSource;
-	spread_        = spread;
+	highSNR_    = highSNR;
+	lowSNR_     = lowSNR;
+	input_      = input;
+	output_     = output;
+	height_     = height;
+	width_      = width;
+	planes_     = planes;
+	sizeIm_     = width_ * height_;
+	size_       = sizeIm_ * planes_;
+	upsampling_ = upsampling;
 	computeFactor();
 	align();
 }
 
 //-------------------------------------------------------------------------------------------------
 void Alignment::Align(const unsigned short* input, unsigned short* output, const size_t height, const size_t width, const size_t planes,
-                      const std::array<std::array<double, 10>, 2>& factors, const size_t upscale, const size_t upscaleMode, const bool upscaleSource,
-                      const bool spread)
+                      const std::array<std::array<double, 10>, 2>& factors, const size_t upsampling)
 
 {
-	highSNR_       = nullptr;
-	lowSNR_        = nullptr;
-	input_         = input;
-	output_        = output;
-	height_        = height;
-	width_         = width;
-	planes_        = planes;
-	sizeIm_        = width_ * height_;
-	size_          = sizeIm_ * planes_;
-	upscale_       = upscale;
-	upscaleMode_   = upscaleMode;
-	upsacleSource_ = upscaleSource;
-	spread_        = spread;
-	factors_       = factors;
+	highSNR_    = nullptr;
+	lowSNR_     = nullptr;
+	input_      = input;
+	output_     = output;
+	height_     = height;
+	width_      = width;
+	planes_     = planes;
+	sizeIm_     = width_ * height_;
+	size_       = sizeIm_ * planes_;
+	upsampling_ = upsampling;
+	factors_    = factors;
 	align();
 }
 
@@ -94,7 +86,6 @@ void Alignment::align()
 //-------------------------------------------------------------------------------------------------
 void Alignment::precomputeTransformMap()
 {
-	transformMap_.resize(sizeIm_); // chaque pixel cible contiendra une liste de contributions
 	std::vector transformGrid(height_ + 1, std::vector<Coord>(width_ + 1));
 
 	// 1. computeCoord pour tous les coins
@@ -104,28 +95,40 @@ void Alignment::precomputeTransformMap()
 	}
 
 	// 2. splatting inverse : chaque pixel source distribue à des pixels cibles
+	// Application du suréchantillonnage.
+	const size_t UpW      = width_ * upsampling_;
+	const size_t UpH      = height_ * upsampling_;
+	const size_t UpSizeIm = UpW * UpH;
+	const double Step     = 1.0 / static_cast<double>(upsampling_);
+	transformMap_.resize(UpSizeIm); // chaque pixel cible contiendra une liste de contributions
+	// transformMap_.resize(sizeIm_);
+
 	#pragma omp parallel for
 	for (int y = 0; y < static_cast<int>(height_); ++y) {
 		const size_t RowIdx = y * width_;
 		for (int x = 0; x < static_cast<int>(width_); ++x) {
 			const size_t SrcIdx = RowIdx + x;
 
-			std::vector P       = {transformGrid[y][x], transformGrid[y][x + 1], transformGrid[y + 1][x + 1], transformGrid[y + 1][x]};
+			const std::vector P = {transformGrid[y][x], transformGrid[y][x + 1], transformGrid[y + 1][x + 1], transformGrid[y + 1][x]};
 			const auto [x0, x1] = std::minmax({P[0].x, P[1].x, P[2].x, P[3].x});
 			const auto [y0, y1] = std::minmax({P[0].y, P[1].y, P[2].y, P[3].y});
-			const size_t Xmin   = static_cast<size_t>(std::max(0.0, std::floor(x0)));
-			const size_t Xmax   = static_cast<size_t>(std::min(static_cast<double>(width_ - 1), std::ceil(x1)));
-			const size_t Ymin   = static_cast<size_t>(std::max(0.0, std::floor(y0)));
-			const size_t Ymax   = static_cast<size_t>(std::min(static_cast<double>(height_ - 1), std::ceil(y1)));
+
+			// Récupération de la boite englobante avec le suréchantillonnage
+			const size_t Xmin = static_cast<size_t>(std::max(0.0, std::floor(x0))) * upsampling_;
+			const size_t Xmax = static_cast<size_t>(std::min(static_cast<double>(width_ - 1), std::ceil(x1))) * upsampling_;
+			const size_t Ymin = static_cast<size_t>(std::max(0.0, std::floor(y0))) * upsampling_;
+			const size_t Ymax = static_cast<size_t>(std::min(static_cast<double>(height_ - 1), std::ceil(y1))) * upsampling_;
 
 			for (size_t j = Ymin; j <= Ymax; ++j) {
-				const size_t rowdstIdx = j * width_;
+				const double Ypix      = static_cast<double>(j) * Step;
+				const size_t RowdstIdx = j * UpW;
 				for (size_t i = Xmin; i <= Xmax; ++i) {
+					const double Xpix = static_cast<double>(i) * Step;
 					std::vector<Coord> clipped;
-					clipPolygon(P, clipped, static_cast<double>(i), static_cast<double>(j));
+					clipPolygon(P, clipped, Xpix, Ypix, Step);
 					if (!clipped.empty()) {
 						#pragma omp critical // Evite la concurrence lors d'écriture simultanée à transformMap_[dstIdx]
-						transformMap_[rowdstIdx + i].emplace_back(Contribution{.index = SrcIdx, .weight = getArea(clipped)});
+						transformMap_[RowdstIdx + i].emplace_back(Contribution{.index = SrcIdx, .weight = getArea(clipped)});
 					}
 				}
 			}
@@ -136,40 +139,41 @@ void Alignment::precomputeTransformMap()
 //-------------------------------------------------------------------------------------------------
 void Alignment::applyTransform() const
 {
-	std::vector<double> tmp(sizeIm_);
+	const int UpSizeIm = static_cast<int>(sizeIm_ * upsampling_ * upsampling_);
+	std::vector tmp(UpSizeIm, 0.0);
 
 	for (size_t p = 0; p < planes_; ++p) {
 		std::ranges::fill(tmp, 0.0);
-		const size_t PlaneOffset = p * sizeIm_;
+		const size_t PlaneOffset = p * sizeIm_; // La source reste inchangé
 
 		#pragma omp parallel for
-		for (int i = 0; i < static_cast<int>(sizeIm_); ++i) {
+		for (int i = 0; i < UpSizeIm; ++i) {
 			double acc = 0.0;
 			for (const auto& [Index, Weight] : transformMap_[i]) { acc += Weight * input_[PlaneOffset + Index]; }
 			tmp[i] = acc;
 		}
-		std::ranges::transform(tmp, output_ + PlaneOffset, [](const double v) { return static_cast<unsigned short>(std::lround(v)); });
+		std::ranges::transform(tmp, output_ + p * UpSizeIm, [](const double v) { return static_cast<unsigned short>(std::lround(v)); });
 	}
 }
 
 //-------------------------------------------------------------------------------------------------
-void Alignment::clipPolygon(const std::vector<Coord>& poly, std::vector<Coord>& clipped, const double xmin, const double ymin)
+void Alignment::clipPolygon(const std::vector<Coord>& poly, std::vector<Coord>& clipped, const double xmin, const double ymin, const double pixelSize)
 {
-	const double Xmax = xmin + 1, Ymax = ymin + 1;
+	const double Xmax = xmin + pixelSize, Ymax = ymin + pixelSize;
 
-	auto inside = [](const double x, const double y, const int edge, const double bound) {
+	auto inside = [](const Coord& c, const int edge, const double bound) {
 		switch (edge) {
-			case 0: return x >= bound; // left
-			case 1: return x <= bound; // right
-			case 2: return y >= bound; // bottom
-			case 3: return y <= bound; // top
+			case 0: return c.x >= bound; // left
+			case 1: return c.x <= bound; // right
+			case 2: return c.y >= bound; // bottom
+			case 3: return c.y <= bound; // top
 			default: return false;
 		}
 	};
 
-	auto intersect = [](const double x0, const double y0, const double x1, const double y1, const int edge, const double bound) {
-		if (edge < 2) { return Coord{.x = bound, .y = y0 + (y1 - y0) * (bound - x0) / (x1 - x0)}; } // vertical clip
-		return Coord{.x = x0 + (x1 - x0) * (bound - y0) / (y1 - y0), .y = bound};                   // horizontal clip
+	auto intersect = [](const Coord& a, const Coord& b, const int edge, const double bound) {
+		if (edge < 2) { return Coord{.x = bound, .y = a.y + (b.y - a.y) * (bound - a.x) / (b.x - a.x)}; } // vertical clip
+		return Coord{.x = a.x + (b.x - a.x) * (bound - a.y) / (b.y - a.y), .y = bound};                   // horizontal clip
 	};
 
 	clipped.reserve(4);
@@ -181,19 +185,28 @@ void Alignment::clipPolygon(const std::vector<Coord>& poly, std::vector<Coord>& 
 		if (input.empty()) { break; }
 
 		for (size_t i = 0; i < input.size(); ++i) {
-			const auto& A  = input[i];
-			const auto& B  = input[(i + 1) % input.size()];
-			const bool Ain = inside(A.x, A.y, edge, (edge % 2 == 0) ? (edge == 0 ? xmin : ymin) : (edge == 1 ? Xmax : Ymax));
-			const bool Bin = inside(B.x, B.y, edge, (edge % 2 == 0) ? (edge == 0 ? xmin : ymin) : (edge == 1 ? Xmax : Ymax));
+			const auto& A = input[i];
+			const auto& B = input[(i + 1) % input.size()];
+			double bound  = 0.0;
+			switch (edge) {
+				case 0: bound = xmin;
+					break; // left
+				case 1: bound = Xmax;
+					break; // right
+				case 2: bound = ymin;
+					break; // bottom
+				case 3:
+				default: bound = Ymax;
+					break; // top
+			}
+
+			const bool Ain = inside(A, edge, bound);
+			const bool Bin = inside(B, edge, bound);
 
 			if (Ain && Bin) { clipped.push_back(B); }
-			else if (Ain && !Bin) {
-				clipped.push_back(intersect(A.x, A.y, B.x, B.y, edge,
-				                            (edge % 2 == 0) ? (edge == 0 ? xmin : ymin) : (edge == 1 ? Xmax : Ymax)));
-			}
+			else if (Ain && !Bin) { clipped.push_back(intersect(A, B, edge, bound)); }
 			else if (!Ain && Bin) {
-				clipped.push_back(intersect(A.x, A.y, B.x, B.y, edge,
-				                            (edge % 2 == 0) ? (edge == 0 ? xmin : ymin) : (edge == 1 ? Xmax : Ymax)));
+				clipped.push_back(intersect(A, B, edge, bound));
 				clipped.push_back(B);
 			}
 		}
