@@ -3,3 +3,4 @@ LIBRARY "PALMTracer_CPU.dll"
 EXPORTS
 	Localization
 	Tracking
+	Alignment

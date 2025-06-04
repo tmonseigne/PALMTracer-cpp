@@ -18,6 +18,8 @@ add_library(CPU SHARED
     CPU/main.cpp
     lib/Constants.hpp
     lib/ExportAPI.hpp
+    lib/alignment/Alignment.hpp
+    lib/alignment/Alignment.cpp
     lib/fit/Fitting.hpp
     lib/fit/Fitting.cpp
     lib/fit/GaussianFit.hpp
