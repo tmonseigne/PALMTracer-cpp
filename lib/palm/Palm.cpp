@@ -44,7 +44,7 @@ Palm::Palm(const unsigned short* image, double* points, const size_t pointsListS
 //-------------------------------------------------------------------------------------------------
 int Palm::Processing() const
 {
-	omp_set_dynamic(1); // Autorise l’adaptation automatique
+	omp_set_dynamic(1); // Autorise l’adaptation automatique du nombre de thread
 	//omp_set_num_threads(static_cast<int>(std::thread::hardware_concurrency())); // Fixe un max
 
 	std::vector<std::vector<std::array<double, N_LOCALIZATIONS>>> allPoints(planes_);

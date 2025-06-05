@@ -74,7 +74,7 @@ protected:
 	std::vector<std::vector<Contribution>> transformMap_; ///< chaque pixel cible contiendra une liste de contributions
 
 	/// <summary>Initialise la mémoire de sortie à 0.</summary>
-	void initOutput() const;
+	void initOutput() const { for (size_t i = 0; i < size_; ++i) { output_[i] = 0; } }
 
 	/// <summary>Fonction virtuelle de calcul des coefficients d'alignement. </summary>
 	///
@@ -113,7 +113,7 @@ protected:
 	/// <param name="xmin">Coordonnée X du coin supérieur gauche du carré.</param>
 	/// <param name="ymin">Coordonnée Y du coin supérieur gauche du carré.</param>
 	/// <param name="pixelSize">Taille du carré (largeur et hauteur identiques).</param>
-	static void clipPolygon(const std::vector<Coord>& poly, std::vector<Coord>& clipped, double xmin, double ymin, const double pixelSize);
+	static void clipPolygon(const std::vector<Coord>& poly, std::vector<Coord>& clipped, double xmin, double ymin, double pixelSize);
 
 	/// <summary>Calcule l’aire (signée) d’un polygone 2D.
 	/// Le polygone peut être orienté : une aire négative indique un ordre antihoraire des sommets.</summary>

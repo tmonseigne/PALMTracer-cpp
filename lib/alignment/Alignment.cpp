@@ -1,8 +1,9 @@
 # include "Alignment.hpp"
 
-#include <algorithm>      // std::min, std::max
-#include <cmath> // pour std::lround
+#include <algorithm> // std::min, std::max
+#include <cmath>	 // pour std::lround
 #include <iostream>
+#include <omp.h>
 #include <stdexcept>
 
 namespace palm_tracer {
@@ -45,9 +46,6 @@ void Alignment::Align(const unsigned short* input, unsigned short* output, const
 }
 
 //-------------------------------------------------------------------------------------------------
-void Alignment::initOutput() const { for (size_t i = 0; i < size_; ++i) { output_[i] = 0; } }
-
-//-------------------------------------------------------------------------------------------------
 void Alignment::computeFactor()
 {
 	throw std::runtime_error("The method to compute factor isn't implemented use precompute constructor : "
@@ -55,7 +53,6 @@ void Alignment::computeFactor()
 }
 
 //-------------------------------------------------------------------------------------------------
-
 void Alignment::computeCoord(const double oldX, const double oldY, double& newX, double& newY) const
 {
 	const double XY  = oldX * oldY,
@@ -78,6 +75,7 @@ void Alignment::computeCoord(const double oldX, const double oldY, double& newX,
 //-------------------------------------------------------------------------------------------------
 void Alignment::align()
 {
+	omp_set_dynamic(1); // Autorise l’adaptation automatique du nombre de thread
 	initOutput();
 	precomputeTransformMap();
 	applyTransform();
