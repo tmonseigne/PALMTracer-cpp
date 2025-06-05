@@ -69,7 +69,8 @@ protected:
 	       planes_,                                       ///< Nombre de plans dans la pile
 	       sizeIm_,                                       ///< Nombre total de pixels d'une image (height × width)
 	       size_,                                         ///< Nombre total de pixels (height × width × planes)
-	       upsampling_;                                   ///< Taux de suréchantillonnage
+	       upsampling_,                                   ///< Taux de suréchantillonnage
+	       upsampling2_;                                  ///< Taux de suréchantillonnage au carré
 	std::array<std::array<double, 10>, 2> factors_;       ///< Coefficients du modèle polynomial
 	std::vector<std::vector<Contribution>> transformMap_; ///< chaque pixel cible contiendra une liste de contributions
 
@@ -119,6 +120,6 @@ protected:
 	/// Le polygone peut être orienté : une aire négative indique un ordre antihoraire des sommets.</summary>
 	/// <param name="poly">Liste des sommets du polygone (fermés ou non).</param>
 	/// <returns>Aire du polygone en unités carrées.</returns>
-	static double getArea(const std::vector<Coord>& poly);
+	double getArea(const std::vector<Coord>& poly) const;
 };
 }

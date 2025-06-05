@@ -12,16 +12,17 @@ void Alignment::Align(const unsigned short* highSNR, const unsigned short* lowSN
                       const size_t height, const size_t width, const size_t planes, const size_t upsampling)
 
 {
-	highSNR_    = highSNR;
-	lowSNR_     = lowSNR;
-	input_      = input;
-	output_     = output;
-	height_     = height;
-	width_      = width;
-	planes_     = planes;
-	sizeIm_     = width_ * height_;
-	size_       = sizeIm_ * planes_;
-	upsampling_ = upsampling;
+	highSNR_     = highSNR;
+	lowSNR_      = lowSNR;
+	input_       = input;
+	output_      = output;
+	height_      = height;
+	width_       = width;
+	planes_      = planes;
+	sizeIm_      = width_ * height_;
+	size_        = sizeIm_ * planes_;
+	upsampling_  = upsampling;
+	upsampling2_ = upsampling * upsampling;
 	computeFactor();
 	align();
 }
@@ -31,17 +32,18 @@ void Alignment::Align(const unsigned short* input, unsigned short* output, const
                       const std::array<std::array<double, 10>, 2>& factors, const size_t upsampling)
 
 {
-	highSNR_    = nullptr;
-	lowSNR_     = nullptr;
-	input_      = input;
-	output_     = output;
-	height_     = height;
-	width_      = width;
-	planes_     = planes;
-	sizeIm_     = width_ * height_;
-	size_       = sizeIm_ * planes_;
-	upsampling_ = upsampling;
-	factors_    = factors;
+	highSNR_     = nullptr;
+	lowSNR_      = nullptr;
+	input_       = input;
+	output_      = output;
+	height_      = height;
+	width_       = width;
+	planes_      = planes;
+	sizeIm_      = width_ * height_;
+	size_        = sizeIm_ * planes_;
+	upsampling_  = upsampling;
+	upsampling2_ = upsampling * upsampling;
+	factors_     = factors;
 	align();
 }
 
@@ -137,7 +139,7 @@ void Alignment::precomputeTransformMap()
 //-------------------------------------------------------------------------------------------------
 void Alignment::applyTransform() const
 {
-	const int UpSizeIm = static_cast<int>(sizeIm_ * upsampling_ * upsampling_);
+	const int UpSizeIm = static_cast<int>(sizeIm_ * upsampling2_);
 	std::vector tmp(UpSizeIm, 0.0);
 
 	for (size_t p = 0; p < planes_; ++p) {
@@ -212,7 +214,7 @@ void Alignment::clipPolygon(const std::vector<Coord>& poly, std::vector<Coord>& 
 }
 
 //-------------------------------------------------------------------------------------------------
-double Alignment::getArea(const std::vector<Coord>& poly)
+double Alignment::getArea(const std::vector<Coord>& poly) const
 {
 	double area    = 0.0;
 	const size_t N = poly.size();
@@ -221,6 +223,6 @@ double Alignment::getArea(const std::vector<Coord>& poly)
 		const auto& [x1, y1] = poly[(i + 1) % N];
 		area += (x0 * y1 - x1 * y0);
 	}
-	return 0.5 * std::abs(area);
+	return 0.5 * static_cast<double>(upsampling2_) * std::abs(area);
 }
 }
