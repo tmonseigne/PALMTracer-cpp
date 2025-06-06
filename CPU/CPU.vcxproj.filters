@@ -23,6 +23,9 @@
     <ClCompile Include="..\lib\tracking\Tracking.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\fit\SplineFit.cpp">
+      <Filter>Fit</Filter>
+    </ClCompile>
     <ClCompile Include="..\lib\fit\Fitting.cpp">
       <Filter>Fit</Filter>
     </ClCompile>
@@ -62,6 +65,9 @@
     </ClInclude>
     <ClInclude Include="..\lib\tracking\Tracking.hpp">
       <Filter>Tracking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\fit\SplineFit.hpp">
+      <Filter>Fit</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\fit\Fitting.hpp">
       <Filter>Fit</Filter>

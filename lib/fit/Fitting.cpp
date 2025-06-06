@@ -23,7 +23,9 @@ Fitting::Fitting(const fit_mode mode, const unsigned short* image, const size_t 
 			break;
 		case fit_mode::gaussian_3d_theta: nParams_ = 7; // 7 : x, y, amplitude, sigmaX, sigmaY, theta, offset
 			break;
-		case fit_mode::spline_2d: break;
+		case fit_mode::spline_3d_emccd:
+		case fit_mode::spline_3d_scmos: nParams_ = 5; // 5 : x, y, amplitude, z, offset,
+			break;
 	}
 	nParams2_ = nParams_ * nParams_;
 	if (roi_ % 2 == 0) { roi_--; }

@@ -25,7 +25,8 @@ enum class fit_mode : uint8_t {
 	gaussian_2d_sigma, ///< Ajustement Gaussien 2D avec calcul du Sigma.
 	gaussian_3d_fixed, ///< Ajustement Gaussien 3D avec Theta fixé et calcul du Sigma sur X et Y.
 	gaussian_3d_theta, ///< Ajustement Gaussien 3D avec calcul du Sigma sur X et Y et du Theta.
-	spline_2d          ///< Ajustement par Spline
+	spline_3d_emccd,   ///< Ajustement par Spline pour Capteur EMCCD
+	spline_3d_scmos    ///< Ajustement par Spline pour Capteur sCMOS
 };
 
 /// <summary>Classe d'ajustement gaussien.</summary>

@@ -105,7 +105,8 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 		intensity = p[1][0];
 		switch (mode_) {
 			case fit_mode::none:
-			case fit_mode::spline_2d:
+			case fit_mode::spline_3d_emccd:
+			case fit_mode::spline_3d_scmos:
 			case fit_mode::gaussian_2d_fixed: {
 				offset = p[1][3];
 				break;
@@ -142,7 +143,8 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 		case fit_mode::none:
 		case fit_mode::gaussian_3d_fixed:
 		case fit_mode::gaussian_3d_theta:
-		case fit_mode::spline_2d: break;
+		case fit_mode::spline_3d_emccd:
+		case fit_mode::spline_3d_scmos: break;
 	}
 	fill(infos, point, x, y, intensity, sigmaX, sigmaY, theta, rss, offset);
 }
@@ -178,7 +180,8 @@ void GaussianFit::initP(std::array<std::vector<double>, 3>& p, const double x, c
 {
 	switch (mode_) {
 		case fit_mode::none:
-		case fit_mode::spline_2d:
+		case fit_mode::spline_3d_emccd:
+		case fit_mode::spline_3d_scmos:
 		case fit_mode::gaussian_2d_fixed: {
 			p[0] = {0, x - 1, y - 1, 0};
 			p[1] = {maxI - minI, x, y, minI};
@@ -238,7 +241,8 @@ double GaussianFit::psf(const std::vector<double>& p, const double x, const doub
 		case fit_mode::gaussian_3d_fixed: return psf(x - p[1], y - p[2], p[0], p[3], p[4], theta_, p[5]);
 		case fit_mode::gaussian_3d_theta: return psf(x - p[1], y - p[2], p[0], p[3], p[4], p[5], p[6]);
 		case fit_mode::none:
-		case fit_mode::spline_2d: return 0;
+		case fit_mode::spline_3d_emccd:
+		case fit_mode::spline_3d_scmos: return 0;
 	}
 	return 0;
 }
@@ -265,7 +269,8 @@ void GaussianFit::deriv(double* out, const std::vector<double>& p, const double 
 {
 	switch (mode_) {
 		case fit_mode::none:
-		case fit_mode::spline_2d:
+		case fit_mode::spline_3d_emccd:
+		case fit_mode::spline_3d_scmos:
 		case fit_mode::gaussian_2d_fixed: return deriv(out, x - p[1], y - p[2], p[0], sigmaX_, false);
 		case fit_mode::gaussian_2d_sigma: return deriv(out, x - p[1], y - p[2], p[0], p[3], true);
 		case fit_mode::gaussian_3d_fixed: return deriv(out, x - p[1], y - p[2], p[0], p[3], p[4], theta_, false);
