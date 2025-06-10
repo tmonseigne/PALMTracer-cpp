@@ -83,20 +83,22 @@ protected:
 	/// L'algorithme utilise une méthode de Levenberg-Marquardt pour minimiser l'erreur entre le modèle et les données.</summary>
 	/// <param name="infos">Informations sur le point localisé.</param>
 	/// <param name="point">Résultat de l'ajustement sur le point localisé.</param>
-	virtual void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) { fill(infos, point, infos.x_, infos.y_); }
+	virtual void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) { fill(infos, point, 0, 0, infos.x_, infos.y_); }
 
 	/// <summary></summary>
 	/// <param name="infos">Informations initiales sur le point localisé.</param>
 	/// <param name="point">Résultat de l'ajustement sur le point localisé.</param>
+	/// <param name="offset">Nouvel offset.</param>
+	/// <param name="intensity">Nouvelle intensité.</param>
 	/// <param name="x">Nouveau X.</param>
 	/// <param name="y">Nouveau Y.</param>
-	/// <param name="intensity">Nouvelle intensité.</param>
+	/// <param name="z">Nouveau Z.</param>
 	/// <param name="sigmaX">Nouveau Sigma sur X.</param>
 	/// <param name="sigmaY">Nouveau Sigma sur Y.</param>
 	/// <param name="theta">Nouveau Theta.</param>
-	/// <param name="rss">Nouveau RSS.</param>
-	/// <param name="offset">Nouvel offset.</param>
-	void fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, double x, double y, double intensity = 0,
-	          double sigmaX = 0, double sigmaY = 0, double theta = 0, double rss = 0, double offset = 0) const;
+	/// <param name="rss">RSS sur X et Y.</param>
+	/// <param name="rssZ">RSS sur Z.</param>
+	void fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, double offset, double intensity, double x, double y, double z = 0,
+	          double sigmaX = 0, double sigmaY = 0, double theta = 0, double rss = -1, double rssZ = -1) const;
 };
 }

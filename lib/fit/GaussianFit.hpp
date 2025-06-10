@@ -69,28 +69,28 @@ protected:
 	/// <param name="x">Coordonnée x d'évaluation.</param>
 	/// <param name="y">Coordonnée y d'évaluation.</param>
 	/// <returns>Valeur de la PSF en (x, y).</returns>
-	double psf(const std::vector<double>& p, double x, double y) const;
+	[[nodiscard]] double psf(const std::vector<double>& p, double x, double y) const;
 
 	/// <summary>PSF gaussienne isotrope (2D) centrée en (0,0), à sigma fixe.</summary>
+	/// <param name="offset">Valeur de fond (background constant).</param>
+	/// <param name="i0">Amplitude de la gaussienne.</param>
 	/// <param name="x">Coordonnée x relative au centre.</param>
 	/// <param name="y">Coordonnée y relative au centre.</param>
-	/// <param name="i0">Amplitude de la gaussienne.</param>
 	/// <param name="sigma">Écart-type commun (isotrope).</param>
-	/// <param name="offset">Valeur de fond (background constant).</param>
 	/// <returns>Valeur de la PSF en (x, y).</returns>
-	static double psf(double x, double y, double i0, double sigma, double offset);
+	static double psf(double offset, double i0, double x, double y, double sigma);
 
 	/// <summary>PSF gaussienne anisotrope 2D avec rotation (theta).</summary>
+	/// <param name="offset">Valeur de fond.</param>
+	/// <param name="i0">Amplitude de la gaussienne.</param>
 	/// <param name="x">Coordonnée x relative au centre.</param>
 	/// <param name="y">Coordonnée y relative au centre.</param>
-	/// <param name="i0">Amplitude de la gaussienne.</param>
 	/// <param name="sigmaX">Écart-type selon l'axe X.</param>
 	/// <param name="sigmaY">Écart-type selon l'axe Y.</param>
 	/// <param name="theta">Angle de rotation (en radians).</param>
-	/// <param name="offset">Valeur de fond.</param>
 	/// <returns>Valeur de la PSF en (x, y).</returns>
 
-	static double psf(double x, double y, double i0, double sigmaX, double sigmaY, double theta, double offset);
+	static double psf(double offset, double i0, double x, double y, double sigmaX, double sigmaY, double theta);
 
 	//==================== Matrix ====================
 	/// <summary>Calcule le gradient de la PSF par rapport aux paramètres, pour un point (x, y), selon le mode d'ajustement.</summary>
@@ -102,23 +102,23 @@ protected:
 
 	/// <summary>Dérivées partielles de la PSF 2D isotrope (centrée) par rapport aux paramètres.</summary>
 	/// <param name="out">Tableau de sortie (au moins 5 éléments).</param>
+	/// <param name="i0">Amplitude.</param>
 	/// <param name="x">Coordonnée x relative au centre.</param>
 	/// <param name="y">Coordonnée y relative au centre.</param>
-	/// <param name="i0">Amplitude.</param>
 	/// <param name="sigma">Écart-type commun.</param>
 	/// <param name="has_sigma">True si sigma est un paramètre libre (ajouter dérivée), false sinon.</param>
-	static void deriv(double* out, double x, double y, double i0, double sigma, bool has_sigma);
+	static void deriv(double* out, double i0, double x, double y, double sigma, bool has_sigma);
 
 	/// <summary>Dérivées partielles de la PSF 2D anisotrope avec rotation par rapport aux paramètres.</summary>
 	/// <param name="out">Tableau de sortie (au moins 7 éléments).</param>
+	/// <param name="i0">Amplitude.</param>
 	/// <param name="x">Coordonnée x relative au centre.</param>
 	/// <param name="y">Coordonnée y relative au centre.</param>
-	/// <param name="i0">Amplitude.</param>
 	/// <param name="sigmaX">Écart-type selon X.</param>
 	/// <param name="sigmaY">Écart-type selon Y.</param>
 	/// <param name="theta">Angle de rotation.</param>
 	/// <param name="has_theta">True si theta est un paramètre libre, false sinon.</param>
-	static void deriv(double* out, double x, double y, double i0, double sigmaX, double sigmaY, double theta, bool has_theta);
+	static void deriv(double* out, double i0, double x, double y, double sigmaX, double sigmaY, double theta, bool has_theta);
 
 	/// <summary>Calcule les matrices alpha et beta du système linéaire de l'ajustement de Levenberg-Marquardt, ainsi que la valeur de chi² pondéré entre modèle et données.</summary>
 	/// <param name="alpha">Matrice des coefficients (nParams x nParams), remplie par la fonction.</param>

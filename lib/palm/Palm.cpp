@@ -117,8 +117,8 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 
 	// Tri par Y puis X (en cas peu probable de Y identique)
 	std::ranges::sort(points, [](const auto& a, const auto& b) {
-		if (std::fabs(a[5] - b[5]) > EPSILON) { return a[5] < b[5]; } // Tri sur Y (p[4])
-		return a[4] < b[4];                                           // Puis sur X (p[3])
+		if (std::fabs(a[5] - b[5]) > EPSILON) { return a[5] < b[5]; } // Tri sur Y (p[5])
+		return a[4] < b[4];                                           // Puis sur X (p[4])
 	});
 }
 }

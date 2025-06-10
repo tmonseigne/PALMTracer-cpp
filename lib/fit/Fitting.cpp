@@ -15,16 +15,16 @@ Fitting::Fitting(const fit_mode mode, const unsigned short* image, const size_t 
 {
 	switch (mode_) {
 		case fit_mode::none:
-		case fit_mode::gaussian_2d_fixed: nParams_ = 4; // 4 paramètres : x, y, amplitude, offset
+		case fit_mode::gaussian_2d_fixed: nParams_ = 4; // 4 paramètres : offset, amplitude, x, y
 			break;
-		case fit_mode::gaussian_2d_sigma: nParams_ = 5; // 5 : x, y, amplitude, sigma, offset
+		case fit_mode::gaussian_2d_sigma: nParams_ = 5; // 5 : offset, amplitude, x, y, sigma
 			break;
-		case fit_mode::gaussian_3d_fixed: nParams_ = 6; // 6 : x, y, amplitude, sigmaX, sigmaY, offset
+		case fit_mode::gaussian_3d_fixed: nParams_ = 6; // 6 : offset, amplitude, x, y, sigmaX, sigmaY
 			break;
-		case fit_mode::gaussian_3d_theta: nParams_ = 7; // 7 : x, y, amplitude, sigmaX, sigmaY, theta, offset
+		case fit_mode::gaussian_3d_theta: nParams_ = 7; // 7 : offset, amplitude, x, y, sigmaX, sigmaY, theta
 			break;
 		case fit_mode::spline_3d_emccd:
-		case fit_mode::spline_3d_scmos: nParams_ = 5; // 5 : x, y, amplitude, z, offset,
+		case fit_mode::spline_3d_scmos: nParams_ = 5; // 5 : offset, amplitude, x, y, z
 			break;
 	}
 	nParams2_ = nParams_ * nParams_;
@@ -45,8 +45,9 @@ void Fitting::Fit(const Segmentation2D& segmentation, std::vector<std::array<dou
 }
 
 //-------------------------------------------------------------------------------------------------
-void Fitting::fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, const double x, const double y, const double intensity,
-                   const double sigmaX, const double sigmaY, const double theta, const double rss, const double offset) const
+void Fitting::fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, const double offset, const double intensity,
+                   const double x, const double y, const double z, const double sigmaX, const double sigmaY, const double theta, const double rss,
+                   const double rssZ) const
 {
 	point[0] = 0;  // Id
 	point[1] = 0;  // Plane
@@ -54,7 +55,7 @@ void Fitting::fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZAT
 	point[3] = -1; // Channel
 	point[4] = x;  // X
 	point[5] = y;  // Y
-	point[6] = 0;  // Z
+	point[6] = z;  // Z
 
 	// Integrated intensity
 	if (mode_ == fit_mode::none) { point[7] = infos.intensity_; }
@@ -64,7 +65,7 @@ void Fitting::fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZAT
 	point[9]  = sigmaY;           // Sigma Y
 	point[10] = theta;            // Theta
 	point[11] = rss;              // MSE X, Y
-	point[12] = -1;               // MSE Z
+	point[12] = rssZ;             // MSE Z
 	point[13] = 0;                // Pair Distance
 	point[14] = intensity;        // Intensity 0
 	point[15] = offset;           // Intensity offset
