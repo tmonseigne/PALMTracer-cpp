@@ -129,4 +129,25 @@ void CenterOfMass(const std::vector<double>& data, const size_t n, double& x, do
 		y = static_cast<double>(n) / 2.0;
 	}
 }
+
+void Delta3D(const double x, const double y, const double z, std::vector<double>& f,
+             std::vector<double>& dxf, std::vector<double>& dyf, std::vector<double>& dzf)
+{
+	double cz = 1.0;
+	for (size_t i = 0; i < 4; ++i) {
+		double cy = 1.0;
+		for (size_t j = 0; j < 4; ++j) {
+			double cx = 1.0;
+			for (size_t k = 0; k < 4; ++k) {
+				f[i * 16 + j * 4 + k] = cz * cy * cx;
+				if (k < 3) { dxf[i * 16 + j * 4 + k + 1] = static_cast<double>(k + 1) * cz * cy * cx; }
+				if (j < 3) { dyf[i * 16 + (j + 1) * 4 + k] = static_cast<double>(j + 1) * cz * cy * cx; }
+				if (i < 3) { dzf[(i + 1) * 16 + j * 4 + k] = static_cast<double>(i + 1) * cz * cy * cx; }
+				cx = cx * x;
+			}
+			cy = cy * y;
+		}
+		cz = cz * z;
+	}
+}
 }

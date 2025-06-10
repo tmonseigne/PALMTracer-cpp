@@ -97,7 +97,7 @@ void Fitting::preCompute(const size_t x, const size_t y, std::vector<double>& da
 }
 
 //-------------------------------------------------------------------------------------------------
-void Fitting::initP(std::array<std::vector<double>, 3>& p, double x, double y, double z, double minI, double maxI) const
+void Fitting::initP(std::array<std::vector<double>, 3>& p, const double x, const double y, const double z, const double minI, const double maxI) const
 {
 	constexpr double MinI = 0.0, MaxI = 65535,
 	                 MinS = 0.1, MaxS = 20;
@@ -129,9 +129,9 @@ void Fitting::initP(std::array<std::vector<double>, 3>& p, double x, double y, d
 		}
 		case fit_mode::spline_3d_emccd:
 		case fit_mode::spline_3d_scmos: {
-			p[0] = {MinI, MinI, x - 1, y - 1, 0}; // le minimum pour Z vaut 0.
+			p[0] = {MinI, MinI, x - 1, y - 1, 0}; // le minimum n'est pas utilisé pour l'ajustement par spline.
 			p[1] = {minI, maxI - minI, x, y, z};
-			p[2] = {MaxI, MaxI, x + 1, y + 1, fitParams_[3]}; // le maximum pour Z est défini dans les paramètres.
+			p[2] = {std::max(20.0, minI), MaxI, 1, 1, std::max(2.0, fitParams_[3] / 3.0)}; // le maximum pour Z est défini dans les paramètres.
 			break;
 		}
 	}

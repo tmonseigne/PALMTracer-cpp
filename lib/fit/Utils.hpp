@@ -68,4 +68,6 @@ namespace palm_tracer {
 	/// <param name="y"></param>
 	void CenterOfMass(const std::vector<double>& data, size_t n, double& x, double& y);
 
+	void Delta3D(double x, double y, double z, std::vector<double>& f, std::vector<double>& dxf, std::vector<double>& dyf, std::vector<double>& dzf);
+
 }

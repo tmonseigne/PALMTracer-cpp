@@ -23,14 +23,25 @@ public:
 	                   const double* fitParams) : Fitting(mode, image, height, width, maxPoints, fitParams) { initialize(); }
 
 protected:
-	double splineSizeX_, ///<
-	       splineSizeY_, ///<
-	       splineSizeZ_; ///<
+	size_t splineSizeX_,         ///<
+	       splineSizeY_,         ///<
+	       splineSizeZ_,         ///<
+	       splineSizeXY_,        ///<
+	       splineSizeXYZ_;       ///<
+	double initZ_,               ///<
+	       intensityRatio_;      ///<
+	std::vector<double> coeffs_; ///<
 
 	/// <summary>Parse les paramètres reçus pour l'ajustement.</summary>
 	void parseParams() override;
 
 	/// <summary>Exécute un ajustement de modèle spline sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.</summary>
 	void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) override;
+
+	void derivativeSpline(size_t x, size_t y, size_t z, const std::vector<double>& f, const std::vector<double>& dxf, const std::vector<double>& dyf,
+	                      const std::vector<double>& dzf, const std::vector<double>& p, std::vector<double>& dudt, double& model) const;
+
+	void updateModel(double data, double model, double& err, double& t1, double& t2,
+	                 std::vector<double>& jacobian, std::vector<double>& hessian, const std::vector<double>& dudt) const;
 };
 }
