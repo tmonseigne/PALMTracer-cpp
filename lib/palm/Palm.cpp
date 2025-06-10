@@ -16,30 +16,16 @@
 #include "ATrous.hpp"
 #include "Segmentation2D.hpp"
 #include "fit/GaussianFit.hpp"
+#include "fit/SplineFit.hpp"
 
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
 Palm::Palm(const unsigned short* image, double* points, const size_t pointsListSize, const size_t height, const size_t width, const size_t planes,
-           const double thresholdVal, const double watershedRatio, const size_t fit, const double* fit_params)
+           const double thresholdVal, const double watershedRatio, const size_t fit, const double* fitParams)
 	: stack_(image), points_(points), height_(height), width_(width), planes_(planes), size_(height * width),
 	  nPointsMax_(pointsListSize / N_LOCALIZATIONS), nPointsMaxPerPlane_((pointsListSize / N_LOCALIZATIONS) / planes),
-	  thresholdVal_(thresholdVal), watershedRatio_(watershedRatio), fit_(fit)
-{
-	if (1 <= fit_ && fit_ <= 4) { // Fit Gaussien
-		roi_        = static_cast<size_t>(fit_params[0]);
-		initSigmaX_ = fit_params[1];
-		initSigmaY_ = 2 * fit_params[1];
-		initTheta_  = fit_params[2];
-	}
-	//else if (5 <= fit_ && fit_ <= XX) {} //Fit Spline
-	else { // Aucun Fit
-		roi_        = 0;
-		initSigmaX_ = 0;
-		initSigmaY_ = 0;
-		initTheta_  = 0;
-	}
-}
+	  thresholdVal_(thresholdVal), watershedRatio_(watershedRatio), fit_(fit), fitParams_(fitParams) { }
 
 //-------------------------------------------------------------------------------------------------
 int Palm::Processing() const
@@ -85,31 +71,37 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 	//----- Fitting -----
 	switch (fit_) {
 		case 1: {
-			GaussianFit fit(fit_mode::gaussian_2d_fixed, image, height_, width_, nPointsMaxPerPlane_, roi_, initSigmaX_, initSigmaY_, initTheta_);
+			GaussianFit fit(fit_mode::gaussian_2d_fixed, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
 			fit.Fit(segmentation, points);
 			break;
 		}
 
 		case 2: { // Gaussian fit of 2D
-			GaussianFit fit(fit_mode::gaussian_2d_sigma, image, height_, width_, nPointsMaxPerPlane_, roi_, initSigmaX_, initSigmaY_, initTheta_);
+			GaussianFit fit(fit_mode::gaussian_2d_sigma, image, height_, width_, nPointsMaxPerPlane_,fitParams_);
 			fit.Fit(segmentation, points);
 			break;
 		}
 
 		case 3: { // Gaussian fit of 3D Theta is constant
-			GaussianFit fit(fit_mode::gaussian_3d_fixed, image, height_, width_, nPointsMaxPerPlane_, roi_, initSigmaX_, initSigmaY_, initTheta_);
+			GaussianFit fit(fit_mode::gaussian_3d_fixed, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
 			fit.Fit(segmentation, points);
 			break;
 		}
 
 		case 4: { // Gaussian fit of 3D
-			GaussianFit fit(fit_mode::gaussian_3d_theta, image, height_, width_, nPointsMaxPerPlane_, roi_, initSigmaX_, initSigmaY_, initTheta_);
+			GaussianFit fit(fit_mode::gaussian_3d_theta, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
+			fit.Fit(segmentation, points);
+			break;
+		}
+
+		case 5: { // Spline fit for Z on EMCCD sensor (maybe same call for sCMOS)
+			SplineFit fit(fit_mode::spline_3d_emccd, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
 			fit.Fit(segmentation, points);
 			break;
 		}
 
 		default: {
-			Fitting fit(fit_mode::none, image, height_, width_, nPointsMaxPerPlane_, roi_, initSigmaX_, initSigmaY_, initTheta_);
+			Fitting fit(fit_mode::none, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
 			fit.Fit(segmentation, points);
 			break;
 		}

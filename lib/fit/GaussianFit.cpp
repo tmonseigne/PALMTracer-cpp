@@ -10,37 +10,45 @@
 #include <ranges>
 #include <vector>
 
+#include "Utils.hpp"
+
 namespace palm_tracer {
+//-------------------------------------------------------------------------------------------------
+void GaussianFit::parseParams()
+{
+	roi_    = static_cast<size_t>(fitParams_[0]);
+	sigmaX_ = fitParams_[1];
+	sigmaY_ = fitParams_[2];
+	theta_  = fitParams_[3];
+}
+
 //-------------------------------------------------------------------------------------------------
 void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point)
 {
-	double offset    = 0,
-	       intensity = 0,
-	       x         = infos.x_,
-	       y         = infos.y_,
-	       sigmaX    = sigmaX_,
-	       sigmaY    = sigmaY_,
-	       theta     = theta_,
-	       rss       = -1;
+	double offset = 0, intensity    = 0, rss         = -1,
+	       x      = infos.x_, y     = infos.y_, z    = infos.z_,
+	       sigmaX = sigmaX_, sigmaY = sigmaY_, theta = theta_;
 
+	// Vérification si la zone d'intérêt est entièrement dans l'image (évite les bords)
 	const size_t Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
 	if (roiHalf_ <= Ux && Ux <= width_ - roiHalf_ - 1 && roiHalf_ <= Uy && Uy <= height_ - roiHalf_ - 1) {
 		// Création des variables
 		double lambda = LAMBDA_0;
 		std::vector<double> alpha(nParams2_), alphaR(nParams2_), alphaRi(nParams2_),
 		                    beta(nParams_), beta_l_deltaP(nParams_), p_try(nParams_), deltaP(nParams_),
-		                    dat(n_), hat(n_), weight(n_), deltaY(n_), deltaY_w(n_);
-		std::vector<size_t> t(2 * n_);
+		                    data(n_), hat(n_), weight(n_), deltaY(n_), deltaY_w(n_);
+		std::vector<size_t> coords(2 * n_);
 
-		// Initialization of dat & t (A vérifier)
+		// Initialization of data & t (A vérifier)
 		double minI, maxI;
-		preComputeFit(minI, maxI, image_, width_, Ux, Uy, dat, weight, t, roi_);
+		preCompute(Ux, Uy, data, coords, minI, maxI);
+		std::ranges::fill(weight, 1);
 
 		std::array<std::vector<double>, 3> p;
 
-		initP(p, x, y, sigmaX, sigmaY, theta, minI, maxI);
+		initP(p, x, y, z, minI, maxI);
 
-		double x2     = lm_matx(t, p[1], dat, weight, alpha, beta, hat);
+		double x2     = lm_matx(coords, p[1], data, weight, alpha, beta, hat);
 		double x2_old = x2;
 
 		// Trouver la valeur absolue maximale
@@ -56,7 +64,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 
 			std::copy_n(alpha.begin(), nParams2_, alphaR.begin()); // Copy du alpha
 			for (size_t i = 0; i < nParams_; ++i) { alphaR[i * nParams_ + i] += lambda * alpha[i * nParams_ + i]; }
-			inverse(alphaR, alphaRi);
+			Inverse(alphaR, alphaRi, nParams_);
 
 			for (size_t i = 0; i < nParams_; ++i) { for (size_t j = 0; j < nParams_; ++j) { deltaP[i] += alphaRi[i * nParams_ + j] * beta[j]; } }
 
@@ -65,7 +73,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 				p_try[i] = std::clamp(p_try[i], p[0][i], p[2][i]);
 			}
 
-			for (size_t i = 0; i < n_; ++i) { deltaY[i] = dat[i] - psf(p_try, static_cast<double>(t[i * 2]), static_cast<double>(t[i * 2 + 1])); }
+			for (size_t i = 0; i < n_; ++i) { deltaY[i] = data[i] - psf(p_try, static_cast<double>(coords[i * 2]), static_cast<double>(coords[i * 2 + 1])); }
 
 			// deltaY .* weight
 			std::ranges::transform(deltaY, weight, deltaY_w.begin(), std::multiplies());
@@ -80,7 +88,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 				x2_old = x2;
 				std::copy_n(p_try.begin(), nParams_, p[1].begin()); // accept p_try
 
-				x2     = lm_matx(t, p[1], dat, weight, alpha, beta, hat);
+				x2     = lm_matx(coords, p[1], data, weight, alpha, beta, hat);
 				lambda = std::max(lambda / LAMBDA_DN, LAMBDA_EPSILON_MIN);
 			}
 			else {               // it IS NOT better
@@ -125,7 +133,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 				break;
 			}
 		}
-		rss = computeR2(dat, hat);
+		rss = computeR2(data, hat);
 	}
 
 	switch (mode_) {
@@ -141,89 +149,29 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 		case fit_mode::spline_3d_emccd:
 		case fit_mode::spline_3d_scmos: break;
 	}
-	fill(infos, point, offset, intensity, x, y, 0, sigmaX, sigmaY, theta, rss);
+	fill(infos, point, offset, intensity, x, y, z, sigmaX, sigmaY, theta, rss);
 }
 
 
 // ==================== Run Computes ====================
 //-------------------------------------------------------------------------------------------------
-void GaussianFit::preComputeFit(double& min, double& max, const unsigned short* image, const size_t width, const size_t x, const size_t y,
-                                std::vector<double>& dat, std::vector<double>& weight, std::vector<size_t>& t, const size_t roi)
+double GaussianFit::computeR2(std::vector<double>& data, std::vector<double>& hat) const
 {
-	min = std::numeric_limits<double>::max();    // Plus grand double possible (FLT_MAX)
-	max = std::numeric_limits<double>::lowest(); // Plus petit double possible (-FLT_MAX)
-
-	const int Half = static_cast<int>(roi / 2);
-	for (int i = -Half; i <= Half; ++i) {
-		const auto Idx = Half + (i + Half) * roi;
-		for (int j = -Half; j <= Half; ++j) {
-			dat[j + Idx]    = static_cast<double>(image[x + j + (y + i) * width]);
-			const auto TIdx = (j + Idx) * 2;
-			t[TIdx]         = x + j;
-			t[TIdx + 1]     = y + i;
-
-			max = std::max(max, dat[j + Idx]);
-			min = std::min(min, dat[j + Idx]);
-		}
-	}
-	std::ranges::fill(weight, 1);
-}
-
-//-------------------------------------------------------------------------------------------------
-void GaussianFit::initP(std::array<std::vector<double>, 3>& p, const double x, const double y, const double sigmaX, const double sigmaY,
-                        const double theta, const double minI, const double maxI) const
-{
-	constexpr double MinI = 0.0, MaxI = 65535,
-	                 MinS = 0.1, MaxS = 20;
-	switch (mode_) {
-		case fit_mode::none:
-		case fit_mode::spline_3d_emccd:
-		case fit_mode::spline_3d_scmos:
-		case fit_mode::gaussian_2d_fixed: {
-			p[0] = {MinI, MinI, x - 1, y - 1};
-			p[1] = {minI, maxI - minI, x, y};
-			p[2] = {MaxI, MaxI, x + 1, y + 1};
-			break;
-		}
-		case fit_mode::gaussian_2d_sigma: {
-			p[0] = {MinI, MinI, x - 1, y - 1, MinS};
-			p[1] = {minI, maxI - minI, x, y, sigmaX};
-			p[2] = {MaxI, MaxI, x + 1, y + 1, MaxS};
-			break;
-		}
-		case fit_mode::gaussian_3d_fixed: {
-			p[0] = {MinI, MinI, x - 1, y - 1, MinS, MinS};
-			p[1] = {minI, maxI - minI, x, y, std::numbers::sqrt2_v<double> * sigmaX, std::numbers::sqrt2_v<double> * sigmaY};
-			p[2] = {MaxI, MaxI, x + 1, y + 1, MaxS, MaxS};
-			break;
-		}
-		case fit_mode::gaussian_3d_theta: {
-			p[0] = {MinI, MinI, x - 1, y - 1, MinS, MinS, -150};
-			p[1] = {minI, maxI - minI, x, y, std::numbers::sqrt2_v<double> * sigmaX, std::numbers::sqrt2_v<double> * sigmaY, theta};
-			p[2] = {MaxI, MaxI, x + 1, y + 1, MaxS, MaxS, 150};
-			break;
-		}
-	}
-}
-
-//-------------------------------------------------------------------------------------------------
-double GaussianFit::computeR2(std::vector<double>& dat, std::vector<double>& hat) const
-{
-	// computing "dat" mean & "hat" mean
-	const double Dat_Mean = std::accumulate(dat.begin(), dat.end(), 0.0) / static_cast<double>(n_),
+	// computing "data" mean & "hat" mean
+	const double Dat_Mean = std::accumulate(data.begin(), data.end(), 0.0) / static_cast<double>(n_),
 	             Hat_Mean = std::accumulate(hat.begin(), hat.end(), 0.0) / static_cast<double>(n_);
 
 	// Normalisation en place
 	for (size_t i = 0; i < n_; ++i) {
-		dat[i] -= Dat_Mean;
+		data[i] -= Dat_Mean;
 		hat[i] -= Hat_Mean;
 	}
 
 	// Calcul des t1, t2, t3
-	const double T1 = std::inner_product(dat.begin(), dat.end(), hat.begin(), 0.0), // dat * hat
-	             T2 = std::inner_product(dat.begin(), dat.end(), dat.begin(), 0.0), // dat * dat
-	             T3 = std::inner_product(hat.begin(), hat.end(), hat.begin(), 0.0), // hat * hat
-	             R  = T1 / std::sqrt(T2 * T3);                                      // Calcul du R
+	const double T1 = std::inner_product(data.begin(), data.end(), hat.begin(), 0.0),  // data * hat
+	             T2 = std::inner_product(data.begin(), data.end(), data.begin(), 0.0), // data * data
+	             T3 = std::inner_product(hat.begin(), hat.end(), hat.begin(), 0.0),    // hat * hat
+	             R  = T1 / std::sqrt(T2 * T3);                                         // Calcul du R
 
 	return std::isnan(R) ? 0 : R * R;
 }
@@ -233,10 +181,10 @@ double GaussianFit::computeR2(std::vector<double>& dat, std::vector<double>& hat
 double GaussianFit::psf(const std::vector<double>& p, const double x, const double y) const
 {
 	switch (mode_) {
-		case fit_mode::gaussian_2d_fixed: return psf(p[0], p[1], x - p[2], y - p[3], sigmaX_);
-		case fit_mode::gaussian_2d_sigma: return psf(p[0], p[1], x - p[2], y - p[3], p[4]);
-		case fit_mode::gaussian_3d_fixed: return psf(p[0], p[1], x - p[2], y - p[3], p[4], p[5], theta_);
-		case fit_mode::gaussian_3d_theta: return psf(p[0], p[1], x - p[2], y - p[3], p[4], p[5], p[6]);
+		case fit_mode::gaussian_2d_fixed: return PSF(p[0], p[1], x - p[2], y - p[3], sigmaX_);
+		case fit_mode::gaussian_2d_sigma: return PSF(p[0], p[1], x - p[2], y - p[3], p[4]);
+		case fit_mode::gaussian_3d_fixed: return PSF(p[0], p[1], x - p[2], y - p[3], p[4], p[5], theta_);
+		case fit_mode::gaussian_3d_theta: return PSF(p[0], p[1], x - p[2], y - p[3], p[4], p[5], p[6]);
 		case fit_mode::none:
 		case fit_mode::spline_3d_emccd:
 		case fit_mode::spline_3d_scmos: return 0;
@@ -244,21 +192,6 @@ double GaussianFit::psf(const std::vector<double>& p, const double x, const doub
 	return 0;
 }
 
-//-------------------------------------------------------------------------------------------------
-double GaussianFit::psf(const double offset, const double i0, const double x, const double y, const double sigma)
-{
-	return i0 * exp(-(x * x + y * y) / (2 * (sigma * sigma))) + offset;
-}
-
-//-------------------------------------------------------------------------------------------------
-double GaussianFit::psf(const double offset, const double i0, const double x, const double y, const double sigmaX, const double sigmaY, const double theta)
-{
-	const auto CosTheta = cos(theta), SinTheta = sin(theta);
-	const auto Factor1  = (x * CosTheta - y * SinTheta) / sigmaX,
-	           Factor2  = (x * SinTheta + y * CosTheta) / sigmaY;
-
-	return i0 * exp(-(Factor1 * Factor1 + Factor2 * Factor2)) + offset;
-}
 
 // ==================== Matrix ====================
 //-------------------------------------------------------------------------------------------------
@@ -268,51 +201,11 @@ void GaussianFit::deriv(double* out, const std::vector<double>& p, const double 
 		case fit_mode::none:
 		case fit_mode::spline_3d_emccd:
 		case fit_mode::spline_3d_scmos:
-		case fit_mode::gaussian_2d_fixed: return deriv(out, p[1], x - p[2], y - p[3], sigmaX_, false);
-		case fit_mode::gaussian_2d_sigma: return deriv(out, p[1], x - p[2], y - p[3], p[4], true);
-		case fit_mode::gaussian_3d_fixed: return deriv(out, p[1], x - p[2], y - p[3], p[4], p[5], theta_, false);
-		case fit_mode::gaussian_3d_theta: return deriv(out, p[1], x - p[2], y - p[3], p[4], p[5], p[6], true);
+		case fit_mode::gaussian_2d_fixed: return Deriv(out, p[1], x - p[2], y - p[3], sigmaX_, false);
+		case fit_mode::gaussian_2d_sigma: return Deriv(out, p[1], x - p[2], y - p[3], p[4], true);
+		case fit_mode::gaussian_3d_fixed: return Deriv(out, p[1], x - p[2], y - p[3], p[4], p[5], theta_, false);
+		case fit_mode::gaussian_3d_theta: return Deriv(out, p[1], x - p[2], y - p[3], p[4], p[5], p[6], true);
 	}
-}
-
-//-------------------------------------------------------------------------------------------------
-void GaussianFit::deriv(double* out, const double i0, const double x, const double y, const double sigma, const bool has_sigma)
-{
-	const auto X_2 = x * x, Y_2 = y * y, Sigma_2 = sigma * sigma;
-	const auto Exp = exp(-(X_2 + Y_2) / (2 * Sigma_2));
-	const auto P   = i0 * Exp;
-
-	out[0] = 1;                                                      // offset
-	out[1] = Exp;                                                    // I0
-	out[2] = P * x / Sigma_2;                                        // x0
-	out[3] = P * y / Sigma_2;                                        // y0
-	if (has_sigma) { out[4] = P / (sigma * Sigma_2) * (X_2 + Y_2); } // sigma
-}
-
-//-------------------------------------------------------------------------------------------------
-void GaussianFit::deriv(double* out, const double i0, const double x, const double y, const double sigmaX, const double sigmaY,
-                        const double theta, const bool has_theta)
-{
-	const auto X_2 = x * x, Y_2 = y * y, X_Y = x * y, SigmaX_2 = sigmaX * sigmaX, SigmaY_2 = sigmaY * sigmaY;
-
-	const auto CosT   = cos(theta), SinT    = sin(theta);
-	const auto CosT_2 = CosT * CosT, SinT_2 = SinT * SinT, CosSinT = CosT * SinT,
-	           XCosT  = x * CosT, XSinT     = x * SinT, YCosT      = y * CosT, YSinT = y * SinT;
-
-	const auto Factor1 = (XCosT - YSinT) / sigmaX,
-	           Factor2 = (XSinT + YCosT) / sigmaY,
-	           Factor3 = 2 * X_Y * CosSinT,
-	           Factor4 = 2 * X_Y / SigmaX_2 - 2 * X_Y / SigmaY_2;
-	const auto Exp     = exp(-(Factor1 * Factor1 + Factor2 * Factor2));
-	const auto P       = i0 * Exp;
-
-	out[0] = 1;                                                                                                                              // offset
-	out[1] = Exp;                                                                                                                            // I0
-	out[2] = P * (-((-2 * CosT_2 * x + 2 * y * CosSinT) / SigmaX_2) - (-2 * SinT_2 * x - 2 * y * CosSinT) / SigmaY_2);                       // x0
-	out[3] = P * (-((2 * SinT_2 * y - 2 * x * CosSinT) / SigmaX_2) - (-2 * CosT_2 * y - 2 * x * CosSinT) / SigmaY_2);                        // y0
-	out[4] = P * (2 * (XCosT * XCosT - Factor3 + YSinT * YSinT) / (sigmaX * SigmaX_2));                                                      // sigma X
-	out[5] = P * (2 * (XSinT * XSinT + Factor3 + YCosT * YCosT) / (sigmaY * SigmaY_2));                                                      // sigma Y
-	if (has_theta) { out[6] = P * (2 * CosSinT * ((X_2 - Y_2) / SigmaX_2 + (Y_2 - X_2) / SigmaY_2) - SinT_2 * Factor4 + CosT_2 * Factor4); } // theta
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -363,36 +256,5 @@ double GaussianFit::lm_matx(const std::vector<size_t>& t, const std::vector<doub
 	for (size_t i = 0; i < n_; ++i) { deriv(&dydp[i * nParams_], p, static_cast<double>(t[i * 2]), static_cast<double>(t[i * 2 + 1])); }
 
 	return chi2(alpha, beta, dydp, weight, delta);
-}
-
-//-------------------------------------------------------------------------------------------------
-void GaussianFit::inverse(std::vector<double>& in, std::vector<double>& out) const
-{
-	std::ranges::fill(out, 0.0);
-	for (size_t i = 0; i < nParams_; ++i) { out[i * nParams_ + i] = 1.0; } // Initialisation de la matrice identité
-
-	// limination de Gauss-Jordan
-	for (size_t i = 0; i < nParams_; ++i) {
-		const double Pivot     = in[i * nParams_ + i];
-		const double Pivot_Inv = 1.0 / Pivot;
-
-		// Normalisation de la ligne i
-		for (size_t j = 0; j < nParams_; ++j) {
-			in[i * nParams_ + j] *= Pivot_Inv;
-			out[i * nParams_ + j] *= Pivot_Inv;
-		}
-
-		// Mise à zéro des autres lignes
-		for (size_t j = 0; j < nParams_; ++j) {
-			if (j != i) {
-				const double Factor = in[j * nParams_ + i];
-
-				for (size_t k = 0; k < nParams_; ++k) {
-					in[j * nParams_ + k] -= Factor * in[i * nParams_ + k];
-					out[j * nParams_ + k] -= Factor * out[i * nParams_ + k];
-				}
-			}
-		}
-	}
 }
 }

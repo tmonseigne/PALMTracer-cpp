@@ -20,10 +20,16 @@ namespace palm_tracer {
 class SplineFit final : public Fitting {
 public:
 	explicit SplineFit(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints,
-	                   const size_t roi, const double sigmaX, const double sigmaY, const double theta)
-		: Fitting(mode, image, height, width, maxPoints, roi, sigmaX, sigmaY, theta) { }
+	                   const double* fitParams) : Fitting(mode, image, height, width, maxPoints, fitParams) { initialize(); }
 
 protected:
+	double splineSizeX_, ///<
+	       splineSizeY_, ///<
+	       splineSizeZ_; ///<
+
+	/// <summary>Parse les paramètres reçus pour l'ajustement.</summary>
+	void parseParams() override;
+
 	/// <summary>Exécute un ajustement de modèle spline sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.</summary>
 	void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) override;
 };

@@ -38,12 +38,9 @@ public:
 	/// <param name="height">Hauteur de l'image.</param>
 	/// <param name="width">Largeur de l'image.</param>
 	/// <param name="maxPoints">Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).</param>
-	/// <param name="roi">Taille de la région d'intérêt autour du point.</param>
-	/// <param name="sigmaX">Écart-type initial sur X.</param>
-	/// <param name="sigmaY">Écart-type initial sur Y.</param>
-	/// <param name="theta">Angle d'orientation (en radians) de la gaussienne si applicable.</param>
-	explicit Fitting(fit_mode mode, const unsigned short* image, size_t height, size_t width, size_t maxPoints,
-	                 size_t roi, double sigmaX, double sigmaY, double theta);
+	/// <param name="fitParams"> Paramètres pour l'ajustement.</param>
+	explicit Fitting(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints, const double* fitParams)
+		: mode_(mode), image_(image), n_(0), nParams_(4), height_(height), width_(width), maxPoints_(maxPoints), fitParams_(fitParams) { initialize(); }
 
 	/// <summary>Destructeur de la classe <c>Fitting</c>.</summary>
 	virtual ~Fitting() = default;
@@ -54,19 +51,18 @@ public:
 	void Fit(const Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points);
 
 protected:
-	fit_mode mode_;                                    ///< Mode de fitting utilisé (ex. position seulement, ou position + orientation...).
-	const unsigned short* image_;                      ///< Image 2D d'entrée (hauteur x largeur) en niveaux de gris.
-	size_t n_,                                         ///< Nombre d'échantillons ou points de données à fitter.
-	       nParams_,                                   ///< Nombre total de paramètres du modèle.
-	       nParams2_,                                  ///< Nombre de paramètres au carré (utile pour les matrices jacobiennes ou hessiennes).
-	       height_,                                    ///< Hauteur de l'image.
-	       width_,                                     ///< Largeur de l'image.
-	       maxPoints_,                                 ///< Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).
-	       roi_,                                       ///< Taille de la région d'intérêt autour du point.
-	       roiHalf_;                                   ///< Demi taille de la région d'intérêt autour du point.
-	double sigmaX_,                                    ///< Écart-type initial sur X.
-	       sigmaY_,                                    ///< Écart-type initial sur Y.
-	       theta_;                                     ///< Angle d'orientation (en radians) de la gaussienne si applicable.
+	fit_mode mode_;               ///< Mode de fitting utilisé (ex. position seulement, ou position + orientation...).
+	const unsigned short* image_; ///< Image 2D d'entrée (hauteur x largeur) en niveaux de gris.
+	size_t n_,                    ///< Nombre d'échantillons ou points de données à fitter.
+	       nParams_,              ///< Nombre total de paramètres du modèle.
+	       nParams2_,             ///< Nombre de paramètres au carré (utile pour les matrices jacobiennes ou hessiennes).
+	       height_,               ///< Hauteur de l'image.
+	       width_,                ///< Largeur de l'image.
+	       maxPoints_,            ///< Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).
+	       roi_,                  ///< Taille de la région d'intérêt autour du point.
+	       roiHalf_;              ///< Demi taille de la région d'intérêt autour du point.
+	const double* fitParams_;     ///< Paramètres de l'ajustement
+
 	static constexpr size_t N_ITER             = 50;   ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
 	static constexpr double EPSILON_1          = 1e-6, ///< Seuil de convergence pour le changement de la fonction objectif.
 	                        EPSILON_2          = 1e-6, ///< Seuil de convergence pour le gradient.
@@ -78,6 +74,11 @@ protected:
 	                        LAMBDA_UP          = 11,   ///< Facteur multiplicatif lorsque la mise à jour est inefficace (augmentation de lambda).
 	                        LAMBDA_DN          = 9;    ///< Facteur de réduction de lambda lorsque la mise à jour est réussie.
 
+	/// <summary>Initialise les différents membres de la classe. </summary>
+	void initialize();
+
+	/// <summary>Parse les paramètres reçus pour l'ajustement.</summary>
+	virtual void parseParams() { roi_ = 7; }
 
 	/// <summary>Exécute l'ajustement selon le mode sélectionné sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.
 	/// L'algorithme utilise une méthode de Levenberg-Marquardt pour minimiser l'erreur entre le modèle et les données.</summary>
@@ -100,5 +101,26 @@ protected:
 	/// <param name="rssZ">RSS sur Z.</param>
 	void fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, double offset, double intensity, double x, double y, double z = 0,
 	          double sigmaX = 0, double sigmaY = 0, double theta = 0, double rss = -1, double rssZ = -1) const;
+
+	/// <summary>Prépare les données nécessaires pour le fitting en extrayant les valeurs de la région d'intérêt autour de (x, y).
+	/// Remplit les vecteurs de données, coordonnées relatives et calcule aussi les intensités minimale et maximale.</summary>
+	/// <param name="x">Coordonnée X centrale de la ROI.</param>
+	/// <param name="y">Coordonnée Y centrale de la ROI.</param>
+	/// <param name="data">Vecteur de sortie contenant les données d'intensité extraites de la ROI.</param>
+	/// <param name="coords">Vecteur contenant les coordonnées X et Y associées à chaque point de la ROI.</param>
+	/// <param name="min">Référence vers la valeur minimale trouvée dans la ROI (définie par la méthode).</param>
+	/// <param name="max">Référence vers la valeur maximale trouvée dans la ROI (définie par la méthode).</param>
+	void preCompute(size_t x, size_t y, std::vector<double>& data, std::vector<size_t>& coords, double& min, double& max) const;
+
+	//==================== Run Computes ====================
+	/// <summary>Initialise les paramètres de départ pour le fitting, ainsi que leurs bornes minimale et maximale.
+	/// Les valeurs dépendent du mode de fitting utilisé.</summary>
+	/// <param name="p"></param>
+	/// <param name="x">Coordonnée X estimée du centre initial.</param>
+	/// <param name="y">Coordonnée Y estimée du centre initial.</param>
+	/// <param name="z">Coordonnée Z estimée du centre initial.</param>
+	/// <param name="minI">Intensité minimale dans la ROI (servira à initialiser l'offset).</param>
+	/// <param name="maxI">Intensité maximale dans la ROI (servira à initialiser l'amplitude).</param>
+	void initP(std::array<std::vector<double>, 3>& p, double x, double y, double z, double minI, double maxI) const;
 };
 }

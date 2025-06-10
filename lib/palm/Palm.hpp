@@ -52,7 +52,7 @@ public:
 	///		- 2 : Gaussien 2D avec sigma variable.
 	///		- 3 : Gaussien 3D avec theta fixe.
 	///		- 4 : Gaussien 3D complet.</param>
-	/// <param name="fit_params"> paramètres de l'ajustement
+	/// <param name="fitParams"> paramètres de l'ajustement
 	/// En cas d'ajustement Gaussien :
 	///		- Taille du ROI (fenêtre carrée centrée) utilisé pour l'ajustement autour de chaque point détecté.
 	///		- Valeur initiale de sigma utilisée dans l'ajustement (sigmaX = sigma et sigmaY = 2* sigma).
@@ -65,7 +65,7 @@ public:
 	///		- Image de fond pour le CMOS et 0 pour le EMCD (pour définir le bruit standard). (taille standard d'une image)
 	/// </param>
 	Palm(const unsigned short* image, double* points, size_t pointsListSize, size_t height, size_t width, size_t planes,
-	     double thresholdVal, double watershedRatio, size_t fit, const double* fit_params);
+	     double thresholdVal, double watershedRatio, size_t fit, const double* fitParams);
 
 	/// <summary>Destructeur de la classe <c>Palm</c>.</summary>
 	~Palm() = default;
@@ -101,15 +101,8 @@ private:
 	double thresholdVal_,   ///< Seuil de détection utilisé après la décomposition en ondelettes.
 	       watershedRatio_; ///< Rapport utilisé dans l'algorithme de Watershed.
 
-	// Gaussian fit members
-	size_t fit_,        ///< Mode de fitting à appliquer (0 = aucun, 1 à 4 = variantes 2D ou 3D de l'ajustement Gaussien).
-	       roi_;        ///< Taille du ROI utilisé pour le fitting gaussien (fenêtre autour du point).
-	double initSigmaX_, ///< Valeur initiale de sigmaX utilisée dans le fitting gaussien.
-	       initSigmaY_, ///< Valeur initiale de sigmaY utilisée dans le fitting gaussien.
-	       initTheta_;  ///< Valeur initiale de theta (orientation) utilisée dans le fitting gaussien.
-
-	// Splines members
-
+	size_t fit_;              ///< Mode de fitting à appliquer (0 = aucun, 1 à 4 = variantes 2D ou 3D de l'ajustement Gaussien, 5 = Ajustement par Splines).
+	const double* fitParams_; ///< Paramètres de l'ajustement
 
 	/// <summary>Lance le traitement complet de détection sur le plan passé en paramèter de l'image d'entrée.</summary>
 	///
