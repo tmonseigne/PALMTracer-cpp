@@ -101,7 +101,6 @@ void Alignment::precomputeTransformMap()
 	const size_t UpSizeIm = UpW * UpH;
 	const double Step     = 1.0 / static_cast<double>(upsampling_);
 	transformMap_.resize(UpSizeIm); // chaque pixel cible contiendra une liste de contributions
-	// transformMap_.resize(sizeIm_);
 
 	#pragma omp parallel for
 	for (int y = 0; y < static_cast<int>(height_); ++y) {

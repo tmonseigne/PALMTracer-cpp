@@ -22,6 +22,12 @@ public:
 	                     const double* fitParams) : Fitting(mode, image, height, width, maxPoints, fitParams) { initialize(); }
 
 protected:
+	static constexpr double LAMBDA_0   = 1e-2, ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.
+	                        LAMBDA_MAX = 1e7,  ///< Valeur maximale autorisée pour lambda.
+	                        LAMBDA_MIN = 1e-7, ///< Valeur minimale autorisée pour lambda.
+	                        LAMBDA_UP  = 11,   ///< Facteur multiplicatif lorsque la mise à jour est inefficace (augmentation de lambda).
+	                        LAMBDA_DN  = 9;    ///< Facteur de réduction de lambda lorsque la mise à jour est réussie.
+
 	double sigmaX_, ///< Écart-type initial sur X.
 	       sigmaY_, ///< Écart-type initial sur Y.
 	       theta_;  ///< Angle d'orientation (en radians) de la gaussienne si applicable.

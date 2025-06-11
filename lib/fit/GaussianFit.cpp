@@ -89,11 +89,11 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 				std::copy_n(p_try.begin(), nParams_, p[1].begin()); // accept p_try
 
 				x2     = lm_matx(coords, p[1], data, weight, alpha, beta, hat);
-				lambda = std::max(lambda / LAMBDA_DN, LAMBDA_EPSILON_MIN);
+				lambda = std::max(lambda / LAMBDA_DN, LAMBDA_MIN);
 			}
 			else {               // it IS NOT better
 				x2     = x2_old; // do not accept a_try
-				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_EPSILON_MAX);
+				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX);
 			}
 
 			m = 0;

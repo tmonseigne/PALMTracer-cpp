@@ -54,10 +54,20 @@ void Fitting::fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZAT
 	point[4] = x;  // X
 	point[5] = y;  // Y
 	point[6] = z;  // Z
-
 	// Integrated intensity
-	if (mode_ == fit_mode::none) { point[7] = infos.intensity_; }
-	else { point[7] = 2.0 * std::numbers::pi * intensity * sigmaX * sigmaY; }
+	switch (mode_) {
+		case fit_mode::none: point[7] = infos.intensity_;
+			break;
+		case fit_mode::gaussian_2d_fixed:
+		case fit_mode::gaussian_2d_sigma:
+		case fit_mode::gaussian_3d_fixed:
+		case fit_mode::gaussian_3d_theta: point[7] = 2.0 * std::numbers::pi * intensity * sigmaX * sigmaY;
+			break;
+		case fit_mode::spline_3d_emccd:
+		case fit_mode::spline_3d_scmos: point[7] = intensity;
+
+			break;
+	}
 
 	point[8]  = sigmaX;           // Sigma X
 	point[9]  = sigmaY;           // Sigma Y
@@ -129,9 +139,9 @@ void Fitting::initP(std::array<std::vector<double>, 3>& p, const double x, const
 		}
 		case fit_mode::spline_3d_emccd:
 		case fit_mode::spline_3d_scmos: {
-			p[0] = {MinI, MinI, x - 1, y - 1, 0}; // le minimum n'est pas utilisé pour l'ajustement par spline.
+			p[0] = {MinI, MinI, x - 1, y - 1, 0};
 			p[1] = {minI, maxI - minI, x, y, z};
-			p[2] = {std::max(20.0, minI), MaxI, 1, 1, std::max(2.0, fitParams_[3] / 3.0)}; // le maximum pour Z est défini dans les paramètres.
+			p[2] = {MaxI, MaxI, x + 1, x + 1, 1}; // le maximum pour Z est défini dans les paramètres par splineSizeZ_.
 			break;
 		}
 	}

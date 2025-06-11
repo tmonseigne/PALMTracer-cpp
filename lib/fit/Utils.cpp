@@ -134,20 +134,44 @@ void Delta3D(const double x, const double y, const double z, std::vector<double>
              std::vector<double>& dxf, std::vector<double>& dyf, std::vector<double>& dzf)
 {
 	double cz = 1.0;
-	for (size_t i = 0; i < 4; ++i) {
+	for (size_t i = 0; i < SPLINE_PATCH_SIDE; ++i) {
 		double cy = 1.0;
-		for (size_t j = 0; j < 4; ++j) {
+		for (size_t j = 0; j < SPLINE_PATCH_SIDE; ++j) {
 			double cx = 1.0;
-			for (size_t k = 0; k < 4; ++k) {
-				f[i * 16 + j * 4 + k] = cz * cy * cx;
-				if (k < 3) { dxf[i * 16 + j * 4 + k + 1] = static_cast<double>(k + 1) * cz * cy * cx; }
-				if (j < 3) { dyf[i * 16 + (j + 1) * 4 + k] = static_cast<double>(j + 1) * cz * cy * cx; }
-				if (i < 3) { dzf[(i + 1) * 16 + j * 4 + k] = static_cast<double>(i + 1) * cz * cy * cx; }
-				cx = cx * x;
+			for (size_t k = 0; k < SPLINE_PATCH_SIDE; ++k) {
+				const double Coef     = cz * cy * cx;
+				f[i * 16 + j * 4 + k] = Coef;
+				if (k < SPLINE_PATCH_SIDE - 1) { dxf[i * SPLINE_PATCH_SQUARE + j * SPLINE_PATCH_SIDE + k + 1] = static_cast<double>(k + 1) * Coef; }
+				if (j < SPLINE_PATCH_SIDE - 1) { dyf[i * SPLINE_PATCH_SQUARE + (j + 1) * SPLINE_PATCH_SIDE + k] = static_cast<double>(j + 1) * Coef; }
+				if (i < SPLINE_PATCH_SIDE - 1) { dzf[(i + 1) * SPLINE_PATCH_SQUARE + j * SPLINE_PATCH_SIDE + k] = static_cast<double>(i + 1) * Coef; }
+				cx *= x;
 			}
-			cy = cy * y;
+			cy *= y;
 		}
-		cz = cz * z;
+		cz *= z;
 	}
+}
+
+bool Cholesky(const std::vector<double>& a, size_t n, std::vector<double>& l, std::vector<double>& u)
+{
+	for (size_t i = 0; i < n; ++i) {
+		for (size_t j = 0; j < i + 1; ++j) {
+			double s = 0;
+			for (size_t k = 0; k < j; ++k) { s += u[i * n + k] * u[j * n + k]; }
+
+			if (i == j) {
+				if (a[i * n + i] - s >= 0) {
+					u[i * n + j] = sqrt(a[i * n + i] - s);
+					l[j * n + i] = u[i * n + j];
+				}
+				else { return false; }
+			}
+			else {
+				u[i * n + j] = (1.0 / u[j * n + j] * (a[i * n + j] - s));
+				l[j * n + i] = u[i * n + j];
+			}
+		}
+	}
+	return true;
 }
 }

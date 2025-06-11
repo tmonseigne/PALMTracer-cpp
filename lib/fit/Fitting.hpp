@@ -63,16 +63,12 @@ protected:
 	       roiHalf_;              ///< Demi taille de la région d'intérêt autour du point.
 	const double* fitParams_;     ///< Paramètres de l'ajustement
 
-	static constexpr size_t N_ITER             = 50;   ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
-	static constexpr double EPSILON_1          = 1e-6, ///< Seuil de convergence pour le changement de la fonction objectif.
-	                        EPSILON_2          = 1e-6, ///< Seuil de convergence pour le gradient.
-	                        EPSILON_3          = 1e-5, ///< Seuil de convergence pour la variation des paramètres.
-	                        EPSILON_4          = 1e-2; ///< Tolérance utilisée pour juger la stagnation ou instabilité.
-	static constexpr double LAMBDA_0           = 1e-2, ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.
-	                        LAMBDA_EPSILON_MAX = 1e7,  ///< Valeur maximale autorisée pour lambda.
-	                        LAMBDA_EPSILON_MIN = 1e-7, ///< Valeur minimale autorisée pour lambda.
-	                        LAMBDA_UP          = 11,   ///< Facteur multiplicatif lorsque la mise à jour est inefficace (augmentation de lambda).
-	                        LAMBDA_DN          = 9;    ///< Facteur de réduction de lambda lorsque la mise à jour est réussie.
+	static constexpr size_t N_ITER    = 50;   ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
+	static constexpr double EPSILON_1 = 1e-6, ///< Seuil de convergence pour le changement de la fonction objectif.
+	                        EPSILON_2 = 1e-6, ///< Seuil de convergence pour le gradient.
+	                        EPSILON_3 = 1e-5, ///< Seuil de convergence pour la variation des paramètres.
+	                        EPSILON_4 = 1e-2; ///< Tolérance utilisée pour juger la stagnation ou instabilité.
+
 
 	/// <summary>Initialise les différents membres de la classe. </summary>
 	void initialize();
@@ -84,7 +80,7 @@ protected:
 	/// L'algorithme utilise une méthode de Levenberg-Marquardt pour minimiser l'erreur entre le modèle et les données.</summary>
 	/// <param name="infos">Informations sur le point localisé.</param>
 	/// <param name="point">Résultat de l'ajustement sur le point localisé.</param>
-	virtual void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) { fill(infos, point, 0, 0, infos.x_, infos.y_); }
+	virtual void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) { fill(infos, point, 0, 0, infos.x_, infos.y_, infos.z_); }
 
 	/// <summary></summary>
 	/// <param name="infos">Informations initiales sur le point localisé.</param>
@@ -122,6 +118,5 @@ protected:
 	/// <param name="minI">Intensité minimale dans la ROI (servira à initialiser l'offset).</param>
 	/// <param name="maxI">Intensité maximale dans la ROI (servira à initialiser l'amplitude).</param>
 	void initP(std::array<std::vector<double>, 3>& p, double x, double y, double z, double minI, double maxI) const;
-
 };
 }

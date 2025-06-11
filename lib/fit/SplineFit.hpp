@@ -23,11 +23,18 @@ public:
 	                   const double* fitParams) : Fitting(mode, image, height, width, maxPoints, fitParams) { initialize(); }
 
 protected:
+	static constexpr double LAMBDA_0   = 0.1,  ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.
+	                        LAMBDA_MAX = 1e7,  ///< Valeur maximale autorisée pour lambda.
+	                        LAMBDA_MIN = 1e-7, ///< Valeur minimale autorisée pour lambda.
+	                        LAMBDA_UP  = 10,   ///< Facteur multiplicatif lorsque la mise à jour est inefficace (augmentation de lambda).
+	                        LAMBDA_DN  = 0.1;  ///< Facteur de réduction de lambda lorsque la mise à jour est réussie.
+
 	size_t splineSizeX_,         ///<
 	       splineSizeY_,         ///<
 	       splineSizeZ_,         ///<
 	       splineSizeXY_,        ///<
-	       splineSizeXYZ_;       ///<
+	       splineSizeXYZ_,       ///<
+	       splineOffset_;        ///<
 	double initZ_,               ///<
 	       intensityRatio_;      ///<
 	std::vector<double> coeffs_; ///<
@@ -41,7 +48,10 @@ protected:
 	void derivativeSpline(size_t x, size_t y, size_t z, const std::vector<double>& f, const std::vector<double>& dxf, const std::vector<double>& dyf,
 	                      const std::vector<double>& dzf, const std::vector<double>& p, std::vector<double>& dudt, double& model) const;
 
-	void updateModel(double data, double model, double& err, double& t1, double& t2,
-	                 std::vector<double>& jacobian, std::vector<double>& hessian, const std::vector<double>& dudt) const;
+	void updateModel(double data, double model, double& err, std::vector<double>& jacobian,
+	                 std::vector<double>& hessian, const std::vector<double>& dudt) const;
+
+	static void updateMuLambda(double& mu, double& lambda, bool up);
+	void luEvaluate(const std::vector<double>& l, const std::vector<double>& u, const std::vector<double>& b, std::vector<double>& x) const;
 };
 }
