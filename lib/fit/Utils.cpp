@@ -104,7 +104,7 @@ void Inverse(std::vector<double>& in, std::vector<double>& out, const size_t n)
 }
 
 //-------------------------------------------------------------------------------------------------
-void CenterOfMass(const std::vector<double>& data, const size_t n, double& x, double& y)
+void CenterOfMass(const std::vector<Pixel>& data, const size_t n, double& x, double& y)
 {
 	x          = 0.0;
 	y          = 0.0;
@@ -113,7 +113,7 @@ void CenterOfMass(const std::vector<double>& data, const size_t n, double& x, do
 	size_t idx = 0;
 	for (size_t i = 0; i < n; ++i) {            // lignes
 		for (size_t j = 0; j < n; ++j, ++idx) { // colonnes
-			const double Value = data[idx];
+			const double Value = data[idx].v;
 			y += Value * static_cast<double>(i);
 			x += Value * static_cast<double>(j);
 			sum += Value;
@@ -130,6 +130,7 @@ void CenterOfMass(const std::vector<double>& data, const size_t n, double& x, do
 	}
 }
 
+//-------------------------------------------------------------------------------------------------
 void Delta3D(const double x, const double y, const double z, std::vector<double>& f,
              std::vector<double>& dxf, std::vector<double>& dyf, std::vector<double>& dzf)
 {
@@ -152,6 +153,7 @@ void Delta3D(const double x, const double y, const double z, std::vector<double>
 	}
 }
 
+//-------------------------------------------------------------------------------------------------
 bool Cholesky(const std::vector<double>& a, size_t n, std::vector<double>& l, std::vector<double>& u)
 {
 	for (size_t i = 0; i < n; ++i) {

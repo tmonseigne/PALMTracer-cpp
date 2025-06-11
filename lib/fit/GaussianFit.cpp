@@ -36,19 +36,19 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 		double lambda = LAMBDA_0;
 		std::vector<double> alpha(nParams2_), alphaR(nParams2_), alphaRi(nParams2_),
 		                    beta(nParams_), beta_l_deltaP(nParams_), p_try(nParams_), deltaP(nParams_),
-		                    data(n_), hat(n_), weight(n_), deltaY(n_), deltaY_w(n_);
-		std::vector<size_t> coords(2 * n_);
+		                    hat(n_), weight(n_), deltaY(n_), deltaY_w(n_);
+		std::vector<Pixel> grid(n_);
 
 		// Initialization of data & t (A vérifier)
 		double minI, maxI;
-		preCompute(Ux, Uy, data, coords, minI, maxI);
+		preCompute(Ux, Uy, grid, minI, maxI);
 		std::ranges::fill(weight, 1);
 
 		std::array<std::vector<double>, 3> p;
 
 		initP(p, x, y, z, minI, maxI);
 
-		double x2     = lm_matx(coords, p[1], data, weight, alpha, beta, hat);
+		double x2     = lm_matx(grid, p[1], weight, alpha, beta, hat);
 		double x2_old = x2;
 
 		// Trouver la valeur absolue maximale
@@ -73,7 +73,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 				p_try[i] = std::clamp(p_try[i], p[0][i], p[2][i]);
 			}
 
-			for (size_t i = 0; i < n_; ++i) { deltaY[i] = data[i] - psf(p_try, static_cast<double>(coords[i * 2]), static_cast<double>(coords[i * 2 + 1])); }
+			for (size_t i = 0; i < n_; ++i) { deltaY[i] = grid[i].v - psf(p_try, static_cast<double>(grid[i].x), static_cast<double>(grid[i].y)); }
 
 			// deltaY .* weight
 			std::ranges::transform(deltaY, weight, deltaY_w.begin(), std::multiplies());
@@ -88,7 +88,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 				x2_old = x2;
 				std::copy_n(p_try.begin(), nParams_, p[1].begin()); // accept p_try
 
-				x2     = lm_matx(coords, p[1], data, weight, alpha, beta, hat);
+				x2     = lm_matx(grid, p[1], weight, alpha, beta, hat);
 				lambda = std::max(lambda / LAMBDA_DN, LAMBDA_MIN);
 			}
 			else {               // it IS NOT better
@@ -133,7 +133,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 				break;
 			}
 		}
-		rss = computeR2(data, hat);
+		rss = computeR2(grid, hat);
 	}
 
 	switch (mode_) {
@@ -155,23 +155,26 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 
 // ==================== Run Computes ====================
 //-------------------------------------------------------------------------------------------------
-double GaussianFit::computeR2(std::vector<double>& data, std::vector<double>& hat) const
+double GaussianFit::computeR2(std::vector<Pixel>& grid, std::vector<double>& hat) const
 {
 	// computing "data" mean & "hat" mean
-	const double Dat_Mean = std::accumulate(data.begin(), data.end(), 0.0) / static_cast<double>(n_),
+	const double Dat_Mean = std::accumulate(grid.begin(), grid.end(), 0.0,
+	                                        [](double sum, const auto& p) { return sum + p.v; }) / static_cast<double>(n_),
 	             Hat_Mean = std::accumulate(hat.begin(), hat.end(), 0.0) / static_cast<double>(n_);
 
 	// Normalisation en place
 	for (size_t i = 0; i < n_; ++i) {
-		data[i] -= Dat_Mean;
+		grid[i].v -= Dat_Mean;
 		hat[i] -= Hat_Mean;
 	}
 
 	// Calcul des t1, t2, t3
-	const double T1 = std::inner_product(data.begin(), data.end(), hat.begin(), 0.0),  // data * hat
-	             T2 = std::inner_product(data.begin(), data.end(), data.begin(), 0.0), // data * data
-	             T3 = std::inner_product(hat.begin(), hat.end(), hat.begin(), 0.0),    // hat * hat
-	             R  = T1 / std::sqrt(T2 * T3);                                         // Calcul du R
+	const double T1 = std::inner_product(grid.begin(), grid.end(), hat.begin(), 0.0,
+	                                     std::plus<>(), [](const auto& a, double b) { return a.v * b; }), // data * hat
+	             T2 = std::inner_product(grid.begin(), grid.end(), grid.begin(), 0.0,
+	                                     std::plus<>(), [](const auto& a, const auto& b) { return a.v * b.v; }), // data * data
+	             T3 = std::inner_product(hat.begin(), hat.end(), hat.begin(), 0.0),                              // hat * hat
+	             R  = T1 / std::sqrt(T2 * T3);                                                                   // Calcul du R
 
 	return std::isnan(R) ? 0 : R * R;
 }
@@ -242,18 +245,18 @@ double GaussianFit::chi2(std::vector<double>& alpha, std::vector<double>& beta, 
 }
 
 //-------------------------------------------------------------------------------------------------
-double GaussianFit::lm_matx(const std::vector<size_t>& t, const std::vector<double>& p, const std::vector<double>& dat, const std::vector<double>& weight,
+double GaussianFit::lm_matx(const std::vector<Pixel>& grid, const std::vector<double>& p, const std::vector<double>& weight,
                             std::vector<double>& alpha, std::vector<double>& beta, std::vector<double>& hat) const
 {
 	std::vector<double> delta(n_);
 	for (size_t i = 0; i < n_; ++i) {
-		hat[i]   = psf(p, static_cast<double>(t[i * 2]), static_cast<double>(t[i * 2 + 1]));
-		delta[i] = dat[i] - hat[i];
+		hat[i]   = psf(p, static_cast<double>(grid[i].x), static_cast<double>(grid[i].y));
+		delta[i] = grid[i].v - hat[i];
 	}
 
 	// Computing Jacobian matrix (dydp)
 	std::vector<double> dydp(n_ * nParams_);
-	for (size_t i = 0; i < n_; ++i) { deriv(&dydp[i * nParams_], p, static_cast<double>(t[i * 2]), static_cast<double>(t[i * 2 + 1])); }
+	for (size_t i = 0; i < n_; ++i) { deriv(&dydp[i * nParams_], p, static_cast<double>(grid[i].x), static_cast<double>(grid[i].y)); }
 
 	return chi2(alpha, beta, dydp, weight, delta);
 }

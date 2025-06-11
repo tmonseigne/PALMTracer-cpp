@@ -86,7 +86,7 @@ void Fitting::fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZAT
 }
 
 //-------------------------------------------------------------------------------------------------
-void Fitting::preCompute(const size_t x, const size_t y, std::vector<double>& data, std::vector<size_t>& coords, double& min, double& max) const
+void Fitting::preCompute(const size_t x, const size_t y, std::vector<Pixel>& grid, double& min, double& max) const
 {
 	min = std::numeric_limits<double>::max();    // Plus grand double possible (DBL_MAX)
 	max = std::numeric_limits<double>::lowest(); // Plus petit double possible (-DBL_MAX)
@@ -95,13 +95,9 @@ void Fitting::preCompute(const size_t x, const size_t y, std::vector<double>& da
 	for (int i = -Half; i <= Half; ++i) {
 		const auto Idx = Half + (i + Half) * roi_;
 		for (int j = -Half; j <= Half; ++j) {
-			data[j + Idx]    = static_cast<double>(image_[x + j + (y + i) * width_]);
-			const auto TIdx  = (j + Idx) * 2;
-			coords[TIdx]     = x + j;
-			coords[TIdx + 1] = y + i;
-
-			max = std::max(max, data[j + Idx]);
-			min = std::min(min, data[j + Idx]);
+			grid[j + Idx] = {.x = x + j, .y = y + i, .v = static_cast<double>(image_[x + j + (y + i) * width_])};
+			min           = std::min(min, grid[j + Idx].v);
+			max           = std::max(max, grid[j + Idx].v);
 		}
 	}
 }

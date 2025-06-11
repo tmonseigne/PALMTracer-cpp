@@ -13,9 +13,16 @@
 #include <vector>
 
 namespace palm_tracer {
-constexpr size_t SPLINE_PATCH_SIDE   = 4,
-                 SPLINE_PATCH_SQUARE = 16,
-                 SPLINE_PATCH_SIZE   = 64;
+constexpr size_t SPLINE_PATCH_SIDE   = 4,  ///<
+                 SPLINE_PATCH_SQUARE = 16, ///<
+                 SPLINE_PATCH_SIZE   = 64; ///<
+
+/// <summary> </summary>
+struct Pixel {
+	size_t x, ///<
+	       y; ///<
+	double v; ///<
+};
 
 //==================== PSF ====================
 /// <summary>PSF gaussienne isotrope (2D) centrée en (0,0), à sigma fixe.</summary>
@@ -70,9 +77,23 @@ void Inverse(std::vector<double>& in, std::vector<double>& out, size_t n);
 /// <param name="n"></param>
 /// <param name="x"></param>
 /// <param name="y"></param>
-void CenterOfMass(const std::vector<double>& data, size_t n, double& x, double& y);
+void CenterOfMass(const std::vector<Pixel>& data, size_t n, double& x, double& y);
 
+/// <summary></summary>
+/// <param name="x"></param>
+/// <param name="y"></param>
+/// <param name="z"></param>
+/// <param name="f"></param>
+/// <param name="dxf"></param>
+/// <param name="dyf"></param>
+/// <param name="dzf"></param>
 void Delta3D(double x, double y, double z, std::vector<double>& f, std::vector<double>& dxf, std::vector<double>& dyf, std::vector<double>& dzf);
 
+/// <summary></summary>
+/// <param name="a"></param>
+/// <param name="n"></param>
+/// <param name="l">.</param>
+/// <param name="u"></param>
+/// <returns></returns>
 bool Cholesky(const std::vector<double>& a, size_t n, std::vector<double>& l, std::vector<double>& u);
 }

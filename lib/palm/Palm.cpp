@@ -77,7 +77,7 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 		}
 
 		case 2: { // Gaussian fit of 2D
-			GaussianFit fit(fit_mode::gaussian_2d_sigma, image, height_, width_, nPointsMaxPerPlane_,fitParams_);
+			GaussianFit fit(fit_mode::gaussian_2d_sigma, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
 			fit.Fit(segmentation, points);
 			break;
 		}

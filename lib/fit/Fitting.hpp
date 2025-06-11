@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "Constants.hpp"
+#include "Utils.hpp"
 #include "palm/Segmentation2D.hpp"
 
 namespace palm_tracer {
@@ -102,11 +103,10 @@ protected:
 	/// Remplit les vecteurs de données, coordonnées relatives et calcule aussi les intensités minimale et maximale.</summary>
 	/// <param name="x">Coordonnée X centrale de la ROI.</param>
 	/// <param name="y">Coordonnée Y centrale de la ROI.</param>
-	/// <param name="data">Vecteur de sortie contenant les données d'intensité extraites de la ROI.</param>
-	/// <param name="coords">Vecteur contenant les coordonnées X et Y associées à chaque point de la ROI.</param>
+	/// <param name="grid">Vecteur contenant les coordonnées X, Y et intensité associée à chaque point de la ROI.</param>
 	/// <param name="min">Référence vers la valeur minimale trouvée dans la ROI (définie par la méthode).</param>
 	/// <param name="max">Référence vers la valeur maximale trouvée dans la ROI (définie par la méthode).</param>
-	void preCompute(size_t x, size_t y, std::vector<double>& data, std::vector<size_t>& coords, double& min, double& max) const;
+	void preCompute(size_t x, size_t y, std::vector<Pixel>& grid, double& min, double& max) const;
 
 	//==================== Run Computes ====================
 	/// <summary>Initialise les paramètres de départ pour le fitting, ainsi que leurs bornes minimale et maximale.

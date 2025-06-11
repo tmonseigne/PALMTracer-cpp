@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "Fitting.hpp"
+#include "Utils.hpp"
 
 namespace palm_tracer {
 /// <summary>Classe d'ajustement gaussien.</summary>
@@ -42,10 +43,10 @@ protected:
 	//==================== Run Computes ====================
 	/// <summary>Calcule le coefficient de corrélation au carré (R²) entre deux vecteurs normalisés.
 	/// Cela donne une mesure de la qualité d'ajustement entre les données observées et le modèle.</summary>
-	/// <param name="data">Vecteur des données observées (modifié en place).</param>
+	/// <param name="grid">Vecteur des pixels de la zone d'intérêt : coordonnées (x, y) et valeur (modifié en place).</param>
 	/// <param name="hat">Vecteur des données ajustées (modifié en place).</param>
 	/// <returns>Valeur de R², dans [0, 1].</returns>
-	double computeR2(std::vector<double>& data, std::vector<double>& hat) const;
+	double computeR2(std::vector<Pixel>& grid, std::vector<double>& hat) const;
 
 	/// <summary>Évalue la fonction PSF (Point Spread Function) en (x, y), selon le mode d'ajustement et les paramètres donnés.</summary>
 	/// <param name="p">Vecteur des paramètres de la PSF (intensité, position, sigma, offset...).</param>
@@ -74,15 +75,14 @@ protected:
 
 	/// <summary>Calcule la matrice alpha, le vecteur beta, et retourne le chi² (erreur) pour l'itération courante.
 	/// Utilisé dans l'algorithme de Levenberg-Marquardt.</summary>
-	/// <param name="t">Vecteur de coordonnées (x, y) pour chaque point</param>
+	/// <param name="grid">Vecteur des pixels de la zone d'intérêt : coordonnées (x, y) et valeur.</param>
 	/// <param name="p">Paramètres du modèle</param>
-	/// <param name="dat">Données observées</param>
 	/// <param name="weight">Poids pour chaque point</param>
 	/// <param name="alpha">Matrice approximative d'Hessienne</param>
 	/// <param name="beta">Gradient du χ²</param>
 	/// <param name="hat">Vecteur des données ajustées (modifié en place).</param>
 	/// <returns>Valeur du χ²</returns>
-	double lm_matx(const std::vector<size_t>& t, const std::vector<double>& p, const std::vector<double>& dat, const std::vector<double>& weight,
+	double lm_matx(const std::vector<Pixel>& grid, const std::vector<double>& p, const std::vector<double>& weight,
 	               std::vector<double>& alpha, std::vector<double>& beta, std::vector<double>& hat) const;
 };
 }

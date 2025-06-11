@@ -49,14 +49,14 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 	if (roiHalf_ <= Ux && Ux <= width_ - roiHalf_ - 1 && roiHalf_ <= Uy && Uy <= height_ - roiHalf_ - 1) {
 		// Création des variables
 		double lambda = LAMBDA_0, minI = 0, maxI = 0, model = 0, err = std::numeric_limits<double>::max(), mu = 1 + lambda;
-		std::vector<double> data(n_), hessian(nParams2_),
+		std::vector<double> hessian(nParams2_),
 		                    dudt(nParams_), jacobian(nParams_), jump(nParams_), update(nParams_), l(nParams_), u(nParams_),
 		                    f(SPLINE_PATCH_SIZE), dxf(SPLINE_PATCH_SIZE), dyf(SPLINE_PATCH_SIZE), dzf(SPLINE_PATCH_SIZE);
-		std::vector<size_t> coords(2 * n_);
+		std::vector<Pixel> data(n_);
 		std::array<std::vector<double>, 3> p;
 
 		// Initialization of data & t (A vérifier)
-		preCompute(Ux, Uy, data, coords, minI, maxI);
+		preCompute(Ux, Uy, data, minI, maxI);
 
 		// Initialisation du/des P :
 		// - Calcul du centre de masse de la région pour x et y
@@ -96,9 +96,9 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			// offset utile, car la ROI et les coeffs ont peut-être des tailles différentes donc on recentre sur X et sur Y
 			// Exemple : ROI de 7 splineX de 11 : La ROI 7x7 est centrée à partir du point 2 dans la spline
 			for (size_t i = 0; i < n_; ++i) {
-				derivativeSpline(coords[i * 2] + splineOffset_, coords[i * 2 + 1] + splineOffset_, static_cast<size_t>(std::floor(p[1][4])),
+				derivativeSpline(data[i].x + splineOffset_, data[i].y + splineOffset_, static_cast<size_t>(std::floor(p[1][4])),
 				                 f, dxf, dyf, dzf, p[1], dudt, model);
-				updateModel(data[i], model, err, jacobian, hessian, dudt);
+				updateModel(data[i].v, model, err, jacobian, hessian, dudt);
 			}
 
 			// Mise à jour de la matrice Hessian

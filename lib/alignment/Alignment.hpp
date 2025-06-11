@@ -120,6 +120,6 @@ protected:
 	/// Le polygone peut être orienté : une aire négative indique un ordre antihoraire des sommets.</summary>
 	/// <param name="poly">Liste des sommets du polygone (fermés ou non).</param>
 	/// <returns>Aire du polygone en unités carrées.</returns>
-	double getArea(const std::vector<Coord>& poly) const;
+	[[nodiscard]] double getArea(const std::vector<Coord>& poly) const;
 };
 }
