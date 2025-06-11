@@ -5,7 +5,6 @@
 #include <cmath>
 #include <cstdlib>
 #include <execution>
-#include <iostream>
 #include <limits>
 #include <numbers>
 #include <numeric>
@@ -49,8 +48,8 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 	if (roiHalf_ <= Ux && Ux <= width_ - roiHalf_ - 1 && roiHalf_ <= Uy && Uy <= height_ - roiHalf_ - 1) {
 		// Création des variables
 		double lambda = LAMBDA_0, minI = 0, maxI = 0, model = 0, err = std::numeric_limits<double>::max(), mu = 1 + lambda;
-		std::vector<double> hessian(nParams2_),
-		                    dudt(nParams_), jacobian(nParams_), jump(nParams_), update(nParams_), l(nParams_), u(nParams_),
+		std::vector<double> hessian(nParams2_), l(nParams2_), u(nParams2_),
+		                    dudt(nParams_), jacobian(nParams_), jump(nParams_), update(nParams_),
 		                    f(SPLINE_PATCH_SIZE), dxf(SPLINE_PATCH_SIZE), dyf(SPLINE_PATCH_SIZE), dzf(SPLINE_PATCH_SIZE);
 		std::vector<Pixel> data(n_);
 		std::array<std::vector<double>, 3> p;

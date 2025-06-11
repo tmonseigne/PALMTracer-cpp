@@ -154,7 +154,7 @@ void Delta3D(const double x, const double y, const double z, std::vector<double>
 }
 
 //-------------------------------------------------------------------------------------------------
-bool Cholesky(const std::vector<double>& a, size_t n, std::vector<double>& l, std::vector<double>& u)
+bool Cholesky(const std::vector<double>& a, const size_t n, std::vector<double>& l, std::vector<double>& u)
 {
 	for (size_t i = 0; i < n; ++i) {
 		for (size_t j = 0; j < i + 1; ++j) {
