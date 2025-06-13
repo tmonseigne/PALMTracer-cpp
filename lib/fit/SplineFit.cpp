@@ -3,8 +3,10 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <complex>
 #include <cstdlib>
 #include <execution>
+#include <iostream>
 #include <limits>
 #include <numbers>
 #include <numeric>
@@ -14,19 +16,26 @@
 #include "Utils.hpp"
 
 namespace palm_tracer {
+static double SqrtReal(const double value)
+{
+	const std::complex Z(value, 0.0);
+	return std::real(std::sqrt(Z));
+}
+
 //-------------------------------------------------------------------------------------------------
 void SplineFit::parseParams()
 {
-	roi_           = static_cast<size_t>(fitParams_[0]);
-	splineSizeX_   = static_cast<size_t>(fitParams_[1]);
-	splineSizeY_   = static_cast<size_t>(fitParams_[2]);
-	splineSizeZ_   = static_cast<size_t>(fitParams_[3]);
+	size_t idx     = 0;
+	roi_           = static_cast<size_t>(fitParams_[idx++]);
+	splineSizeX_   = static_cast<size_t>(fitParams_[idx++]);
+	splineSizeY_   = static_cast<size_t>(fitParams_[idx++]);
+	splineSizeZ_   = static_cast<size_t>(fitParams_[idx++]);
 	splineSizeXY_  = splineSizeX_ * splineSizeY_;
 	splineSizeXYZ_ = splineSizeXY_ * splineSizeZ_;
-	initZ_         = fitParams_[4];
+	initZ_         = fitParams_[idx++];
+	deltaZ_        = fitParams_[idx++];
 	coeffs_.resize(splineSizeXYZ_ * SPLINE_PATCH_SIZE);
-	std::ranges::fill(coeffs_, 0.0);
-	//for (size_t i = 0; i < coeffs_.size(); ++i) { coeffs_[i] = fitParams_[i + 4]; }
+	for (double& coeff : coeffs_) { coeff = fitParams_[idx++]; }
 	const double CenterCoeff = coeffs_[splineSizeZ_ / 2 * splineSizeXY_ + splineSizeY_ / 2 * splineSizeX_ + splineSizeX_ / 2];
 	intensityRatio_          = std::fabs(CenterCoeff) < std::numeric_limits<double>::epsilon() ? 1.0 : 4.0 / CenterCoeff;
 	splineOffset_            = static_cast<size_t>(std::floor((static_cast<double>(splineSizeX_) + 1.0 - static_cast<double>(roi_)) / 2));
@@ -97,7 +106,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			for (size_t i = 0; i < n_; ++i) {
 				derivativeSpline(data[i].x + splineOffset_, data[i].y + splineOffset_, static_cast<size_t>(std::floor(p[1][4])),
 				                 f, dxf, dyf, dzf, p[1], dudt, model);
-				updateModel(data[i].v, model, err, jacobian, hessian, dudt);
+				updateJacobianHessian(data[i].v, model, err, jacobian, hessian, dudt);
 			}
 
 			// Mise à jour de la matrice Hessian
@@ -136,12 +145,50 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			if (iteration > 2 && (err < EPSILON_1 || std::fabs(err - OldErr) / err < EPSILON_1)) { stop = true; } // Si Convergence, on arrête.
 		}
 
-		offset    = p[1][0];
-		intensity = p[1][1];
-		x         = p[1][2];
-		y         = p[1][3];
-		z         = p[1][4];
-		//Calculs du MSE sur XY et sur Z à faire...
+		//Calcul du CRLB
+		std::vector<double> m(nParams2_, 0.0), mInv(nParams2_, 0.0), crlb(nParams_);
+		std::ranges::fill(f, 0.0);
+		std::ranges::fill(dxf, 0.0);
+		std::ranges::fill(dyf, 0.0);
+		std::ranges::fill(dzf, 0.0);
+		std::ranges::fill(dudt, 0.0);
+
+		const double Xc = p[1][2] - std::floor(p[1][2]), Yc = p[1][3] - std::floor(p[1][3]), Zc = p[1][4] - std::floor(p[1][4]);
+		Delta3D(Xc, Yc, Zc, f, dxf, dyf, dzf);
+		for (size_t i = 0; i < n_; ++i) {
+			derivativeSpline(data[i].x + splineOffset_, data[i].y + splineOffset_, static_cast<size_t>(std::floor(p[1][4])),
+			                 f, dxf, dyf, dzf, p[1], dudt, model);
+			// Calcul de la matrice d'information de Fisher
+			for (size_t j = 0; j < nParams_; ++j) {
+				for (size_t k = j; k < nParams_; ++k) {
+					m[j * nParams_ + k] += dudt[k] * dudt[j] / model;
+					m[k * nParams_ + j] = m[j * nParams_ + k];
+				}
+			}
+		}
+		std::cout << "Matrice : \n";
+		for (size_t i = 0; i < nParams_; ++i) {
+			std::cout << "|\t";
+			for (size_t j = 0; j < nParams_; ++j) { std::cout << m[i * nParams_] << "\t"; }
+			std::cout << "|\n";
+		}
+		// Matrice inverse (CRLB=F^-1)
+		InverseLU(m, mInv, nParams_);
+		for (size_t i = 0; i < nParams_; ++i) {
+			crlb[i] = SqrtReal(mInv[i * nParams_ + i]);
+			std::cout << mInv[i * nParams_ + i] << "\t";
+		}
+		std::cout << "\n";
+
+		// Assignation
+		offset    = crlb[0];
+		intensity = crlb[1];
+		x         = p[1][2] - static_cast<double>(roiHalf_) + infos.x_;
+		y         = p[1][3] - static_cast<double>(roiHalf_) + infos.y_;
+		z         = deltaZ_ * (p[1][4] - initZ_);
+		rssXY     = (crlb[2] + crlb[3]) / 2;
+		rssZ      = deltaZ_ * crlb[4];
+		std::cout << "offset :" << offset << "\t" << "intensity :" << intensity << "\t" << "rssXY :" << rssXY << "\t" << "rssZ :" << rssZ << "\n";
 	}
 
 	fill(infos, point, offset, intensity, x, y, z, 0, 0, 0, rssXY, rssZ);
@@ -169,7 +216,8 @@ void SplineFit::derivativeSpline(const size_t x, const size_t y, const size_t z,
 	model = p[0] + p[1] * dudt[1];
 }
 
-void SplineFit::updateModel(const double data, const double model, double& err, std::vector<double>& jacobian,
+//-------------------------------------------------------------------------------------------------
+void SplineFit::updateJacobianHessian(const double data, const double model, double& err, std::vector<double>& jacobian,
                             std::vector<double>& hessian, const std::vector<double>& dudt) const
 {
 	if (data > 0) { err = err + 2 * (model - data - data * log(model / data)); }
@@ -187,6 +235,7 @@ void SplineFit::updateModel(const double data, const double model, double& err, 
 	}
 }
 
+//-------------------------------------------------------------------------------------------------
 void SplineFit::updateMuLambda(double& mu, double& lambda, const bool up)
 {
 	if (up) {
@@ -199,6 +248,7 @@ void SplineFit::updateMuLambda(double& mu, double& lambda, const bool up)
 	}
 }
 
+//-------------------------------------------------------------------------------------------------
 void SplineFit::luEvaluate(const std::vector<double>& l, const std::vector<double>& u, const std::vector<double>& b, std::vector<double>& x) const
 {
 	//ax = b -> lux = b. Then y is defined to be Ux

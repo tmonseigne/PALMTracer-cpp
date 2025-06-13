@@ -64,7 +64,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 
 			std::copy_n(alpha.begin(), nParams2_, alphaR.begin()); // Copy du alpha
 			for (size_t i = 0; i < nParams_; ++i) { alphaR[i * nParams_ + i] += lambda * alpha[i * nParams_ + i]; }
-			Inverse(alphaR, alphaRi, nParams_);
+			InverseGaussJordan(alphaR, alphaRi, nParams_);
 
 			for (size_t i = 0; i < nParams_; ++i) { for (size_t j = 0; j < nParams_; ++j) { deltaP[i] += alphaRi[i * nParams_ + j] * beta[j]; } }
 

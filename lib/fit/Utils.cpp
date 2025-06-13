@@ -74,7 +74,7 @@ void Deriv(double* out, const double i0, const double x, const double y, const d
 }
 
 //-------------------------------------------------------------------------------------------------
-void Inverse(std::vector<double>& in, std::vector<double>& out, const size_t n)
+void InverseGaussJordan(std::vector<double>& in, std::vector<double>& out, const size_t n)
 {
 	std::ranges::fill(out, 0.0);
 	for (size_t i = 0; i < n; ++i) { out[i * n + i] = 1.0; } // Initialisation de la matrice identité
@@ -99,6 +99,59 @@ void Inverse(std::vector<double>& in, std::vector<double>& out, const size_t n)
 					out[j * n + k] -= Factor * out[i * n + k];
 				}
 			}
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+void InverseLU(std::vector<double>& in, std::vector<double>& out, const size_t n)
+{
+	size_t b;
+	double tmp1 = 0;
+	std::vector<double> y(n * n);
+
+	for (size_t j = 0; j < n; ++j) {
+		//calculate upper matrix
+		for (size_t i = 0; i <= j; ++i) {
+			//deal with ii-1 in the sum, set sum(kk=0->ii-1) when ii=0 to zero
+			if (i > 0) {
+				for (size_t k = 0; k <= i - 1; ++k) { tmp1 += in[i + k * n] * in[k + j * n]; }
+				in[i + j * n] -= tmp1;
+				tmp1 = 0;
+			}
+		}
+
+		for (size_t i = j + 1; i < n; ++i) {
+			if (j > 0) {
+				for (size_t k = 0; k <= j - 1; ++k) { tmp1 += in[i + k * n] * in[k + j * n]; }
+				in[i + j * n] = (1 / in[j + j * n]) * (in[i + j * n] - tmp1);
+				tmp1         = 0;
+			}
+			else { in[i + j * n] = (1 / in[j + j * n]) * in[i + j * n]; }
+		}
+	}
+
+	tmp1 = 0;
+	for (size_t num = 0; num < n; ++num) {
+		// calculate yy
+		if (num == 0) { y[0] = 1; }
+		else { y[0] = 0; }
+
+		for (size_t i = 1; i < n; ++i) {
+			if (i == num) { b = 1; }
+			else { b = 0; }
+			for (size_t j = 0; j <= i - 1; ++j) { tmp1 += in[i + j * n] * y[j]; }
+			y[i] = static_cast<double>(b) - tmp1;
+			tmp1 = 0;
+		}
+
+		// calculate out
+		out[n - 1 + num * n] = y[n - 1] / in[(n - 1) + (n - 1) * n];
+
+		for (int i = static_cast<int>(n) - 2; i >= 0; --i) {
+			for (size_t j = i + 1; j < n; ++j) { tmp1 += in[i + j * n] * out[j + num * n]; }
+			out[i + num * n] = (1 / in[i + i * n]) * (y[i] - tmp1);
+			tmp1              = 0;
 		}
 	}
 }

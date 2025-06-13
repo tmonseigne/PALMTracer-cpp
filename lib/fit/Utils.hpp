@@ -66,11 +66,19 @@ void Deriv(double* out, double i0, double x, double y, double sigma, bool has_si
 /// <param name="has_theta">True si theta est un paramètre libre, false sinon.</param>
 void Deriv(double* out, double i0, double x, double y, double sigmaX, double sigmaY, double theta, bool has_theta);
 
-/// <summary>Inversion de matrice (méthode spécifique à l'implémentation, incomplète ici).</summary>
+/// <summary>Inversion de matrice (méthode de Gauss-Jordan).</summary>
 /// <param name="in">Matrice à inverser (format vectorisé ligne par ligne).</param>
 /// <param name="out">Matrice résultat de l'inversion (même format).</param>
 /// <param name="n"> Taille de la matrice (nxn). </param>
-void Inverse(std::vector<double>& in, std::vector<double>& out, size_t n);
+void InverseGaussJordan(std::vector<double>& in, std::vector<double>& out, size_t n);
+
+
+/// <summary>Inversion de matrice (méthode LU (sans pivot) + systèmes triangulaires).</summary>
+/// <param name="in">Matrice à inverser (format vectorisé ligne par ligne).</param>
+/// <param name="out">Matrice résultat de l'inversion (même format).</param>
+/// <param name="n"> Taille de la matrice (nxn). </param>
+void InverseLU(std::vector<double>& in, std::vector<double>& out, size_t n);
+
 
 /// <summary></summary>
 /// <param name="data"></param>

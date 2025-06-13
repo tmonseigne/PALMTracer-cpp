@@ -36,6 +36,7 @@ protected:
 	       splineSizeXYZ_,       ///<
 	       splineOffset_;        ///<
 	double initZ_,               ///<
+	       deltaZ_,              ///<
 	       intensityRatio_;      ///<
 	std::vector<double> coeffs_; ///<
 
@@ -48,7 +49,7 @@ protected:
 	void derivativeSpline(size_t x, size_t y, size_t z, const std::vector<double>& f, const std::vector<double>& dxf, const std::vector<double>& dyf,
 	                      const std::vector<double>& dzf, const std::vector<double>& p, std::vector<double>& dudt, double& model) const;
 
-	void updateModel(double data, double model, double& err, std::vector<double>& jacobian,
+	void updateJacobianHessian(double data, double model, double& err, std::vector<double>& jacobian,
 	                 std::vector<double>& hessian, const std::vector<double>& dudt) const;
 
 	static void updateMuLambda(double& mu, double& lambda, bool up);
