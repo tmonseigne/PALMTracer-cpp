@@ -273,7 +273,7 @@ void Segmentation2D::filterStructureWS()
 
 	// Marquage d'un seul point par structure pour Watershed final
 	std::ranges::fill(map_, 0);
-	for (int i = 0; i <= static_cast<int>(wsFusions.size()); ++i) {
+	for (int i = 0; i < static_cast<int>(wsFusions.size()); ++i) {
 		if (wsFusions[i].structToBecome == i) { map_[wsFusions[i].x * width_ + wsFusions[i].y] = static_cast<unsigned short>(wsFusions[i].newIndex); }
 	}
 }
