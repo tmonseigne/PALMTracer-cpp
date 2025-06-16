@@ -135,9 +135,14 @@ void Fitting::initP(std::array<std::vector<double>, 3>& p, const double x, const
 		}
 		case fit_mode::spline_3d_emccd:
 		case fit_mode::spline_3d_scmos: {
-			p[0] = {MinI, MinI, x - 1, y - 1, 0};
+			const double RoiC = (fitParams_[0] - 1) / 2.0,
+			             RoiD = fitParams_[0] / 4.0;
+			const double Dmin = RoiC - RoiD,
+			             Dmax = RoiC + RoiD;
+
+			p[0] = {-0.01, -1, Dmin, Dmin, 0};
 			p[1] = {minI, maxI - minI, x, y, z};
-			p[2] = {MaxI, MaxI, x + 1, x + 1, 1}; // le maximum pour Z est défini dans les paramètres par splineSizeZ_.
+			p[2] = {0.01, 1, Dmax, Dmax, 1}; // le maximum pour Z est défini dans les paramètres par splineSizeZ_.
 			break;
 		}
 	}
