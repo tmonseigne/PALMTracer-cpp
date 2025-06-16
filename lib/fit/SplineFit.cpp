@@ -32,7 +32,7 @@ void SplineFit::parseParams()
 	splineSizeZ_   = static_cast<size_t>(fitParams_[idx++]);
 	splineSizeXY_  = splineSizeX_ * splineSizeY_;
 	splineSizeXYZ_ = splineSizeXY_ * splineSizeZ_;
-	initZ_         = fitParams_[idx++];
+	initZ_         = fitParams_[idx++] + static_cast<double>(splineSizeZ_) / 2.0;
 	deltaZ_        = fitParams_[idx++];
 	coeffs_.resize(splineSizeXYZ_ * SPLINE_PATCH_SIZE);
 	for (double& coeff : coeffs_) { coeff = fitParams_[idx++]; }
@@ -71,7 +71,8 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		CenterOfMass(data, roi_, x, y);
 
 		initP(p, x, y, z, minI, maxI);
-		p[1][1] *= intensityRatio_; // Change l'intensité pour la position actuelle.
+		p[1][1] *= intensityRatio_;                  // Change l'intensité pour la position actuelle.
+		p[2][4] = static_cast<double>(splineSizeZ_); // Change le maximum pour Z.
 		jump = {std::max(20.0, p[1][1]), std::max(100.0, p[1][1]), 1.0, 1.0, std::max(static_cast<double>(splineSizeZ_) / 3.0, 2.0)};
 
 		bool stop        = false;
@@ -97,7 +98,10 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 
 			//----- Calculs -----
 			// Calcul du patch 3D de 4x4x4 (64) (SPLINE_PATCH_SIDE = 4, SPLINE_PATCH_SIZE = 64)
-			const double Xc = p[1][2] - std::floor(p[1][2]), Yc = p[1][3] - std::floor(p[1][3]), Zc = p[1][4] - std::floor(p[1][4]);
+			double xc = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
+			       yc = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
+
+			const double Xc = xc - std::floor(xc), Yc = yc - std::floor(yc), Zc = p[1][4] - std::floor(p[1][4]);
 			Delta3D(Xc, Yc, Zc, f, dxf, dyf, dzf);
 
 			// Calcul des dérivées et initialisation du model
@@ -153,7 +157,9 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		std::ranges::fill(dzf, 0.0);
 		std::ranges::fill(dudt, 0.0);
 
-		const double Xc = p[1][2] - std::floor(p[1][2]), Yc = p[1][3] - std::floor(p[1][3]), Zc = p[1][4] - std::floor(p[1][4]);
+		double xc = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
+		       yc = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
+		const double Xc = xc - std::floor(xc), Yc = yc - std::floor(yc), Zc = p[1][4] - std::floor(p[1][4]);
 		Delta3D(Xc, Yc, Zc, f, dxf, dyf, dzf);
 		for (size_t i = 0; i < n_; ++i) {
 			derivativeSpline(data[i].x + splineOffset_, data[i].y + splineOffset_, static_cast<size_t>(std::floor(p[1][4])),
@@ -172,8 +178,17 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			for (size_t j = 0; j < nParams_; ++j) { std::cout << m[i * nParams_] << "\t"; }
 			std::cout << "|\n";
 		}
+
+		// Si la convergence est parfaite (ou le point pile sur une grille), des 0 seront présents, à remplacer pour calculer la matrice inverse.
+		for (size_t i = 0; i < nParams_; ++i) {
+			if (std::fabs(m[i * nParams_ + i]) < std::numeric_limits<double>::epsilon()) { m[i * nParams_ + i] = std::numeric_limits<double>::epsilon(); }
+		}
+
 		// Matrice inverse (CRLB=F^-1)
 		InverseLU(m, mInv, nParams_);
+
+		for (size_t i = 0; i < nParams_; ++i) { crlb[i] = SqrtReal(mInv[i * nParams_ + i]); }
+
 		for (size_t i = 0; i < nParams_; ++i) {
 			crlb[i] = SqrtReal(mInv[i * nParams_ + i]);
 			std::cout << mInv[i * nParams_ + i] << "\t";
@@ -200,6 +215,7 @@ void SplineFit::derivativeSpline(const size_t x, const size_t y, const size_t z,
                                  const std::vector<double>& p, std::vector<double>& dudt, double& model) const
 {
 	const size_t Pos = z * splineSizeXY_ + y * splineSizeX_ + x;
+	std::ranges::fill(dudt, 0.0);
 
 	for (size_t i = 0; i < SPLINE_PATCH_SIZE; ++i) {
 		const size_t Id = i * splineSizeXYZ_ + Pos;
