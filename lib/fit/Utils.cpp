@@ -194,7 +194,7 @@ void Delta3D(const double x, const double y, const double z, std::vector<double>
 			double cx = 1.0;
 			for (size_t k = 0; k < SPLINE_PATCH_SIDE; ++k) {
 				const double Coef     = cz * cy * cx;
-				f[i * 16 + j * 4 + k] = Coef;
+				f[i * SPLINE_PATCH_SQUARE + j * SPLINE_PATCH_SIDE + k] = Coef;
 				if (k < SPLINE_PATCH_SIDE - 1) { dxf[i * SPLINE_PATCH_SQUARE + j * SPLINE_PATCH_SIDE + k + 1] = static_cast<double>(k + 1) * Coef; }
 				if (j < SPLINE_PATCH_SIDE - 1) { dyf[i * SPLINE_PATCH_SQUARE + (j + 1) * SPLINE_PATCH_SIDE + k] = static_cast<double>(j + 1) * Coef; }
 				if (i < SPLINE_PATCH_SIDE - 1) { dzf[(i + 1) * SPLINE_PATCH_SQUARE + j * SPLINE_PATCH_SIDE + k] = static_cast<double>(i + 1) * Coef; }
