@@ -73,6 +73,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		initP(p, x, y, z, minI, maxI);
 		p[1][1] *= intensityRatio_;                  // Change l'intensité pour la position actuelle.
 		p[2][4] = static_cast<double>(splineSizeZ_); // Change le maximum pour Z.
+		std::cout << "X : " << p[1][2] << "\tY : " << p[1][3] << "\t Power : " << p[1][1] << "\n";
 		jump = {std::max(20.0, p[1][1]), std::max(100.0, p[1][1]), 1.0, 1.0, std::max(static_cast<double>(splineSizeZ_) / 3.0, 2.0)};
 
 		bool stop        = false;
@@ -147,6 +148,8 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			//----- Conditions d'arrêts -----
 			if (iteration >= N_ITER) { stop = true; } // Si Nombre d'itérations maximum atteint, on arrête.
 			if (iteration > 2 && (err < EPSILON_1 || std::fabs(err - OldErr) / err < EPSILON_1)) { stop = true; } // Si Convergence, on arrête.
+			std::cout << "iteration " << iteration << " : mu (" << mu << "), lambda (" << lambda << "), xc (" << Xc << "), yc (" << Yc << "), zc (" << Zc <<
+				")\n";
 		}
 
 		//Calcul du CRLB
@@ -159,8 +162,37 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 
 		double xc = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
 		       yc = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
+
+		std::cout << "xc : " << xc << "\tyc : " << yc << "\n";
+
 		const double Xc = xc - std::floor(xc), Yc = yc - std::floor(yc), Zc = p[1][4] - std::floor(p[1][4]);
 		Delta3D(Xc, Yc, Zc, f, dxf, dyf, dzf);
+		std::cout << "Xc : " << Xc << "\tYc : " << Yc << "\tZc : " << Zc << "\n";
+		std::cout << "f : \n";
+		for (size_t i = 0; i < nParams_; ++i) {
+			std::cout << "|\t";
+			for (size_t j = 0; j < nParams_; ++j) { std::cout << f[i * nParams_ + j] << "\t"; }
+			std::cout << "|\n";
+		}
+		std::cout << "dxf : \n";
+		for (size_t i = 0; i < nParams_; ++i) {
+			std::cout << "|\t";
+			for (size_t j = 0; j < nParams_; ++j) { std::cout << dxf[i * nParams_ + j] << "\t"; }
+			std::cout << "|\n";
+		}
+		std::cout << "dyf : \n";
+		for (size_t i = 0; i < nParams_; ++i) {
+			std::cout << "|\t";
+			for (size_t j = 0; j < nParams_; ++j) { std::cout << dyf[i * nParams_ + j] << "\t"; }
+			std::cout << "|\n";
+		}
+		std::cout << "dzf : \n";
+		for (size_t i = 0; i < nParams_; ++i) {
+			std::cout << "|\t";
+			for (size_t j = 0; j < nParams_; ++j) { std::cout << dzf[i * nParams_ + j] << "\t"; }
+			std::cout << "|\n";
+		}
+
 		for (size_t i = 0; i < n_; ++i) {
 			derivativeSpline(data[i].x + splineOffset_, data[i].y + splineOffset_, static_cast<size_t>(std::floor(p[1][4])),
 			                 f, dxf, dyf, dzf, p[1], dudt, model);
@@ -172,10 +204,11 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 				}
 			}
 		}
+
 		std::cout << "Matrice : \n";
 		for (size_t i = 0; i < nParams_; ++i) {
 			std::cout << "|\t";
-			for (size_t j = 0; j < nParams_; ++j) { std::cout << m[i * nParams_] << "\t"; }
+			for (size_t j = 0; j < nParams_; ++j) { std::cout << m[i * nParams_ + j] << "\t"; }
 			std::cout << "|\n";
 		}
 
@@ -189,11 +222,24 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 
 		for (size_t i = 0; i < nParams_; ++i) { crlb[i] = SqrtReal(mInv[i * nParams_ + i]); }
 
+		// print
+		std::cout << "dudt after : \n";
+		std::cout << "|\t";
+		for (size_t j = 0; j < nParams_; ++j) { std::cout << dudt[j] << "\t"; }
+		std::cout << "|\n";
+
+		std::cout << "Matrice : \n";
 		for (size_t i = 0; i < nParams_; ++i) {
-			crlb[i] = SqrtReal(mInv[i * nParams_ + i]);
-			std::cout << mInv[i * nParams_ + i] << "\t";
+			std::cout << "|\t";
+			for (size_t j = 0; j < nParams_; ++j) { std::cout << m[i * nParams_ + j] << "\t"; }
+			std::cout << "|\n";
 		}
-		std::cout << "\n";
+		std::cout << "Matrice Inverse : \n";
+		for (size_t i = 0; i < nParams_; ++i) {
+			std::cout << "|\t";
+			for (size_t j = 0; j < nParams_; ++j) { std::cout << mInv[i * nParams_ + j] << "\t"; }
+			std::cout << "|\n";
+		}
 
 		// Assignation
 		offset    = crlb[0];
@@ -224,7 +270,7 @@ void SplineFit::derivativeSpline(const size_t x, const size_t y, const size_t z,
 		dudt[3] += dyf[i] * coeffs_[Id]; // y
 		dudt[4] += dzf[i] * coeffs_[Id]; // z
 	}
-
+	//std::cout << "Temp : " << dudt[1] << "\t" << " theta[2] : " << p[1] << "\n";
 	dudt[0] = 1;          // offset
 	dudt[2] *= -1 * p[1]; // x
 	dudt[3] *= -1 * p[1]; // y
@@ -234,7 +280,7 @@ void SplineFit::derivativeSpline(const size_t x, const size_t y, const size_t z,
 
 //-------------------------------------------------------------------------------------------------
 void SplineFit::updateJacobianHessian(const double data, const double model, double& err, std::vector<double>& jacobian,
-                            std::vector<double>& hessian, const std::vector<double>& dudt) const
+                                      std::vector<double>& hessian, const std::vector<double>& dudt) const
 {
 	if (data > 0) { err = err + 2 * (model - data - data * log(model / data)); }
 	else { err = err + 2 * model; }
