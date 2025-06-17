@@ -41,16 +41,17 @@ void Deriv(double* out, const double i0, const double x, const double y, const d
 	const auto Exp = exp(-(X_2 + Y_2) / (2 * Sigma_2));
 	const auto P   = i0 * Exp;
 
-	out[0] = 1;                                                      // offset
-	out[1] = Exp;                                                    // I0
-	out[2] = P * x / Sigma_2;                                        // x0
-	out[3] = P * y / Sigma_2;                                        // y0
-	if (has_sigma) { out[4] = P / (sigma * Sigma_2) * (X_2 + Y_2); } // sigma
+	out[0] = 1;                                                      // offset	: ∂PSF/∂offset
+	out[1] = Exp;                                                    // I0		: ∂PSF/∂I0
+	out[2] = P * x / Sigma_2;                                        // x0		: ∂PSF/∂x0
+	out[3] = P * y / Sigma_2;                                        // y0		: ∂PSF/∂y0
+	if (has_sigma) { out[4] = P / (sigma * Sigma_2) * (X_2 + Y_2); } // sigma	: ∂PSF/∂sigma
 }
 
 //-------------------------------------------------------------------------------------------------
 void Deriv(double* out, const double i0, const double x, const double y, const double sigmaX, const double sigmaY, const double theta, const bool has_theta)
 {
+	// Calculs préliminaires
 	const auto X_2 = x * x, Y_2 = y * y, X_Y = x * y, SigmaX_2 = sigmaX * sigmaX, SigmaY_2 = sigmaY * sigmaY;
 
 	const auto CosT   = cos(theta), SinT    = sin(theta);
@@ -89,7 +90,7 @@ void InverseGaussJordan(std::vector<double>& in, std::vector<double>& out, const
 			out[i * n + j] *= Pivot_Inv;
 		}
 
-		// Mise à zéro des autres lignes
+		// Élimination des autres lignes
 		for (size_t j = 0; j < n; ++j) {
 			if (j != i) {
 				const double Factor = in[j * n + i];
@@ -110,6 +111,7 @@ void InverseLU(std::vector<double>& in, std::vector<double>& out, const size_t n
 	double tmp1 = 0;
 	std::vector<double> y(n * n);
 
+	// Décomposition LU
 	for (size_t j = 0; j < n; ++j) {
 		//calculate upper matrix
 		for (size_t i = 0; i <= j; ++i) {
@@ -131,7 +133,8 @@ void InverseLU(std::vector<double>& in, std::vector<double>& out, const size_t n
 		}
 	}
 
-	tmp1 = 0;
+	//tmp1 = 0; inutile réinitialisé après chaque utilisation
+	// Résolution pour chaque colonne
 	for (size_t num = 0; num < n; ++num) {
 		// calculate yy
 		if (num == 0) { y[0] = 1; }
@@ -177,7 +180,7 @@ void CenterOfMass(const std::vector<Pixel>& data, const size_t n, double& x, dou
 		x /= sum;
 		y /= sum;
 	}
-	else { // fallback au centre
+	else { // Valeur nulle partout ⇾ centre géométrique
 		x = static_cast<double>(n) / 2.0;
 		y = static_cast<double>(n) / 2.0;
 	}
@@ -212,16 +215,17 @@ bool Cholesky(const std::vector<double>& a, const size_t n, std::vector<double>&
 	for (size_t i = 0; i < n; ++i) {
 		for (size_t j = 0; j < i + 1; ++j) {
 			double s = 0;
+			// Calcul de la somme des produits scalaires entre lignes/colonnes précédentes
 			for (size_t k = 0; k < j; ++k) { s += u[i * n + k] * u[j * n + k]; }
 
-			if (i == j) {
-				if (a[i * n + i] - s >= 0) {
+			if (i == j) {                    // Diagonale
+				if (a[i * n + i] - s >= 0) { // On vérifie que la racine est réelle (matrice définie positive)
 					u[i * n + j] = sqrt(a[i * n + i] - s);
 					l[j * n + i] = u[i * n + j];
 				}
-				else { return false; }
+				else { return false; } // La matrice n'est pas définie positive → échec
 			}
-			else {
+			else { // Hors diagonale : calcul classique de la valeur
 				u[i * n + j] = (1.0 / u[j * n + j] * (a[i * n + j] - s));
 				l[j * n + i] = u[i * n + j];
 			}

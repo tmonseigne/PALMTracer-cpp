@@ -16,6 +16,18 @@
 #include "Utils.hpp"
 
 namespace palm_tracer {
+/// <summary>Calcule la racine carrée réelle d'un nombre, même s'il est négatif.
+///
+/// Cette fonction retourne la partie réelle de la racine carrée complexe d'un nombre réel.
+/// Contrairement à std::sqrt(double), qui retourne NaN pour une entrée négative.
+/// Cette version utilise les nombres complexes pour permettre un traitement sûr.
+///
+/// Cela garantit :
+/// - SqrtReal(x) = sqrt(x) si x ≥ 0
+/// - SqrtReal(x) = 0 si x < 0 (car partie réelle de sqrt(x + 0i) est nulle pour x < 0)
+/// </summary>
+/// <param name="value">Nombre réel dont on veut extraire la racine carrée réelle.</param>
+/// <returns>La partie réelle de la racine carrée complexe de `value`.</returns>
 static double SqrtReal(const double value)
 {
 	const std::complex Z(value, 0.0);
@@ -261,37 +273,38 @@ void SplineFit::derivativeSpline(const size_t x, const size_t y, const size_t z,
                                  const std::vector<double>& p, std::vector<double>& dudt, double& model) const
 {
 	const size_t Pos = z * splineSizeXY_ + y * splineSizeX_ + x;
-	std::ranges::fill(dudt, 0.0);
+	std::ranges::fill(dudt, 0.0); // Initialise toutes les dérivées à zéro
 
 	for (size_t i = 0; i < SPLINE_PATCH_SIZE; ++i) {
 		const size_t Id = i * splineSizeXYZ_ + Pos;
-		dudt[1] += f[i] * coeffs_[Id];   // Intensité
-		dudt[2] += dxf[i] * coeffs_[Id]; // x
-		dudt[3] += dyf[i] * coeffs_[Id]; // y
-		dudt[4] += dzf[i] * coeffs_[Id]; // z
+		dudt[1] += f[i] * coeffs_[Id];   // Contribution à l’intensité.
+		dudt[2] += dxf[i] * coeffs_[Id]; // Dérivée en x.
+		dudt[3] += dyf[i] * coeffs_[Id]; // Dérivée en y.
+		dudt[4] += dzf[i] * coeffs_[Id]; // Dérivée en z.
 	}
-	dudt[0] = 1;          // offset
-	dudt[2] *= -1 * p[1]; // x
-	dudt[3] *= -1 * p[1]; // y
-	dudt[4] *= p[1];      // z
-	model = p[0] + p[1] * dudt[1];
+	dudt[0] = 1;                   // Dérivée par rapport à l’offset
+	dudt[2] *= -1 * p[1];          // Ajustement en x.
+	dudt[3] *= -1 * p[1];          // Ajustement en y.
+	dudt[4] *= p[1];               // Ajustement en z.
+	model = p[0] + p[1] * dudt[1]; // Évaluation du modèle spline : offset + amplitude * contribution
 }
 
 //-------------------------------------------------------------------------------------------------
 void SplineFit::updateJacobianHessian(const double data, const double model, double& err, std::vector<double>& jacobian,
                                       std::vector<double>& hessian, const std::vector<double>& dudt) const
 {
+	// Calcul du terme d’erreur : -2 * log-vraisemblance (formule EMCCD)
 	if (data > 0) { err = err + 2 * (model - data - data * log(model / data)); }
 	else { err = err + 2 * model; }
 
 	const double T1 = 1 - data / model;
-	for (size_t i = 0; i < nParams_; ++i) { jacobian[i] += T1 * dudt[i]; }
+	for (size_t i = 0; i < nParams_; ++i) { jacobian[i] += T1 * dudt[i]; } // ∂L/∂θ_i
 
 	const double T2 = data / (model * model);
 	for (size_t i = 0; i < nParams_; ++i) {
 		for (size_t j = i; j < nParams_; ++j) {
 			hessian[i * nParams_ + j] += T2 * dudt[i] * dudt[j];
-			hessian[j * nParams_ + i] = hessian[i * nParams_ + j];
+			hessian[j * nParams_ + i] = hessian[i * nParams_ + j]; // Hessienne symétrique
 		}
 	}
 }
@@ -299,11 +312,11 @@ void SplineFit::updateJacobianHessian(const double data, const double model, dou
 //-------------------------------------------------------------------------------------------------
 void SplineFit::updateMuLambda(double& mu, double& lambda, const bool up)
 {
-	if (up) {
+	if (up) { // Augmentation du lambda : on recule dans la descente
 		mu     = std::max((1 + lambda * LAMBDA_UP) / (1 + lambda), 1.3);
 		lambda = LAMBDA_UP * lambda;
 	}
-	else {
+	else { // Diminution du lambda : on fait confiance au gradient
 		lambda = LAMBDA_DN * lambda;
 		mu     = 1 + lambda;
 	}
@@ -312,15 +325,17 @@ void SplineFit::updateMuLambda(double& mu, double& lambda, const bool up)
 //-------------------------------------------------------------------------------------------------
 void SplineFit::luEvaluate(const std::vector<double>& l, const std::vector<double>& u, const std::vector<double>& b, std::vector<double>& x) const
 {
-	//ax = b -> lux = b. Then y is defined to be Ux
-	std::vector y(6, 0.0);
-	// Forward solve Ly = b
+	// ax = b ⇾ lux = b, on résout Ly = b puis Ux = y
+	std::vector y(nParams_, 0.0);
+
+	// Substitution avant : Ly = b
 	for (size_t i = 0; i < nParams_; ++i) {
 		y[i] = b[i];
 		for (size_t j = 0; j < i; ++j) { y[i] -= l[j * nParams_ + i] * y[j]; }
 		y[i] /= l[i * nParams_ + i];
 	}
-	// Backward solve Ux = y
+
+	// Substitution arrière : Ux = y
 	for (int i = static_cast<int>(nParams_ - 1); i >= 0; --i) {
 		x[i] = y[i];
 		for (size_t j = i + 1; j < nParams_; j++) { x[i] -= u[j * nParams_ + i] * x[j]; }
