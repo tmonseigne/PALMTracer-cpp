@@ -147,4 +147,4 @@ void Fitting::initP(std::array<std::vector<double>, 3>& p, const double x, const
 		}
 	}
 }
-}
+} // namespace palm_tracer

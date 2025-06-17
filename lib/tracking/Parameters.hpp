@@ -37,4 +37,4 @@ public:
 
 	std::mt19937 rng_{42}; // Générateur de nombres pseudo-aléatoires, seedé avec 42
 };
-}
+} // namespace palm_tracer

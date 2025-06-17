@@ -112,4 +112,4 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 		return a[4] < b[4];                                           // Puis sur X (p[4])
 	});
 }
-}
+} // namespace palm_tracer

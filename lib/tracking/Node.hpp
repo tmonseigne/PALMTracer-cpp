@@ -72,4 +72,4 @@ private:
 	double simpleLinkageSwap(double limit, Node* node);
 	double simpleLinkageDoubleSwap(double limit, Node* node, size_t count);
 };
-}
+} // namespace palm_tracer

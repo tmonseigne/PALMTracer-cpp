@@ -115,4 +115,4 @@ void Delta3D(double x, double y, double z, std::vector<double>& f, std::vector<d
 /// <remarks>En cas d’échec (diagonale négative ou nulle), les vecteurs de sortie ne sont pas fiables.
 /// L’utilisateur doit s’assurer que `l` et `u` sont préalloués de taille n x n.</remarks>
 bool Cholesky(const std::vector<double>& a, size_t n, std::vector<double>& l, std::vector<double>& u);
-}
+} // namespace palm_tracer

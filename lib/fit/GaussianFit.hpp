@@ -89,4 +89,4 @@ protected:
 	double lm_matx(const std::vector<Pixel>& grid, const std::vector<double>& p, const std::vector<double>& weight,
 	               std::vector<double>& alpha, std::vector<double>& beta, std::vector<double>& hat) const;
 };
-}
+}  // namespace palm_tracer

@@ -11,26 +11,31 @@
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
 namespace {
-	struct Filter {
-		bool enabled;
-		double value;
-	};
+struct Filter {
+	bool enabled;
+	double value;
+};
 
-	// Création d'un tableau constexpr avec tous à false + 0.0 sauf
-	constexpr std::array<Filter, N_LOCALIZATIONS> MakeDefaultFilter()
-	{
-		std::array<Filter, N_LOCALIZATIONS> params{};
-		for (auto& p : params) { p = {.enabled = false, .value = 0.0}; }
-		// Paramètres à filtrer
-		params[0] = {.enabled = true, .value = VOLUME_MIN};
-		return params;
-	}
-
-	constexpr std::array<Filter, N_LOCALIZATIONS> SEGMENTATION_FILTER = MakeDefaultFilter();
-	///< Tableau de paramètres de filtre (min/max de surface, intensité, morphologie...)
-
-	bool CheckFilter(const Filter& p, const double value, const bool lessThan) { return p.enabled && (lessThan ? (value <= p.value) : (value >= p.value)); }
+// Création d'un tableau constexpr avec tous à false + 0.0 sauf
+constexpr std::array<Filter, N_LOCALIZATIONS> MakeDefaultFilter()
+{
+	std::array<Filter, N_LOCALIZATIONS> params{};
+	for (auto& p : params) { p = {.enabled = false, .value = 0.0}; }
+	// Paramètres à filtrer
+	params[0] = {.enabled = true, .value = VOLUME_MIN};
+	return params;
 }
+
+constexpr std::array<Filter, N_LOCALIZATIONS> SEGMENTATION_FILTER = MakeDefaultFilter();
+///< Tableau de paramètres de filtre (min/max de surface, intensité, morphologie...)
+
+/// <summary>Vérifie si le filtre est actif et valide.</summary>
+/// <param name="f">Filtre.</param>
+/// <param name="value">Valeur.</param>
+/// <param name="lessThan">Comparatif (True si plus petit que, False sinon).</param>
+/// <returns></returns>
+bool CheckFilter(const Filter& f, const double value, const bool lessThan) { return f.enabled && (lessThan ? (value <= f.value) : (value >= f.value)); }
+} // namespace
 
 //-------------------------------------------------------------------------------------------------
 Segmentation2D::Segmentation2D(const ATrous& decomposition, const double threshold, const double ratio)
@@ -73,7 +78,7 @@ void Segmentation2D::FilterData()
 
 	// Marquage des régions sur les bords
 	std::vector bounds(infos_.size(), false);
-	if (SEGMENTATION_FILTER[12].enabled == 1) {
+	if (SEGMENTATION_FILTER[12].enabled) {
 		for (size_t i = 0; i < height_; ++i) {
 			const auto Idx = i * width_;
 			if (map_[Idx] != 0) { bounds[map_[Idx]] = true; }
@@ -380,4 +385,4 @@ void Segmentation2D::watershed()
 		}
 	}
 }
-}
+} // namespace palm_tracer

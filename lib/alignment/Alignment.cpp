@@ -224,4 +224,4 @@ double Alignment::getArea(const std::vector<Coord>& poly) const
 	}
 	return 0.5 * static_cast<double>(upsampling2_) * std::abs(area);
 }
-}
+} // namespace palm_tracer

@@ -433,4 +433,4 @@ double Node::simpleLinkageDoubleSwap(const double limit, Node* node, const size_
 	return DeltaE;
 	//return(0.);
 }
-}
+} // namespace palm_tracer

@@ -89,4 +89,4 @@ protected:
 	/// <param name="x">Vecteur solution du système (x).</param>
 	void luEvaluate(const std::vector<double>& l, const std::vector<double>& u, const std::vector<double>& b, std::vector<double>& x) const;
 };
-}
+} // namespace palm_tracer

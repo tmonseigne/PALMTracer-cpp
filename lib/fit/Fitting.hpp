@@ -114,4 +114,4 @@ protected:
 	/// <param name="maxI">Intensité maximale dans la ROI (servira à initialiser l'amplitude).</param>
 	void initP(std::array<std::vector<double>, 3>& p, double x, double y, double z, double minI, double maxI) const;
 };
-}
+} // namespace palm_tracer

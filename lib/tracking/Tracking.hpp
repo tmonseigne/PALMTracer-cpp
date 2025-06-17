@@ -46,4 +46,4 @@ protected:
 	void setColorToTrackedStructures();
 	void setIndexToTrackedStructures();
 };
-}
+} // namespace palm_tracer

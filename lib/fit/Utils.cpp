@@ -228,4 +228,4 @@ bool Cholesky(const std::vector<double>& a, const size_t n, std::vector<double>&
 	}
 	return true;
 }
-}
+} // namespace palm_tracer

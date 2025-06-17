@@ -119,4 +119,4 @@ private:
 	/// <param name="points">Résultat de l'analyse.</param>
 	void processingPlane(size_t plane, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const;
 };
-}
+} // namespace palm_tracer

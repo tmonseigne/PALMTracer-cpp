@@ -259,4 +259,4 @@ double GaussianFit::lm_matx(const std::vector<Pixel>& grid, const std::vector<do
 
 	return chi2(alpha, beta, dydp, weight, delta);
 }
-}
+} // namespace palm_tracer

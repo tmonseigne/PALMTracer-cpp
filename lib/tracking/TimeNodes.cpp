@@ -56,4 +56,4 @@ void TimeNodes::ComputeConstantSigmas(double& intensity, size_t& nInt, double& m
 {
 	for (const auto& N : nodes_) { N.ComputeConstantSigmas(intensity, nInt, mean, nMean, distance, nDist); }
 }
-}
+} // namespace palm_tracer

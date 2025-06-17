@@ -37,4 +37,4 @@ public:
 	void MakeAllInitializationConnections() { for (auto& node : nodes_) { node.MakeInitializationConnection(); } }
 	double TryRandomChange(const double limit) { return nNodes_ == 0 ? 0 : nodes_[params_->RandomModulo(nNodes_)].MakeChange(limit); }
 };
-}
+} // namespace palm_tracer

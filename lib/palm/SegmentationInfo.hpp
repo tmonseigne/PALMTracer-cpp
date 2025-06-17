@@ -67,4 +67,4 @@ public:
 		intensity_ = 0;
 	}
 };
-}
+} // namespace palm_tracer

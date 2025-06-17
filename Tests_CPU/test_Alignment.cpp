@@ -175,4 +175,4 @@ INSTANTIATE_TEST_CASE_P(
 		}(), 2
 		}
 	));
-}
+} // namespace palm_tracer

@@ -90,4 +90,4 @@ private:
 	/// Utilise une file de priorité pour propager les labels des régions à travers la carte de potentiel. </summary>
 	void watershed();
 };
-}
+}  // namespace palm_tracer

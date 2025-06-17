@@ -122,4 +122,4 @@ protected:
 	/// <returns>Aire du polygone en unités carrées.</returns>
 	[[nodiscard]] double getArea(const std::vector<Coord>& poly) const;
 };
-}
+}  // namespace palm_tracer // namespace palm_tracer

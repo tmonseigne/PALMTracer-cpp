@@ -263,4 +263,4 @@ void Tracking::updateConstants()
 	params_->stdMean_      = sqrt(params_->stdMean_);
 	for (auto& t : timeNodes_) { for (auto& n : t.nodes_) { n.UpdateConstants(); } }
 }
-}
+} // namespace palm_tracer

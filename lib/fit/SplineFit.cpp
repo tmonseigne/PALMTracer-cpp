@@ -281,4 +281,4 @@ void SplineFit::luEvaluate(const std::vector<double>& l, const std::vector<doubl
 		x[i] /= u[i * nParams_ + i];
 	}
 }
-}
+} // namespace palm_tracer
