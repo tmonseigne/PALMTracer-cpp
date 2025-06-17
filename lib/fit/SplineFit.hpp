@@ -23,11 +23,13 @@ public:
 	                   const double* fitParams) : Fitting(mode, image, height, width, maxPoints, fitParams) { initialize(); }
 
 protected:
-	static constexpr double LAMBDA_0   = 0.1,  ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.
-	                        LAMBDA_MAX = 1e7,  ///< Valeur maximale autorisée pour lambda.
-	                        LAMBDA_MIN = 1e-7, ///< Valeur minimale autorisée pour lambda.
-	                        LAMBDA_UP  = 10,   ///< Facteur multiplicatif lorsque la mise à jour est inefficace (augmentation de lambda).
-	                        LAMBDA_DN  = 0.1;  ///< Facteur de réduction de lambda lorsque la mise à jour est réussie.
+	static constexpr double LAMBDA_0   = 0.1,   ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.
+	                        LAMBDA_MAX = 1e7,   ///< Valeur maximale autorisée pour lambda.
+	                        LAMBDA_MIN = 1e-7,  ///< Valeur minimale autorisée pour lambda.
+	                        LAMBDA_UP  = 10,    ///< Facteur multiplicatif lorsque la mise à jour est inefficace (augmentation de lambda).
+	                        LAMBDA_DN  = 0.1;   ///< Facteur de réduction de lambda lorsque la mise à jour est réussie.
+	static constexpr double EPSILON_1  = 1e-6,  ///< Seuil de convergence pour le changement de la fonction objectif.
+	                        EPSILON_2  = 1e-10; ///< avant calcul de la matrice inverse
 
 	size_t splineSizeX_,         ///<
 	       splineSizeY_,         ///<
@@ -50,7 +52,7 @@ protected:
 	                      const std::vector<double>& dzf, const std::vector<double>& p, std::vector<double>& dudt, double& model) const;
 
 	void updateJacobianHessian(double data, double model, double& err, std::vector<double>& jacobian,
-	                 std::vector<double>& hessian, const std::vector<double>& dudt) const;
+	                           std::vector<double>& hessian, const std::vector<double>& dudt) const;
 
 	static void updateMuLambda(double& mu, double& lambda, bool up);
 	void luEvaluate(const std::vector<double>& l, const std::vector<double>& u, const std::vector<double>& b, std::vector<double>& x) const;

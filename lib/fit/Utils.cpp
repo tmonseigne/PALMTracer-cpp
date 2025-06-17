@@ -125,7 +125,7 @@ void InverseLU(std::vector<double>& in, std::vector<double>& out, const size_t n
 			if (j > 0) {
 				for (size_t k = 0; k <= j - 1; ++k) { tmp1 += in[i + k * n] * in[k + j * n]; }
 				in[i + j * n] = (1 / in[j + j * n]) * (in[i + j * n] - tmp1);
-				tmp1         = 0;
+				tmp1          = 0;
 			}
 			else { in[i + j * n] = (1 / in[j + j * n]) * in[i + j * n]; }
 		}
@@ -151,7 +151,7 @@ void InverseLU(std::vector<double>& in, std::vector<double>& out, const size_t n
 		for (int i = static_cast<int>(n) - 2; i >= 0; --i) {
 			for (size_t j = i + 1; j < n; ++j) { tmp1 += in[i + j * n] * out[j + num * n]; }
 			out[i + num * n] = (1 / in[i + i * n]) * (y[i] - tmp1);
-			tmp1              = 0;
+			tmp1             = 0;
 		}
 	}
 }
@@ -193,7 +193,7 @@ void Delta3D(const double x, const double y, const double z, std::vector<double>
 		for (size_t j = 0; j < SPLINE_PATCH_SIDE; ++j) {
 			double cx = 1.0;
 			for (size_t k = 0; k < SPLINE_PATCH_SIDE; ++k) {
-				const double Coef     = cz * cy * cx;
+				const double Coef                                      = cz * cy * cx;
 				f[i * SPLINE_PATCH_SQUARE + j * SPLINE_PATCH_SIDE + k] = Coef;
 				if (k < SPLINE_PATCH_SIDE - 1) { dxf[i * SPLINE_PATCH_SQUARE + j * SPLINE_PATCH_SIDE + k + 1] = static_cast<double>(k + 1) * Coef; }
 				if (j < SPLINE_PATCH_SIDE - 1) { dyf[i * SPLINE_PATCH_SQUARE + (j + 1) * SPLINE_PATCH_SIDE + k] = static_cast<double>(j + 1) * Coef; }

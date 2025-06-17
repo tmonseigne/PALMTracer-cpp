@@ -64,12 +64,7 @@ protected:
 	       roiHalf_;              ///< Demi taille de la région d'intérêt autour du point.
 	const double* fitParams_;     ///< Paramètres de l'ajustement
 
-	static constexpr size_t N_ITER    = 50;   ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
-	static constexpr double EPSILON_1 = 1e-6, ///< Seuil de convergence pour le changement de la fonction objectif.
-	                        EPSILON_2 = 1e-6, ///< Seuil de convergence pour le gradient.
-	                        EPSILON_3 = 1e-5, ///< Seuil de convergence pour la variation des paramètres.
-	                        EPSILON_4 = 1e-2; ///< Tolérance utilisée pour juger la stagnation ou instabilité.
-
+	static constexpr size_t N_ITER = 50; ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
 
 	/// <summary>Initialise les différents membres de la classe. </summary>
 	void initialize();

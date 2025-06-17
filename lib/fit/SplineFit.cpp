@@ -148,8 +148,8 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			//----- Conditions d'arrêts -----
 			if (iteration >= N_ITER) { stop = true; } // Si Nombre d'itérations maximum atteint, on arrête.
 			if (iteration > 2 && (err < EPSILON_1 || std::fabs(err - OldErr) / err < EPSILON_1)) { stop = true; } // Si Convergence, on arrête.
-			std::cout << "iteration " << iteration << " : mu (" << mu << "), lambda (" << lambda << "), xc (" << Xc << "), yc (" << Yc << "), zc (" << Zc <<
-				")\n";
+			std::cout << "iteration " << iteration << " : mu (" << mu << "), lambda (" << lambda
+				<< "), xc (" << Xc << "), yc (" << Yc << "), zc (" << Zc << ")\n";
 		}
 
 		//Calcul du CRLB
@@ -214,7 +214,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 
 		// Si la convergence est parfaite (ou le point pile sur une grille), des 0 seront présents, à remplacer pour calculer la matrice inverse.
 		for (size_t i = 0; i < nParams_; ++i) {
-			if (std::fabs(m[i * nParams_ + i]) < std::numeric_limits<double>::epsilon()) { m[i * nParams_ + i] = std::numeric_limits<double>::epsilon(); }
+			if (std::fabs(m[i * nParams_ + i]) < std::numeric_limits<double>::epsilon()) { m[i * nParams_ + i] = EPSILON_2; }
 		}
 
 		// Matrice inverse (CRLB=F^-1)
@@ -270,7 +270,6 @@ void SplineFit::derivativeSpline(const size_t x, const size_t y, const size_t z,
 		dudt[3] += dyf[i] * coeffs_[Id]; // y
 		dudt[4] += dzf[i] * coeffs_[Id]; // z
 	}
-	//std::cout << "Temp : " << dudt[1] << "\t" << " theta[2] : " << p[1] << "\n";
 	dudt[0] = 1;          // offset
 	dudt[2] *= -1 * p[1]; // x
 	dudt[3] *= -1 * p[1]; // y

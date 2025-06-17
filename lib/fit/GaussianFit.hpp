@@ -28,6 +28,10 @@ protected:
 	                        LAMBDA_MIN = 1e-7, ///< Valeur minimale autorisée pour lambda.
 	                        LAMBDA_UP  = 11,   ///< Facteur multiplicatif lorsque la mise à jour est inefficace (augmentation de lambda).
 	                        LAMBDA_DN  = 9;    ///< Facteur de réduction de lambda lorsque la mise à jour est réussie.
+	static constexpr double EPSILON_1  = 1e-6, ///< Seuil de convergence pour le changement de la fonction objectif.
+	                        EPSILON_2  = 1e-6, ///< Seuil de convergence pour le gradient.
+	                        EPSILON_3  = 1e-5, ///< Seuil de convergence pour la variation des paramètres.
+	                        EPSILON_4  = 1e-2; ///< Tolérance utilisée pour juger la stagnation ou instabilité.
 
 	double sigmaX_, ///< Écart-type initial sur X.
 	       sigmaY_, ///< Écart-type initial sur Y.
