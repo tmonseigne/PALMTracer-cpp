@@ -1,13 +1,7 @@
 #include "Utils.hpp"
 
 #include <algorithm>
-#include <array>
-#include <cmath>
-#include <cstdlib>
 #include <execution>
-#include <numbers>
-#include <numeric>
-#include <ranges>
 #include <vector>
 
 namespace palm_tracer {
@@ -219,7 +213,7 @@ bool Cholesky(const std::vector<double>& a, const size_t n, std::vector<double>&
 			for (size_t k = 0; k < j; ++k) { s += u[i * n + k] * u[j * n + k]; }
 
 			if (i == j) {                    // Diagonale
-				if (a[i * n + i] - s >= 0) { // On vérifie que la racine est réelle (matrice définie positive)
+				if (a[i * n + i] - s >= 0) { // On vérifie que la racine est réelle (matrice définie positive).
 					u[i * n + j] = sqrt(a[i * n + i] - s);
 					l[j * n + i] = u[i * n + j];
 				}

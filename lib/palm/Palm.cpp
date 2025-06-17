@@ -9,7 +9,6 @@
 #include <array>
 #include <cmath>
 #include <execution>
-#include <numbers>
 #include <thread>
 #include <vector>
 
@@ -24,7 +23,7 @@ namespace palm_tracer {
 Palm::Palm(const unsigned short* image, double* points, const size_t pointsListSize, const size_t height, const size_t width, const size_t planes,
            const double thresholdVal, const double watershedRatio, const size_t fit, const double* fitParams)
 	: stack_(image), points_(points), height_(height), width_(width), planes_(planes), size_(height * width),
-	  nPointsMax_(pointsListSize / N_LOCALIZATIONS), nPointsMaxPerPlane_((pointsListSize / N_LOCALIZATIONS) / planes),
+	  nPointsMaxPerPlane_((pointsListSize / N_LOCALIZATIONS) / planes),
 	  thresholdVal_(thresholdVal), watershedRatio_(watershedRatio), fit_(fit), fitParams_(fitParams) { }
 
 //-------------------------------------------------------------------------------------------------

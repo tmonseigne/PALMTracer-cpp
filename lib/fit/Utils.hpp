@@ -102,7 +102,7 @@ void Delta3D(double x, double y, double z, std::vector<double>& f, std::vector<d
 
 /// <summary>Réalise une décomposition de Cholesky d'une matrice symétrique définie positive.
 ///
-/// Cette fonction effectue la décomposition d'une matrice réelle symétrique définie positive `a` de taille n×n selon la formule :
+/// Cette fonction effectue la décomposition d'une matrice réelle symétrique définie positive `A` de taille nxn selon la formule :
 /// A = L * Lᵀ = Uᵀ * U.
 ///
 /// Ici, L est triangulaire inférieure, U est triangulaire supérieure, et L = Uᵀ.

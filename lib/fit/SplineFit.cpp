@@ -4,11 +4,8 @@
 #include <array>
 #include <cmath>
 #include <complex>
-#include <cstdlib>
 #include <execution>
 #include <limits>
-#include <numbers>
-#include <numeric>
 #include <ranges>
 #include <vector>
 
@@ -18,7 +15,7 @@ namespace palm_tracer {
 /// <summary>Calcule la racine carrée réelle d'un nombre, même s'il est négatif.
 ///
 /// Cette fonction retourne la partie réelle de la racine carrée complexe d'un nombre réel.
-/// Contrairement à std::sqrt(double), qui retourne NaN pour une entrée négative.
+/// Contrairement à la fonction standard (std::sqrt(x)), qui retourne NaN pour une entrée négative.
 /// Cette version utilise les nombres complexes pour permettre un traitement sûr.
 ///
 /// Cela garantit :

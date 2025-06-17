@@ -45,11 +45,9 @@ private:
 
 	/// <summary>Calcule 2^val.</summary>
 	/// <param name="val">Exposant (taille non signée)</param>
-	/// <returns>Renvoie 2^val (2 élevé à la puissance val)</returns>
-	/// <remarks>
-	/// Cette fonction est constexpr, donc évaluée à la compilation si possible.
-	/// Le mot-clé [[nodiscard]] indique que le résultat ne doit pas être ignoré.
-	/// </remarks>
+	/// <returns>Renvoie 2^val.</returns>
+	/// <remarks>Cette fonction est constexpr, donc évaluée à la compilation si possible.
+	/// Le mot-clé [[nodiscard]] indique que le résultat ne doit pas être ignoré.</remarks>
 	[[nodiscard]] static constexpr size_t twoToThe(const size_t val) noexcept { return (val == 0) ? 1 : static_cast<size_t>(1) << val; }
 
 	/// <summary>Calcule l'offset dans un tableau 1D à partir d'une position 2D avec gestion des débordements par clamp.</summary>

@@ -228,7 +228,7 @@ void Tracking::computeConstants()
 		if (distance > 1e-8 && nDist > 0) { params_->stdDistance_ = distance / static_cast<double>(nDist); } //*1.0275;//3.4352;
 		params_->stdDistance_ = sqrt(params_->stdDistance_);
 	}
-	params_->stdDistance_ /= 3; //attention au / 3 c'est juste pour augmenter l'influence de la distance
+	params_->stdDistance_ /= 3; //attention à la division par 3, c'est juste pour augmenter l'influence de la distance.
 	for (auto& t : timeNodes_) { for (auto& n : t.nodes_) { n.UpdateConstants(); } }
 }
 

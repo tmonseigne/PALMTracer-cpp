@@ -66,8 +66,7 @@ private:
 	size_t height_,                           ///< Hauteur de l'image d'entrée.
 	       width_,                            ///< Largeur de l'image d'entrée.
 	       size_;                             ///< Taille totale de l'image (height_ * width_).
-	double threshold_,                        ///< Seuil de détection utilisé après la décomposition en ondelettes.
-	       ratio_;                            ///< Rapport utilisé dans l'algorithme de Watershed.
+	double ratio_;                            ///< Rapport utilisé dans l'algorithme de Watershed.
 	std::vector<SegmentationInfo> infos_;     ///< Vecteur de structures 2D analysées ou filtrées.
 	std::vector<unsigned short> map_;         ///< Image segmentée (carte binaire des objets détectés).
 	std::vector<double> output_;              ///< Carte des valeurs utilisées pour la segmentation (après seuillage).

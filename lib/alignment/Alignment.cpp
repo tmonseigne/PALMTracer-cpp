@@ -77,7 +77,7 @@ void Alignment::computeCoord(const double oldX, const double oldY, double& newX,
 //-------------------------------------------------------------------------------------------------
 void Alignment::align()
 {
-	omp_set_dynamic(1); // Autorise l’adaptation automatique du nombre de thread
+	omp_set_dynamic(1); // Autorise l’adaptation automatique du nombre de threads.
 	initOutput();
 	precomputeTransformMap();
 	applyTransform();
@@ -186,7 +186,7 @@ void Alignment::clipPolygon(const std::vector<Coord>& poly, std::vector<Coord>& 
 		for (size_t i = 0; i < input.size(); ++i) {
 			const auto& A = input[i];
 			const auto& B = input[(i + 1) % input.size()];
-			double bound  = 0.0;
+			double bound;
 			switch (edge) {
 				case 0: bound = xmin;
 					break; // left

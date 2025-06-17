@@ -55,7 +55,7 @@ public:
 	/// <param name="fitParams"> paramètres de l'ajustement
 	/// En cas d'ajustement Gaussien :
 	///		- Taille du ROI (fenêtre carrée centrée) utilisé pour l'ajustement autour de chaque point détecté.
-	///		- Valeur initiale de sigma utilisée dans l'ajustement (sigmaX = sigma et sigmaY = 2* sigma).
+	///		- Valeur initiale de sigma utilisé dans l'ajustement (sigmaX = sigma et sigmaY = 2* sigma).
 	///		- Valeur initiale de l'orientation theta pour l'ajustement.
 	///	En cas d'ajustement par Splines :
 	///		- Taille du ROI (fenêtre carrée centrée) utilisé pour l'ajustement autour de chaque point détecté.
@@ -94,7 +94,6 @@ private:
 	       width_,                ///< Largeur de l'image.
 	       planes_,               ///< Nombre de plans de la pile.
 	       size_,                 ///< Taille totale d'une image (height × width).
-	       nPointsMax_,           ///< Nombre maximum de points (pour éviter le débordement dans le tableau `points_`).
 	       nPointsMaxPerPlane_;   ///< Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).
 
 	// Decomposition members
