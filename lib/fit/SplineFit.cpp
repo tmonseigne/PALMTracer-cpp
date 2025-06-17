@@ -6,7 +6,6 @@
 #include <complex>
 #include <cstdlib>
 #include <execution>
-#include <iostream>
 #include <limits>
 #include <numbers>
 #include <numeric>
@@ -85,7 +84,6 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		initP(p, x, y, z, minI, maxI);
 		p[1][1] *= intensityRatio_;                  // Change l'intensité pour la position actuelle.
 		p[2][4] = static_cast<double>(splineSizeZ_); // Change le maximum pour Z.
-		std::cout << "X : " << p[1][2] << "\tY : " << p[1][3] << "\t Power : " << p[1][1] << "\n";
 		jump = {std::max(20.0, p[1][1]), std::max(100.0, p[1][1]), 1.0, 1.0, std::max(static_cast<double>(splineSizeZ_) / 3.0, 2.0)};
 
 		bool stop        = false;
@@ -160,8 +158,6 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			//----- Conditions d'arrêts -----
 			if (iteration >= N_ITER) { stop = true; } // Si Nombre d'itérations maximum atteint, on arrête.
 			if (iteration > 2 && (err < EPSILON_1 || std::fabs(err - OldErr) / err < EPSILON_1)) { stop = true; } // Si Convergence, on arrête.
-			std::cout << "iteration " << iteration << " : mu (" << mu << "), lambda (" << lambda
-				<< "), xc (" << Xc << "), yc (" << Yc << "), zc (" << Zc << ")\n";
 		}
 
 		//Calcul du CRLB
@@ -175,35 +171,8 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		double xc = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
 		       yc = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
 
-		std::cout << "xc : " << xc << "\tyc : " << yc << "\n";
-
 		const double Xc = xc - std::floor(xc), Yc = yc - std::floor(yc), Zc = p[1][4] - std::floor(p[1][4]);
 		Delta3D(Xc, Yc, Zc, f, dxf, dyf, dzf);
-		std::cout << "Xc : " << Xc << "\tYc : " << Yc << "\tZc : " << Zc << "\n";
-		std::cout << "f : \n";
-		for (size_t i = 0; i < nParams_; ++i) {
-			std::cout << "|\t";
-			for (size_t j = 0; j < nParams_; ++j) { std::cout << f[i * nParams_ + j] << "\t"; }
-			std::cout << "|\n";
-		}
-		std::cout << "dxf : \n";
-		for (size_t i = 0; i < nParams_; ++i) {
-			std::cout << "|\t";
-			for (size_t j = 0; j < nParams_; ++j) { std::cout << dxf[i * nParams_ + j] << "\t"; }
-			std::cout << "|\n";
-		}
-		std::cout << "dyf : \n";
-		for (size_t i = 0; i < nParams_; ++i) {
-			std::cout << "|\t";
-			for (size_t j = 0; j < nParams_; ++j) { std::cout << dyf[i * nParams_ + j] << "\t"; }
-			std::cout << "|\n";
-		}
-		std::cout << "dzf : \n";
-		for (size_t i = 0; i < nParams_; ++i) {
-			std::cout << "|\t";
-			for (size_t j = 0; j < nParams_; ++j) { std::cout << dzf[i * nParams_ + j] << "\t"; }
-			std::cout << "|\n";
-		}
 
 		for (size_t i = 0; i < n_; ++i) {
 			derivativeSpline(data[i].x + splineOffset_, data[i].y + splineOffset_, static_cast<size_t>(std::floor(p[1][4])),
@@ -217,13 +186,6 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			}
 		}
 
-		std::cout << "Matrice : \n";
-		for (size_t i = 0; i < nParams_; ++i) {
-			std::cout << "|\t";
-			for (size_t j = 0; j < nParams_; ++j) { std::cout << m[i * nParams_ + j] << "\t"; }
-			std::cout << "|\n";
-		}
-
 		// Si la convergence est parfaite (ou le point pile sur une grille), des 0 seront présents, à remplacer pour calculer la matrice inverse.
 		for (size_t i = 0; i < nParams_; ++i) {
 			if (std::fabs(m[i * nParams_ + i]) < std::numeric_limits<double>::epsilon()) { m[i * nParams_ + i] = EPSILON_2; }
@@ -234,25 +196,6 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 
 		for (size_t i = 0; i < nParams_; ++i) { crlb[i] = SqrtReal(mInv[i * nParams_ + i]); }
 
-		// print
-		std::cout << "dudt after : \n";
-		std::cout << "|\t";
-		for (size_t j = 0; j < nParams_; ++j) { std::cout << dudt[j] << "\t"; }
-		std::cout << "|\n";
-
-		std::cout << "Matrice : \n";
-		for (size_t i = 0; i < nParams_; ++i) {
-			std::cout << "|\t";
-			for (size_t j = 0; j < nParams_; ++j) { std::cout << m[i * nParams_ + j] << "\t"; }
-			std::cout << "|\n";
-		}
-		std::cout << "Matrice Inverse : \n";
-		for (size_t i = 0; i < nParams_; ++i) {
-			std::cout << "|\t";
-			for (size_t j = 0; j < nParams_; ++j) { std::cout << mInv[i * nParams_ + j] << "\t"; }
-			std::cout << "|\n";
-		}
-
 		// Assignation
 		offset    = crlb[0];
 		intensity = crlb[1];
@@ -261,7 +204,6 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		z         = deltaZ_ * (p[1][4] - initZ_);
 		rssXY     = (crlb[2] + crlb[3]) / 2;
 		rssZ      = deltaZ_ * crlb[4];
-		std::cout << "offset :" << offset << "\t" << "intensity :" << intensity << "\t" << "rssXY :" << rssXY << "\t" << "rssZ :" << rssZ << "\n";
 	}
 
 	fill(infos, point, offset, intensity, x, y, z, 0, 0, 0, rssXY, rssZ);
