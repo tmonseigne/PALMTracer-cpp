@@ -1,6 +1,7 @@
 #include "Utils.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <execution>
 #include <vector>
 
@@ -214,7 +215,7 @@ bool Cholesky(const std::vector<double>& a, const size_t n, std::vector<double>&
 
 			if (i == j) {                    // Diagonale
 				if (a[i * n + i] - s >= 0) { // On vérifie que la racine est réelle (matrice définie positive).
-					u[i * n + j] = sqrt(a[i * n + i] - s);
+					u[i * n + j] = std::sqrt(a[i * n + i] - s);
 					l[j * n + i] = u[i * n + j];
 				}
 				else { return false; } // La matrice n'est pas définie positive → échec
