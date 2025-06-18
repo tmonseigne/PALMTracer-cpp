@@ -7,6 +7,19 @@ et ce projet adhère à [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+<!-- run command git log v1.2.0..HEAD --pretty=format:"- %s"-->
+
+## [1.2.0] - 2025-06-18
+
+### Ajouté
+
+- Ajout d'un premier ajustement par splines à améliorer avec des tests poussés ([#15](https://github.com/tmonseigne/PALMTracer-cpp/pull/15))
+
+### Modifié
+
+- Correction d'une erreur critique sur la segmentation pouvant faire crasher le traitement dans certains cas.
+- Corrections mineures sur les Clang code Issues
+
 ## [1.1.0] - 2025-06-05
 
 ### Ajouté
