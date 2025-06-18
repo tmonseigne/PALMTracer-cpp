@@ -30,7 +30,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 
 	// Vérification si la zone d'intérêt est entièrement dans l'image (évite les bords)
 	const auto Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
-	if (roiHalf_ <= Ux && Ux <= width_ - roiHalf_ - 1 && roiHalf_ <= Uy && Uy <= height_ - roiHalf_ - 1) {
+	if (roiHalf_ <= Ux && Ux < width_ - roiHalf_ && roiHalf_ <= Uy && Uy < height_ - roiHalf_) {
 		// Création des variables
 		double lambda = LAMBDA_0;
 		std::vector<double> alpha(nParams2_), alphaR(nParams2_), alphaRi(nParams2_),

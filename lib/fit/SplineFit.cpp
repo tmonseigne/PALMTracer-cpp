@@ -62,26 +62,27 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 
 	// Vérification si la zone d'intérêt est entièrement dans l'image (évite les bords)
 	const auto Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
-	if (roiHalf_ <= Ux && Ux <= width_ - roiHalf_ - 1 && roiHalf_ <= Uy && Uy <= height_ - roiHalf_ - 1) {
+	if (roiHalf_ <= Ux && Ux < width_ - roiHalf_ && roiHalf_ <= Uy && Uy < height_ - roiHalf_) {
 		// Création des variables
 		double lambda = LAMBDA_0, minI = 0, maxI = 0, model = 0, err = std::numeric_limits<double>::max(), mu = 1 + lambda;
 		std::vector<double> hessian(nParams2_), l(nParams2_), u(nParams2_),
 		                    dudt(nParams_), jacobian(nParams_), jump(nParams_), update(nParams_),
 		                    f(SPLINE_PATCH_SIZE), dxf(SPLINE_PATCH_SIZE), dyf(SPLINE_PATCH_SIZE), dzf(SPLINE_PATCH_SIZE);
-		std::vector<Pixel> data(n_);
+		std::vector<Pixel> grid(n_);
 		std::array<std::vector<double>, 3> p;
 
 		// Initialization of data & t (A vérifier)
-		preCompute(Ux, Uy, data, minI, maxI);
+		preCompute(Ux, Uy, grid, minI, maxI);
 
 		// Initialisation du/des P :
 		// - Calcul du centre de masse de la région pour x et y
-		CenterOfMass(data, roi_, x, y);
+		CenterOfMass(grid, roi_, x, y);
 
 		initP(p, x, y, z, minI, maxI);
-		p[1][1] *= intensityRatio_;                  // Change l'intensité pour la position actuelle.
-		p[2][4] = static_cast<double>(splineSizeZ_); // Change le maximum pour Z.
-		jump    = {std::max(20.0, p[1][1]), std::max(100.0, p[1][1]), 1.0, 1.0, std::max(static_cast<double>(splineSizeZ_) / 3.0, 2.0)};
+		p[1][1] *= intensityRatio_;                                                                // Change l'intensité pour la position actuelle.
+		p[2][4] = static_cast<double>(splineSizeZ_);                                               // Change le maximum pour Z.
+		for (size_t i = 0; i < nParams_; ++i) { p[1][i] = std::clamp(p[1][i], p[0][i], p[2][i]); } // Clamp en cas de problème.
+		jump = {std::max(20.0, p[1][1]), std::max(100.0, p[1][1]), 1.0, 1.0, std::max(static_cast<double>(splineSizeZ_) / 3.0, 2.0)};
 
 		bool stop        = false;
 		size_t iteration = 0;
@@ -106,19 +107,23 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 
 			//----- Calculs -----
 			// Calcul du patch 3D de 4x4x4 (64) (SPLINE_PATCH_SIDE = 4, SPLINE_PATCH_SIZE = 64)
-			const double X = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
-			             Y = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
+			const double Xr = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
+			             Yr = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
 
-			const double Xc = X - std::floor(X), Yc = Y - std::floor(Y), Zc = p[1][4] - std::floor(p[1][4]);
+			const int Xi = static_cast<int>(std::floor(Xr)),
+			          Yi = static_cast<int>(std::floor(Yr)),
+			          Zi = static_cast<int>(std::floor(p[1][4]));
+
+			const double Xc = Xr - Xi, Yc = Yr - Yi, Zc = p[1][4] - Zi;
 			Delta3D(Xc, Yc, Zc, f, dxf, dyf, dzf);
-
 			// Calcul des dérivées et initialisation du model
 			// offset utile, car la ROI et les coeffs ont peut-être des tailles différentes donc on recentre sur X et sur Y
 			// Exemple : ROI de 7 splineX de 11 : La ROI 7x7 est centrée à partir du point 2 dans la spline
-			for (size_t i = 0; i < n_; ++i) {
-				derivativeSpline(data[i].x + splineOffset_, data[i].y + splineOffset_, static_cast<size_t>(std::floor(p[1][4])),
-				                 f, dxf, dyf, dzf, p[1], dudt, model);
-				updateJacobianHessian(data[i].v, model, err, jacobian, hessian, dudt);
+			for (size_t i = 0, idx = 0; i < roi_; ++i) {
+				for (size_t j = 0; j < roi_; ++j, ++idx) {
+					derivativeSpline(Xi + i + splineOffset_, Yi + j + splineOffset_, Zi, f, dxf, dyf, dzf, p[1], dudt, model);
+					updateJacobianHessian(grid[idx].v, model, err, jacobian, hessian, dudt);
+				}
 			}
 
 			// Mise à jour de la matrice Hessian
@@ -165,23 +170,31 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		std::ranges::fill(dzf, 0.0);
 		std::ranges::fill(dudt, 0.0);
 
-		const double X = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
-		             Y = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
+		const double Xr = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
+		             Yr = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
 
-		const double Xc = X - std::floor(X), Yc = Y - std::floor(Y), Zc = p[1][4] - std::floor(p[1][4]);
+		const int Xi = static_cast<int>(std::floor(Xr)),
+		          Yi = static_cast<int>(std::floor(Yr)),
+		          Zi = static_cast<int>(std::floor(p[1][4]));
+
+		const double Xc = Xr - Xi, Yc = Yr - Yi, Zc = p[1][4] - Zi;
 		Delta3D(Xc, Yc, Zc, f, dxf, dyf, dzf);
-
-		for (size_t i = 0; i < n_; ++i) {
-			derivativeSpline(data[i].x + splineOffset_, data[i].y + splineOffset_, static_cast<size_t>(std::floor(p[1][4])),
-			                 f, dxf, dyf, dzf, p[1], dudt, model);
-			// Calcul de la matrice d'information de Fisher
-			for (size_t j = 0; j < nParams_; ++j) {
-				for (size_t k = j; k < nParams_; ++k) {
-					m[j * nParams_ + k] += dudt[k] * dudt[j] / model;
-					m[k * nParams_ + j] = m[j * nParams_ + k];
+		// Calcul des dérivées et initialisation du model
+		// offset utile, car la ROI et les coeffs ont peut-être des tailles différentes donc on recentre sur X et sur Y
+		// Exemple : ROI de 7 splineX de 11 : La ROI 7x7 est centrée à partir du point 2 dans la spline
+		for (size_t i = 0, idx = 0; i < roi_; ++i) {
+			for (size_t j = 0; j < roi_; ++j, ++idx) {
+				derivativeSpline(Xi + i + splineOffset_, Yi + j + splineOffset_, Zi, f, dxf, dyf, dzf, p[1], dudt, model);
+				// Calcul de la matrice d'information de Fisher
+				for (size_t i2 = 0; i2 < nParams_; ++i2) {
+					for (size_t j2 = i2; j2 < nParams_; ++j2) {
+						m[i2 * nParams_ + j2] += dudt[j2] * dudt[i2] / model;
+						m[j2 * nParams_ + i2] = m[i2 * nParams_ + j2];
+					}
 				}
 			}
 		}
+
 
 		// Si la convergence est parfaite (ou le point pile sur une grille), des 0 seront présents, à remplacer pour calculer la matrice inverse.
 		for (size_t i = 0; i < nParams_; ++i) {
@@ -207,12 +220,17 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 }
 
 //-------------------------------------------------------------------------------------------------
-void SplineFit::derivativeSpline(const size_t x, const size_t y, const size_t z, const std::vector<double>& f,
+void SplineFit::derivativeSpline(size_t x, size_t y, size_t z, const std::vector<double>& f,
                                  const std::vector<double>& dxf, const std::vector<double>& dyf, const std::vector<double>& dzf,
                                  const std::vector<double>& p, std::vector<double>& dudt, double& model) const
 {
+	x = std::clamp<size_t>(x, 0, splineSizeX_ - 1);
+	y = std::clamp<size_t>(y, 0, splineSizeY_ - 1);
+	z = std::clamp<size_t>(z, 0, splineSizeZ_ - 1);
+
 	const size_t Pos = z * splineSizeXY_ + y * splineSizeX_ + x;
 	std::ranges::fill(dudt, 0.0); // Initialise toutes les dérivées à zéro
+
 
 	for (size_t i = 0; i < SPLINE_PATCH_SIZE; ++i) {
 		const size_t Id = i * splineSizeXYZ_ + Pos;
