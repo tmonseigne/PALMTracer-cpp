@@ -8,7 +8,7 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-void Alignment::Align(const unsigned short* highSNR, const unsigned short* lowSNR, const unsigned short* input, unsigned short* output,
+void Alignment::Align(const uint16_t* highSNR, const uint16_t* lowSNR, const uint16_t* input, uint16_t* output,
                       const size_t height, const size_t width, const size_t planes, const size_t upsampling)
 
 {
@@ -28,7 +28,7 @@ void Alignment::Align(const unsigned short* highSNR, const unsigned short* lowSN
 }
 
 //-------------------------------------------------------------------------------------------------
-void Alignment::Align(const unsigned short* input, unsigned short* output, const size_t height, const size_t width, const size_t planes,
+void Alignment::Align(const uint16_t* input, uint16_t* output, const size_t height, const size_t width, const size_t planes,
                       const std::array<std::array<double, 10>, 2>& factors, const size_t upsampling)
 
 {
@@ -51,7 +51,7 @@ void Alignment::Align(const unsigned short* input, unsigned short* output, const
 void Alignment::computeFactor()
 {
 	throw std::runtime_error("The method to compute factor isn't implemented use precompute constructor : "
-		"Alignment(const unsigned short* input, unsigned short* output, size_t height, size_t width, size_t planes, const std::array<std::array<double, 10>, 2>&factors, size_t upscale, size_t upscaleMode, bool spread)");
+		"Alignment(const uint16_t* input, uint16_t* output, size_t height, size_t width, size_t planes, const std::array<std::array<double, 10>, 2>&factors, size_t upscale, size_t upscaleMode, bool spread)");
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -77,7 +77,7 @@ void Alignment::computeCoord(const double oldX, const double oldY, double& newX,
 //-------------------------------------------------------------------------------------------------
 void Alignment::align()
 {
-	omp_set_dynamic(1); // Autorise l’adaptation automatique du nombre de thread
+	omp_set_dynamic(1); // Autorise l’adaptation automatique du nombre de threads.
 	initOutput();
 	precomputeTransformMap();
 	applyTransform();
@@ -101,7 +101,6 @@ void Alignment::precomputeTransformMap()
 	const size_t UpSizeIm = UpW * UpH;
 	const double Step     = 1.0 / static_cast<double>(upsampling_);
 	transformMap_.resize(UpSizeIm); // chaque pixel cible contiendra une liste de contributions
-	// transformMap_.resize(sizeIm_);
 
 	#pragma omp parallel for
 	for (int y = 0; y < static_cast<int>(height_); ++y) {
@@ -152,7 +151,7 @@ void Alignment::applyTransform() const
 			for (const auto& [Index, Weight] : transformMap_[i]) { acc += Weight * input_[PlaneOffset + Index]; }
 			tmp[i] = acc;
 		}
-		std::ranges::transform(tmp, output_ + p * UpSizeIm, [](const double v) { return static_cast<unsigned short>(std::lround(v)); });
+		std::ranges::transform(tmp, output_ + p * UpSizeIm, [](const double v) { return static_cast<uint16_t>(std::lround(v)); });
 	}
 }
 
@@ -187,7 +186,7 @@ void Alignment::clipPolygon(const std::vector<Coord>& poly, std::vector<Coord>& 
 		for (size_t i = 0; i < input.size(); ++i) {
 			const auto& A = input[i];
 			const auto& B = input[(i + 1) % input.size()];
-			double bound  = 0.0;
+			double bound;
 			switch (edge) {
 				case 0: bound = xmin;
 					break; // left
@@ -221,8 +220,8 @@ double Alignment::getArea(const std::vector<Coord>& poly) const
 	for (size_t i = 0; i < N; ++i) {
 		const auto& [x0, y0] = poly[i];
 		const auto& [x1, y1] = poly[(i + 1) % N];
-		area += (x0 * y1 - x1 * y0);
+		area += x0 * y1 - x1 * y0;
 	}
 	return 0.5 * static_cast<double>(upsampling2_) * std::abs(area);
 }
-}
+} // namespace palm_tracer

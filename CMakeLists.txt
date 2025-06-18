@@ -24,6 +24,10 @@ add_library(CPU SHARED
     lib/fit/Fitting.cpp
     lib/fit/GaussianFit.hpp
     lib/fit/GaussianFit.cpp
+    lib/fit/SplineFit.hpp
+    lib/fit/SplineFit.cpp
+    lib/fit/Utils.hpp
+    lib/fit/Utils.cpp
     lib/palm/ATrous.hpp
     lib/palm/ATrous.cpp
     lib/palm/SegmentationInfo.hpp

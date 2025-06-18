@@ -29,7 +29,7 @@ size_t Tracking::Processing()
 	for (size_t step = 0; step < Parameters::N_STEPS; ++step) {
 		if (step == Parameters::N_STEPS - 1) { error = 20; }
 		else { error = 0; }
-		long cpt = 0;
+		size_t cpt = 0;
 
 		if (step == 0) {
 			computeConstants();
@@ -37,13 +37,8 @@ size_t Tracking::Processing()
 		}
 		else { updateConstants(); }
 
-		int nbInt = 0;
-		int bcl   = 0;
 		do {
 			if (step == Parameters::N_STEPS - 1) { error *= 1. - decrease_; }
-
-			nbInt++;
-
 			double likeness = 0;
 			for (size_t i = 0; i < Parameters::N_ITERATIONS; ++i) {
 				for (size_t t = 0; t < nbTimes_ - 1; ++t) { likeness += timeNodes_[t].TryRandomChange(error); }
@@ -51,8 +46,6 @@ size_t Tracking::Processing()
 
 			if (std::fabs(likeness) < 1e-8) { cpt++; }
 			else { cpt = 0; }
-
-			bcl++;
 		}
 		while (cpt < 10);
 	}
@@ -78,8 +71,8 @@ size_t Tracking::printConnectionsASCII_trc()
 	size_t idx = 0;
 	for (const auto& T : timeNodes_) {
 		for (const auto& N : T.nodes_) {
-			if (!N.past_ && N.trackedIndex_ > 0) {
-				for (const Node* node = &N; node; node = node->future_) {
+			if (N.past_ == nullptr && N.trackedIndex_ > 0) {
+				for (const Node* node = &N; node != nullptr; node = node->future_) {
 					tracks_[idx++] = static_cast<double>(N.trackedIndex_); // Track
 					tracks_[idx++] = static_cast<double>(node->time_ + 1); // Plane
 					tracks_[idx++] = node->id_;                            // Id
@@ -162,10 +155,10 @@ void setColorToTrackedStructures() set a color index to each tracked structures
 void Tracking::setColorToTrackedStructures()
 {
 	int idx = 1;
-	for (auto& T : timeNodes_) {
-		for (auto& node : T.nodes_) {
+	for (auto& t : timeNodes_) {
+		for (auto& node : t.nodes_) {
 			if (node.trackedIndex_ != 0) {
-				if (!node.past_) {
+				if (node.past_ == nullptr) {
 					node.colorIndex_[0] = idx;
 					node.colorIndex_[1] = idx;
 					idx++;
@@ -187,16 +180,16 @@ void Tracking::setIndexToTrackedStructures()
 {
 	size_t idx = 1, nNodes;
 	Node* node;
-	for (auto& T : timeNodes_) {
-		for (size_t i = 0; i < T.nNodes_; ++i) {
-			if (!T.nodes_[i].past_) {
-				for (node = &T.nodes_[i], nNodes = 0; node && nNodes < minLife_; node = node->future_, ++nNodes) { node->trackedIndex_ = 0; }
+	for (auto& t : timeNodes_) {
+		for (size_t i = 0; i < t.nNodes_; ++i) {
+			if (t.nodes_[i].past_ == nullptr) {
+				for (node = &t.nodes_[i], nNodes = 0; node != nullptr && nNodes < minLife_; node = node->future_, ++nNodes) { node->trackedIndex_ = 0; }
 				if (nNodes >= minLife_) {
-					T.nodes_[i].trackedIndex_ = idx;
+					t.nodes_[i].trackedIndex_ = idx;
 					idx++;
 				}
 			}
-			else { T.nodes_[i].trackedIndex_ = T.nodes_[i].past_->trackedIndex_; }
+			else { t.nodes_[i].trackedIndex_ = t.nodes_[i].past_->trackedIndex_; }
 		}
 	}
 }
@@ -228,7 +221,7 @@ void Tracking::computeConstants()
 		if (distance > 1e-8 && nDist > 0) { params_->stdDistance_ = distance / static_cast<double>(nDist); } //*1.0275;//3.4352;
 		params_->stdDistance_ = sqrt(params_->stdDistance_);
 	}
-	params_->stdDistance_ /= 3; //attention au / 3 c'est juste pour augmenter l'influence de la distance
+	params_->stdDistance_ /= 3; //attention à la division par 3, c'est juste pour augmenter l'influence de la distance.
 	for (auto& t : timeNodes_) { for (auto& n : t.nodes_) { n.UpdateConstants(); } }
 }
 
@@ -237,7 +230,7 @@ updateConstants() ones the Tracking in compute, compute the constant
 ********************************************************************************************************************/
 void Tracking::updateConstants()
 {
-	long cpt                   = 0;
+	size_t cpt                 = 0;
 	params_->stdDistance_      = 0;
 	params_->stdIntensity_     = 0;
 	params_->stdMean_          = 0;
@@ -245,7 +238,7 @@ void Tracking::updateConstants()
 
 	for (const auto& T : timeNodes_) {
 		for (const auto& Node : T.nodes_) {
-			if (Node.future_) {
+			if (Node.future_ != nullptr) {
 				params_->stdDistance_ += Node.Distance(*Node.future_) * Node.Distance(*Node.future_);
 				params_->stdIntensity_ += (Node.intensity_ - Node.future_->intensity_) * (Node.intensity_ - Node.future_->intensity_);
 				params_->stdMean_ += (Node.mean_ - Node.future_->mean_) * (Node.mean_ - Node.future_->mean_);
@@ -254,13 +247,13 @@ void Tracking::updateConstants()
 			}
 		}
 	}
-	params_->stdDistance_ /= cpt;
-	params_->stdIntensity_ /= cpt;
-	params_->stdMean_ /= cpt;
-	params_->covMeanIntensity_ /= cpt;
+	params_->stdDistance_ /= static_cast<double>(cpt);
+	params_->stdIntensity_ /= static_cast<double>(cpt);
+	params_->stdMean_ /= static_cast<double>(cpt);
+	params_->covMeanIntensity_ /= static_cast<double>(cpt);
 	params_->stdIntensity_ = sqrt(params_->stdIntensity_);
 	params_->stdDistance_  = sqrt(params_->stdDistance_);
 	params_->stdMean_      = sqrt(params_->stdMean_);
 	for (auto& t : timeNodes_) { for (auto& n : t.nodes_) { n.UpdateConstants(); } }
 }
-}
+} // namespace palm_tracer

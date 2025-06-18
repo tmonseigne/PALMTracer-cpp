@@ -35,7 +35,7 @@ GaussianFit::GaussianFit(const fit_mode mode)
 }
 
 //==================== Run ====================
-void GaussianFit::Run(const unsigned short* image, size_t width, size_t height, double& x, double& y, double& intensity, double& sigmaX,
+void GaussianFit::Run(const uint16_t* image, size_t width, size_t height, double& x, double& y, double& intensity, double& sigmaX,
                       double& sigmaY, double& theta, double& offset, double& rss, size_t roi)
 {
 	if (roi % 2 == 0) { roi--; } // Not present in GPU original file why ?
@@ -148,7 +148,7 @@ void GaussianFit::Run(const unsigned short* image, size_t width, size_t height, 
 	}
 }
 
-void GaussianFit::preComputeFit(double& min, double& max, const unsigned short* image, const size_t width,
+void GaussianFit::preComputeFit(double& min, double& max, const uint16_t* image, const size_t width,
                                 const size_t x, const size_t y, std::vector<double>& dat, std::vector<double>& weight, std::vector<size_t>& t,
                                 const size_t roi)
 {

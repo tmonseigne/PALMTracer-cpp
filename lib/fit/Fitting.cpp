@@ -8,24 +8,24 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-Fitting::Fitting(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints,
-                 const size_t roi, const double sigmaX, const double sigmaY, const double theta)
-	: mode_(mode), image_(image), n_(0), nParams_(4), height_(height), width_(width), maxPoints_(maxPoints),
-	  roi_(roi), sigmaX_(sigmaX), sigmaY_(sigmaY), theta_(theta)
+void Fitting::initialize()
 {
 	switch (mode_) {
 		case fit_mode::none:
-		case fit_mode::gaussian_2d_fixed: nParams_ = 4; // 4 paramètres : x, y, amplitude, offset
+		case fit_mode::gaussian_2d_fixed: nParams_ = 4; // 4 paramètres : offset, amplitude, x, y
 			break;
-		case fit_mode::gaussian_2d_sigma: nParams_ = 5; // 5 : x, y, amplitude, sigma, offset
+		case fit_mode::gaussian_2d_sigma: nParams_ = 5; // 5 : offset, amplitude, x, y, sigma
 			break;
-		case fit_mode::gaussian_3d_fixed: nParams_ = 6; // 6 : x, y, amplitude, sigmaX, sigmaY, offset
+		case fit_mode::gaussian_3d_fixed: nParams_ = 6; // 6 : offset, amplitude, x, y, sigmaX, sigmaY
 			break;
-		case fit_mode::gaussian_3d_theta: nParams_ = 7; // 7 : x, y, amplitude, sigmaX, sigmaY, theta, offset
+		case fit_mode::gaussian_3d_theta: nParams_ = 7; // 7 : offset, amplitude, x, y, sigmaX, sigmaY, theta
 			break;
-		case fit_mode::spline_2d: break;
+		case fit_mode::spline_3d_emccd:
+		case fit_mode::spline_3d_scmos: nParams_ = 5; // 5 : offset, amplitude, x, y, z
+			break;
 	}
 	nParams2_ = nParams_ * nParams_;
+	parseParams();
 	if (roi_ % 2 == 0) { roi_--; }
 	roiHalf_ = roi_ / 2;
 	n_       = roi_ * roi_;
@@ -43,8 +43,9 @@ void Fitting::Fit(const Segmentation2D& segmentation, std::vector<std::array<dou
 }
 
 //-------------------------------------------------------------------------------------------------
-void Fitting::fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, const double x, const double y, const double intensity,
-                   const double sigmaX, const double sigmaY, const double theta, const double rss, const double offset) const
+void Fitting::fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, const double offset, const double intensity,
+                   const double x, const double y, const double z, const double sigmaX, const double sigmaY, const double theta, const double rss,
+                   const double rssZ) const
 {
 	point[0] = 0;  // Id
 	point[1] = 0;  // Plane
@@ -52,17 +53,27 @@ void Fitting::fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZAT
 	point[3] = -1; // Channel
 	point[4] = x;  // X
 	point[5] = y;  // Y
-	point[6] = 0;  // Z
-
+	point[6] = z;  // Z
 	// Integrated intensity
-	if (mode_ == fit_mode::none) { point[7] = infos.intensity_; }
-	else { point[7] = 2.0 * std::numbers::pi * intensity * sigmaX * sigmaY; }
+	switch (mode_) {
+		case fit_mode::none: point[7] = infos.intensity_;
+			break;
+		case fit_mode::gaussian_2d_fixed:
+		case fit_mode::gaussian_2d_sigma:
+		case fit_mode::gaussian_3d_fixed:
+		case fit_mode::gaussian_3d_theta: point[7] = 2.0 * std::numbers::pi * intensity * sigmaX * sigmaY;
+			break;
+		case fit_mode::spline_3d_emccd:
+		case fit_mode::spline_3d_scmos: point[7] = intensity;
+
+			break;
+	}
 
 	point[8]  = sigmaX;           // Sigma X
 	point[9]  = sigmaY;           // Sigma Y
 	point[10] = theta;            // Theta
 	point[11] = rss;              // MSE X, Y
-	point[12] = -1;               // MSE Z
+	point[12] = rssZ;             // MSE Z
 	point[13] = 0;                // Pair Distance
 	point[14] = intensity;        // Intensity 0
 	point[15] = offset;           // Intensity offset
@@ -73,4 +84,67 @@ void Fitting::fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZAT
 	if (sigmaX > EPSILON && sigmaY > EPSILON) { point[18] = std::min(sigmaX, sigmaY) / std::max(sigmaX, sigmaY); }
 	else { point[18] = 1; }
 }
+
+//-------------------------------------------------------------------------------------------------
+void Fitting::preCompute(const size_t x, const size_t y, std::vector<Pixel>& grid, double& min, double& max) const
+{
+	min = std::numeric_limits<double>::max();    // Plus grand double possible (DBL_MAX)
+	max = std::numeric_limits<double>::lowest(); // Plus petit double possible (-DBL_MAX)
+
+	const int Half = static_cast<int>(roiHalf_);
+	for (int i = -Half; i <= Half; ++i) {
+		const auto Idx = Half + (i + Half) * roi_;
+		for (int j = -Half; j <= Half; ++j) {
+			grid[j + Idx] = {.x = x + j, .y = y + i, .v = static_cast<double>(image_[x + j + (y + i) * width_])};
+			min           = std::min(min, grid[j + Idx].v);
+			max           = std::max(max, grid[j + Idx].v);
+		}
+	}
 }
+
+//-------------------------------------------------------------------------------------------------
+void Fitting::initP(std::array<std::vector<double>, 3>& p, const double x, const double y, const double z, const double minI, const double maxI) const
+{
+	constexpr double MinI = 0.0, MaxI = 65535,
+	                 MinS = 0.1, MaxS = 20;
+	switch (mode_) {
+		case fit_mode::none:
+		case fit_mode::gaussian_2d_fixed: {
+			p[0] = {MinI, MinI, x - 1, y - 1}; // minimum théorique
+			p[1] = {minI, maxI - minI, x, y};  // Valeur initiale
+			p[2] = {MaxI, MaxI, x + 1, y + 1}; // maximum théorique
+			break;
+		}
+		case fit_mode::gaussian_2d_sigma: {
+			p[0] = {MinI, MinI, x - 1, y - 1, MinS};
+			p[1] = {minI, maxI - minI, x, y, fitParams_[1]};
+			p[2] = {MaxI, MaxI, x + 1, y + 1, MaxS};
+			break;
+		}
+		case fit_mode::gaussian_3d_fixed: {
+			p[0] = {MinI, MinI, x - 1, y - 1, MinS, MinS};
+			p[1] = {minI, maxI - minI, x, y, std::numbers::sqrt2_v<double> * fitParams_[1], std::numbers::sqrt2_v<double> * fitParams_[2]};
+			p[2] = {MaxI, MaxI, x + 1, y + 1, MaxS, MaxS};
+			break;
+		}
+		case fit_mode::gaussian_3d_theta: {
+			p[0] = {MinI, MinI, x - 1, y - 1, MinS, MinS, -150};
+			p[1] = {minI, maxI - minI, x, y, std::numbers::sqrt2_v<double> * fitParams_[1], std::numbers::sqrt2_v<double> * fitParams_[2], fitParams_[3]};
+			p[2] = {MaxI, MaxI, x + 1, y + 1, MaxS, MaxS, 150};
+			break;
+		}
+		case fit_mode::spline_3d_emccd:
+		case fit_mode::spline_3d_scmos: {
+			const double RoiC = (fitParams_[0] - 1) / 2.0,
+			             RoiD = fitParams_[0] / 4.0;
+			const double Dmin = RoiC - RoiD,
+			             Dmax = RoiC + RoiD;
+
+			p[0] = {-0.01, -1, Dmin, Dmin, 0};
+			p[1] = {minI, maxI - minI, x, y, z};
+			p[2] = {0.01, 1, Dmax, Dmax, 1}; // le maximum pour Z est défini dans les paramètres par splineSizeZ_.
+			break;
+		}
+	}
+}
+} // namespace palm_tracer

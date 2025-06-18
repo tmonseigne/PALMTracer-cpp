@@ -12,6 +12,7 @@
 
 #pragma once
 #include <array>
+#include <cstdint>
 #include <vector>
 
 #include "Constants.hpp"
@@ -52,10 +53,10 @@ public:
 	///		- 2 : Gaussien 2D avec sigma variable.
 	///		- 3 : Gaussien 3D avec theta fixe.
 	///		- 4 : Gaussien 3D complet.</param>
-	/// <param name="fit_params"> paramètres de l'ajustement
+	/// <param name="fitParams"> paramètres de l'ajustement
 	/// En cas d'ajustement Gaussien :
 	///		- Taille du ROI (fenêtre carrée centrée) utilisé pour l'ajustement autour de chaque point détecté.
-	///		- Valeur initiale de sigma utilisée dans l'ajustement (sigmaX = sigma et sigmaY = 2* sigma).
+	///		- Valeur initiale de sigma utilisé dans l'ajustement (sigmaX = sigma et sigmaY = 2* sigma).
 	///		- Valeur initiale de l'orientation theta pour l'ajustement.
 	///	En cas d'ajustement par Splines :
 	///		- Taille du ROI (fenêtre carrée centrée) utilisé pour l'ajustement autour de chaque point détecté.
@@ -64,8 +65,8 @@ public:
 	///		- Tableau de Coefficients d'une PSF optimale ? pour chaque Z ? (tableau 4D TODO Voir quelles dimensions est pour quoi)
 	///		- Image de fond pour le CMOS et 0 pour le EMCD (pour définir le bruit standard). (taille standard d'une image)
 	/// </param>
-	Palm(const unsigned short* image, double* points, size_t pointsListSize, size_t height, size_t width, size_t planes,
-	     double thresholdVal, double watershedRatio, size_t fit, const double* fit_params);
+	Palm(const uint16_t* image, double* points, size_t pointsListSize, size_t height, size_t width, size_t planes,
+	     double thresholdVal, double watershedRatio, size_t fit, const double* fitParams);
 
 	/// <summary>Destructeur de la classe <c>Palm</c>.</summary>
 	~Palm() = default;
@@ -84,32 +85,24 @@ public:
 	/// Le tableau `points_` est rempli avec des blocs de N_LOCALIZATIONS double, représentant les paramètres pour chaque détection. Une ligne vide (valeurs = -1) est ajoutée à la fin.
 	///
 	/// <returns>Le nombre total de valeurs (doubles) écrites dans `points_`, y compris la ligne finale vide. (i.e. `nb_points * N_LOCALIZATIONS + N_LOCALIZATIONS`) </returns>
-	int Processing() const;
+	[[nodiscard]] int Processing() const;
 
 private:
 	// Basic members
-	const unsigned short* stack_; ///< Image 3D d'entrée (plan x hauteur x largeur) en niveaux de gris.
-	double* points_;              ///< Tableau de points de sortie (rempli avec les résultats de détection).
-	size_t height_,               ///< Hauteur de l'image.
-	       width_,                ///< Largeur de l'image.
-	       planes_,               ///< Nombre de plans de la pile.
-	       size_,                 ///< Taille totale d'une image (height × width).
-	       nPointsMax_,           ///< Nombre maximum de points (pour éviter le débordement dans le tableau `points_`).
-	       nPointsMaxPerPlane_;   ///< Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).
+	const uint16_t* stack_;     ///< Image 3D d'entrée (plan x hauteur x largeur) en niveaux de gris.
+	double* points_;            ///< Tableau de points de sortie (rempli avec les résultats de détection).
+	size_t height_,             ///< Hauteur de l'image.
+	       width_,              ///< Largeur de l'image.
+	       planes_,             ///< Nombre de plans de la pile.
+	       size_,               ///< Taille totale d'une image (height × width).
+	       nPointsMaxPerPlane_; ///< Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).
 
 	// Decomposition members
 	double thresholdVal_,   ///< Seuil de détection utilisé après la décomposition en ondelettes.
 	       watershedRatio_; ///< Rapport utilisé dans l'algorithme de Watershed.
 
-	// Gaussian fit members
-	size_t fit_,        ///< Mode de fitting à appliquer (0 = aucun, 1 à 4 = variantes 2D ou 3D de l'ajustement Gaussien).
-	       roi_;        ///< Taille du ROI utilisé pour le fitting gaussien (fenêtre autour du point).
-	double initSigmaX_, ///< Valeur initiale de sigmaX utilisée dans le fitting gaussien.
-	       initSigmaY_, ///< Valeur initiale de sigmaY utilisée dans le fitting gaussien.
-	       initTheta_;  ///< Valeur initiale de theta (orientation) utilisée dans le fitting gaussien.
-
-	// Splines members
-
+	size_t fit_;              ///< Mode de fitting à appliquer (0 = aucun, 1 à 4 = variantes 2D ou 3D de l'ajustement Gaussien, 5 = Ajustement par Splines).
+	const double* fitParams_; ///< Paramètres de l'ajustement
 
 	/// <summary>Lance le traitement complet de détection sur le plan passé en paramèter de l'image d'entrée.</summary>
 	///
@@ -127,4 +120,4 @@ private:
 	/// <param name="points">Résultat de l'analyse.</param>
 	void processingPlane(size_t plane, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const;
 };
-}
+} // namespace palm_tracer

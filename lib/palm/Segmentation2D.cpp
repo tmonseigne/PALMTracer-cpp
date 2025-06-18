@@ -4,8 +4,6 @@
 #include <cfloat>
 #include <cmath>
 #include <queue>
-#include <ranges>
-#include <unordered_map>
 #include <utility> // std::pair
 
 #include "Constants.hpp"
@@ -13,26 +11,31 @@
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
 namespace {
-	struct Filter {
-		bool enabled;
-		double value;
-	};
+struct Filter {
+	bool enabled;
+	double value;
+};
 
-	// Création d'un tableau constexpr avec tous à false + 0.0 sauf
-	constexpr std::array<Filter, N_LOCALIZATIONS> MakeDefaultFilter()
-	{
-		std::array<Filter, N_LOCALIZATIONS> params{};
-		for (auto& p : params) { p = {.enabled = false, .value = 0.0}; }
-		// Paramètres à filtrer
-		params[0] = {.enabled = true, .value = VOLUME_MIN};
-		return params;
-	}
-
-	constexpr std::array<Filter, N_LOCALIZATIONS> SEGMENTATION_FILTER = MakeDefaultFilter();
-	///< Tableau de paramètres de filtre (min/max de surface, intensité, morphologie...)
-
-	bool CheckFilter(const Filter& p, const double value, const bool lessThan) { return p.enabled && (lessThan ? (value <= p.value) : (value >= p.value)); }
+// Création d'un tableau constexpr avec tous à false + 0.0 sauf
+constexpr std::array<Filter, N_LOCALIZATIONS> MakeDefaultFilter()
+{
+	std::array<Filter, N_LOCALIZATIONS> params{};
+	for (auto& p : params) { p = {.enabled = false, .value = 0.0}; }
+	// Paramètres à filtrer
+	params[0] = {.enabled = true, .value = VOLUME_MIN};
+	return params;
 }
+
+constexpr std::array<Filter, N_LOCALIZATIONS> SEGMENTATION_FILTER = MakeDefaultFilter();
+///< Tableau de paramètres de filtre (min/max de surface, intensité, morphologie...)
+
+/// <summary>Vérifie si le filtre est actif et valide.</summary>
+/// <param name="f">Filtre.</param>
+/// <param name="value">Valeur.</param>
+/// <param name="lessThan">Comparatif (True si plus petit que, False sinon).</param>
+/// <returns></returns>
+bool CheckFilter(const Filter& f, const double value, const bool lessThan) { return f.enabled && (lessThan ? value <= f.value : value >= f.value); }
+} // namespace
 
 //-------------------------------------------------------------------------------------------------
 Segmentation2D::Segmentation2D(const ATrous& decomposition, const double threshold, const double ratio)
@@ -75,7 +78,7 @@ void Segmentation2D::FilterData()
 
 	// Marquage des régions sur les bords
 	std::vector bounds(infos_.size(), false);
-	if (SEGMENTATION_FILTER[12].enabled == 1) {
+	if (SEGMENTATION_FILTER[12].enabled) {
 		for (size_t i = 0; i < height_; ++i) {
 			const auto Idx = i * width_;
 			if (map_[Idx] != 0) { bounds[map_[Idx]] = true; }
@@ -120,7 +123,7 @@ void Segmentation2D::FilterData()
 	for (size_t i = 0; i < size_; ++i) {
 		if (map_[i] > 0) {
 			const size_t OldIndex = map_[i] - 1;
-			map_[i]               = oldToNew[OldIndex] > 0 ? static_cast<unsigned short>(oldToNew[OldIndex]) : 0;
+			map_[i]               = oldToNew[OldIndex] > 0 ? static_cast<uint16_t>(oldToNew[OldIndex]) : 0;
 		}
 	}
 }
@@ -133,9 +136,9 @@ void Segmentation2D::ComputeStatistics()
 	// Accumulation des mesures ne pas paralléliser
 	for (size_t i = 0, idx = 0; i < height_; ++i) {
 		for (size_t j = 0; j < width_; ++j, ++idx) {
-			const unsigned short s = map_[idx];
-			if (s == 0) { continue; }
-			auto& info       = infos_[s - 1];
+			const uint16_t S = map_[idx];
+			if (S == 0) { continue; }
+			auto& info       = infos_[S - 1];
 			const double Val = output_[idx];
 
 			// Mesures
@@ -195,7 +198,7 @@ void Segmentation2D::filterStructureWS()
 		// Analyse des structures
 		for (size_t i = 0, idx = 0; i < height_; ++i) {
 			for (size_t j = 0; j < width_; ++j, ++idx) {
-				const unsigned short Sid = map_[idx];
+				const uint16_t Sid = map_[idx];
 				if (Sid == 0) { continue; }
 				auto& s = wsFusions[Sid - 1];
 
@@ -212,7 +215,7 @@ void Segmentation2D::filterStructureWS()
 					for (size_t jj = std::max(j, static_cast<size_t>(1)) - 1; jj <= std::min(j + 1, width_ - 1); ++jj) {
 						if (ii == i && jj == j) { continue; }
 
-						const unsigned short NeighborSid = map_[ii * width_ + jj];
+						const uint16_t NeighborSid = map_[ii * width_ + jj];
 						if (NeighborSid != 0 && NeighborSid != Sid) {
 							if (output_[idx] > s.maxPotentialWithNeighbor) {
 								s.maxPotentialWithNeighbor = output_[idx];
@@ -251,10 +254,10 @@ void Segmentation2D::filterStructureWS()
 		label = 0;
 		for (int i = 0; i <= static_cast<int>(wsFusions.size()); ++i) { if (wsFusions[i].structToBecome == i) { wsFusions[i].newIndex = ++label; } }
 
-		for (unsigned short& s : map_) {
+		for (uint16_t& s : map_) {
 			if (s != 0) {
 				const auto& Sid = wsFusions[s - 1];
-				s               = static_cast<unsigned short>(wsFusions[Sid.structToBecome].newIndex);
+				s               = static_cast<uint16_t>(wsFusions[Sid.structToBecome].newIndex);
 			}
 		}
 	}
@@ -273,8 +276,8 @@ void Segmentation2D::filterStructureWS()
 
 	// Marquage d'un seul point par structure pour Watershed final
 	std::ranges::fill(map_, 0);
-	for (int i = 0; i <= static_cast<int>(wsFusions.size()); ++i) {
-		if (wsFusions[i].structToBecome == i) { map_[wsFusions[i].x * width_ + wsFusions[i].y] = static_cast<unsigned short>(wsFusions[i].newIndex); }
+	for (int i = 0; i < static_cast<int>(wsFusions.size()); ++i) {
+		if (wsFusions[i].structToBecome == i) { map_[wsFusions[i].x * width_ + wsFusions[i].y] = static_cast<uint16_t>(wsFusions[i].newIndex); }
 	}
 }
 
@@ -282,7 +285,7 @@ void Segmentation2D::filterStructureWS()
 void Segmentation2D::getLocalMax()
 {
 	std::ranges::fill(map_, 0);
-	unsigned short label = 1;
+	uint16_t label = 1;
 
 	for (size_t i = 0, idx = 0; i < height_; ++i) {
 		for (size_t j = 0; j < width_; ++j, ++idx) {
@@ -295,8 +298,8 @@ void Segmentation2D::getLocalMax()
 					}
 				}
 				if (!err) { //new maximum found
-					unsigned short maxi = 0;
-					err                 = false;
+					uint16_t maxi = 0;
+					err           = false;
 					for (size_t ii = i == 0 ? 0 : i - 1; ii <= std::min(i + 1, height_ - 1) && !err; ++ii) {
 						const size_t Idx1 = ii * width_;
 						for (size_t jj = j == 0 ? 0 : j - 1; jj <= std::min(j + 1, width_ - 1) && !err; ++jj) {
@@ -351,10 +354,7 @@ void Segmentation2D::watershed()
 				}
 			}
 
-			if (vois) {
-				double cle = -output_[idx];
-				heap.emplace(cle, coord_2d{x, y});
-			}
+			if (vois) { heap.emplace(-output_[idx], coord_2d{x, y}); }
 		}
 	}
 
@@ -365,21 +365,21 @@ void Segmentation2D::watershed()
 		++it;
 
 		for (int dx = -1; dx <= 1; ++dx) {
-			int nx = p.first + dx;
-			if (nx < 0 || nx >= static_cast<int>(height_)) { continue; }
+			const int Nx = p.first + dx;
+			if (Nx < 0 || Nx >= static_cast<int>(height_)) { continue; }
 
 			for (int dy = -1; dy <= 1; ++dy) {
-				int ny = p.second + dy;
-				if ((dx == 0 && dy == 0) || ny < 0 || ny >= static_cast<int>(width_)) { continue; }
+				const int Ny = p.second + dy;
+				if ((dx == 0 && dy == 0) || Ny < 0 || Ny >= static_cast<int>(width_)) { continue; }
 
-				const size_t Nid = nx * width_ + ny;
+				const size_t Nid = Nx * width_ + Ny;
 				if (output_[Nid] > THRESHOLD && map_[Nid] == 0) {
-					double newCle = -output_[Nid] + static_cast<double>(it) * EPSILON;
-					heap.emplace(newCle, coord_2d{nx, ny});
+					const double Cle = -output_[Nid] + static_cast<double>(it) * EPSILON;
+					heap.emplace(Cle, coord_2d{Nx, Ny});
 					map_[Nid] = map_[p.first * width_ + p.second];
 				}
 			}
 		}
 	}
 }
-}
+} // namespace palm_tracer

@@ -27,7 +27,7 @@ public:
 	std::vector<Node> nodes_;
 	size_t nNodes_;
 	TimeNodes(size_t time, size_t nNodes, Parameters* params);
-	virtual ~TimeNodes() { nodes_.clear(); }
+	~TimeNodes() { nodes_.clear(); }
 
 	Node& operator[](const size_t i) { return nodes_[i]; }
 	void LinkNeighborsBeforeAndAfter(TimeNodes& futures);
@@ -37,4 +37,4 @@ public:
 	void MakeAllInitializationConnections() { for (auto& node : nodes_) { node.MakeInitializationConnection(); } }
 	double TryRandomChange(const double limit) { return nNodes_ == 0 ? 0 : nodes_[params_->RandomModulo(nNodes_)].MakeChange(limit); }
 };
-}
+} // namespace palm_tracer

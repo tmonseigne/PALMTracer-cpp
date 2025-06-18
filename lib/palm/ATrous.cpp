@@ -6,7 +6,7 @@
 #include "Constants.hpp"
 
 namespace palm_tracer {
-ATrous::ATrous(const unsigned short* image, const size_t height, const size_t width)
+ATrous::ATrous(const uint16_t* image, const size_t height, const size_t width)
 	: height_(height), width_(width), size_(height * width)
 {
 	tmp_.resize(size_);
@@ -15,13 +15,13 @@ ATrous::ATrous(const unsigned short* image, const size_t height, const size_t wi
 }
 
 //-------------------------------------------------------------------------------------------------
-void ATrous::decomposition2D(const unsigned short* image)
+void ATrous::decomposition2D(const uint16_t* image)
 {
 	/**
 		WAVELET TRANSFORM WITH "A TROUS" ALGORITHM
 
 		Makes the transformation of the 2D signal "image".
-		"image" must be a unsigned short array of 2 dimentions ( 2D image).
+		"image" must be a uint16_t array of 2 dimentions ( 2D image).
 
 
 		The algorithm makes a decompostion of the input signal in "outputData.size(2)" wavelet planes ("outputData").
@@ -38,7 +38,7 @@ void ATrous::decomposition2D(const unsigned short* image)
 	**/
 
 	//do the initialisation of multiresolution algorthm (initialisation of the first wavelet plane) signal is projected in V0 space
-	std::transform(image, image + size_, wDecomp_[0].begin(), [](const unsigned short val) { return static_cast<double>(val); });
+	std::transform(image, image + size_, wDecomp_[0].begin(), [](const uint16_t val) { return static_cast<double>(val); });
 
 	//Projection of the input signal in each wavelet space. the signal waveletPlanes[x] is the projection of the input signal in the W(x+1) space
 	for (size_t i = 0; i < N_PLANES - 1; ++i) {
@@ -91,4 +91,4 @@ void ATrous::b3SplineFiltering2D(const std::vector<double>& in, std::vector<doub
 	#pragma omp parallel for
 	for (int idx = 0; idx < static_cast<int>(size_); ++idx) { out[idx] = convolutionX(idx, idx / static_cast<int>(width_), idx % static_cast<int>(width_)); }
 }
-}
+} // namespace palm_tracer

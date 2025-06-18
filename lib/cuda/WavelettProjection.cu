@@ -10,7 +10,7 @@
 constexpr double COEFF_H0 = 3.0 / 8.0, COEFF_H1 = 1.0 / 4.0, COEFF_H2 = 1.0 / 16.0;
 
 
-__global__ void convertToDouble(const unsigned short* in, double* out, const size_t size)
+__global__ void convertToDouble(const uint16_t* in, double* out, const size_t size)
 {
 	const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
 	if (idx >= size) { return; }
@@ -66,22 +66,22 @@ __global__ void Wavelet_substract(const double* in, double* out, const size_t si
 
 //Parsing
 extern "C"
-void WaveletProjections(const unsigned short* image, const size_t height, const size_t width, const size_t nbPlane, std::vector<std::vector<double>>& decomp)
+void WaveletProjections(const uint16_t* image, const size_t height, const size_t width, const size_t nbPlane, std::vector<std::vector<double>>& decomp)
 {
 	//copie de l'image dans decomp[0] en passant en double
-	//std::transform(image, image + size_, wDecomp_[0].begin(), [](const unsigned short val) { return static_cast<double>(val); });
+	//std::transform(image, image + size_, wDecomp_[0].begin(), [](const uint16_t val) { return static_cast<double>(val); });
 	const size_t Size      = height * width;
 	const size_t TotalSize = Size * nbPlane;
 
 	// Allocation GPU
-	unsigned short* image_d;
+	uint16_t* image_d;
 	double *decomp_d, *tmp_d;
-	cudaMalloc(&image_d, Size * sizeof(unsigned short));
+	cudaMalloc(&image_d, Size * sizeof(uint16_t));
 	cudaMalloc(&decomp_d, TotalSize * sizeof(double));
 	cudaMalloc(&tmp_d, Size * sizeof(double));
 
 	// Transfert de l'image
-	cudaMemcpy(image_d, image, Size * sizeof(unsigned short), cudaMemcpyHostToDevice);
+	cudaMemcpy(image_d, image, Size * sizeof(uint16_t), cudaMemcpyHostToDevice);
 
 	// Appel du kernel principal CUDA répartition en 256 threads et force à passer sur totue l'image si l'image d'est pas une puissance de 2.
 	dim3 blockSize(16, 16);

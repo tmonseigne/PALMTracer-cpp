@@ -5,7 +5,7 @@
 #include <iostream>
 #include <stdexcept>
 
-inline void loadTiff3D(const char* filename, std::vector<unsigned short>& data, size_t& width, size_t& height, size_t& planes)
+inline void loadTiff3D(const char* filename, std::vector<uint16_t>& data, size_t& width, size_t& height, size_t& planes)
 {
 	TIFF* tif = TIFFOpen(filename, "r");
 	if (!tif) { throw std::runtime_error("Erreur d'ouverture du fichier TIFF"); }
@@ -32,7 +32,7 @@ inline void loadTiff3D(const char* filename, std::vector<unsigned short>& data, 
 			}
 		}
 
-		std::vector<unsigned short> buf(w * h);
+		std::vector<uint16_t> buf(w * h);
 
 		for (uint32 row = 0; row < h; ++row) {
 			if (TIFFReadScanline(tif, buf.data() + row * w, row) < 0) {
@@ -51,7 +51,7 @@ inline void loadTiff3D(const char* filename, std::vector<unsigned short>& data, 
 	TIFFClose(tif);
 }
 
-inline void saveTiff3D(const char* filename, const unsigned short* data, size_t width, size_t height, size_t planes)
+inline void saveTiff3D(const char* filename, const uint16_t* data, size_t width, size_t height, size_t planes)
 {
 	TIFF* tif = TIFFOpen(filename, "w");
 	if (!tif) { throw std::runtime_error("Erreur à l'ouverture du TIFF pour l'écriture"); }
@@ -67,7 +67,7 @@ inline void saveTiff3D(const char* filename, const unsigned short* data, size_t 
 		TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
 
 		for (uint32 row = 0; row < height; ++row) {
-			const unsigned short* row_data = data + k * width * height + row * width;
+			const uint16_t* row_data = data + k * width * height + row * width;
 			TIFFWriteScanline(tif, (void*)row_data, row);
 		}
 
