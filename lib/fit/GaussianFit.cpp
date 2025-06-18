@@ -29,7 +29,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 	       sigmaX = sigmaX_, sigmaY = sigmaY_, theta = theta_;
 
 	// Vérification si la zone d'intérêt est entièrement dans l'image (évite les bords)
-	const size_t Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
+	const auto Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
 	if (roiHalf_ <= Ux && Ux <= width_ - roiHalf_ - 1 && roiHalf_ <= Uy && Uy <= height_ - roiHalf_ - 1) {
 		// Création des variables
 		double lambda = LAMBDA_0;
@@ -169,11 +169,11 @@ double GaussianFit::computeR2(std::vector<Pixel>& grid, std::vector<double>& hat
 
 	// Calcul des t1, t2, t3
 	const double T1 = std::inner_product(grid.begin(), grid.end(), hat.begin(), 0.0,
-	                                     std::plus<>(), [](const auto& a, double b) { return a.v * b; }), // data * hat
+	                                     std::plus(), [](const auto& a, double b) { return a.v * b; }), // data * hat
 	             T2 = std::inner_product(grid.begin(), grid.end(), grid.begin(), 0.0,
-	                                     std::plus<>(), [](const auto& a, const auto& b) { return a.v * b.v; }), // data * data
-	             T3 = std::inner_product(hat.begin(), hat.end(), hat.begin(), 0.0),                              // hat * hat
-	             R  = T1 / std::sqrt(T2 * T3);                                                                   // Calcul du R
+	                                     std::plus(), [](const auto& a, const auto& b) { return a.v * b.v; }), // data * data
+	             T3 = std::inner_product(hat.begin(), hat.end(), hat.begin(), 0.0),                            // hat * hat
+	             R  = T1 / std::sqrt(T2 * T3);                                                                 // Calcul du R
 
 	return std::isnan(R) ? 0 : R * R;
 }
@@ -203,10 +203,14 @@ void GaussianFit::deriv(double* out, const std::vector<double>& p, const double 
 		case fit_mode::none:
 		case fit_mode::spline_3d_emccd:
 		case fit_mode::spline_3d_scmos:
-		case fit_mode::gaussian_2d_fixed: return Deriv(out, p[1], x - p[2], y - p[3], sigmaX_, false);
-		case fit_mode::gaussian_2d_sigma: return Deriv(out, p[1], x - p[2], y - p[3], p[4], true);
-		case fit_mode::gaussian_3d_fixed: return Deriv(out, p[1], x - p[2], y - p[3], p[4], p[5], theta_, false);
-		case fit_mode::gaussian_3d_theta: return Deriv(out, p[1], x - p[2], y - p[3], p[4], p[5], p[6], true);
+		case fit_mode::gaussian_2d_fixed: Deriv(out, p[1], x - p[2], y - p[3], sigmaX_, false);
+			break;
+		case fit_mode::gaussian_2d_sigma: Deriv(out, p[1], x - p[2], y - p[3], p[4], true);
+			break;
+		case fit_mode::gaussian_3d_fixed: Deriv(out, p[1], x - p[2], y - p[3], p[4], p[5], theta_, false);
+			break;
+		case fit_mode::gaussian_3d_theta: Deriv(out, p[1], x - p[2], y - p[3], p[4], p[5], p[6], true);
+			break;
 	}
 }
 

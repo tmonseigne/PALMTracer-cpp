@@ -84,7 +84,7 @@ public:
 	/// Le tableau `points_` est rempli avec des blocs de N_LOCALIZATIONS double, représentant les paramètres pour chaque détection. Une ligne vide (valeurs = -1) est ajoutée à la fin.
 	///
 	/// <returns>Le nombre total de valeurs (doubles) écrites dans `points_`, y compris la ligne finale vide. (i.e. `nb_points * N_LOCALIZATIONS + N_LOCALIZATIONS`) </returns>
-	int Processing() const;
+	[[nodiscard]] int Processing() const;
 
 private:
 	// Basic members

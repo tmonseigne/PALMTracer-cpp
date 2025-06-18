@@ -41,7 +41,7 @@ public:
 	/// <param name="maxPoints">Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).</param>
 	/// <param name="fitParams"> Paramètres pour l'ajustement.</param>
 	explicit Fitting(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints, const double* fitParams)
-		: mode_(mode), image_(image), n_(0), nParams_(4), height_(height), width_(width), maxPoints_(maxPoints), fitParams_(fitParams) { initialize(); }
+		: mode_(mode), image_(image), height_(height), width_(width), maxPoints_(maxPoints), fitParams_(fitParams) { initialize(); }
 
 	/// <summary>Destructeur de la classe <c>Fitting</c>.</summary>
 	virtual ~Fitting() = default;
@@ -54,14 +54,14 @@ public:
 protected:
 	fit_mode mode_;               ///< Mode de fitting utilisé (ex. position seulement, ou position + orientation...).
 	const unsigned short* image_; ///< Image 2D d'entrée (hauteur x largeur) en niveaux de gris.
-	size_t n_,                    ///< Nombre d'échantillons ou points de données à fitter.
-	       nParams_,              ///< Nombre total de paramètres du modèle.
-	       nParams2_,             ///< Nombre de paramètres au carré (utile pour les matrices jacobiennes ou hessiennes).
+	size_t n_{0},                 ///< Nombre d'échantillons ou points de données à fitter.
+	       nParams_{4},           ///< Nombre total de paramètres du modèle.
+	       nParams2_{},           ///< Nombre de paramètres au carré (utile pour les matrices jacobiennes ou hessiennes).
 	       height_,               ///< Hauteur de l'image.
 	       width_,                ///< Largeur de l'image.
 	       maxPoints_,            ///< Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).
-	       roi_,                  ///< Taille de la région d'intérêt autour du point.
-	       roiHalf_;              ///< Demi taille de la région d'intérêt autour du point.
+	       roi_{},                ///< Taille de la région d'intérêt autour du point.
+	       roiHalf_{};            ///< Demi taille de la région d'intérêt autour du point.
 	const double* fitParams_;     ///< Paramètres de l'ajustement
 
 	static constexpr size_t N_ITER = 50; ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.

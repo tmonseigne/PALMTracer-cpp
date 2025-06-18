@@ -220,7 +220,7 @@ double Alignment::getArea(const std::vector<Coord>& poly) const
 	for (size_t i = 0; i < N; ++i) {
 		const auto& [x0, y0] = poly[i];
 		const auto& [x1, y1] = poly[(i + 1) % N];
-		area += (x0 * y1 - x1 * y0);
+		area += x0 * y1 - x1 * y0;
 	}
 	return 0.5 * static_cast<double>(upsampling2_) * std::abs(area);
 }

@@ -61,7 +61,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 	       rssZ      = -1;
 
 	// Vérification si la zone d'intérêt est entièrement dans l'image (évite les bords)
-	const size_t Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
+	const auto Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
 	if (roiHalf_ <= Ux && Ux <= width_ - roiHalf_ - 1 && roiHalf_ <= Uy && Uy <= height_ - roiHalf_ - 1) {
 		// Création des variables
 		double lambda = LAMBDA_0, minI = 0, maxI = 0, model = 0, err = std::numeric_limits<double>::max(), mu = 1 + lambda;
@@ -81,7 +81,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		initP(p, x, y, z, minI, maxI);
 		p[1][1] *= intensityRatio_;                  // Change l'intensité pour la position actuelle.
 		p[2][4] = static_cast<double>(splineSizeZ_); // Change le maximum pour Z.
-		jump = {std::max(20.0, p[1][1]), std::max(100.0, p[1][1]), 1.0, 1.0, std::max(static_cast<double>(splineSizeZ_) / 3.0, 2.0)};
+		jump    = {std::max(20.0, p[1][1]), std::max(100.0, p[1][1]), 1.0, 1.0, std::max(static_cast<double>(splineSizeZ_) / 3.0, 2.0)};
 
 		bool stop        = false;
 		size_t iteration = 0;
@@ -106,10 +106,10 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 
 			//----- Calculs -----
 			// Calcul du patch 3D de 4x4x4 (64) (SPLINE_PATCH_SIDE = 4, SPLINE_PATCH_SIZE = 64)
-			double xc = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
-			       yc = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
+			const double X = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
+			             Y = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
 
-			const double Xc = xc - std::floor(xc), Yc = yc - std::floor(yc), Zc = p[1][4] - std::floor(p[1][4]);
+			const double Xc = X - std::floor(X), Yc = Y - std::floor(Y), Zc = p[1][4] - std::floor(p[1][4]);
 			Delta3D(Xc, Yc, Zc, f, dxf, dyf, dzf);
 
 			// Calcul des dérivées et initialisation du model
@@ -165,10 +165,10 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		std::ranges::fill(dzf, 0.0);
 		std::ranges::fill(dudt, 0.0);
 
-		double xc = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
-		       yc = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
+		const double X = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
+		             Y = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
 
-		const double Xc = xc - std::floor(xc), Yc = yc - std::floor(yc), Zc = p[1][4] - std::floor(p[1][4]);
+		const double Xc = X - std::floor(X), Yc = Y - std::floor(Y), Zc = p[1][4] - std::floor(p[1][4]);
 		Delta3D(Xc, Yc, Zc, f, dxf, dyf, dzf);
 
 		for (size_t i = 0; i < n_; ++i) {

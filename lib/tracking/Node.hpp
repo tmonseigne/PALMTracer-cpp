@@ -29,7 +29,7 @@ public:
 	size_t time_;
 	Node *future_, *past_;
 	size_t trackedIndex_;
-	size_t colorIndex_[2];
+	std::array<size_t, 2> colorIndex_;
 
 	std::array<std::vector<Node*>, 2> neighbors_;
 
@@ -39,7 +39,7 @@ public:
 	Node(size_t time, Parameters* params);
 	~Node();
 
-	double Distance(const Node& node) const;
+	[[nodiscard]] double Distance(const Node& node) const;
 	double Likeness(const Node* n = nullptr) const;
 	void UpdateConstants();
 	void ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance, size_t& nDist) const;
@@ -50,11 +50,11 @@ public:
 
 private:
 	//==================== Computes ====================
-	bool metropolis(double deltaE, double temperature) const;
-	double sphericEffect() const;
+	[[nodiscard]] bool metropolis(double deltaE, double temperature) const;
+	[[nodiscard]] double sphericEffect() const;
 	static double sphericEffect(const Node& n1, const Node& n2) { return n1.sphericEffect() + n2.sphericEffect(); }
-	double distance(const Node& n1, const Node& n2) const;
-	Node* getRandomNeighbor(const size_t type = 0) const { return neighbors_[type][params_->RandomModulo(neighbors_[type].size())]; }
+	[[nodiscard]] double distance(const Node& n1, const Node& n2) const;
+	[[nodiscard]] Node* getRandomNeighbor(const size_t type = 0) const { return neighbors_[type][params_->RandomModulo(neighbors_[type].size())]; }
 
 	//==================== likeness ====================
 	static double getLikeness(const double difference, const double sigma) { return 1. - std::fabs(difference) / (3. * sigma); }
@@ -66,7 +66,7 @@ private:
 	//==================== Linkage ====================
 	double makeChangeSimpleLinkage(double limit);
 	bool isSimpleLinkageAvailable(const Node* node) const;
-	double simpleLinkageDisconnection(double limit) const;
+	[[nodiscard]] double simpleLinkageDisconnection(double limit) const;
 	double simpleLinkageReassignment(double limit, Node* node);
 	double simpleLinkageBreakAndReconnect(double limit, Node* node);
 	double simpleLinkageSwap(double limit, Node* node);

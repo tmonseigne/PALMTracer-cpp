@@ -27,7 +27,7 @@ public:
 	std::vector<Node> nodes_;
 	size_t nNodes_;
 	TimeNodes(size_t time, size_t nNodes, Parameters* params);
-	virtual ~TimeNodes() { nodes_.clear(); }
+	~TimeNodes() { nodes_.clear(); }
 
 	Node& operator[](const size_t i) { return nodes_[i]; }
 	void LinkNeighborsBeforeAndAfter(TimeNodes& futures);

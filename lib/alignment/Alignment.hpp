@@ -60,18 +60,18 @@ protected:
 		double x, y;
 	};
 
-	const unsigned short *highSNR_,                       ///< Image de référence alignée (fort SNR)
-	                     *lowSNR_,                        ///< Image de référence désalignée (faible SNR)
-	                     *input_;                         ///< Données d'entrée (pile à aligner)
-	unsigned short* output_;                              ///< Résultat de l'alignement
-	size_t height_,                                       ///< Hauteur des images (pixels)
-	       width_,                                        ///< Largeur des images (pixels)
-	       planes_,                                       ///< Nombre de plans dans la pile
-	       sizeIm_,                                       ///< Nombre total de pixels d'une image (height × width)
-	       size_,                                         ///< Nombre total de pixels (height × width × planes)
-	       upsampling_,                                   ///< Taux de suréchantillonnage
-	       upsampling2_;                                  ///< Taux de suréchantillonnage au carré
-	std::array<std::array<double, 10>, 2> factors_;       ///< Coefficients du modèle polynomial
+	const unsigned short *highSNR_{},                     ///< Image de référence alignée (fort SNR)
+	                     *lowSNR_{},                      ///< Image de référence désalignée (faible SNR)
+	                     *input_{};                       ///< Données d'entrée (pile à aligner)
+	unsigned short* output_{};                            ///< Résultat de l'alignement
+	size_t height_{},                                     ///< Hauteur des images (pixels)
+	       width_{},                                      ///< Largeur des images (pixels)
+	       planes_{},                                     ///< Nombre de plans dans la pile
+	       sizeIm_{},                                     ///< Nombre total de pixels d'une image (height × width)
+	       size_{},                                       ///< Nombre total de pixels (height × width × planes)
+	       upsampling_{},                                 ///< Taux de suréchantillonnage
+	       upsampling2_{};                                ///< Taux de suréchantillonnage au carré
+	std::array<std::array<double, 10>, 2> factors_{};     ///< Coefficients du modèle polynomial
 	std::vector<std::vector<Contribution>> transformMap_; ///< chaque pixel cible contiendra une liste de contributions
 
 	/// <summary>Initialise la mémoire de sortie à 0.</summary>
@@ -122,4 +122,4 @@ protected:
 	/// <returns>Aire du polygone en unités carrées.</returns>
 	[[nodiscard]] double getArea(const std::vector<Coord>& poly) const;
 };
-}  // namespace palm_tracer // namespace palm_tracer
+}  // namespace palm_tracer

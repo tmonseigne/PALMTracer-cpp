@@ -34,7 +34,7 @@ constexpr std::array<Filter, N_LOCALIZATIONS> SEGMENTATION_FILTER = MakeDefaultF
 /// <param name="value">Valeur.</param>
 /// <param name="lessThan">Comparatif (True si plus petit que, False sinon).</param>
 /// <returns></returns>
-bool CheckFilter(const Filter& f, const double value, const bool lessThan) { return f.enabled && (lessThan ? (value <= f.value) : (value >= f.value)); }
+bool CheckFilter(const Filter& f, const double value, const bool lessThan) { return f.enabled && (lessThan ? value <= f.value : value >= f.value); }
 } // namespace
 
 //-------------------------------------------------------------------------------------------------
@@ -136,9 +136,9 @@ void Segmentation2D::ComputeStatistics()
 	// Accumulation des mesures ne pas paralléliser
 	for (size_t i = 0, idx = 0; i < height_; ++i) {
 		for (size_t j = 0; j < width_; ++j, ++idx) {
-			const unsigned short s = map_[idx];
-			if (s == 0) { continue; }
-			auto& info       = infos_[s - 1];
+			const unsigned short S = map_[idx];
+			if (S == 0) { continue; }
+			auto& info       = infos_[S - 1];
 			const double Val = output_[idx];
 
 			// Mesures
@@ -354,10 +354,7 @@ void Segmentation2D::watershed()
 				}
 			}
 
-			if (vois) {
-				double cle = -output_[idx];
-				heap.emplace(cle, coord_2d{x, y});
-			}
+			if (vois) { heap.emplace(-output_[idx], coord_2d{x, y}); }
 		}
 	}
 
@@ -368,17 +365,17 @@ void Segmentation2D::watershed()
 		++it;
 
 		for (int dx = -1; dx <= 1; ++dx) {
-			int nx = p.first + dx;
-			if (nx < 0 || nx >= static_cast<int>(height_)) { continue; }
+			const int Nx = p.first + dx;
+			if (Nx < 0 || Nx >= static_cast<int>(height_)) { continue; }
 
 			for (int dy = -1; dy <= 1; ++dy) {
-				int ny = p.second + dy;
-				if ((dx == 0 && dy == 0) || ny < 0 || ny >= static_cast<int>(width_)) { continue; }
+				const int Ny = p.second + dy;
+				if ((dx == 0 && dy == 0) || Ny < 0 || Ny >= static_cast<int>(width_)) { continue; }
 
-				const size_t Nid = nx * width_ + ny;
+				const size_t Nid = Nx * width_ + Ny;
 				if (output_[Nid] > THRESHOLD && map_[Nid] == 0) {
-					double newCle = -output_[Nid] + static_cast<double>(it) * EPSILON;
-					heap.emplace(newCle, coord_2d{nx, ny});
+					const double Cle = -output_[Nid] + static_cast<double>(it) * EPSILON;
+					heap.emplace(Cle, coord_2d{Nx, Ny});
 					map_[Nid] = map_[p.first * width_ + p.second];
 				}
 			}

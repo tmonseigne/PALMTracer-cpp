@@ -59,49 +59,49 @@ int Palm::Processing() const
 //-------------------------------------------------------------------------------------------------
 void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const
 {
-	const unsigned short* image = stack_ + (plane * size_);
+	const unsigned short* image = stack_ + plane * size_;
 
 	//----- Décomposition en ondelette -----
-	ATrous decomposition(image, height_, width_); // Objet pour la décomposition ondelettes (algorithme à trous).
+	const ATrous Decomposition(image, height_, width_); // Objet pour la décomposition ondelettes (algorithme à trous).
 
 	//----- Segmentation -----
-	Segmentation2D segmentation(decomposition, thresholdVal_, watershedRatio_); // Objet de segmentation intelligente 2D.
+	const Segmentation2D Segmentation(Decomposition, thresholdVal_, watershedRatio_); // Objet de segmentation intelligente 2D.
 
 	//----- Fitting -----
 	switch (fit_) {
 		case 1: {
 			GaussianFit fit(fit_mode::gaussian_2d_fixed, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
-			fit.Fit(segmentation, points);
+			fit.Fit(Segmentation, points);
 			break;
 		}
 
 		case 2: { // Gaussian fit of 2D
 			GaussianFit fit(fit_mode::gaussian_2d_sigma, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
-			fit.Fit(segmentation, points);
+			fit.Fit(Segmentation, points);
 			break;
 		}
 
 		case 3: { // Gaussian fit of 3D Theta is constant
 			GaussianFit fit(fit_mode::gaussian_3d_fixed, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
-			fit.Fit(segmentation, points);
+			fit.Fit(Segmentation, points);
 			break;
 		}
 
 		case 4: { // Gaussian fit of 3D
 			GaussianFit fit(fit_mode::gaussian_3d_theta, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
-			fit.Fit(segmentation, points);
+			fit.Fit(Segmentation, points);
 			break;
 		}
 
 		case 5: { // Spline fit for Z on EMCCD sensor (maybe same call for sCMOS)
 			SplineFit fit(fit_mode::spline_3d_emccd, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
-			fit.Fit(segmentation, points);
+			fit.Fit(Segmentation, points);
 			break;
 		}
 
 		default: {
 			Fitting fit(fit_mode::none, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
-			fit.Fit(segmentation, points);
+			fit.Fit(Segmentation, points);
 			break;
 		}
 	}

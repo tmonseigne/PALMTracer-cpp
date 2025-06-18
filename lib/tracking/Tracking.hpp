@@ -20,14 +20,14 @@
 namespace palm_tracer {
 class Tracking {
 public:
-	size_t nTraj_;
-
 	explicit Tracking(const double* points, double* tracks, const size_t minLife, const double decrease, const size_t ntimes, Parameters* params)
-		: nTraj_(0), points_(points), tracks_(tracks), decrease_(decrease), minLife_(minLife), nbTimes_(ntimes), params_(params) { }
+		: points_(points), tracks_(tracks), decrease_(decrease), minLife_(minLife), nbTimes_(ntimes), params_(params) { }
 
 	~Tracking() { timeNodes_.clear(); }
 
 	size_t Processing();
+
+	size_t nTraj_{};
 
 protected:
 	const double* points_;

@@ -33,9 +33,9 @@ protected:
 	                        EPSILON_3  = 1e-5, ///< Seuil de convergence pour la variation des paramètres.
 	                        EPSILON_4  = 1e-2; ///< Tolérance utilisée pour juger la stagnation ou instabilité.
 
-	double sigmaX_, ///< Écart-type initial sur X.
-	       sigmaY_, ///< Écart-type initial sur Y.
-	       theta_;  ///< Angle d'orientation (en radians) de la gaussienne si applicable.
+	double sigmaX_{1.0}, ///< Écart-type initial sur X.
+	       sigmaY_{2.0}, ///< Écart-type initial sur Y.
+	       theta_{0.0};  ///< Angle d'orientation (en radians) de la gaussienne si applicable.
 
 	/// <summary>Parse les paramètres reçus pour l'ajustement.</summary>
 	void parseParams() override;
@@ -89,4 +89,4 @@ protected:
 	double lm_matx(const std::vector<Pixel>& grid, const std::vector<double>& p, const std::vector<double>& weight,
 	               std::vector<double>& alpha, std::vector<double>& beta, std::vector<double>& hat) const;
 };
-}  // namespace palm_tracer
+} // namespace palm_tracer

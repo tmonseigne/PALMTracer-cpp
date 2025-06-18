@@ -31,15 +31,15 @@ protected:
 	static constexpr double EPSILON_1  = 1e-6,  ///< Seuil de convergence pour le changement de la fonction objectif.
 	                        EPSILON_2  = 1e-10; ///< avant calcul de la matrice inverse
 
-	size_t splineSizeX_,         ///< Taille de la spline en X (nombre de points dans la direction horizontale).
-	       splineSizeY_,         ///< Taille de la spline en Y (nombre de points dans la direction verticale).
-	       splineSizeZ_,         ///< Taille de la spline en Z (nombre de plans en profondeur).
-	       splineSizeXY_,        ///< Taille totale d’un plan XY (splineSizeX_ * splineSizeY_). Utilisé pour accéder rapidement aux coefficients.
-	       splineSizeXYZ_,       ///< Taille totale de l’ensemble du volume spline (splineSizeX_ * splineSizeY_ * splineSizeZ_).
-	       splineOffset_;        ///< Offset utilisé pour indexer ou accéder efficacement aux sous-blocs ou aux patchs de la spline.
-	double initZ_,               ///< Position initiale en Z (origine physique ou de modélisation de la spline en profondeur).
-	       deltaZ_,              ///< Pas ou résolution entre deux couches Z successives dans la spline.
-	       intensityRatio_;      ///< Rapport d’intensité entre l’image et le modèle spline (pour corriger une mise à l’échelle ou un gain).
+	size_t splineSizeX_{},       ///< Taille de la spline en X (nombre de points dans la direction horizontale).
+	       splineSizeY_{},       ///< Taille de la spline en Y (nombre de points dans la direction verticale).
+	       splineSizeZ_{},       ///< Taille de la spline en Z (nombre de plans en profondeur).
+	       splineSizeXY_{},      ///< Taille totale d’un plan XY (splineSizeX_ * splineSizeY_). Utilisé pour accéder rapidement aux coefficients.
+	       splineSizeXYZ_{},     ///< Taille totale de l’ensemble du volume spline (splineSizeX_ * splineSizeY_ * splineSizeZ_).
+	       splineOffset_{};      ///< Offset utilisé pour indexer ou accéder efficacement aux sous-blocs ou aux patchs de la spline.
+	double initZ_{},             ///< Position initiale en Z (origine physique ou de modélisation de la spline en profondeur).
+	       deltaZ_{},            ///< Pas ou résolution entre deux couches Z successives dans la spline.
+	       intensityRatio_{};    ///< Rapport d’intensité entre l’image et le modèle spline (pour corriger une mise à l’échelle ou un gain).
 	std::vector<double> coeffs_; ///< Coefficients du modèle spline 3D, stockés de manière linéaire (ordre : [z][y][x]) pour un accès rapide.
 
 	/// <summary>Parse les paramètres reçus pour l'ajustement.</summary>

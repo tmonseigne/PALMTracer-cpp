@@ -25,12 +25,12 @@ public:
 	static constexpr size_t MODEL        = 2; //the number of the used model
 
 	// Params
-	double maxSpeed_;
-	double costBirthDeath_;
+	double maxSpeed_{};
+	double costBirthDeath_{};
 
 	// Computes
-	double stdIntensity_, stdMean_, stdDistance_, covMeanIntensity_;
-	double maxX_, maxY_, maxZ_;
+	double stdIntensity_{}, stdMean_{}, stdDistance_{}, covMeanIntensity_{};
+	double maxX_{}, maxY_{}, maxZ_{};
 
 	size_t RandomModulo(const size_t n) { return rng_() % n; }
 	double Randomfloat() { return static_cast<double>(rng_()) / static_cast<double>(std::mt19937::max()); }

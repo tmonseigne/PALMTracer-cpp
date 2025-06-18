@@ -48,7 +48,7 @@ private:
 	/// <returns>Renvoie 2^val.</returns>
 	/// <remarks>Cette fonction est constexpr, donc évaluée à la compilation si possible.
 	/// Le mot-clé [[nodiscard]] indique que le résultat ne doit pas être ignoré.</remarks>
-	[[nodiscard]] static constexpr size_t twoToThe(const size_t val) noexcept { return (val == 0) ? 1 : static_cast<size_t>(1) << val; }
+	[[nodiscard]] static constexpr size_t twoToThe(const size_t val) noexcept { return val == 0 ? 1 : static_cast<size_t>(1) << val; }
 
 	/// <summary>Calcule l'offset dans un tableau 1D à partir d'une position 2D avec gestion des débordements par clamp.</summary>
 	/// <param name="i">Indice de ligne (peut être négatif, sera borné entre 0 et height-1).</param>
