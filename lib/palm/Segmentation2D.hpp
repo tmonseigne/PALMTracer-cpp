@@ -68,7 +68,7 @@ private:
 	       size_;                             ///< Taille totale de l'image (height_ * width_).
 	double ratio_;                            ///< Rapport utilisé dans l'algorithme de Watershed.
 	std::vector<SegmentationInfo> infos_;     ///< Vecteur de structures 2D analysées ou filtrées.
-	std::vector<unsigned short> map_;         ///< Image segmentée (carte binaire des objets détectés).
+	std::vector<uint16_t> map_;               ///< Image segmentée (carte binaire des objets détectés).
 	std::vector<double> output_;              ///< Carte des valeurs utilisées pour la segmentation (après seuillage).
 
 	/// <summary>Alloue un vecteur de structures (`infos_`) pour un nombre donné de segments.</summary>
@@ -90,4 +90,4 @@ private:
 	/// Utilise une file de priorité pour propager les labels des régions à travers la carte de potentiel. </summary>
 	void watershed();
 };
-}  // namespace palm_tracer
+} // namespace palm_tracer

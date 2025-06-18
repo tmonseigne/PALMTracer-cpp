@@ -221,7 +221,7 @@ bool Cholesky(const std::vector<double>& a, const size_t n, std::vector<double>&
 				else { return false; } // La matrice n'est pas définie positive → échec
 			}
 			else { // Hors diagonale : calcul classique de la valeur
-				u[i * n + j] = (1.0 / u[j * n + j] * (a[i * n + j] - s));
+				u[i * n + j] = 1.0 / u[j * n + j] * (a[i * n + j] - s);
 				l[j * n + i] = u[i * n + j];
 			}
 		}

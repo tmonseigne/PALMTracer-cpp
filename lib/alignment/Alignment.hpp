@@ -11,6 +11,7 @@
 
 #pragma once
 #include <array>
+#include <cstdint>
 #include <vector>
 
 namespace palm_tracer {
@@ -34,7 +35,7 @@ public:
 	/// <param name="width">Largeur de chaque plan (en pixels).</param>
 	/// <param name="planes">Nombre de plans (profondeur de la pile).</param>
 	/// <param name="upsampling">Taux de suréchantillonnage à appliquer avant recalage.</param>
-	void Align(const unsigned short* highSNR, const unsigned short* lowSNR, const unsigned short* input, unsigned short* output,
+	void Align(const uint16_t* highSNR, const uint16_t* lowSNR, const uint16_t* input, uint16_t* output,
 	           size_t height, size_t width, size_t planes, size_t upsampling = 1);
 
 	/// <summary>Constructeur alternatif de la classe <c>Fitting</c>. Applique directement des coefficients d'alignement fournis.</summary>
@@ -45,7 +46,7 @@ public:
 	/// <param name="planes">Nombre de plans (profondeur de la pile).</param>
 	/// <param name="factors">Coefficients du modèle non linéaire (degrés 1 à 3).</param>
 	/// <param name="upsampling">Taux de suréchantillonnage à appliquer avant recalage.</param>
-	void Align(const unsigned short* input, unsigned short* output, size_t height, size_t width,
+	void Align(const uint16_t* input, uint16_t* output, size_t height, size_t width,
 	           size_t planes, const std::array<std::array<double, 10>, 2>& factors, size_t upsampling = 1);
 
 protected:
@@ -60,10 +61,10 @@ protected:
 		double x, y;
 	};
 
-	const unsigned short *highSNR_{},                     ///< Image de référence alignée (fort SNR)
-	                     *lowSNR_{},                      ///< Image de référence désalignée (faible SNR)
-	                     *input_{};                       ///< Données d'entrée (pile à aligner)
-	unsigned short* output_{};                            ///< Résultat de l'alignement
+	const uint16_t *highSNR_{},                           ///< Image de référence alignée (fort SNR)
+	               *lowSNR_{},                            ///< Image de référence désalignée (faible SNR)
+	               *input_{};                             ///< Données d'entrée (pile à aligner)
+	uint16_t* output_{};                                  ///< Résultat de l'alignement
 	size_t height_{},                                     ///< Hauteur des images (pixels)
 	       width_{},                                      ///< Largeur des images (pixels)
 	       planes_{},                                     ///< Nombre de plans dans la pile
@@ -122,4 +123,4 @@ protected:
 	/// <returns>Aire du polygone en unités carrées.</returns>
 	[[nodiscard]] double getArea(const std::vector<Coord>& poly) const;
 };
-}  // namespace palm_tracer
+} // namespace palm_tracer

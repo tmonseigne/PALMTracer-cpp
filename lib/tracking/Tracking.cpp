@@ -29,7 +29,7 @@ size_t Tracking::Processing()
 	for (size_t step = 0; step < Parameters::N_STEPS; ++step) {
 		if (step == Parameters::N_STEPS - 1) { error = 20; }
 		else { error = 0; }
-		long cpt = 0;
+		size_t cpt = 0;
 
 		if (step == 0) {
 			computeConstants();
@@ -230,7 +230,7 @@ updateConstants() ones the Tracking in compute, compute the constant
 ********************************************************************************************************************/
 void Tracking::updateConstants()
 {
-	long cpt                   = 0;
+	size_t cpt                 = 0;
 	params_->stdDistance_      = 0;
 	params_->stdIntensity_     = 0;
 	params_->stdMean_          = 0;
@@ -247,10 +247,10 @@ void Tracking::updateConstants()
 			}
 		}
 	}
-	params_->stdDistance_ /= cpt;
-	params_->stdIntensity_ /= cpt;
-	params_->stdMean_ /= cpt;
-	params_->covMeanIntensity_ /= cpt;
+	params_->stdDistance_ /= static_cast<double>(cpt);
+	params_->stdIntensity_ /= static_cast<double>(cpt);
+	params_->stdMean_ /= static_cast<double>(cpt);
+	params_->covMeanIntensity_ /= static_cast<double>(cpt);
 	params_->stdIntensity_ = sqrt(params_->stdIntensity_);
 	params_->stdDistance_  = sqrt(params_->stdDistance_);
 	params_->stdMean_      = sqrt(params_->stdMean_);

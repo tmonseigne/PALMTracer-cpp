@@ -123,7 +123,7 @@ void Segmentation2D::FilterData()
 	for (size_t i = 0; i < size_; ++i) {
 		if (map_[i] > 0) {
 			const size_t OldIndex = map_[i] - 1;
-			map_[i]               = oldToNew[OldIndex] > 0 ? static_cast<unsigned short>(oldToNew[OldIndex]) : 0;
+			map_[i]               = oldToNew[OldIndex] > 0 ? static_cast<uint16_t>(oldToNew[OldIndex]) : 0;
 		}
 	}
 }
@@ -136,7 +136,7 @@ void Segmentation2D::ComputeStatistics()
 	// Accumulation des mesures ne pas paralléliser
 	for (size_t i = 0, idx = 0; i < height_; ++i) {
 		for (size_t j = 0; j < width_; ++j, ++idx) {
-			const unsigned short S = map_[idx];
+			const uint16_t S = map_[idx];
 			if (S == 0) { continue; }
 			auto& info       = infos_[S - 1];
 			const double Val = output_[idx];
@@ -198,7 +198,7 @@ void Segmentation2D::filterStructureWS()
 		// Analyse des structures
 		for (size_t i = 0, idx = 0; i < height_; ++i) {
 			for (size_t j = 0; j < width_; ++j, ++idx) {
-				const unsigned short Sid = map_[idx];
+				const uint16_t Sid = map_[idx];
 				if (Sid == 0) { continue; }
 				auto& s = wsFusions[Sid - 1];
 
@@ -215,7 +215,7 @@ void Segmentation2D::filterStructureWS()
 					for (size_t jj = std::max(j, static_cast<size_t>(1)) - 1; jj <= std::min(j + 1, width_ - 1); ++jj) {
 						if (ii == i && jj == j) { continue; }
 
-						const unsigned short NeighborSid = map_[ii * width_ + jj];
+						const uint16_t NeighborSid = map_[ii * width_ + jj];
 						if (NeighborSid != 0 && NeighborSid != Sid) {
 							if (output_[idx] > s.maxPotentialWithNeighbor) {
 								s.maxPotentialWithNeighbor = output_[idx];
@@ -254,10 +254,10 @@ void Segmentation2D::filterStructureWS()
 		label = 0;
 		for (int i = 0; i <= static_cast<int>(wsFusions.size()); ++i) { if (wsFusions[i].structToBecome == i) { wsFusions[i].newIndex = ++label; } }
 
-		for (unsigned short& s : map_) {
+		for (uint16_t& s : map_) {
 			if (s != 0) {
 				const auto& Sid = wsFusions[s - 1];
-				s               = static_cast<unsigned short>(wsFusions[Sid.structToBecome].newIndex);
+				s               = static_cast<uint16_t>(wsFusions[Sid.structToBecome].newIndex);
 			}
 		}
 	}
@@ -277,7 +277,7 @@ void Segmentation2D::filterStructureWS()
 	// Marquage d'un seul point par structure pour Watershed final
 	std::ranges::fill(map_, 0);
 	for (int i = 0; i < static_cast<int>(wsFusions.size()); ++i) {
-		if (wsFusions[i].structToBecome == i) { map_[wsFusions[i].x * width_ + wsFusions[i].y] = static_cast<unsigned short>(wsFusions[i].newIndex); }
+		if (wsFusions[i].structToBecome == i) { map_[wsFusions[i].x * width_ + wsFusions[i].y] = static_cast<uint16_t>(wsFusions[i].newIndex); }
 	}
 }
 
@@ -285,7 +285,7 @@ void Segmentation2D::filterStructureWS()
 void Segmentation2D::getLocalMax()
 {
 	std::ranges::fill(map_, 0);
-	unsigned short label = 1;
+	uint16_t label = 1;
 
 	for (size_t i = 0, idx = 0; i < height_; ++i) {
 		for (size_t j = 0; j < width_; ++j, ++idx) {
@@ -298,8 +298,8 @@ void Segmentation2D::getLocalMax()
 					}
 				}
 				if (!err) { //new maximum found
-					unsigned short maxi = 0;
-					err                 = false;
+					uint16_t maxi = 0;
+					err           = false;
 					for (size_t ii = i == 0 ? 0 : i - 1; ii <= std::min(i + 1, height_ - 1) && !err; ++ii) {
 						const size_t Idx1 = ii * width_;
 						for (size_t jj = j == 0 ? 0 : j - 1; jj <= std::min(j + 1, width_ - 1) && !err; ++jj) {

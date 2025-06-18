@@ -12,6 +12,7 @@
 
 #pragma once
 #include <array>
+#include <cstdint>
 #include <vector>
 
 #include "Constants.hpp"
@@ -64,7 +65,7 @@ public:
 	///		- Tableau de Coefficients d'une PSF optimale ? pour chaque Z ? (tableau 4D TODO Voir quelles dimensions est pour quoi)
 	///		- Image de fond pour le CMOS et 0 pour le EMCD (pour définir le bruit standard). (taille standard d'une image)
 	/// </param>
-	Palm(const unsigned short* image, double* points, size_t pointsListSize, size_t height, size_t width, size_t planes,
+	Palm(const uint16_t* image, double* points, size_t pointsListSize, size_t height, size_t width, size_t planes,
 	     double thresholdVal, double watershedRatio, size_t fit, const double* fitParams);
 
 	/// <summary>Destructeur de la classe <c>Palm</c>.</summary>
@@ -88,13 +89,13 @@ public:
 
 private:
 	// Basic members
-	const unsigned short* stack_; ///< Image 3D d'entrée (plan x hauteur x largeur) en niveaux de gris.
-	double* points_;              ///< Tableau de points de sortie (rempli avec les résultats de détection).
-	size_t height_,               ///< Hauteur de l'image.
-	       width_,                ///< Largeur de l'image.
-	       planes_,               ///< Nombre de plans de la pile.
-	       size_,                 ///< Taille totale d'une image (height × width).
-	       nPointsMaxPerPlane_;   ///< Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).
+	const uint16_t* stack_;     ///< Image 3D d'entrée (plan x hauteur x largeur) en niveaux de gris.
+	double* points_;            ///< Tableau de points de sortie (rempli avec les résultats de détection).
+	size_t height_,             ///< Hauteur de l'image.
+	       width_,              ///< Largeur de l'image.
+	       planes_,             ///< Nombre de plans de la pile.
+	       size_,               ///< Taille totale d'une image (height × width).
+	       nPointsMaxPerPlane_; ///< Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).
 
 	// Decomposition members
 	double thresholdVal_,   ///< Seuil de détection utilisé après la décomposition en ondelettes.

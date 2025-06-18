@@ -6,7 +6,7 @@
 #include "Constants.hpp"
 
 extern "C"
-void WaveletProjections(const unsigned short* image, size_t height, size_t width, size_t nbPlane, std::vector<std::vector<double>>& decomp);
+void WaveletProjections(const uint16_t* image, size_t height, size_t width, size_t nbPlane, std::vector<std::vector<double>>& decomp);
 
 size_t ATrous::offsetTest(const int i, const int j) const
 {
@@ -59,7 +59,7 @@ void ATrous::b3SplineFiltering2D(const std::vector<double>& in, std::vector<doub
 	for (int idx = 0; idx < static_cast<int>(size_); ++idx) { out[idx] = convolutionX(idx, idx / static_cast<int>(width_), idx % static_cast<int>(width_)); }
 }
 
-int ATrous::ATrousDecomposition2D(const unsigned short* image, const size_t height, const size_t width, bool* planesToUse, size_t nbPlane)
+int ATrous::ATrousDecomposition2D(const uint16_t* image, const size_t height, const size_t width, bool* planesToUse, size_t nbPlane)
 {
 	height_ = height;
 	width_  = width;

@@ -28,10 +28,10 @@ TEST(AlignmentTests, BlankCallWithReference)
 	constexpr size_t ImSize     = Height * Width;
 	constexpr size_t Size       = ImSize * Planes;
 	constexpr size_t Upsampling = 1;
-	const auto HighSNR          = new unsigned short[ImSize],
-	           LowSNR           = new unsigned short[ImSize],
-	           Input            = new unsigned short[Size],
-	           Output           = new unsigned short[Size];
+	const auto HighSNR          = new uint16_t[ImSize],
+	           LowSNR           = new uint16_t[ImSize],
+	           Input            = new uint16_t[Size],
+	           Output           = new uint16_t[Size];
 
 	// Création et Remplissage des vecteurs
 	std::fill_n(HighSNR, ImSize, 0);
@@ -58,8 +58,8 @@ TEST(AlignmentTests, BlankCallWithFactor)
 	constexpr size_t ImSize     = Height * Width;
 	constexpr size_t Size       = ImSize * Planes;
 	constexpr size_t Upsampling = 1;
-	const auto Input            = new unsigned short[Size],
-	           Output           = new unsigned short[Size];
+	const auto Input            = new uint16_t[Size],
+	           Output           = new uint16_t[Size];
 
 	constexpr std::array<std::array<double, 10>, 2> Factors = {};
 
@@ -77,14 +77,14 @@ TEST_P(AlignmentTests, AlignmentCore)
 {
 	const auto& [outputPath, factors, upsampling] = GetParam();
 
-	std::vector<unsigned short> input;
+	std::vector<uint16_t> input;
 	size_t width, height, planes;
 
 	// 1. Charger
 	loadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Alignement_Reference.tiff", input, width, height, planes);
 
 	// 2. Allouer
-	std::vector<unsigned short> output(input.size() * upsampling * upsampling, 0);
+	std::vector<uint16_t> output(input.size() * upsampling * upsampling, 0);
 
 	// 3. Algorithme
 	Alignment align;

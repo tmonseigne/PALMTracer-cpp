@@ -54,9 +54,6 @@
     </ClInclude>
     <ClInclude Include="..\lib\Constants.hpp" />
     <ClInclude Include="..\lib\ExportAPI.hpp" />
-    <ClInclude Include="..\lib\tracking\Node.h">
-      <Filter>Tracking</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\tracking\Node.hpp">
       <Filter>Tracking</Filter>
     </ClInclude>

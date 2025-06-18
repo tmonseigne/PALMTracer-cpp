@@ -121,7 +121,9 @@ double Node::likenessDistance(Node* n)
 *********************************************************************************************/
 double Node::likenessDistance(const Node* n) const
 {
-	return (n == nullptr) ? getLikeness(std::min(distanceToBorder_, params_->stdDistance_), params_->stdDistance_) : getLikeness(Distance(*n), params_->stdDistance_);
+	return n == nullptr
+		       ? getLikeness(std::min(distanceToBorder_, params_->stdDistance_), params_->stdDistance_)
+		       : getLikeness(Distance(*n), params_->stdDistance_);
 }
 
 /*********************************************************************************************
@@ -132,7 +134,7 @@ double Node::likenessMean(Node* n)
   We use the hypothesis that
 	sigma(mean intensity) proportional to surface^-1/6 simga_noise / Mean in 2D.
 *********************************************************************************************/
-double Node::likenessMean(const Node* n) const { return (n == nullptr) ? likenessMean_ : getLikeness(mean_ - n->mean_, params_->stdMean_); }
+double Node::likenessMean(const Node* n) const { return n == nullptr ? likenessMean_ : getLikeness(mean_ - n->mean_, params_->stdMean_); }
 
 /*********************************************************************************************
 double Node::likenessIntensity(Node* n)
@@ -141,7 +143,10 @@ double Node::likenessIntensity(Node* n)
 
   We use the hypothesis that sigma(intensity) proportional to simga_noise/Mean.
 *********************************************************************************************/
-double Node::likenessIntensity(const Node* n) const { return (n == nullptr) ? likenessIntensity_ : getLikeness(intensity_ - n->intensity_, params_->stdIntensity_); }
+double Node::likenessIntensity(const Node* n) const
+{
+	return n == nullptr ? likenessIntensity_ : getLikeness(intensity_ - n->intensity_, params_->stdIntensity_);
+}
 
 /*********************************************************************************************
 double Node::likeness(Node* n)
@@ -150,7 +155,7 @@ double Node::likeness(Node* n)
 *********************************************************************************************/
 double Node::Likeness(const Node* n) const
 {
-	return (n == nullptr)
+	return n == nullptr
 		       ? (WEIGHT_DISTANCE * likenessDistance() + WEIGHT_INTENSITY * likenessIntensity()
 		          + WEIGHT_MEAN_INTENSITY * likenessMean()) / 2. - params_->costBirthDeath_
 		       : WEIGHT_DISTANCE * likenessDistance(n) + WEIGHT_INTENSITY * likenessIntensity(n) + WEIGHT_MEAN_INTENSITY * likenessMean(n);
@@ -217,7 +222,7 @@ void Node::ComputeBorderDistance()
 //==================== Linkage ====================
 double Node::makeChangeSimpleLinkage(const double limit)
 {
-	if ((future_ == nullptr) || params_->RandomModulo(2) == 0) {
+	if (future_ == nullptr || params_->RandomModulo(2) == 0) {
 		if (neighbors_[1].empty()) { return 0.; } //no neighbors
 		Node* target = getRandomNeighbor(1);
 		// the new random link is the same as future_,try simple deconnection
@@ -245,7 +250,7 @@ double Node::makeChangeSimpleLinkage(const double limit)
 		//	Present		Future
 		//	1-----------3(cRand)
 		//	4-----------2
-		if ((params_->RandomModulo(2) != 0) && (future_ != nullptr)) { return simpleLinkageSwap(limit, target); }
+		if (params_->RandomModulo(2) != 0 && future_ != nullptr) { return simpleLinkageSwap(limit, target); }
 
 		//find a new node to be connected
 		// try to find a free node to connect the past_ of the conflict node.
@@ -315,7 +320,7 @@ double Node::simpleLinkageReassignment(const double limit, Node* node)
 
 	if (Distance(*node) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
 
-	const double DeltaE = Likeness(node) + ((future_ != nullptr) ? future_->Likeness() : 0) - node->Likeness() - Likeness(future_);
+	const double DeltaE = Likeness(node) + (future_ != nullptr ? future_->Likeness() : 0) - node->Likeness() - Likeness(future_);
 	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
 	// change the configuration
 	//unlink future_
@@ -342,8 +347,8 @@ double Node::simpleLinkageBreakAndReconnect(const double limit, Node* node)
 
 	if (Distance(*node) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
 
-	const double DeltaE = Likeness(node) + ((future_ == nullptr) ? 0 : future_->Likeness())
-	                      + ((node->past_ == nullptr) ? 0 : node->past_->Likeness()) - Likeness(future_) - node->Likeness(node->past_);
+	const double DeltaE = Likeness(node) + (future_ == nullptr ? 0 : future_->Likeness())
+	                      + (node->past_ == nullptr ? 0 : node->past_->Likeness()) - Likeness(future_) - node->Likeness(node->past_);
 	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
 	// change the configuration
 	//unlink future_
@@ -369,8 +374,8 @@ double Node::simpleLinkageSwap(const double limit, Node* node)
 	//	1-----------3(cRand)
 	//	4-----------2
 
-	if ((node->past_ != nullptr) && node->past_->Distance(*future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-	if (Distance(*node) >= params_->maxSpeed_) { return 0.; }                                // Distance is not respected
+	if (node->past_ != nullptr && node->past_->Distance(*future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
+	if (Distance(*node) >= params_->maxSpeed_) { return 0.; }                                             // Distance is not respected
 
 	const double DeltaE = Likeness(node) + future_->Likeness(node->past_) - node->Likeness(node->past_) - Likeness(future_);
 	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
@@ -415,10 +420,10 @@ double Node::simpleLinkageDoubleSwap(const double limit, Node* node, const size_
 	//	4-----------5(c)
 	//	NULL--------2
 	//if (!c || !isSimpleLinkageAvailable(c->neighbor_)) { return -1; }                             //ERROR
-	if (Distance(*node) >= params_->maxSpeed_) { return 0.; }                                              // Distance is not respected
-	if ((node->past_ != nullptr) && node->past_->Distance(*selected) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
+	if (Distance(*node) >= params_->maxSpeed_) { return 0.; }                                            // Distance is not respected
+	if (node->past_ != nullptr && node->past_->Distance(*selected) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
 
-	const double DeltaE = Likeness(node) + node->past_->Likeness(selected) + ((future_ == nullptr) ? 0 : future_->Likeness())
+	const double DeltaE = Likeness(node) + node->past_->Likeness(selected) + (future_ == nullptr ? 0 : future_->Likeness())
 	                      - Likeness(future_) - node->Likeness(node->past_) - selected->Likeness();
 	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad
 	// change the configuration

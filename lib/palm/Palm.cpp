@@ -20,7 +20,7 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-Palm::Palm(const unsigned short* image, double* points, const size_t pointsListSize, const size_t height, const size_t width, const size_t planes,
+Palm::Palm(const uint16_t* image, double* points, const size_t pointsListSize, const size_t height, const size_t width, const size_t planes,
            const double thresholdVal, const double watershedRatio, const size_t fit, const double* fitParams)
 	: stack_(image), points_(points), height_(height), width_(width), planes_(planes), size_(height * width),
 	  nPointsMaxPerPlane_((pointsListSize / N_LOCALIZATIONS) / planes),
@@ -59,7 +59,7 @@ int Palm::Processing() const
 //-------------------------------------------------------------------------------------------------
 void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const
 {
-	const unsigned short* image = stack_ + plane * size_;
+	const uint16_t* image = stack_ + plane * size_;
 
 	//----- Décomposition en ondelette -----
 	const ATrous Decomposition(image, height_, width_); // Objet pour la décomposition ondelettes (algorithme à trous).

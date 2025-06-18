@@ -19,7 +19,7 @@ namespace palm_tracer {
 /// <summary>Classe d'ajustement par spline.</summary>
 class SplineFit final : public Fitting {
 public:
-	explicit SplineFit(const fit_mode mode, const unsigned short* image, const size_t height, const size_t width, const size_t maxPoints,
+	explicit SplineFit(const fit_mode mode, const uint16_t* image, const size_t height, const size_t width, const size_t maxPoints,
 	                   const double* fitParams) : Fitting(mode, image, height, width, maxPoints, fitParams) { initialize(); }
 
 protected:

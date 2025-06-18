@@ -95,7 +95,6 @@
     <ClInclude Include="..\lib\palm\Palm.hpp" />
     <ClInclude Include="..\lib\palm\SegmentationInfo.hpp" />
     <ClInclude Include="..\lib\palm\Segmentation2D.hpp" />
-    <ClInclude Include="..\lib\tracking\Node.h" />
     <ClInclude Include="..\lib\tracking\Node.hpp" />
     <ClInclude Include="..\lib\tracking\Parameters.hpp" />
     <ClInclude Include="..\lib\tracking\TimeNodes.hpp" />

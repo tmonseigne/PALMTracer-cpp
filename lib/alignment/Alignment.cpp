@@ -8,7 +8,7 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-void Alignment::Align(const unsigned short* highSNR, const unsigned short* lowSNR, const unsigned short* input, unsigned short* output,
+void Alignment::Align(const uint16_t* highSNR, const uint16_t* lowSNR, const uint16_t* input, uint16_t* output,
                       const size_t height, const size_t width, const size_t planes, const size_t upsampling)
 
 {
@@ -28,7 +28,7 @@ void Alignment::Align(const unsigned short* highSNR, const unsigned short* lowSN
 }
 
 //-------------------------------------------------------------------------------------------------
-void Alignment::Align(const unsigned short* input, unsigned short* output, const size_t height, const size_t width, const size_t planes,
+void Alignment::Align(const uint16_t* input, uint16_t* output, const size_t height, const size_t width, const size_t planes,
                       const std::array<std::array<double, 10>, 2>& factors, const size_t upsampling)
 
 {
@@ -51,7 +51,7 @@ void Alignment::Align(const unsigned short* input, unsigned short* output, const
 void Alignment::computeFactor()
 {
 	throw std::runtime_error("The method to compute factor isn't implemented use precompute constructor : "
-		"Alignment(const unsigned short* input, unsigned short* output, size_t height, size_t width, size_t planes, const std::array<std::array<double, 10>, 2>&factors, size_t upscale, size_t upscaleMode, bool spread)");
+		"Alignment(const uint16_t* input, uint16_t* output, size_t height, size_t width, size_t planes, const std::array<std::array<double, 10>, 2>&factors, size_t upscale, size_t upscaleMode, bool spread)");
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -151,7 +151,7 @@ void Alignment::applyTransform() const
 			for (const auto& [Index, Weight] : transformMap_[i]) { acc += Weight * input_[PlaneOffset + Index]; }
 			tmp[i] = acc;
 		}
-		std::ranges::transform(tmp, output_ + p * UpSizeIm, [](const double v) { return static_cast<unsigned short>(std::lround(v)); });
+		std::ranges::transform(tmp, output_ + p * UpSizeIm, [](const double v) { return static_cast<uint16_t>(std::lround(v)); });
 	}
 }
 
