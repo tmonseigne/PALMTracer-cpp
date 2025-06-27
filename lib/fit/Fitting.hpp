@@ -70,7 +70,7 @@ protected:
 	void initialize();
 
 	/// <summary>Parse les paramètres reçus pour l'ajustement.</summary>
-	virtual void parseParams() { roi_ = 7; }
+	virtual void parseParams() { roi_ = static_cast<size_t>(fitParams_[0]); }
 
 	/// <summary>Exécute l'ajustement selon le mode sélectionné sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.
 	/// L'algorithme utilise une méthode de Levenberg-Marquardt pour minimiser l'erreur entre le modèle et les données.</summary>
