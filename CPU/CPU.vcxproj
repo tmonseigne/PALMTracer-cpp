@@ -76,6 +76,7 @@
     <ClCompile Include="..\lib\palm\Palm.cpp" />
     <ClCompile Include="..\lib\palm\Segmentation2D.cpp" />
     <ClCompile Include="..\lib\PSF.cpp" />
+    <ClCompile Include="..\lib\Spline.cpp" />
     <ClCompile Include="..\lib\tracking\Node.cpp" />
     <ClCompile Include="..\lib\tracking\TimeNodes.cpp" />
     <ClCompile Include="..\lib\tracking\Tracking.cpp" />
@@ -97,6 +98,7 @@
     <ClInclude Include="..\lib\palm\SegmentationInfo.hpp" />
     <ClInclude Include="..\lib\palm\Segmentation2D.hpp" />
     <ClInclude Include="..\lib\PSF.hpp" />
+    <ClInclude Include="..\lib\Spline.hpp" />
     <ClInclude Include="..\lib\Structs.hpp" />
     <ClInclude Include="..\lib\tracking\Node.hpp" />
     <ClInclude Include="..\lib\tracking\Parameters.hpp" />

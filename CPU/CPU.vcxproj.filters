@@ -34,6 +34,7 @@
     </ClCompile>
     <ClCompile Include="..\lib\Matrix.cpp" />
     <ClCompile Include="..\lib\PSF.cpp" />
+    <ClCompile Include="..\lib\Spline.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\fit\GaussianFit.hpp">
@@ -77,6 +78,7 @@
     <ClInclude Include="..\lib\Matrix.hpp" />
     <ClInclude Include="..\lib\PSF.hpp" />
     <ClInclude Include="..\lib\Structs.hpp" />
+    <ClInclude Include="..\lib\Spline.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PALMTracer.def" />

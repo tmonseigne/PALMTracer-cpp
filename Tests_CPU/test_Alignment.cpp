@@ -81,7 +81,7 @@ TEST_P(AlignmentTests, AlignmentCore)
 	size_t width, height, planes;
 
 	// 1. Charger
-	loadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Alignement_Reference.tiff", input, width, height, planes);
+	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Alignement_Reference.tiff", input, height, width, planes);
 
 	// 2. Allouer
 	std::vector<uint16_t> output(input.size() * upsampling * upsampling, 0);
@@ -91,7 +91,7 @@ TEST_P(AlignmentTests, AlignmentCore)
 	align.Align(input.data(), output.data(), height, width, planes, factors, upsampling);
 
 	// 4. Sauvegarder
-	saveTiff3D(outputPath.c_str(), output.data(), width * upsampling, height * upsampling, planes);
+	SaveTiff3D(outputPath.c_str(), output.data(), height * upsampling, width * upsampling, planes);
 
 	SUCCEED();
 }

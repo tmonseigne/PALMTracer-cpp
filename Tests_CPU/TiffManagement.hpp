@@ -1,17 +1,17 @@
 #pragma once
 
-#include <tiffio.h>
-#include <vector>
 #include <iostream>
 #include <stdexcept>
+#include <tiffio.h>
+#include <vector>
 
-inline void loadTiff3D(const char* filename, std::vector<uint16_t>& data, size_t& width, size_t& height, size_t& planes)
+inline void LoadTiff3D(const char* filename, std::vector<uint16_t>& data, size_t& height, size_t& width, size_t& planes)
 {
 	TIFF* tif = TIFFOpen(filename, "r");
-	if (!tif) { throw std::runtime_error("Erreur d'ouverture du fichier TIFF"); }
+	if (tif == nullptr) { throw std::runtime_error("Erreur d'ouverture du fichier TIFF"); }
 
-	uint32 w, h;
-	uint16 depth;
+	uint32_t w, h;
+	uint16_t depth;
 	size_t frame = 0;
 
 	do {
@@ -34,7 +34,7 @@ inline void loadTiff3D(const char* filename, std::vector<uint16_t>& data, size_t
 
 		std::vector<uint16_t> buf(w * h);
 
-		for (uint32 row = 0; row < h; ++row) {
+		for (uint32_t row = 0; row < h; ++row) {
 			if (TIFFReadScanline(tif, buf.data() + row * w, row) < 0) {
 				TIFFClose(tif);
 				throw std::runtime_error("Erreur de lecture scanline");
@@ -51,10 +51,10 @@ inline void loadTiff3D(const char* filename, std::vector<uint16_t>& data, size_t
 	TIFFClose(tif);
 }
 
-inline void saveTiff3D(const char* filename, const uint16_t* data, size_t width, size_t height, size_t planes)
+inline void SaveTiff3D(const char* filename, const uint16_t* data, const size_t height, const size_t width, const size_t planes)
 {
 	TIFF* tif = TIFFOpen(filename, "w");
-	if (!tif) { throw std::runtime_error("Erreur à l'ouverture du TIFF pour l'écriture"); }
+	if (tif == nullptr) { throw std::runtime_error("Erreur à l'ouverture du TIFF pour l'écriture"); }
 
 	for (size_t k = 0; k < planes; ++k) {
 		TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, width);
@@ -66,7 +66,7 @@ inline void saveTiff3D(const char* filename, const uint16_t* data, size_t width,
 		TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
 		TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
 
-		for (uint32 row = 0; row < height; ++row) {
+		for (uint32_t row = 0; row < height; ++row) {
 			const uint16_t* row_data = data + k * width * height + row * width;
 			TIFFWriteScanline(tif, (void*)row_data, row);
 		}

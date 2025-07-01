@@ -22,6 +22,8 @@ add_library(CPU SHARED
     lib/Matrix.hpp
     lib/PSF.cpp
     lib/PSF.hpp
+    lib/Spline.cpp
+    lib/Spline.hpp
     lib/Structs.hpp
     lib/alignment/Alignment.hpp
     lib/alignment/Alignment.cpp
