@@ -1,4 +1,4 @@
-#include "Utils.hpp"
+#include "Matrix.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -6,29 +6,6 @@
 #include <vector>
 
 namespace palm_tracer {
-//=============================================
-//==================== PSF ====================
-//=============================================
-//-------------------------------------------------------------------------------------------------
-double PSF(const double offset, const double i0, const double x, const double y, const double sigma)
-{
-	return i0 * exp(-(x * x + y * y) / (2 * (sigma * sigma))) + offset;
-}
-
-//-------------------------------------------------------------------------------------------------
-double PSF(const double offset, const double i0, const double x, const double y, const double sigmaX, const double sigmaY, const double theta)
-{
-	const auto CosTheta = cos(theta), SinTheta = sin(theta);
-	const auto Factor1  = (x * CosTheta - y * SinTheta) / sigmaX,
-	           Factor2  = (x * SinTheta + y * CosTheta) / sigmaY;
-
-	return i0 * exp(-(Factor1 * Factor1 + Factor2 * Factor2)) + offset;
-}
-
-
-//================================================
-//==================== Matrix ====================
-//================================================
 //-------------------------------------------------------------------------------------------------
 void Deriv(double* out, const double i0, const double x, const double y, const double sigma, const bool has_sigma)
 {
@@ -178,29 +155,6 @@ void CenterOfMass(const std::vector<Pixel>& data, const size_t n, double& x, dou
 	else { // Valeur nulle partout ⇾ centre géométrique
 		x = static_cast<double>(n) / 2.0;
 		y = static_cast<double>(n) / 2.0;
-	}
-}
-
-//-------------------------------------------------------------------------------------------------
-void Delta3D(const double x, const double y, const double z, std::vector<double>& f,
-             std::vector<double>& dxf, std::vector<double>& dyf, std::vector<double>& dzf)
-{
-	double cz = 1.0;
-	for (size_t i = 0; i < SPLINE_PATCH_SIDE; ++i) {
-		double cy = 1.0;
-		for (size_t j = 0; j < SPLINE_PATCH_SIDE; ++j) {
-			double cx = 1.0;
-			for (size_t k = 0; k < SPLINE_PATCH_SIDE; ++k) {
-				const double Coef                                      = cz * cy * cx;
-				f[i * SPLINE_PATCH_SQUARE + j * SPLINE_PATCH_SIDE + k] = Coef;
-				if (k < SPLINE_PATCH_SIDE - 1) { dxf[i * SPLINE_PATCH_SQUARE + j * SPLINE_PATCH_SIDE + k + 1] = static_cast<double>(k + 1) * Coef; }
-				if (j < SPLINE_PATCH_SIDE - 1) { dyf[i * SPLINE_PATCH_SQUARE + (j + 1) * SPLINE_PATCH_SIDE + k] = static_cast<double>(j + 1) * Coef; }
-				if (i < SPLINE_PATCH_SIDE - 1) { dzf[(i + 1) * SPLINE_PATCH_SQUARE + j * SPLINE_PATCH_SIDE + k] = static_cast<double>(i + 1) * Coef; }
-				cx *= x;
-			}
-			cy *= y;
-		}
-		cz *= z;
 	}
 }
 

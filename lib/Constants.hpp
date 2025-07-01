@@ -38,4 +38,11 @@ constexpr size_t N_TRACKING = 9; ///< Nombre de paramètres à renvoyer lors du 
 // Anciennement "Sigma X", "Sigma Y", "Theta", "Y", "X", "Intensity 0", "Intensity Offset", "MSE Gaussian", "Intensity", "Surface", "Z", "Pair Distance", "Id"
 // Maintenant Id, X, Y, Z, Integrated Intensity, Pair Distance (color), surface
 constexpr size_t N_IN_PARAMS = 7; ///< Nombre de paramètres reçu lors du tracking.
+
+//=================================================
+//==================== SPLINES ====================
+//=================================================
+constexpr size_t SPLINE_PATCH_SIDE  = 4,  ///< Taille d'un côté du patch spline (nombre de points en X ou Y).
+                 SPLINE_PATCH_PLANE = 16, ///< Nombre total de points dans un plan 2D du patch spline : SPLINE_PATCH_SIDE ^ 2.
+                 SPLINE_PATCH_SIZE  = 64; ///< Nombre total de coefficients dans un patch spline 3D : SPLINE_PATCH_SIDE ^ 3.
 }  // namespace palm_tracer

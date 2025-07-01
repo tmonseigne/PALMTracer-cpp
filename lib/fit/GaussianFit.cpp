@@ -9,7 +9,8 @@
 #include <ranges>
 #include <vector>
 
-#include "Utils.hpp"
+#include "Matrix.hpp"
+#include "PSF.hpp"
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------

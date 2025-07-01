@@ -9,7 +9,7 @@
 #include <ranges>
 #include <vector>
 
-#include "Utils.hpp"
+#include "Matrix.hpp"
 
 namespace palm_tracer {
 /// <summary>Calcule la racine carrée réelle d'un nombre, même s'il est négatif.
@@ -115,7 +115,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			          Zi = static_cast<int>(std::floor(p[1][4]));
 
 			const double Xc = Xr - Xi, Yc = Yr - Yi, Zc = p[1][4] - Zi;
-			Delta3D(Xc, Yc, Zc, f, dxf, dyf, dzf);
+			delta3D(Xc, Yc, Zc, f, dxf, dyf, dzf);
 			// Calcul des dérivées et initialisation du model
 			// offset utile, car la ROI et les coeffs ont peut-être des tailles différentes donc on recentre sur X et sur Y
 			// Exemple : ROI de 7 splineX de 11 : La ROI 7x7 est centrée à partir du point 2 dans la spline
@@ -178,7 +178,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		          Zi = static_cast<int>(std::floor(p[1][4]));
 
 		const double Xc = Xr - Xi, Yc = Yr - Yi, Zc = p[1][4] - Zi;
-		Delta3D(Xc, Yc, Zc, f, dxf, dyf, dzf);
+		delta3D(Xc, Yc, Zc, f, dxf, dyf, dzf);
 		// Calcul des dérivées et initialisation du model
 		// offset utile, car la ROI et les coeffs ont peut-être des tailles différentes donc on recentre sur X et sur Y
 		// Exemple : ROI de 7 splineX de 11 : La ROI 7x7 est centrée à partir du point 2 dans la spline
@@ -297,6 +297,28 @@ void SplineFit::luEvaluate(const std::vector<double>& l, const std::vector<doubl
 		x[i] = y[i];
 		for (size_t j = i + 1; j < nParams_; j++) { x[i] -= u[j * nParams_ + i] * x[j]; }
 		x[i] /= u[i * nParams_ + i];
+	}
+}
+
+void SplineFit::delta3D(const double x, const double y, const double z, std::vector<double>& f, std::vector<double>& dxf, std::vector<double>& dyf,
+                        std::vector<double>& dzf)
+{
+	double cz = 1.0;
+	for (size_t i = 0; i < SPLINE_PATCH_SIDE; ++i) {
+		double cy = 1.0;
+		for (size_t j = 0; j < SPLINE_PATCH_SIDE; ++j) {
+			double cx = 1.0;
+			for (size_t k = 0; k < SPLINE_PATCH_SIDE; ++k) {
+				const double Coef                                     = cz * cy * cx;
+				f[i * SPLINE_PATCH_PLANE + j * SPLINE_PATCH_SIDE + k] = Coef;
+				if (k < SPLINE_PATCH_SIDE - 1) { dxf[i * SPLINE_PATCH_PLANE + j * SPLINE_PATCH_SIDE + k + 1] = static_cast<double>(k + 1) * Coef; }
+				if (j < SPLINE_PATCH_SIDE - 1) { dyf[i * SPLINE_PATCH_PLANE + (j + 1) * SPLINE_PATCH_SIDE + k] = static_cast<double>(j + 1) * Coef; }
+				if (i < SPLINE_PATCH_SIDE - 1) { dzf[(i + 1) * SPLINE_PATCH_PLANE + j * SPLINE_PATCH_SIDE + k] = static_cast<double>(i + 1) * Coef; }
+				cx *= x;
+			}
+			cy *= y;
+		}
+		cz *= z;
 	}
 }
 } // namespace palm_tracer

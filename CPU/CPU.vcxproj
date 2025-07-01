@@ -71,10 +71,11 @@
     <ClCompile Include="..\lib\fit\Fitting.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit.cpp" />
     <ClCompile Include="..\lib\fit\SplineFit.cpp" />
-    <ClCompile Include="..\lib\fit\Utils.cpp" />
+    <ClCompile Include="..\lib\Matrix.cpp" />
     <ClCompile Include="..\lib\palm\ATrous.cpp" />
     <ClCompile Include="..\lib\palm\Palm.cpp" />
     <ClCompile Include="..\lib\palm\Segmentation2D.cpp" />
+    <ClCompile Include="..\lib\PSF.cpp" />
     <ClCompile Include="..\lib\tracking\Node.cpp" />
     <ClCompile Include="..\lib\tracking\TimeNodes.cpp" />
     <ClCompile Include="..\lib\tracking\Tracking.cpp" />
@@ -90,11 +91,13 @@
     <ClInclude Include="..\lib\fit\Fitting.hpp" />
     <ClInclude Include="..\lib\fit\GaussianFit.hpp" />
     <ClInclude Include="..\lib\fit\SplineFit.hpp" />
-    <ClInclude Include="..\lib\fit\Utils.hpp" />
+    <ClInclude Include="..\lib\Matrix.hpp" />
     <ClInclude Include="..\lib\palm\ATrous.hpp" />
     <ClInclude Include="..\lib\palm\Palm.hpp" />
     <ClInclude Include="..\lib\palm\SegmentationInfo.hpp" />
     <ClInclude Include="..\lib\palm\Segmentation2D.hpp" />
+    <ClInclude Include="..\lib\PSF.hpp" />
+    <ClInclude Include="..\lib\Structs.hpp" />
     <ClInclude Include="..\lib\tracking\Node.hpp" />
     <ClInclude Include="..\lib\tracking\Parameters.hpp" />
     <ClInclude Include="..\lib\tracking\TimeNodes.hpp" />

@@ -18,6 +18,11 @@ add_library(CPU SHARED
     CPU/main.cpp
     lib/Constants.hpp
     lib/ExportAPI.hpp
+    lib/Matrix.cpp
+    lib/Matrix.hpp
+    lib/PSF.cpp
+    lib/PSF.hpp
+    lib/Structs.hpp
     lib/alignment/Alignment.hpp
     lib/alignment/Alignment.cpp
     lib/fit/Fitting.hpp
@@ -26,8 +31,6 @@ add_library(CPU SHARED
     lib/fit/GaussianFit.cpp
     lib/fit/SplineFit.hpp
     lib/fit/SplineFit.cpp
-    lib/fit/Utils.hpp
-    lib/fit/Utils.cpp
     lib/palm/ATrous.hpp
     lib/palm/ATrous.cpp
     lib/palm/SegmentationInfo.hpp

@@ -13,7 +13,6 @@
 #include <vector>
 
 #include "Fitting.hpp"
-#include "Utils.hpp"
 
 namespace palm_tracer {
 /// <summary>Classe d'ajustement gaussien.</summary>

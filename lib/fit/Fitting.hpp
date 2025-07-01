@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "Constants.hpp"
-#include "Utils.hpp"
+#include "Structs.hpp"
 #include "palm/Segmentation2D.hpp"
 
 namespace palm_tracer {

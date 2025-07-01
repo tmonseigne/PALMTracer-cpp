@@ -7,6 +7,7 @@
 #include <utility> // std::pair
 
 #include "Constants.hpp"
+#include "Structs.hpp"
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
@@ -324,17 +325,9 @@ void Segmentation2D::getLocalMax()
 }
 
 //-------------------------------------------------------------------------------------------------
-using coord_2d = std::pair<int, int>;
-
-struct Compare {
-	bool operator()(const std::pair<double, coord_2d>& a, const std::pair<double, coord_2d>& b) const { return a.first > b.first; }
-};
-
-
-//-------------------------------------------------------------------------------------------------
 void Segmentation2D::watershed()
 {
-	std::priority_queue<std::pair<double, coord_2d>, std::vector<std::pair<double, coord_2d>>, Compare> heap;
+	std::priority_queue<Pixel> heap;
 
 	for (size_t x = 0, idx = 0; x < height_; ++x) {
 		for (size_t y = 0; y < width_; ++y, ++idx) {
@@ -354,29 +347,29 @@ void Segmentation2D::watershed()
 				}
 			}
 
-			if (vois) { heap.emplace(-output_[idx], coord_2d{x, y}); }
+			if (vois) { heap.emplace(Pixel{.x = x, .y = y, .v = -output_[idx]}); }
 		}
 	}
 
 	int it = 0;
 	while (!heap.empty()) {
-		auto [cle, p] = heap.top();
+		const Pixel P = heap.top();
 		heap.pop();
 		++it;
 
 		for (int dx = -1; dx <= 1; ++dx) {
-			const int Nx = p.first + dx;
+			const int Nx = static_cast<int>(P.x) + dx;
 			if (Nx < 0 || Nx >= static_cast<int>(height_)) { continue; }
 
 			for (int dy = -1; dy <= 1; ++dy) {
-				const int Ny = p.second + dy;
+				const int Ny = static_cast<int>(P.y) + dy;
 				if ((dx == 0 && dy == 0) || Ny < 0 || Ny >= static_cast<int>(width_)) { continue; }
 
 				const size_t Nid = Nx * width_ + Ny;
 				if (output_[Nid] > THRESHOLD && map_[Nid] == 0) {
 					const double Cle = -output_[Nid] + static_cast<double>(it) * EPSILON;
-					heap.emplace(Cle, coord_2d{Nx, Ny});
-					map_[Nid] = map_[p.first * width_ + p.second];
+					heap.emplace(Pixel{.x = static_cast<size_t>(Nx), .y = static_cast<size_t>(Ny), .v = Cle});
+					map_[Nid] = map_[P.x * width_ + P.y];
 				}
 			}
 		}

@@ -32,9 +32,8 @@
     <ClCompile Include="..\lib\alignment\Alignment.cpp">
       <Filter>Alignment</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\fit\Utils.cpp">
-      <Filter>Fit</Filter>
-    </ClCompile>
+    <ClCompile Include="..\lib\Matrix.cpp" />
+    <ClCompile Include="..\lib\PSF.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\fit\GaussianFit.hpp">
@@ -75,9 +74,9 @@
     <ClInclude Include="..\lib\alignment\Alignment.hpp">
       <Filter>Alignment</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\fit\Utils.hpp">
-      <Filter>Fit</Filter>
-    </ClInclude>
+    <ClInclude Include="..\lib\Matrix.hpp" />
+    <ClInclude Include="..\lib\PSF.hpp" />
+    <ClInclude Include="..\lib\Structs.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PALMTracer.def" />

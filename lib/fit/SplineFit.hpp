@@ -88,5 +88,18 @@ protected:
 	/// <param name="b">Vecteur second membre (b).</param>
 	/// <param name="x">Vecteur solution du système (x).</param>
 	void luEvaluate(const std::vector<double>& l, const std::vector<double>& u, const std::vector<double>& b, std::vector<double>& x) const;
+
+	/// <summary>Calcule les contributions d'une base de fonctions splines 3D (valeurs et dérivées).
+	/// Cette fonction calcule la valeur et les dérivées par rapport à x, y et z d'une fonction spline 3D basée sur des monômes (cx, cy, cz) à chaque point de l'espace (x, y, z).
+	/// Le résultat est stocké dans trois tableaux (valeur, dérivées partielles) de taille SPLINE_PATCH_SIDE^3.
+	/// </summary>
+	/// <param name="x">Coordonnée x (locale, typiquement entre 0 et 1).</param>
+	/// <param name="y">Coordonnée y (locale).</param>
+	/// <param name="z">Coordonnée z (locale).</param>
+	/// <param name="f">Référence vers le vecteur contenant les valeurs des fonctions de base.</param>
+	/// <param name="dxf">Référence vers le vecteur contenant les dérivées de f par rapport à x (∂f/∂x).</param>
+	/// <param name="dyf">Référence vers le vecteur contenant les dérivées de f par rapport à y (∂f/∂y).</param>
+	/// <param name="dzf">Référence vers le vecteur contenant les dérivées de f par rapport à z (∂f/∂z).</param>
+	static void delta3D(double x, double y, double z, std::vector<double>& f, std::vector<double>& dxf, std::vector<double>& dyf, std::vector<double>& dzf);
 };
 } // namespace palm_tracer
