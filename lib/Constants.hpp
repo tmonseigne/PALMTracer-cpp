@@ -15,10 +15,11 @@ namespace palm_tracer {
 //=========================================================
 //==================== PALM PROCESSING ====================
 //=========================================================
-constexpr size_t PLANE_ID      = 1;            ///< Indice du plan d'ondelettes à utiliser pour la détection.
-constexpr size_t N_PLANES      = PLANE_ID + 2; ///< Nombre de plans d'ondelettes à utiliser pour la détection.
-constexpr size_t INTENSITY_MIN = 0;            ///< Intensité minimale requise pour valider une détection.
-constexpr size_t VOLUME_MIN    = 4;            ///< Volume minimal requis pour valider une détection.
+constexpr size_t PLANE_ID            = 1;            ///< Indice du plan d'ondelettes à utiliser pour la détection.
+constexpr size_t N_PLANES            = PLANE_ID + 2; ///< Nombre de plans d'ondelettes à utiliser pour la détection.
+constexpr size_t INTENSITY_MIN       = 0;            ///< Intensité minimale requise pour valider une détection.
+constexpr size_t VOLUME_MIN          = 4;            ///< Volume minimal requis pour valider une détection.
+constexpr size_t THRESHOLD_ITERATION = 5;            ///< Nombre d'iteration maximum pour l'auto-threshold.
 
 // Paramètres de la localisation :
 // Id, Plane, Index, Channel, X, Y, Z, Integrated Intensity,

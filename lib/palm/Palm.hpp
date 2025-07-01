@@ -71,7 +71,7 @@ public:
 	/// <summary>Destructeur de la classe <c>Palm</c>.</summary>
 	~Palm() = default;
 
-	/// <summary>Lance le traitement complet de détection sur l'image d'entrée.</summary>
+	/// <summary>Lance le traitement complet de détection sur l'image d'entrée.
 	///
 	/// Étapes principales :
 	/// - Décomposition en ondelettes (ATrous).
@@ -83,9 +83,31 @@ public:
 	/// - Remplissage du tableau `points_` avec les résultats (coordonnées, intensité, sigma, etc.).
 	///
 	/// Le tableau `points_` est rempli avec des blocs de N_LOCALIZATIONS double, représentant les paramètres pour chaque détection. Une ligne vide (valeurs = -1) est ajoutée à la fin.
-	///
+	/// </summary>
 	/// <returns>Le nombre total de valeurs (doubles) écrites dans `points_`, y compris la ligne finale vide. (i.e. `nb_points * N_LOCALIZATIONS + N_LOCALIZATIONS`) </returns>
 	[[nodiscard]] int Processing() const;
+
+	/// <summary>Calcule automatiquement un seuil adapté à l'image en fonction des localisations détectées.
+	///
+	/// La méthode procède par itérations successives afin d’affiner le seuil de segmentation.
+	/// Elle utilise un algorithme basé sur la détection de points lumineux (localisations)
+	/// et la caractérisation statistique des pixels hors des régions d’intérêt (ROI) définies autour de ces localisations.
+	///
+	/// Étapes principales :
+	/// - Initialisation de l’écart type (seuil) à partir de l’image brute.
+	/// - À chaque itération :
+	///   - Détection des points lumineux sur l’image avec le seuil courant via `processingPlane`.
+	///   - Construction d’un masque binaire qui couvre les zones autour des localisations détectées (ROI).
+	///   - Extraction des pixels hors masque (hors ROI).
+	///   - Calcul de l’écart type des pixels hors ROI.
+	///   - Mise à jour du seuil si l’écart type a changé significativement.
+	/// - Arrêt si l’écart type ne varie plus ou si les pixels hors ROI sont insuffisants.
+	///
+	/// Le masque binaire est construit avec des zones carrées centrées sur chaque localisation, de taille définie par `fitParams_[0]` (taille ROI).
+	/// </summary>
+	/// <returns>Le seuil calculé correspondant à l’écart type final des pixels hors régions segmentées.</returns>
+	[[nodiscard]] double AutoThreshold();
+
 
 private:
 	// Basic members

@@ -9,6 +9,8 @@
 #include <array>
 #include <cmath>
 #include <execution>
+#include <numeric>
+#include <ranges>
 #include <thread>
 #include <vector>
 
@@ -29,7 +31,7 @@ Palm::Palm(const uint16_t* image, double* points, const size_t pointsListSize, c
 //-------------------------------------------------------------------------------------------------
 int Palm::Processing() const
 {
-	omp_set_dynamic(1); // Autorise l’adaptation automatique du nombre de thread
+	omp_set_dynamic(1); // Autorise l’adaptation automatique du nombre de threads.
 	//omp_set_num_threads(static_cast<int>(std::thread::hardware_concurrency())); // Fixe un max
 
 	std::vector<std::vector<std::array<double, N_LOCALIZATIONS>>> allPoints(planes_);
@@ -54,6 +56,57 @@ int Palm::Processing() const
 	}
 
 	return static_cast<int>(count);
+}
+
+//-------------------------------------------------------------------------------------------------
+double Palm::AutoThreshold()
+{
+	omp_set_dynamic(1); // Autorise l’adaptation automatique du nombre de threads.
+	std::vector<std::array<double, N_LOCALIZATIONS>> points;
+	std::vector mask(size_, false); //  Creation du masque binaire (true = masque actif)
+	const double HalfRoi = fitParams_[0] / 2;
+
+	// Calcul de l'écart type initial
+	double mu       = std::accumulate(stack_, stack_ + size_, 0.0) / static_cast<double>(size_);
+	double variance = 0.0;
+	for (size_t i = 0; i < size_; ++i) { variance += (stack_[i] - mu) * (stack_[i] - mu); }
+	variance /= static_cast<double>(size_);
+	thresholdVal_ = std::sqrt(variance);
+
+	for (size_t i = 0; i < THRESHOLD_ITERATION; ++i) {
+		processingPlane(0, points);
+		// Mise à jour du masque
+		std::fill(mask.begin(), mask.end(), false);
+		for (auto& p : points) {
+			const auto Xmin = static_cast<size_t>(std::max(0, static_cast<int>(p[4] - HalfRoi))),
+			           Xmax = std::min(width_, static_cast<size_t>(p[4] + HalfRoi)),
+			           Ymin = static_cast<size_t>(std::max(0, static_cast<int>(p[5] - HalfRoi))),
+			           Ymax = std::min(height_, static_cast<size_t>(p[5] + HalfRoi));
+			for (size_t y = Ymin; y < Ymax; ++y) { for (size_t x = Xmin; x < Xmax; ++x) { mask[y * width_ + x] = true; } }
+		}
+		// Extraction des pixels non masqués (hors ROI)
+		std::vector<double> tmp;
+		tmp.reserve(size_); // pré-allocation
+		for (size_t j = 0; j < size_; ++j) {
+			if (!mask[j]) {
+				tmp.push_back(stack_[j]); // image_ : image 2D stockée en 1D
+			}
+		}
+
+		// Si nombre de pixels restant insuffisant break
+		if (tmp.empty()) { break; }
+
+		// Calcul de l'écart type pour les pixels hors segmentation
+		mu       = std::accumulate(tmp.begin(), tmp.end(), 0.0) / static_cast<double>(tmp.size());
+		variance = 0.0;
+		for (const double V : tmp) { variance += (V - mu) * (V - mu); }
+		variance /= static_cast<double>(tmp.size());
+		variance = std::sqrt(variance);
+		if (std::fabs(thresholdVal_ - variance) <= std::numeric_limits<double>::epsilon()) { break; } // Aucun changement
+		thresholdVal_ = variance;
+	}
+
+	return thresholdVal_;
 }
 
 //-------------------------------------------------------------------------------------------------

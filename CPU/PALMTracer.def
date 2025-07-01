@@ -1,6 +1,7 @@
-LIBRARY "PALMTracer_CPU.dll"
+LIBRARY "PALMTracer_CPU"
 
 EXPORTS
+	Alignment
+	AutoThreshold
 	Localization
 	Tracking
-	Alignment
