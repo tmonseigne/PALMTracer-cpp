@@ -1,20 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="test_Alignment.cpp" />
-    <ClCompile Include="..\lib\Spline.cpp">
-      <Filter>lib</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\alignment\Alignment.cpp">
       <Filter>lib</Filter>
     </ClCompile>
     <ClCompile Include="test_Spline.cpp" />
-    <ClCompile Include="..\lib\Matrix.cpp">
-      <Filter>lib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\PSF.cpp">
-      <Filter>lib</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\palm\ATrous.cpp">
       <Filter>lib</Filter>
     </ClCompile>
@@ -43,22 +34,25 @@
       <Filter>lib</Filter>
     </ClCompile>
     <ClCompile Include="test_FFT.cpp" />
+    <ClCompile Include="..\lib\signal_processing\Matrix.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\signal_processing\PSF.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\signal_processing\Spline.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\signal_processing\Interpolation.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TiffManagement.hpp" />
-    <ClInclude Include="..\lib\Spline.hpp">
-      <Filter>lib</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\alignment\Alignment.hpp">
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\Constants.hpp">
-      <Filter>lib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\Matrix.hpp">
-      <Filter>lib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\PSF.hpp">
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\Structs.hpp">
@@ -97,7 +91,19 @@
     <ClInclude Include="..\lib\fit\SplineFit.hpp">
       <Filter>lib</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\FFT.hpp">
+    <ClInclude Include="..\lib\signal_processing\FFT.hpp">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\signal_processing\Matrix.hpp">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\signal_processing\PSF.hpp">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\signal_processing\Spline.hpp">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\signal_processing\Interpolation.hpp">
       <Filter>lib</Filter>
     </ClInclude>
   </ItemGroup>

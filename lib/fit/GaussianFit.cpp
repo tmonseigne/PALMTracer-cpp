@@ -9,8 +9,8 @@
 #include <ranges>
 #include <vector>
 
-#include "Matrix.hpp"
-#include "PSF.hpp"
+#include "signal_processing/Matrix.hpp"
+#include "signal_processing/PSF.hpp"
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------

@@ -26,22 +26,48 @@ struct Pixel {
 struct Voxel {
 	size_t x, ///< Coordonnée entière horizontale du pixel (axe X).
 	       y, ///< Coordonnée entière verticale du pixel (axe Y).
-	       z; ///< Coordonnée entière verticale du pixel (axe Y).
+	       z; ///< Coordonnée entière de profondeur du pixel (axe Z).
 	double v; ///< Valeur associée au pixel (intensité, poids, erreur, etc.).
 };
 
 /// <summary> Structure représentant un pixel avec ses coordonnées (x, y) en flottant et une valeur scalaire associée (v).</summary>
 struct Point2D {
-	double x, ///< Coordonnée entière horizontale du pixel (axe X).
-	       y, ///< Coordonnée entière verticale du pixel (axe Y).
+	double x, ///< Coordonnée flottante horizontale du pixel (axe X).
+	       y, ///< Coordonnée flottante verticale du pixel (axe Y).
 	       v; ///< Valeur associée au pixel (intensité, poids, erreur, etc.).
 };
 
 /// <summary> Structure représentant un pixel avec ses coordonnées (x, y) en flottant et une valeur scalaire associée (v).</summary>
 struct Point3D {
-	double x, ///< Coordonnée entière horizontale du pixel (axe X).
-	       y, ///< Coordonnée entière verticale du pixel (axe Y).
-	       z, ///< Coordonnée entière verticale du pixel (axe Y).
+	double x, ///< Coordonnée flottante horizontale du pixel (axe X).
+	       y, ///< Coordonnée flottante verticale du pixel (axe Y).
+	       z, ///< Coordonnée flottante de profondeur du pixel (axe Z).
 	       v; ///< Valeur associée au pixel (intensité, poids, erreur, etc.).
+};
+
+/// <summary> Structure représentant des coordonnées (x, y).</summary>
+struct Coord {
+	size_t x, ///< Coordonnée entière horizontale du pixel (axe X).
+	       y; ///< Coordonnée entière verticale du pixel (axe Y).
+};
+
+/// <summary> Structure représentant des coordonnées (x, y).</summary>
+struct Vec2 {
+	double x, ///< Coordonnée flottante horizontale du pixel (axe X).
+	       y; ///< Coordonnée flottante verticale du pixel (axe Y).
+};
+
+/// <summary> Structure représentant des coordonnées (x, y).</summary>
+struct Coord3D {
+	size_t x, ///< Coordonnée entière horizontale du pixel (axe X).
+	       y, ///< Coordonnée entière verticale du pixel (axe Y).
+	       z; ///< Coordonnée entière de profondeur du pixel (axe Z).
+};
+
+/// <summary> Structure représentant des coordonnées (x, y).</summary>
+struct Vec3 {
+	double x, ///< Coordonnée flottante horizontale du pixel (axe X).
+	       y, ///< Coordonnée flottante verticale du pixel (axe Y).
+	       z; ///< Coordonnée flottante de profondeur du pixel (axe Z).
 };
 } // namespace palm_tracer

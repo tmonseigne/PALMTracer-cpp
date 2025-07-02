@@ -69,4 +69,14 @@ void CenterOfMass(const std::vector<Pixel>& data, size_t n, double& x, double& y
 /// <remarks>En cas d’échec (diagonale négative ou nulle), les vecteurs de sortie ne sont pas fiables.
 /// L’utilisateur doit s’assurer que `l` et `u` sont préalloués de taille n x n.</remarks>
 bool Cholesky(const std::vector<double>& a, size_t n, std::vector<double>& l, std::vector<double>& u);
+
+/// <summary>Décalage vers 0 et normalisation de la matrice.</summary>
+/// <param name="a">Matrice à normaliser (modifié en place).</param>
+/// <param name="shift">Autorise le décallage vers 0 du minimum.</param>
+void Normalisation(std::vector<double>& a, bool shift = true);
+
+/// <summary>Récupère l'indice du maximum du tableau.</summary>
+/// <param name="vol">Tableau.</param>
+/// <returns>Indice du maximum.</returns>
+inline size_t GetMaxId(const std::vector<double>& vol) { return std::distance(vol.begin(), std::ranges::max_element(vol)); }
 } // namespace palm_tracer

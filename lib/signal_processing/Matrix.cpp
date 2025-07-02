@@ -182,4 +182,16 @@ bool Cholesky(const std::vector<double>& a, const size_t n, std::vector<double>&
 	}
 	return true;
 }
+
+//-------------------------------------------------------------------------------------------------
+void Normalisation(std::vector<double>& a, const bool shift)
+{
+	if (shift) {
+		const double Min = *std::ranges::min_element(a);
+		for (auto& v : a) { v -= Min; }
+	}
+	const double Sum  = std::accumulate(a.begin(), a.end(), 0.0);
+	const double Norm = (Sum > 0.0 ? 1.0 / Sum : 1.0);
+	for (auto& v : a) { v *= Norm; }
+}
 } // namespace palm_tracer

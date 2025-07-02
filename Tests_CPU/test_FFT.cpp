@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "FFT.hpp"
+#include "signal_processing/FFT.hpp"
 
 
 namespace palm_tracer {

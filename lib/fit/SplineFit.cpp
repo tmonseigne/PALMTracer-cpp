@@ -9,7 +9,7 @@
 #include <ranges>
 #include <vector>
 
-#include "Matrix.hpp"
+#include "signal_processing/Matrix.hpp"
 
 namespace palm_tracer {
 /// <summary>Calcule la racine carrée réelle d'un nombre, même s'il est négatif.

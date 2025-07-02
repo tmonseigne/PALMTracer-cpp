@@ -32,9 +32,18 @@
     <ClCompile Include="..\lib\alignment\Alignment.cpp">
       <Filter>Alignment</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\Matrix.cpp" />
-    <ClCompile Include="..\lib\PSF.cpp" />
-    <ClCompile Include="..\lib\Spline.cpp" />
+    <ClCompile Include="..\lib\signal_processing\Matrix.cpp">
+      <Filter>Signal Processing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\signal_processing\PSF.cpp">
+      <Filter>Signal Processing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\signal_processing\Spline.cpp">
+      <Filter>Signal Processing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\signal_processing\Interpolation.cpp">
+      <Filter>Signal Processing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\fit\GaussianFit.hpp">
@@ -75,11 +84,22 @@
     <ClInclude Include="..\lib\alignment\Alignment.hpp">
       <Filter>Alignment</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\Matrix.hpp" />
-    <ClInclude Include="..\lib\PSF.hpp" />
     <ClInclude Include="..\lib\Structs.hpp" />
-    <ClInclude Include="..\lib\Spline.hpp" />
-    <ClInclude Include="..\lib\FFT.hpp" />
+    <ClInclude Include="..\lib\signal_processing\FFT.hpp">
+      <Filter>Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\signal_processing\Matrix.hpp">
+      <Filter>Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\signal_processing\PSF.hpp">
+      <Filter>Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\signal_processing\Spline.hpp">
+      <Filter>Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\signal_processing\Interpolation.hpp">
+      <Filter>Signal Processing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="PALMTracer.def" />
@@ -96,6 +116,9 @@
     </Filter>
     <Filter Include="Alignment">
       <UniqueIdentifier>{2caa0989-d4fc-4b89-b905-d7a44762da8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Signal Processing">
+      <UniqueIdentifier>{a8c5f277-5599-4994-bd9c-a29d32ee0205}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
