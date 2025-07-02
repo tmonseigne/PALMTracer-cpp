@@ -79,6 +79,7 @@
     <ClInclude Include="..\lib\PSF.hpp" />
     <ClInclude Include="..\lib\Structs.hpp" />
     <ClInclude Include="..\lib\Spline.hpp" />
+    <ClInclude Include="..\lib\FFT.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PALMTracer.def" />

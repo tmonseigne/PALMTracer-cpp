@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="test_Alignment.cpp" />
@@ -42,6 +42,7 @@
     <ClCompile Include="..\lib\fit\SplineFit.cpp">
       <Filter>lib</Filter>
     </ClCompile>
+    <ClCompile Include="test_FFT.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TiffManagement.hpp" />
@@ -94,6 +95,9 @@
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\fit\SplineFit.hpp">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\FFT.hpp">
       <Filter>lib</Filter>
     </ClInclude>
   </ItemGroup>

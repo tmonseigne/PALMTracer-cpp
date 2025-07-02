@@ -42,6 +42,7 @@
   <ItemGroup>
     <ClInclude Include="..\lib\alignment\Alignment.hpp" />
     <ClInclude Include="..\lib\Constants.hpp" />
+    <ClInclude Include="..\lib\FFT.hpp" />
     <ClInclude Include="..\lib\fit\Fitting.hpp" />
     <ClInclude Include="..\lib\fit\GaussianFit.hpp" />
     <ClInclude Include="..\lib\fit\SplineFit.hpp" />
@@ -74,6 +75,7 @@
     <ClCompile Include="..\lib\tracking\TimeNodes.cpp" />
     <ClCompile Include="..\lib\tracking\Tracking.cpp" />
     <ClCompile Include="test_Alignment.cpp" />
+    <ClCompile Include="test_FFT.cpp" />
     <ClCompile Include="test_Spline.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -51,7 +51,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>../lib;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../lib;C:\Git\vcpkg\installed\x64-windows\include</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
@@ -89,6 +89,7 @@
     <ClInclude Include="..\lib\alignment\Alignment.hpp" />
     <ClInclude Include="..\lib\Constants.hpp" />
     <ClInclude Include="..\lib\ExportAPI.hpp" />
+    <ClInclude Include="..\lib\FFT.hpp" />
     <ClInclude Include="..\lib\fit\Fitting.hpp" />
     <ClInclude Include="..\lib\fit\GaussianFit.hpp" />
     <ClInclude Include="..\lib\fit\SplineFit.hpp" />
