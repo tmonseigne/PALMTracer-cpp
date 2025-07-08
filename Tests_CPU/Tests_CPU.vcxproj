@@ -76,9 +76,10 @@
     <ClCompile Include="..\lib\tracking\Node.cpp" />
     <ClCompile Include="..\lib\tracking\TimeNodes.cpp" />
     <ClCompile Include="..\lib\tracking\Tracking.cpp" />
-    <ClCompile Include="test_Alignment.cpp" />
-    <ClCompile Include="test_FFT.cpp" />
-    <ClCompile Include="test_Spline.cpp" />
+    <ClCompile Include="test_sp_Alignment.cpp" />
+    <ClCompile Include="test_sp_FFT.cpp" />
+    <ClCompile Include="test_sp_Interpolation.cpp" />
+    <ClCompile Include="test_sp_Spline.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CPU\CPU.vcxproj">

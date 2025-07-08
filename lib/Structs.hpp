@@ -57,14 +57,14 @@ struct Vec2 {
 	       y; ///< Coordonnée flottante verticale du pixel (axe Y).
 };
 
-/// <summary> Structure représentant des coordonnées (x, y).</summary>
+/// <summary> Structure représentant des coordonnées (x, y, z).</summary>
 struct Coord3D {
 	size_t x, ///< Coordonnée entière horizontale du pixel (axe X).
 	       y, ///< Coordonnée entière verticale du pixel (axe Y).
 	       z; ///< Coordonnée entière de profondeur du pixel (axe Z).
 };
 
-/// <summary> Structure représentant des coordonnées (x, y).</summary>
+/// <summary> Structure représentant des coordonnées (x, y, z).</summary>
 struct Vec3 {
 	double x, ///< Coordonnée flottante horizontale du pixel (axe X).
 	       y, ///< Coordonnée flottante verticale du pixel (axe Y).

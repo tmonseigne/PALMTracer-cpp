@@ -14,18 +14,57 @@
 ///-------------------------------------------------------------------------------------------------
 
 #pragma once
+#include <array>
 #include <vector>
-#include <cmath>
-#include <algorithm>
+#include "Structs.hpp"
 
 
 namespace palm_tracer {
-// Fonction d'interpolation cubique 1D (Catmull-Rom ou Hermite, ici simple forme cardinal)
-double CubicInterpolation1D(double v0, double v1, double v2, double v3, double x);
+/// <summary> Effectue une interpolation trilineaire dans un volume 3D. </summary>
+/// <param name="volume">Vecteur linéarisé représentant le volume 3D (X-Y-Z) en mémoire row-major.</param>
+/// <param name="size">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
+/// <param name="pos">Position flottante (x, y, z) où calculer l'interpolation.</param>
+/// <returns> Valeur interpolée par interpolation linéaire trivariée au point donné.
+/// Renvoie 0.0 si la position est en dehors des bornes du volume. </returns>
+double LinearInterpolation3D(const std::vector<double>& volume, const Coord3D& size, const Vec3& pos);
 
-// Fonction d'interpolation trilineaire cubique (64 valeurs, 4x4x4)
-double CubicInterpolation3D(const std::vector<double>& volume, size_t Z, size_t Y, size_t X, double z, double y, double x);
+/// <summary>Applique un zoom isotrope sur un volume 3D avec interpolation linéaire.</summary>
+/// <param name="volume">Vecteur linéarisé représentant un volume 3D en mémoire ligne-colonne-plan (X-Y-Z).</param>
+/// <param name="size">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
+/// <param name="level">Facteur de zoom entier (> 0). Un niveau 1 insère un point entre chaque valeur initiale, un niveau 2 en insère 3, etc.
+/// Soit `2^factor - 1` points interpolés entre chaque voxel.</param>
+/// <param name="newSize">Taille du volume de sortie, calculée comme :
+/// - `(size.x - 1) * 2^level + 1`
+/// - `(size.y - 1) * 2^level + 1`
+/// - `(size.z - 1) * 2^level + 1`
+/// Ce comportement imite fidèlement le comportement de MATLAB `interp3(M, level, 'cubic')`.</param>
+/// <returns>Volume agrandi sous forme linéarisée avec interpolation linéaire.</returns>
+std::vector<double> LinearZoom3D(const std::vector<double>& volume, const Coord3D& size, size_t level, Coord3D& newSize);
 
-// Fonction de "zoom" uniforme (interpolation cubique avec facteur entier)
-std::vector<double> CubicZoom3D(const std::vector<double>& volume, size_t Z, size_t Y, size_t X, int factor);
+/// <summary> Applique un décalage (shift) flottant sur tout le volume avec interpolation linéaire. </summary>
+/// <param name="volume">Vecteur linéarisé représentant un volume 3D en mémoire ligne-colonne-plan (X-Y-Z).</param>
+/// <param name="size">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
+/// <param name="shift">Décalage flottant (x, y, z).</param>
+/// <returns>Volume décalé, même taille que l'entrée.</returns>
+std::vector<double> LinearShift3D(const std::vector<double>& volume, const Coord3D& size, const Vec3& shift);
+
+/// <summary>Effectue une interpolation cubique 1D sur quatre valeursBasé sur la méthode de Catmull-Rom (forme cardinale).</summary>
+/// <param name="v">Tableau de 4 valeurs consécutives.</param>
+/// <param name="x">Position relative entre les points (dans [0, 1]).</param>
+/// <returns>Valeur interpolée à la position x.</returns>
+double CubicInterpolation1D(const std::array<double, 4>& v, double x);
+
+/// <summary>Interpolation cubique trivariée dans un volume 3D (64 voxels pris en compte, 4x4x4).</summary>
+/// <param name="volume">Vecteur linéarisé représentant un volume 3D en mémoire ligne-colonne-plan (X-Y-Z).</param>
+/// <param name="size">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
+/// <param name="pos">Coordonnées flottantes où interpoler.</param>
+/// <returns>Valeur interpolée au point donné, ou 0.0 si hors volume.</returns>
+double CubicInterpolation3D(const std::vector<double>& volume, const Coord3D& size, const Vec3& pos);
+
+/// <summary> Applique un décalage (shift) flottant sur tout le volume avec interpolation cubique. </summary>
+/// <param name="volume">Vecteur linéarisé représentant un volume 3D en mémoire ligne-colonne-plan (X-Y-Z).</param>
+/// <param name="size">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
+/// <param name="shift">Décalage flottant (x, y, z).</param>
+/// <returns>Volume décalé, même taille que l'entrée.</returns>
+std::vector<double> CubicShift3D(const std::vector<double>& volume, const Coord3D& size, const Vec3& shift);
 } // namespace palm_tracer
