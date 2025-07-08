@@ -56,8 +56,6 @@ protected:
 
 	void registerPSF(std::vector<std::vector<double>>& beads) const;
 
-	void get3DShift(const std::vector<double>& ref, const std::vector<double>& target, Point3D& shift) const;
-
-	static void idToPoint3D(size_t id, Point3D& pos, size_t x, size_t y);
+	void alignToRef(std::vector<double>& ref, std::vector<std::vector<double>>& beads);
 };
 } // namespace palm_tracer

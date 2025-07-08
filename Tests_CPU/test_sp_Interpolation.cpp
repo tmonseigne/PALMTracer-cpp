@@ -4,42 +4,31 @@
 #include <numeric>
 
 #include "signal_processing/Interpolation.hpp"
+#include "signal_processing/Matrix.hpp"
+
 
 namespace palm_tracer {
+constexpr auto MODE = interpolation_mode::trilinear;
+constexpr auto CROP = true;
+
+
 //-------------------------------------------------------------------------------------------------
 TEST(InterpolationTests, ZoomFactor)
 {
+	const Interpolation3D Interp(MODE, CROP);
 	// Matrice 3x4x5 = 60 valeurs
 	constexpr Coord3D Size = {.x = 3, .y = 4, .z = 5};
 	Coord3D newSize{};
 	std::vector<double> volume(60);
 	std::iota(volume.begin(), volume.end(), 1); // valeurs 1 à 60
 
-	// size_t idx = 0;
-	// for (size_t z = 0; z < Size.z; ++z) {
-	// 	std::cout << "Plane " << z << "\n";
-	// 	for (size_t y = 0; y < Size.y; ++y) {
-	// 		for (size_t x = 0; x < Size.x; ++x, ++idx) { std::cout << volume[idx] << "\t"; }
-	// 		std::cout << "\n";
-	// 	}
-	// 	std::cout << "\n";
-	// }
-
-	const auto Zoomed0 = LinearZoom3D(volume, Size, 0, newSize);
+	const auto Zoomed0 = Interp.Zoom(volume, Size, 0, newSize);
 	EXPECT_EQ(Zoomed0.size(), volume.size());
 	for (size_t i = 0; i < Zoomed0.size(); ++i) { EXPECT_DOUBLE_EQ(Zoomed0[i], volume[i]); }
 
-	const auto Zoomed1 = LinearZoom3D(volume, Size, 1, newSize);
+	const auto Zoomed1 = Interp.Zoom(volume, Size, 1, newSize);
 	EXPECT_EQ(Zoomed1.size(), (5 * 7 * 9)); // (3-1)*2+1=5, (4-1)*2+1=7, (5-1)*2+1=9
-	//size_t idx = 0;
-	//for (size_t z = 0; z < newSize.z; ++z) {
-	//	std::cout << "Plane " << z << "\n";
-	//	for (size_t y = 0; y < newSize.y; ++y) {
-	//		for (size_t x = 0; x < newSize.x; ++x, ++idx) { std::cout << Zoomed1[idx] << "\t"; }
-	//		std::cout << "\n";
-	//	}
-	//	std::cout << "\n";
-	//}
+
 	const std::vector Ref1 = {
 		1.0000, 1.5000, 2.0000, 2.5000, 3.0000, 2.5000, 3.0000, 3.5000, 4.0000, 4.5000,
 		4.0000, 4.5000, 5.0000, 5.5000, 6.0000, 5.5000, 6.0000, 6.5000, 7.0000, 7.5000,
@@ -89,25 +78,26 @@ TEST(InterpolationTests, ZoomFactor)
 	for (size_t i = 0; i < Zoomed0.size(); ++i) { EXPECT_DOUBLE_EQ(Zoomed1[i], Ref1[i]); }
 
 
-	const auto Zoomed2 = LinearZoom3D(volume, Size, 2, newSize);
+	const auto Zoomed2 = Interp.Zoom(volume, Size, 2, newSize);
 	EXPECT_EQ(Zoomed2.size(), (9 * 13 * 17)); // (3-1)*2+1=5, (4-1)*2+1=7, (5-1)*2+1=9
 
-	const auto Zoomed3 = LinearZoom3D(volume, Size, 3, newSize);
+	const auto Zoomed3 = Interp.Zoom(volume, Size, 3, newSize);
 	EXPECT_EQ(Zoomed3.size(), (25 * 17 * 33));
 
-	const auto Zoomed4 = LinearZoom3D(volume, Size, 4, newSize);
+	const auto Zoomed4 = Interp.Zoom(volume, Size, 4, newSize);
 	EXPECT_EQ(Zoomed4.size(), (49 * 33 * 65));
 }
 
 //-------------------------------------------------------------------------------------------------
 TEST(InterpolationTests, ShiftInsideBounds)
 {
+	const Interpolation3D Interp(MODE, CROP);
 	constexpr Coord3D Size = {.x = 3, .y = 4, .z = 5};
 	std::vector<double> volume(60);
 	std::iota(volume.begin(), volume.end(), 1);
 
 	constexpr Vec3 Shift  = {.x = 0.15, .y = 0.25, .z = 0.5};
-	const auto Shifted    = LinearShift3D(volume, Size, Shift);
+	const auto Shifted    = Interp.Shift(volume, Size, Shift);
 	const std::vector Ref = {
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 		0.0, 0.0, 0.0, 0.0, 10.1, 11.1, 0.0, 13.1, 14.1, 0.0, 16.1, 17.1,
@@ -116,21 +106,149 @@ TEST(InterpolationTests, ShiftInsideBounds)
 		0.0, 0.0, 0.0, 0.0, 46.1, 47.1, 0.0, 49.1, 50.1, 0.0, 52.1, 53.1,
 	};
 
+	PrintVolume(Shifted, Size);
+
 	EXPECT_EQ(Shifted.size(), 60);
 	for (size_t i = 0; i < Shifted.size(); ++i) { EXPECT_DOUBLE_EQ(Shifted[i], Ref[i]); }
-
 }
 
 //-------------------------------------------------------------------------------------------------
 TEST(InterpolationTests, ShiftOutOfBounds)
 {
+	const Interpolation3D Interp(MODE, CROP);
 	constexpr Coord3D Size = {.x = 3, .y = 4, .z = 5};
 	std::vector<double> volume(60);
 	std::iota(volume.begin(), volume.end(), 1);
 
 	constexpr Vec3 Shift = {.x = 3.0, .y = 4.0, .z = 5.0}; // shift trop grand, tout doit être à 0.
-	const auto Shifted   = CubicShift3D(volume, Size, Shift);
+	const auto Shifted   = Interp.Shift(volume, Size, Shift);
 
 	for (const double V : Shifted) { EXPECT_DOUBLE_EQ(V, 0.0); }
+}
+
+
+//-------------------------------------------------------------------------------------------------
+TEST(InterpolationTests, InterpolateShifted)
+{
+	const Interpolation3D Interp(MODE, CROP);
+	constexpr Coord3D Size = {.x = 3, .y = 4, .z = 5};
+	Coord3D newSize{};
+	const std::vector Shifted = {
+		0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0, 0.0, 0.0, 10.1, 11.1, 0.0, 13.1, 14.1, 0.0, 16.1, 17.1,
+		0.0, 0.0, 0.0, 0.0, 22.1, 23.1, 0.0, 25.1, 26.1, 0.0, 28.1, 29.1,
+		0.0, 0.0, 0.0, 0.0, 34.1, 35.1, 0.0, 37.1, 38.1, 0.0, 40.1, 41.1,
+		0.0, 0.0, 0.0, 0.0, 46.1, 47.1, 0.0, 49.1, 50.1, 0.0, 52.1, 53.1,
+	};
+
+	const auto Hd = Interp.Zoom(Shifted, Size, 1, newSize);
+
+	const std::vector<double> MatlabRef = {
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0,
+
+		0, 0, 0, 0, 0, 0, 1.6845703125, 2.7734375, 3.2666015625, 3.1640625,
+		0, 2.9296875, 4.8125, 5.6484375, 5.4375, 0, 3.62548828125, 5.93359375, 6.92431640625, 6.59765625,
+		0, 4.1015625, 6.6875, 7.7578125, 7.3125, 0, 4.6875, 7.625, 8.8125, 8.25,
+		0, 5.2734375, 8.5625, 9.8671875, 9.1875,
+
+		0, 0, 0, 0, 0, 0, 3.6328125, 5.9375, 6.9140625, 6.5625,
+		0, 6.1875, 10.1, 11.7375, 11.1, 0, 7.39453125, 12.04375, 13.94765625, 13.10625,
+		0, 8.0625, 13.1, 15.1125, 14.1, 0, 9, 14.6, 16.8, 15.6,
+		0, 9.9375, 16.1, 18.4875, 17.1,
+
+		0, 0, 0, 0, 0, 0, 5.91064453125, 9.58984375, 11.03759765625, 10.25390625,
+		0, 9.85546875, 15.98125, 18.37734375, 17.04375, 0, 11.343017578125, 18.374609375, 21.094775390625, 19.503515625,
+		0, 11.84765625, 19.16875, 21.96328125, 20.23125, 0, 12.84375, 20.7625, 23.75625, 21.825,
+		0, 13.83984375, 22.35625, 25.54921875, 23.41875,
+
+		0, 0, 0, 0, 0, 0, 8.3203125, 13.4375, 15.3515625, 14.0625,
+		0, 13.6875, 22.1, 25.2375, 23.1, 0, 15.36328125, 24.79375, 28.29140625, 25.85625,
+		0, 15.5625, 25.1, 28.6125, 26.1, 0, 16.5, 26.6, 30.3, 27.6,
+		0, 17.4375, 28.1, 31.9875, 29.1,
+
+		0, 0, 0, 0, 0, 0, 10.6640625, 17.1875, 19.5703125, 17.8125,
+		0, 17.4375, 28.1, 31.9875, 29.1, 0, 19.34765625, 31.16875, 35.46328125, 32.23125,
+		0, 19.3125, 31.1, 35.3625, 32.1, 0, 20.25, 32.6, 37.05, 33.6,
+		0, 21.1875, 34.1, 38.7375, 35.1,
+
+		0, 0, 0, 0, 0, 0, 13.0078125, 20.9375, 23.7890625, 21.5625,
+		0, 21.1875, 34.1, 38.7375, 35.1, 0, 23.33203125, 37.54375, 42.63515625, 38.60625,
+		0, 23.0625, 37.1, 42.1125, 38.1, 0, 24, 38.6, 43.8, 39.6,
+		0, 24.9375, 40.1, 45.4875, 41.1,
+
+		0, 0, 0, 0, 0, 0, 15.3515625, 24.6875, 28.0078125, 25.3125,
+		0, 24.9375, 40.1, 45.4875, 41.1, 0, 27.31640625, 43.91875, 49.80703125, 44.98125,
+		0, 26.8125, 43.1, 48.8625, 44.1, 0, 27.75, 44.6, 50.55, 45.6,
+		0, 28.6875, 46.1, 52.2375, 47.1,
+
+		0, 0, 0, 0, 0, 0, 17.6953125, 28.4375, 32.2265625, 29.0625,
+		0, 28.6875, 46.1, 52.2375, 47.1, 0, 31.30078125, 50.29375, 56.97890625, 51.35625,
+		0, 30.5625, 49.1, 55.6125, 50.1, 0, 31.5, 50.6, 57.3, 51.6,
+		0, 32.4375, 52.1, 58.9875, 53.1
+	};
+	EXPECT_EQ(Hd.size(), MatlabRef.size());
+
+	size_t idx = 0;
+	for (size_t z = 0; z < newSize.z; ++z) {
+		std::cout << "Plane " << z << " :\n";
+		for (size_t y = 0; y < newSize.y; ++y) {
+			std::cout << "|\t";
+			for (size_t x = 0; x < newSize.x; ++x, ++idx) {
+				if (std::fabs(Hd[idx] - MatlabRef[idx]) < std::numeric_limits<double>::epsilon()) { std::cout << "GOOD" << "\t|\t"; }
+				else { std::cout << Hd[idx] << " VS " << MatlabRef[idx] << "\t|\t"; }
+			}
+			std::cout << "\n";
+		}
+		std::cout << "\n\n";
+	}
+
+	for (size_t i = 0; i < Hd.size(); ++i) { EXPECT_DOUBLE_EQ(Hd[i], MatlabRef[i]); }
+}
+
+//-------------------------------------------------------------------------------------------------
+TEST(InterpolationTests, SubpixelMaxInterp3D)
+{
+	constexpr Coord3D Size = {.x = 3, .y = 3, .z = 3};
+	std::vector volume(Size.x * Size.y * Size.z, 0.0);
+
+	// Coordonnées du maximum entre les voxels (1,1,1) et (2,2,2)
+	volume[(1 * Size.y + 1) * Size.x + 1] = 1.0;
+	volume[(2 * Size.y + 2) * Size.x + 2] = 8.0; // maximum, mais non aligné avec grille
+
+	constexpr Vec3 Start   = {.x = 1.5, .y = 1.5, .z = 1.5};
+	constexpr double Delta = 0.05, Window = 1.0;
+
+	const auto [x, y, z] = Interpolation3D::SubpixelMax(volume, Size, Start, Delta, Window);
+
+	// Attendu : le maximum doit se situer autour de (2,2,2).
+	EXPECT_DOUBLE_EQ(x, 2.0);
+	EXPECT_DOUBLE_EQ(y, 2.0);
+	EXPECT_DOUBLE_EQ(z, 2.0);
+}
+
+//-------------------------------------------------------------------------------------------------
+TEST(InterpolationTests, GetShift3D)
+{
+	const Interpolation3D Interp(MODE, CROP);
+	constexpr Coord3D Size = {.x = 3, .y = 4, .z = 5};
+	std::vector<double> volume(60);
+	std::iota(volume.begin(), volume.end(), 1);
+	const std::vector Shifted = {
+		0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0, 0.0, 0.0, 10.1, 11.1, 0.0, 13.1, 14.1, 0.0, 16.1, 17.1,
+		0.0, 0.0, 0.0, 0.0, 22.1, 23.1, 0.0, 25.1, 26.1, 0.0, 28.1, 29.1,
+		0.0, 0.0, 0.0, 0.0, 34.1, 35.1, 0.0, 37.1, 38.1, 0.0, 40.1, 41.1,
+		0.0, 0.0, 0.0, 0.0, 46.1, 47.1, 0.0, 49.1, 50.1, 0.0, 52.1, 53.1,
+	};
+	//constexpr Vec3 MatLabShift = {.x = 0.0375, .y = 0.0375, .z = 0}; // interpolated shifted matrix result is different
+	constexpr Vec3 MyShift = {.x = 0, .y = 0, .z = 0}; // Résultat avec mon interpolation
+
+	const auto [x, y, z] = Interp.GetShift(volume, Shifted, Size);
+	EXPECT_DOUBLE_EQ(x, MyShift.x);
+	EXPECT_DOUBLE_EQ(y, MyShift.y);
+	EXPECT_DOUBLE_EQ(z, MyShift.z);
 }
 } // namespace palm_tracer

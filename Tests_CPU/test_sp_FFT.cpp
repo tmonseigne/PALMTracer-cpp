@@ -8,16 +8,17 @@ namespace palm_tracer {
 TEST(FFTTest, ForwardInverseIdentity)
 {
 	constexpr size_t X = 4, Y = 4, Z = 4;
+	constexpr Coord3D Size{.x = X, .y = Y, .z = Z};
 	std::vector<double> input(X * Y * Z);
 
 	// Remplissage avec un pattern simple.
 	for (size_t i = 0; i < input.size(); ++i) { input[i] = static_cast<double>(i % 10 + 1); }
 
 	std::vector<std::complex<double>> fft_out;
-	FFT3D(input, fft_out, X, Y, Z);
+	FFT3D(input, fft_out, Size);
 
 	std::vector<double> ifft_out;
-	IFFT3D(fft_out, ifft_out, X, Y, Z);
+	IFFT3D(fft_out, ifft_out, Size);
 
 	// Vérifier que le résultat approxime l'entrée originale.
 	for (size_t i = 0; i < input.size(); ++i) { EXPECT_NEAR(input[i], ifft_out[i], 1e-9); }

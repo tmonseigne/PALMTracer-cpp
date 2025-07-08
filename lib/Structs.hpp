@@ -10,6 +10,7 @@
 ///-------------------------------------------------------------------------------------------------
 
 #pragma once
+#include <iostream>
 
 namespace palm_tracer {
 /// <summary> Structure représentant un pixel avec ses coordonnées (x, y) et une valeur scalaire associée (v).</summary>
@@ -49,6 +50,7 @@ struct Point3D {
 struct Coord {
 	size_t x, ///< Coordonnée entière horizontale du pixel (axe X).
 	       y; ///< Coordonnée entière verticale du pixel (axe Y).
+	[[nodiscard]] size_t GetSize() const { return x * y; }
 };
 
 /// <summary> Structure représentant des coordonnées (x, y).</summary>
@@ -62,6 +64,11 @@ struct Coord3D {
 	size_t x, ///< Coordonnée entière horizontale du pixel (axe X).
 	       y, ///< Coordonnée entière verticale du pixel (axe Y).
 	       z; ///< Coordonnée entière de profondeur du pixel (axe Z).
+
+	[[nodiscard]] size_t GetPlaneSize() const { return x * y; }
+	[[nodiscard]] size_t GetSize() const { return x * y * z; }
+	[[nodiscard]] size_t GetIndex(const Coord3D& size) const { return (z * size.y + y) * size.x + x; }
+	[[nodiscard]] Coord3D GetMid() const { return Coord3D{.x = x / 2, .y = y / 2, .z = z / 2}; }
 };
 
 /// <summary> Structure représentant des coordonnées (x, y, z).</summary>
@@ -70,4 +77,51 @@ struct Vec3 {
 	       y, ///< Coordonnée flottante verticale du pixel (axe Y).
 	       z; ///< Coordonnée flottante de profondeur du pixel (axe Z).
 };
+
+
+//-------------------------------------------------------------------------------------------------
+//------------------------------------------ Conversions ------------------------------------------
+//-------------------------------------------------------------------------------------------------
+/// <summary>Récupère les coordonnées depuis un index et les dimensions du volume.</summary>
+/// <param name="index">Index dans le volume.</param>
+/// <param name="size">Dimensions du volume.</param>
+/// <returns> Un vecteur de position</returns>
+inline Coord3D GetCoord3D(size_t index, const Coord3D& size)
+{
+	Coord3D res{};
+	res.x = index % size.x;
+	index /= size.x;
+	res.y = index % size.y;
+	index /= size.y;
+	res.z = index;
+	return res;
+}
+
+/// <summary> Cast des Coordonnées (entières) vers les Coordonnées (flottantes).</summary>
+/// <param name="c">Coordonnées entières.</param>
+/// <returns> Coordonnées flottantes. </returns>
+inline Vec3 CoordToVec(const Coord3D& c) { return Vec3{.x = static_cast<double>(c.x), .y = static_cast<double>(c.y), .z = static_cast<double>(c.z)}; }
+
+/// <summary> Cast des Coordonnées (entières) vers les Coordonnées (flottantes).</summary>
+/// <param name="c">Coordonnées entières.</param>
+/// <returns> Coordonnées flottantes. </returns>
+inline Vec2 CoordToVec(const Coord& c) { return Vec2{.x = static_cast<double>(c.x), .y = static_cast<double>(c.y)}; }
+
+//-------------------------------------------------------------------------------------------------
+//------------------------------------------- Surcharges ------------------------------------------
+//-------------------------------------------------------------------------------------------------
+
+/// <summary> Surcharge de l'opérateur d'affichage pour la structure Coord3D. Format : (x, y, z) </summary>
+inline std::ostream& operator<<(std::ostream& os, const Coord3D& c)
+{
+	os << "(" << c.x << ", " << c.y << ", " << c.z << ")";
+	return os;
+}
+
+/// <summary> Surcharge de l'opérateur d'affichage pour la structure Coord3D. Format : (x, y, z) </summary>
+inline std::ostream& operator<<(std::ostream& os, const Vec3& c)
+{
+	os << "(" << c.x << ", " << c.y << ", " << c.z << ")";
+	return os;
+}
 } // namespace palm_tracer

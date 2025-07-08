@@ -79,4 +79,6 @@ void Normalisation(std::vector<double>& a, bool shift = true);
 /// <param name="vol">Tableau.</param>
 /// <returns>Indice du maximum.</returns>
 inline size_t GetMaxId(const std::vector<double>& vol) { return std::distance(vol.begin(), std::ranges::max_element(vol)); }
+
+void PrintVolume(const std::vector<double>& vol, const Coord3D& size);
 } // namespace palm_tracer

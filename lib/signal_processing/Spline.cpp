@@ -7,10 +7,8 @@
 #include <iostream>
 #include <numeric>
 #include <vector>
-#include "Constants.hpp"
 #include "signal_processing/FFT.hpp"
 #include "signal_processing/Matrix.hpp"
-#include "palm/Palm.hpp"
 
 
 namespace palm_tracer {
@@ -78,9 +76,9 @@ void Spline::setMembers(const size_t height, const size_t width, const size_t pl
 
 
 	// Calcul de la zone d'interet centrale sur Z.
-	zStart_       = std::max(0, static_cast<int>(planesHalf_ - distanceHalf_));
-	zEnd_         = std::min(static_cast<int>(planesHalf_ + distanceHalf_), static_cast<int>(planes_) - 1);
-	zN_           = zEnd_ - zStart_ + 1;
+	zStart_ = std::max(0, static_cast<int>(planesHalf_ - distanceHalf_));
+	zEnd_   = std::min(static_cast<int>(planesHalf_ + distanceHalf_), static_cast<int>(planes_) - 1);
+	zN_     = zEnd_ - zStart_ + 1;
 
 	// Calcul de la zone d'interet centrale de largeur maximum 13 pour la PSF (au-delà, les éléments sont éclipsés de certains calculs)
 	constexpr size_t MaxWindowSize = 13;
@@ -196,7 +194,7 @@ void Spline::registerPSF(std::vector<std::vector<double>>& beads) const
 
 	std::vector<Point3D> shifts(beads.size());
 	for (size_t i = 0; i < beads.size(); ++i) {
-		get3DShift(mu, beads[i], shifts[i]);
+		//get3DShift(mu, beads[i], shifts[i]);
 		// mais si on a plus besoin des autres frames on peut couper les Z en dehors ou quand meme utile durant les calculs ?
 		// new_b = interp3(b, Xq - shift(k, 2), Yq - shift(k, 1), Zq - shift(k, 3), 'cubic', 0);
 		// Si ce n'est pas génant voir pour modifier en place b, peut etre que la transformation des ID sera plus relou
@@ -204,54 +202,36 @@ void Spline::registerPSF(std::vector<std::vector<double>>& beads) const
 	}
 }
 
-//-------------------------------------------------------------------------------------------------
-void Spline::get3DShift(const std::vector<double>& ref, const std::vector<double>& target, Point3D& shift) const
+void Spline::alignToRef(std::vector<double>& ref, std::vector<std::vector<double>>& beads)
 {
-	shift = {.x = 0, .y = 0, .z = 0, .v = 0}; // (x, y, z) est le shift et v est la cross-correlation.
+	// Pour chaque bille, stocker la sous-image
+	// Calcul de la zone d'interet centrale de largeur maximum 13
+	constexpr size_t MaxWindowSize = 13;
+	const size_t HalfWindow        = std::min(MaxWindowSize, roi_) / 2, // division entière, on prend le plus petit entre la ROI et la largeur Maximale
+	             Start             = roiHalf_ - HalfWindow,
+	             End               = roiHalf_ + HalfWindow;
+	// Génèration de la plage d’indices [start, end]
+	std::vector<size_t> range;
+	for (size_t i = Start; i <= End; ++i) { range.push_back(i); }
+	const Coord3D newSize    = {.x = range.size(), .y = range.size(), .z = planes_};
+	const size_t newBeadSize = newSize.GetSize();
 
-	// Création d'image HD (*2)
-	constexpr size_t FACTOR = 2;
-	const size_t Zn_HD      = FACTOR * zN_, Roi_HD = FACTOR * roi_;
-	std::vector<double> ref_HD, target_HD;
-	//ref_HD = interp3(ref,FACTOR,'cubic');
-	//target_HD = interp3(target,FACTOR,'cubic');
-	//ref_HD /= mean(refHD);
-	//target_HD /= mean(targetHD);
+	std::vector<std::vector<double>> smallBeads(beads.size());
+	size_t idx = 0;
+	for (size_t i = 0; i < beads.size(); ++i) {
+		smallBeads.reserve(newBeadSize);
+		for (size_t z = 0; z < newSize.z; ++z) {
+			for (size_t y = 0; y < newSize.y; ++y) {
+				for (size_t x = 0; x < newSize.x; ++x, ++idx) {
+					smallBeads[idx] = beads[idx];
+				}
+			}
+		}
+	}
 
-	// FFT 3D des deux volumes
-	std::vector<std::complex<double>> ref_FFT, target_FFT;
-	FFT3D(ref_HD, ref_FFT, Zn_HD, Roi_HD, Roi_HD);
-	FFT3D(target_HD, target_FFT, Zn_HD, Roi_HD, Roi_HD);
 
-	// Produit de Fourier croisé
-	std::vector<std::complex<double>> G;
-	CrossPowerSpectrum(ref_FFT, target_FFT, G);
-
-	// iFFT 3D de G
-	std::vector<double> Gs;
-	IFFT3D(G, Gs, Zn_HD, Roi_HD, Roi_HD);
-	const auto MaxG = std::ranges::max_element(Gs);
-	shift.v         = *MaxG;
-	idToPoint3D(std::distance(Gs.begin(), MaxG), shift, Roi_HD, Roi_HD);
-
-	// Raffinement subpixel (pas encore implémenté)
-	// getmaxInterp(Gs, shift, 0.05, 1)
-
-	// Calcul du décalage final relatif au centre (à vérifier, car avec les indices matlab un peu yolo)
-	// De plus les calculs ont été fait sur une image HD de Facteur 2 (FACTOR)
-	shift.x = (shift.x - static_cast<double>(Roi_HD) + 1) / (2 * FACTOR);
-	shift.y = (shift.y - static_cast<double>(Roi_HD) + 1) / (2 * FACTOR);
-	shift.z = (shift.z - static_cast<double>(Zn_HD) + 1) / (2 * FACTOR);
-}
-
-//-------------------------------------------------------------------------------------------------
-void Spline::idToPoint3D(size_t id, Point3D& pos, const size_t x, const size_t y)
-{
-	pos.x = static_cast<double>(id % x);
-	id /= x;
-	pos.y = static_cast<double>(id % y);
-	id /= y;
-	pos.z = static_cast<double>(id);
+	std::vector<Point3D> shifts(beads.size());
+	for (size_t i = 0; i < beads.size(); ++i) { }
 }
 
 /*

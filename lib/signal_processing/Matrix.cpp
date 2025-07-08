@@ -194,4 +194,18 @@ void Normalisation(std::vector<double>& a, const bool shift)
 	const double Norm = (Sum > 0.0 ? 1.0 / Sum : 1.0);
 	for (auto& v : a) { v *= Norm; }
 }
+
+void PrintVolume(const std::vector<double>& vol, const Coord3D& size)
+{
+	size_t idx = 0;
+	for (size_t z = 0; z < size.z; ++z) {
+		std::cout << "Plane " << z + 1 << " :\n";
+		for (size_t y = 0; y < size.y; ++y) {
+			std::cout << "|\t";
+			for (size_t x = 0; x < size.x; ++x, ++idx) { std::cout << vol[idx] << "\t|\t"; }
+			std::cout << "\n";
+		}
+		std::cout << "\n\n";
+	}
+}
 } // namespace palm_tracer
