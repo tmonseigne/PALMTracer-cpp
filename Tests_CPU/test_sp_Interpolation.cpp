@@ -106,8 +106,6 @@ TEST(InterpolationTests, ShiftInsideBounds)
 		0.0, 0.0, 0.0, 0.0, 46.1, 47.1, 0.0, 49.1, 50.1, 0.0, 52.1, 53.1,
 	};
 
-	PrintVolume(Shifted, Size);
-
 	EXPECT_EQ(Shifted.size(), 60);
 	for (size_t i = 0; i < Shifted.size(); ++i) { EXPECT_DOUBLE_EQ(Shifted[i], Ref[i]); }
 }

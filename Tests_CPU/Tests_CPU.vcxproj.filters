@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\lib\alignment\Alignment.cpp">
-      <Filter>lib</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\palm\ATrous.cpp">
       <Filter>lib</Filter>
     </ClCompile>
@@ -47,12 +44,12 @@
     <ClCompile Include="test_sp_FFT.cpp" />
     <ClCompile Include="test_sp_Interpolation.cpp" />
     <ClCompile Include="test_sp_Spline.cpp" />
+    <ClCompile Include="..\lib\signal_processing\Alignment.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TiffManagement.hpp" />
-    <ClInclude Include="..\lib\alignment\Alignment.hpp">
-      <Filter>lib</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\Constants.hpp">
       <Filter>lib</Filter>
     </ClInclude>
@@ -105,6 +102,9 @@
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\signal_processing\Interpolation.hpp">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\signal_processing\Alignment.hpp">
       <Filter>lib</Filter>
     </ClInclude>
   </ItemGroup>

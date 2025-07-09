@@ -23,15 +23,15 @@
 #include "Structs.hpp"
 
 namespace palm_tracer {
+//-------------------------------------------------------------------------------------------------
 /// <summary>Calcul la transformée de Fourier 3D directe d'un volume réel.</summary>
 /// <param name="in">Volume d'entrée réel en 1D, taille z*y*x.</param>
 /// <param name="out">Volume de sortie complexe (FFT), taille z*y*x.</param>
-/// <param name="width">Largeur (dimension x).</param>
-/// <param name="height">Hauteur (dimension y).</param>
-/// <param name="planes">Nombre de plans (dimension z).</param>
+/// <param name="size">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
+/// <param name="real3D"></param>
 inline void FFT3D(const std::vector<double>& in, std::vector<std::complex<double>>& out, const Coord3D& size, const bool real3D = false)
 {
-	const size_t Sp = size.GetPlaneSize(), S = size.GetSize();
+	const size_t S = size.GetSize();
 	out.resize(S);
 	if (real3D) {
 		auto* fft_in  = static_cast<fftw_complex*>(fftw_malloc(sizeof(fftw_complex) * S));
@@ -54,22 +54,23 @@ inline void FFT3D(const std::vector<double>& in, std::vector<std::complex<double
 		fftw_free(fft_out);
 	}
 	else { // Version matlab équivalente à fft(fft2(volume), [], 3) on effectue la FFT plan par plan puis sur Z.
+		const size_t Sp = size.GetPlaneSize();
 		// 1. FFT2D sur chaque plan (Z)
 		auto* temp2D     = static_cast<fftw_complex*>(fftw_malloc(sizeof(fftw_complex) * Sp));
 		auto* buffer2D   = static_cast<fftw_complex*>(fftw_malloc(sizeof(fftw_complex) * Sp));
 		fftw_plan plan2D = fftw_plan_dft_2d(static_cast<int>(size.y), static_cast<int>(size.x), temp2D, buffer2D,FFTW_FORWARD, FFTW_ESTIMATE);
 		for (size_t z = 0; z < size.z; ++z) {
-			const size_t offset = z * Sp;
+			const size_t Offset = z * Sp;
 			// Remplir temp2D
 			for (size_t i = 0; i < Sp; ++i) {
-				temp2D[i][0] = in[offset + i];
+				temp2D[i][0] = in[Offset + i];
 				temp2D[i][1] = 0.0;
 			}
 
 			fftw_execute(plan2D);
 
 			// Sauvegarder résultat FFT2 dans out temporairement
-			for (size_t i = 0; i < Sp; ++i) { out[offset + i] = std::complex(buffer2D[i][0], buffer2D[i][1]); }
+			for (size_t i = 0; i < Sp; ++i) { out[Offset + i] = std::complex(buffer2D[i][0], buffer2D[i][1]); }
 		}
 		fftw_destroy_plan(plan2D);
 		fftw_free(temp2D);
@@ -101,15 +102,14 @@ inline void FFT3D(const std::vector<double>& in, std::vector<std::complex<double
 	}
 }
 
+//-------------------------------------------------------------------------------------------------
 /// <summary>Calcul la transformée de Fourier 3D inverse d'un volume complexe.</summary>
 /// <param name="in">Volume d'entrée complexe (FFT), taille z*y*x.</param>
 /// <param name="out">Volume de sortie réel normalisé, taille z*y*x.</param>
-/// <param name="width">Largeur (dimension x).</param>
-/// <param name="height">Hauteur (dimension y).</param>
-/// <param name="planes">Nombre de plans (dimension z).</param>
+/// <param name="size">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
 inline void IFFT3D(const std::vector<std::complex<double>>& in, std::vector<double>& out, const Coord3D& size)
 {
-	const size_t Sp = size.GetPlaneSize(), S = size.GetSize();
+	const size_t S = size.GetSize();
 	out.resize(S);
 	auto* fft_in  = static_cast<fftw_complex*>(fftw_malloc(sizeof(fftw_complex) * S));
 	auto* fft_out = static_cast<fftw_complex*>(fftw_malloc(sizeof(fftw_complex) * S));
@@ -132,6 +132,7 @@ inline void IFFT3D(const std::vector<std::complex<double>>& in, std::vector<doub
 	fftw_free(fft_out);
 }
 
+//-------------------------------------------------------------------------------------------------
 /// <summary>Calcule le produit de Fourier croisé G = FFT(ref) * conj(FFT(target)).</summary>
 /// <param name="ref">FFT du volume de référence (complexe).</param>
 /// <param name="target">FFT du volume cible (complexe).</param>
@@ -144,29 +145,27 @@ inline void CrossPowerSpectrum(const std::vector<std::complex<double>>& ref, con
 	for (size_t i = 0; i < N; ++i) { g[i] = ref[i] * std::conj(target[i]); }
 }
 
+//-------------------------------------------------------------------------------------------------
 /// <summary>Recentre la fréquence nulle d’un volume 3D (fftshift), comme en MATLAB.</summary>
 /// <param name="volume">Volume 3D en mémoire linéaire (row-major x, y, z).</param>
-/// <param name="size">Dimensions du volume.</param>
+/// <param name="size">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
 inline void FFTShift3D(std::vector<double>& volume, const Coord3D& size)
 {
-	{
-		std::vector temp(volume.size(), 0.0);
-		const Coord3D Mid = size.GetMid();
+	std::vector temp(volume.size(), 0.0);
+	const Coord3D Mid = size.GetMid();
 
-		Coord3D pos{};
-		for (pos.z = 0; pos.z < size.z; ++pos.z) {
-			Coord3D shifted{};
-			shifted.z = (pos.z + Mid.z) % size.z;
-			for (pos.y = 0; pos.y < size.y; ++pos.y) {
-				shifted.y = (pos.y + Mid.y) % size.y;
-				for (pos.x = 0; pos.x < size.x; ++pos.x) {
-					shifted.x                = (pos.x + Mid.x) % size.x;
-					temp[pos.GetIndex(size)] = volume[shifted.GetIndex(size)];
-				}
+	Coord3D pos{};
+	for (pos.z = 0; pos.z < size.z; ++pos.z) {
+		Coord3D shifted{};
+		shifted.z = (pos.z + Mid.z) % size.z;
+		for (pos.y = 0; pos.y < size.y; ++pos.y) {
+			shifted.y = (pos.y + Mid.y) % size.y;
+			for (pos.x = 0; pos.x < size.x; ++pos.x) {
+				shifted.x                = (pos.x + Mid.x) % size.x;
+				temp[pos.GetIndex(size)] = volume[shifted.GetIndex(size)];
 			}
 		}
-
-		volume.swap(temp); // Remplacer volume par la version recentrée
 	}
+	volume.swap(temp); // Remplacer volume par la version recentrée
 }
 } // namespace palm_tracer

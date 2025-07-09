@@ -3,7 +3,7 @@
 #include <algorithm>
 
 #include "TiffManagement.hpp"
-#include "alignment/Alignment.hpp"
+#include "signal_processing//Alignment.hpp"
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
@@ -28,6 +28,7 @@ TEST(AlignmentTests, BlankCallWithReference)
 	constexpr size_t ImSize     = Height * Width;
 	constexpr size_t Size       = ImSize * Planes;
 	constexpr size_t Upsampling = 1;
+	constexpr Coord3D Dim       = {.x = Width, .y = Height, .z = Planes};
 	const auto HighSNR          = new uint16_t[ImSize],
 	           LowSNR           = new uint16_t[ImSize],
 	           Input            = new uint16_t[Size],
@@ -39,8 +40,7 @@ TEST(AlignmentTests, BlankCallWithReference)
 	std::fill_n(Input, Size, 0);
 	std::fill_n(Output, Size, 0);
 
-	EXPECT_THROW(align.Align(HighSNR, LowSNR, Input, Output, Height, Width, Planes, Upsampling),
-	             std::runtime_error);
+	EXPECT_THROW(align.Align(HighSNR, LowSNR, Input, Output, Dim, Upsampling), std::runtime_error);
 
 
 	delete[] HighSNR;
@@ -58,6 +58,7 @@ TEST(AlignmentTests, BlankCallWithFactor)
 	constexpr size_t ImSize     = Height * Width;
 	constexpr size_t Size       = ImSize * Planes;
 	constexpr size_t Upsampling = 1;
+	constexpr Coord3D Dim       = {.x = Width, .y = Height, .z = Planes};
 	const auto Input            = new uint16_t[Size],
 	           Output           = new uint16_t[Size];
 
@@ -67,7 +68,7 @@ TEST(AlignmentTests, BlankCallWithFactor)
 	std::fill_n(Input, Size, 0);
 	std::fill_n(Output, Size, 0);
 
-	align.Align(Input, Output, Height, Width, Planes, Factors, Upsampling);
+	align.Align(Input, Output, Dim, Factors, Upsampling);
 
 	delete[] Input;
 	delete[] Output;
@@ -78,20 +79,22 @@ TEST_P(AlignmentTests, AlignmentCore)
 	const auto& [outputPath, factors, upsampling] = GetParam();
 
 	std::vector<uint16_t> input;
-	size_t width, height, planes;
+	Coord3D dim{};
 
 	// 1. Charger
-	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Alignement_Reference.tiff", input, height, width, planes);
+	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Alignement_Reference.tiff", input, dim);
 
 	// 2. Allouer
 	std::vector<uint16_t> output(input.size() * upsampling * upsampling, 0);
 
 	// 3. Algorithme
 	Alignment align;
-	align.Align(input.data(), output.data(), height, width, planes, factors, upsampling);
+	align.Align(input.data(), output.data(), dim, factors, upsampling);
 
 	// 4. Sauvegarder
-	SaveTiff3D(outputPath.c_str(), output.data(), height * upsampling, width * upsampling, planes);
+	const Coord3D Newdim{.x = dim.x * upsampling, .y = dim.y * upsampling, .z = dim.z};
+
+	SaveTiff3D(outputPath.c_str(), output.data(), Newdim);
 
 	SUCCEED();
 }

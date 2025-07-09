@@ -13,8 +13,8 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-void Spline::Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, const size_t height, const size_t width, const size_t planes,
-                       const size_t roi, const size_t distance, const size_t dz, size_t smoothZ)
+void Spline::Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, const Coord3D& size, const size_t roi,
+                       const size_t distance, const size_t dz, const size_t smoothZ)
 {
 	/**
 	 Pour faire le fichier de calibration : Les billes doivent être pile sur la hauteur de la Frame (Nframe / 2)
@@ -29,24 +29,24 @@ void Spline::Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, c
 	========== calibrate3D_g.m ==========
 	Récupération des ROI sur les N frames pour les N billes (RoiX, RoiY, Z, N Billes)
 	sstack = size(beads(1).stack.image);
-	allstacks = zeros(sstack(1), sstack(2), sstack(3), length(beads)) + NaN;
+	beadsStack = zeros(sstack(1), sstack(2), sstack(3), length(beads)) + NaN;
 	allstackst = zeros(sstack(1), sstack(2), sstack(3), length(beads)) + NaN;
 	Récupération de la frame du milieu (Z / 2)
 	halfstoreframes = round((size(beads(1).stack.image, 3) - 1) / 2);
 	Calcul d'une psf moyenne sur X,Y,Z
-	mstack = mean(allstacks, 4, 'omitnan');				% Moyenne sur le nombre de billes (une somme serait suffisante vu la normalisation
+	mstack = mean(beadsStack, 4, 'omitnan');				% Moyenne sur le nombre de billes (une somme serait suffisante vu la normalisation
 	mstack = mstack - min(mstack(:), [], 'omitnan');	% Décalage vers 0
 	mstack = mstack / sum(mstack(:), 'omitnan');		% Normalisation
 
 	 *
 	 */
-	setMembers(height, width, planes, roi, distance, dz, smoothZ);
+	setMembers(size, roi, distance, dz, smoothZ);
 
 	// Récupération des volumes des billes sur l'image Décallé vers zéro (soustraction du minimum de l'image)
 	auto beadsStack = extractBeads(stack, beads);
 	std::cout << beadsStack.size() << "\t" << beadsStack[0].size() << "\n";
 	for (size_t i = 0; i < 5; ++i) {
-		const size_t RoiIdx = i * roi_;
+		const size_t RoiIdx = i * beadSize_.x;
 		std::cout << "[";
 		for (size_t j = 0; j < 5; ++j) { std::cout << beadsStack[0][RoiIdx + j] << "    "; }
 		std::cout << "]\n";
@@ -56,78 +56,83 @@ void Spline::Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, c
 }
 
 //-------------------------------------------------------------------------------------------------
-void Spline::setMembers(const size_t height, const size_t width, const size_t planes, const size_t roi,
-                        const size_t distance, const size_t dz, const size_t smoothZ)
+void Spline::setMembers(const Coord3D& size, const size_t roi, const size_t distance, const size_t dz, const size_t smoothZ)
 {
-	roi_          = roi % 2 == 0 ? roi - 1 : roi; // roi doit-être impair. Pour éviter les effets de bords, on soustrait en cas de nombre pair.
-	roiHalf_      = roi_ / 2;
-	roi2_         = roi_ * roi_;
+	const size_t NewRoi = roi % 2 == 0 ? roi - 1 : roi; // ROI doit-être impair. Pour éviter les effets de bords, on soustrait en cas de nombre pair.
+
+	size_      = size;
+	imSize_    = size_.GetPlaneSize();
+	stackSize_ = size_.GetSize();
+
+	beadSize_      = Coord3D{.x = NewRoi, .y = NewRoi, .z = size_.z};
+	beadImSize_    = beadSize_.GetPlaneSize();
+	beadStackSize_ = beadSize_.GetSize();
+	midBead_       = beadSize_.GetMid();
+
 	distance_     = distance;
 	distanceHalf_ = distance / 2;
-	height_       = height;
-	width_        = width;
-	planes_       = planes;
-	planesHalf_   = planes / 2;
-	sizeIm_       = width * height;
-	sizeStack_    = sizeIm_ * planes;
-	sizeBeads_    = planes * roi2_;
 	dz_           = dz;
 	smoothZ_      = smoothZ;
 
-
-	// Calcul de la zone d'interet centrale sur Z.
-	zStart_ = std::max(0, static_cast<int>(planesHalf_ - distanceHalf_));
-	zEnd_   = std::min(static_cast<int>(planesHalf_ + distanceHalf_), static_cast<int>(planes_) - 1);
-	zN_     = zEnd_ - zStart_ + 1;
-
 	// Calcul de la zone d'interet centrale de largeur maximum 13 pour la PSF (au-delà, les éléments sont éclipsés de certains calculs)
 	constexpr size_t MaxWindowSize = 13;
-	const size_t HalfWindow        = std::min(MaxWindowSize / 2, roiHalf_), // division entière
-	             Start             = roiHalf_ - HalfWindow,
-	             End               = roiHalf_ + HalfWindow; // Avec la division entière End < roi_
+	const size_t HalfWindow        = std::min(MaxWindowSize / 2, midBead_.x), // division entière
+	             StartX            = midBead_.x - HalfWindow,                 // Avec la division entière Start > 0
+	             EndX              = midBead_.x + HalfWindow;                 // Avec la division entière End < roi_
 
 	// Génère la plage d’indices du centre de la ROI de taille maximum 13.
-	roiCenterIndices.clear();        // Remise à 0 du vecteur (en cas d'appels répétés)
-	roiCenterIndices.reserve(roi2_); // taille max du range intégralité de la psf récupéré
-	for (size_t i = Start; i <= End; ++i) {
-		const size_t IdxRow = i * roi_;
-		for (size_t j = Start; j <= End; ++j) { roiCenterIndices.push_back(IdxRow + j); }
-	}
+	smallXIndices_.clear();              // Remise à 0 du vecteur (en cas d'appels répétés)
+	smallXIndices_.reserve(beadSize_.x); // taille max du range intégralité de la psf récupéré
+	for (size_t i = StartX; i <= EndX; ++i) { smallXIndices_.push_back(i); }
+
+	// Calcul de la zone d'interet centrale sur Z.
+	const size_t StartZ = std::max(0, static_cast<int>(midBead_.z - distanceHalf_)),
+	             EndZ   = std::min(static_cast<int>(midBead_.z + distanceHalf_), static_cast<int>(beadSize_.z) - 1);
+	// Génère la plage d’indices du centre de la ROI de taille maximum 13.
+	smallXIndices_.clear();              // Remise à 0 du vecteur (en cas d'appels répétés)
+	smallXIndices_.reserve(beadSize_.x); // taille max du range intégralité de la psf récupéré
+	for (size_t i = StartZ; i <= EndZ; ++i) { smallZIndices_.push_back(i); }
+
+	//Dimansions de la zone d'interet centrale.
+	smallBeadSize_      = Coord3D{.x = smallXIndices_.size(), .y = smallXIndices_.size(), .z = smallZIndices_.size()};
+	smallBeadImSize_    = smallBeadSize_.GetPlaneSize();
+	smallBeadStackSize_ = smallBeadSize_.GetSize();
 }
 
 //-------------------------------------------------------------------------------------------------
 std::vector<std::vector<double>> Spline::extractBeads(const uint16_t* stack, const std::vector<Coord>& beads) const
 {
 	const size_t Nbeads   = beads.size();
-	const uint16_t Minima = *std::min_element(stack, stack + (sizeStack_));
-	std::vector allstacks(Nbeads, std::vector(sizeBeads_, 0.0));
+	const uint16_t Minima = *std::min_element(stack, stack + (stackSize_));
+	std::vector beadsStack(Nbeads, std::vector(beadStackSize_, 0.0));
 
 	// Extraction des PSF individuelles
 	#pragma omp parallel for
 	for (int b = 0; b < Nbeads; ++b) {
 		const auto& [Xb, Yb] = beads[b];
-		auto& stackb         = allstacks[b];
+		auto& s              = beadsStack[b];
 
-		for (size_t z = 0; z < planes_; ++z) {
-			for (size_t dy = 0; dy < roi_; ++dy) {
-				for (size_t dx = 0; dx < roi_; ++dx) {
-					const size_t X    = Xb - roiHalf_ + dx,
-					             Y    = Yb - roiHalf_ + dy,
-					             Idx  = (z * height_ + Y) * width_ + X,
-					             IdxS = z * roi2_ + dy * roi_ + dx;
-					stackb[IdxS]      = static_cast<double>(stack[Idx]) - Minima;
+		Coord3D posBead{};
+		for (posBead.z = 0; posBead.z < beadSize_.z; ++posBead.z) {
+			Coord3D pos{};
+			pos.z = posBead.z;
+			for (posBead.y = 0; posBead.y < beadSize_.y; ++posBead.y) {
+				pos.y = Yb - midBead_.y + posBead.y;
+				for (posBead.x = 0; posBead.x < beadSize_.x; ++posBead.x) {
+					pos.x                  = Xb - midBead_.x + posBead.x;
+					s[pos.GetIndex(size_)] = static_cast<double>(stack[posBead.GetIndex(beadSize_)]) - Minima;
 				}
 			}
 		}
 	}
 
 	// Calcul de la PSF moyenne (somme avec NaN ignorés)
-	std::vector mu(sizeBeads_, 0.0);
+	std::vector mu(beadStackSize_, 0.0);
 
 	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(sizeBeads_); ++i) {
+	for (int i = 0; i < static_cast<int>(beadStackSize_); ++i) {
 		double sum = 0.0;
-		for (size_t b = 0; b < Nbeads; ++b) { sum += allstacks[b][i]; }
+		for (size_t b = 0; b < Nbeads; ++b) { sum += beadsStack[b][i]; }
 		mu[i] = sum / static_cast<double>(Nbeads);
 	}
 
@@ -138,14 +143,14 @@ std::vector<std::vector<double>> Spline::extractBeads(const uint16_t* stack, con
 	std::vector dstack(Nbeads, 0.0);
 	#pragma omp parallel for
 	for (int b = 0; b < static_cast<int>(Nbeads); ++b) {
-		std::vector<double> stackb = allstacks[b]; // Copie locale (allstacks ne doit pas être modifié)
+		std::vector<double> tmp = beadsStack[b]; // Copie locale (beadsStack ne doit pas être modifié)
 
-		Normalisation(stackb, true); // Normalisation individuelle
+		Normalisation(tmp, true); // Normalisation individuelle
 
 		// Calcul distance quadratique
 		double dist2 = 0.0;
-		for (size_t i = 0; i < sizeBeads_; ++i) {
-			const double Dist = stackb[i] - mu[i];
+		for (size_t i = 0; i < beadStackSize_; ++i) {
+			const double Dist = tmp[i] - mu[i];
 			dist2 += Dist * Dist;
 		}
 		dstack[b] = dist2;
@@ -162,7 +167,7 @@ std::vector<std::vector<double>> Spline::extractBeads(const uint16_t* stack, con
 
 	std::vector<std::vector<double>> res(Nbeads);
 	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(Nbeads); ++i) { res[i] = std::move(allstacks[indices[i]]); }
+	for (int i = 0; i < static_cast<int>(Nbeads); ++i) { res[i] = std::move(beadsStack[indices[i]]); }
 
 	return res;
 }
@@ -174,23 +179,16 @@ void Spline::registerPSF(std::vector<std::vector<double>>& beads) const
 	const size_t Nref = std::min<size_t>(std::max<size_t>(5, beads.size() / 2), beads.size());
 
 	//Création de la PSF de référence moyenne sur le volume complet
-	std::vector mu(sizeBeads_, 0.0);
+	std::vector mu(beadStackSize_, 0.0);
 	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(sizeBeads_); ++i) {
+	for (int i = 0; i < static_cast<int>(beadStackSize_); ++i) {
 		double sum = 0.0;
 		for (size_t b = 0; b < Nref; ++b) { sum += beads[b][i]; }
 		mu[i] = sum / static_cast<double>(Nref);
 	}
 
 	// Alignement
-	// Calcul de la zone d'interet centrale de largeur maximum 13
-	constexpr size_t MaxWindowSize = 13;
-	const size_t HalfWindow        = std::min(MaxWindowSize, roi_) / 2, // division entière
-	             Start             = roiHalf_ - HalfWindow,
-	             End               = roiHalf_ + HalfWindow;
-	// Génère la plage d’indices [start, end]
-	std::vector<size_t> range;
-	for (size_t i = Start; i <= End; ++i) { range.push_back(i); }
+
 
 	std::vector<Point3D> shifts(beads.size());
 	for (size_t i = 0; i < beads.size(); ++i) {
@@ -205,33 +203,15 @@ void Spline::registerPSF(std::vector<std::vector<double>>& beads) const
 void Spline::alignToRef(std::vector<double>& ref, std::vector<std::vector<double>>& beads)
 {
 	// Pour chaque bille, stocker la sous-image
-	// Calcul de la zone d'interet centrale de largeur maximum 13
-	constexpr size_t MaxWindowSize = 13;
-	const size_t HalfWindow        = std::min(MaxWindowSize, roi_) / 2, // division entière, on prend le plus petit entre la ROI et la largeur Maximale
-	             Start             = roiHalf_ - HalfWindow,
-	             End               = roiHalf_ + HalfWindow;
-	// Génèration de la plage d’indices [start, end]
-	std::vector<size_t> range;
-	for (size_t i = Start; i <= End; ++i) { range.push_back(i); }
-	const Coord3D newSize    = {.x = range.size(), .y = range.size(), .z = planes_};
-	const size_t newBeadSize = newSize.GetSize();
 
-	std::vector<std::vector<double>> smallBeads(beads.size());
-	size_t idx = 0;
-	for (size_t i = 0; i < beads.size(); ++i) {
-		smallBeads.reserve(newBeadSize);
-		for (size_t z = 0; z < newSize.z; ++z) {
-			for (size_t y = 0; y < newSize.y; ++y) {
-				for (size_t x = 0; x < newSize.x; ++x, ++idx) {
-					smallBeads[idx] = beads[idx];
-				}
-			}
-		}
-	}
-
-
-	std::vector<Point3D> shifts(beads.size());
-	for (size_t i = 0; i < beads.size(); ++i) { }
+	//std::vector<std::vector<double>> smallBeads(beads.size());
+	//size_t idx = 0;
+	//for (size_t i = 0; i < beads.size(); ++i) {
+	//	smallBeads.reserve(newBeadSize);
+	//	for (size_t z = 0; z < smallBeadSize_.z; ++z) {
+	//		for (size_t y = 0; y < smallBeadSize_.y; ++y) { for (size_t x = 0; x < smallBeadSize_.x; ++x, ++idx) { smallBeads[idx] = beads[idx]; } }
+	//	}
+	//}
 }
 
 /*

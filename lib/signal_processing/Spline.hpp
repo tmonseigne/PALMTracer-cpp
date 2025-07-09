@@ -20,37 +20,32 @@ namespace palm_tracer {
 /// <summary>Classe de calibration de la spline pour l'ajustement.</summary>
 class Spline {
 public:
-	size_t roi_{},
-	       roiHalf_{},
-	       roi2_{},
-	       height_{},
-	       width_{},
-	       planes_{},
-	       planesHalf_{},
-	       sizeIm_{},
-	       sizeStack_{},
-	       sizeBeads_{},
+	size_t imSize_{},
+	       stackSize_{},
+	       beadImSize_{},
+	       beadStackSize_{},
+	       smallBeadImSize_{},
+	       smallBeadStackSize_{},
+
 	       distance_{},
 	       distanceHalf_{},
 	       dz_{},
-	       smoothZ_{},
-	       zStart_,
-	       zEnd_,
-	       zN_;
-	std::vector<size_t> roiCenterIndices;
+	       smoothZ_{};
+
+	Coord3D size_, beadSize_, midBead_, smallBeadSize_;
+	std::vector<size_t> smallXIndices_, smallZIndices_;
 
 	Spline()  = default;
 	~Spline() = default;
 
-	void Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, size_t height, size_t width, size_t planes, size_t roi,
-	               size_t distance, size_t dz, size_t smoothZ);
+	void Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, const Coord3D& size, size_t roi, size_t distance, size_t dz, size_t smoothZ);
 
 	void Load(const std::string& filename);
 
 	void Save(const std::string& filename);
 
 protected:
-	void setMembers(size_t height, size_t width, size_t planes, size_t roi, size_t distance, size_t dz, size_t smoothZ);
+	void setMembers(const Coord3D& size, size_t roi, size_t distance, size_t dz, size_t smoothZ);
 
 	std::vector<std::vector<double>> extractBeads(const uint16_t* stack, const std::vector<Coord>& beads) const;
 

@@ -40,7 +40,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\lib\alignment\Alignment.hpp" />
     <ClInclude Include="..\lib\Constants.hpp" />
     <ClInclude Include="..\lib\fit\Fitting.hpp" />
     <ClInclude Include="..\lib\fit\GaussianFit.hpp" />
@@ -49,6 +48,7 @@
     <ClInclude Include="..\lib\palm\Palm.hpp" />
     <ClInclude Include="..\lib\palm\Segmentation2D.hpp" />
     <ClInclude Include="..\lib\palm\SegmentationInfo.hpp" />
+    <ClInclude Include="..\lib\signal_processing\Alignment.hpp" />
     <ClInclude Include="..\lib\signal_processing\FFT.hpp" />
     <ClInclude Include="..\lib\signal_processing\Interpolation.hpp" />
     <ClInclude Include="..\lib\signal_processing\Matrix.hpp" />
@@ -62,13 +62,13 @@
     <ClInclude Include="TiffManagement.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\lib\alignment\Alignment.cpp" />
     <ClCompile Include="..\lib\fit\Fitting.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit.cpp" />
     <ClCompile Include="..\lib\fit\SplineFit.cpp" />
     <ClCompile Include="..\lib\palm\ATrous.cpp" />
     <ClCompile Include="..\lib\palm\Palm.cpp" />
     <ClCompile Include="..\lib\palm\Segmentation2D.cpp" />
+    <ClCompile Include="..\lib\signal_processing\Alignment.cpp" />
     <ClCompile Include="..\lib\signal_processing\Interpolation.cpp" />
     <ClCompile Include="..\lib\signal_processing\Matrix.cpp" />
     <ClCompile Include="..\lib\signal_processing\PSF.cpp" />

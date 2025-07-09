@@ -13,6 +13,7 @@
 #include <array>
 #include <cstdint>
 #include <vector>
+#include "Structs.hpp"
 
 namespace palm_tracer {
 /// <summary> Classe pour l'alignement optique d'une pile d'images 3D avec déformation non linéaire. </summary>
@@ -31,23 +32,17 @@ public:
 	/// <param name="lowSNR">Image de référence (désalignée) avec un haut faible signal/bruit.</param>
 	/// <param name="input">Données d'entrée (pile d'images à réaligner).</param>
 	/// <param name="output">Pointeur vers la zone mémoire de sortie (même taille que `input`).</param>
-	/// <param name="height">Hauteur de chaque plan (en pixels).</param>
-	/// <param name="width">Largeur de chaque plan (en pixels).</param>
-	/// <param name="planes">Nombre de plans (profondeur de la pile).</param>
+	/// <param name="size">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
 	/// <param name="upsampling">Taux de suréchantillonnage à appliquer avant recalage.</param>
-	void Align(const uint16_t* highSNR, const uint16_t* lowSNR, const uint16_t* input, uint16_t* output,
-	           size_t height, size_t width, size_t planes, size_t upsampling = 1);
+	void Align(const uint16_t* highSNR, const uint16_t* lowSNR, const uint16_t* input, uint16_t* output, const Coord3D& size, size_t upsampling = 1);
 
 	/// <summary>Constructeur alternatif de la classe <c>Fitting</c>. Applique directement des coefficients d'alignement fournis.</summary>
 	/// <param name="input">Données d'entrée (pile d'images à réaligner).</param>
 	/// <param name="output">Pointeur vers la zone mémoire de sortie (même taille que `input`).</param>
-	/// <param name="height">Hauteur de chaque plan (en pixels).</param>
-	/// <param name="width">Largeur de chaque plan (en pixels).</param>
-	/// <param name="planes">Nombre de plans (profondeur de la pile).</param>
+	/// <param name="size">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
 	/// <param name="factors">Coefficients du modèle non linéaire (degrés 1 à 3).</param>
 	/// <param name="upsampling">Taux de suréchantillonnage à appliquer avant recalage.</param>
-	void Align(const uint16_t* input, uint16_t* output, size_t height, size_t width,
-	           size_t planes, const std::array<std::array<double, 10>, 2>& factors, size_t upsampling = 1);
+	void Align(const uint16_t* input, uint16_t* output, const Coord3D& size, const std::array<std::array<double, 10>, 2>& factors, size_t upsampling = 1);
 
 protected:
 	/// <summary> Structure permettant de stocker les contributions sur la sortie. </summary>
@@ -56,27 +51,20 @@ protected:
 		double weight; ///< Poids du pixel.
 	};
 
-	/// <summary> Structure permettant de stocker les coordonnées x et y en flottant.</summary>
-	struct Coord {
-		double x, y;
-	};
-
 	const uint16_t *highSNR_{},                           ///< Image de référence alignée (fort SNR)
 	               *lowSNR_{},                            ///< Image de référence désalignée (faible SNR)
 	               *input_{};                             ///< Données d'entrée (pile à aligner)
 	uint16_t* output_{};                                  ///< Résultat de l'alignement
-	size_t height_{},                                     ///< Hauteur des images (pixels)
-	       width_{},                                      ///< Largeur des images (pixels)
-	       planes_{},                                     ///< Nombre de plans dans la pile
-	       sizeIm_{},                                     ///< Nombre total de pixels d'une image (height × width)
-	       size_{},                                       ///< Nombre total de pixels (height × width × planes)
+	Coord3D size_{};                                      ///< Dimensions du volume source (width=X, height=Y, depth=Z)
+	size_t sizeIm_{},                                     ///< Nombre total de pixels d'une image (height × width)
+	       sizeStack_{},                                  ///< Nombre total de pixels (height × width × planes)
 	       upsampling_{},                                 ///< Taux de suréchantillonnage
 	       upsampling2_{};                                ///< Taux de suréchantillonnage au carré
 	std::array<std::array<double, 10>, 2> factors_{};     ///< Coefficients du modèle polynomial
 	std::vector<std::vector<Contribution>> transformMap_; ///< chaque pixel cible contiendra une liste de contributions
 
 	/// <summary>Initialise la mémoire de sortie à 0.</summary>
-	void initOutput() const { for (size_t i = 0; i < size_; ++i) { output_[i] = 0; } }
+	void initOutput() const { for (size_t i = 0; i < sizeStack_; ++i) { output_[i] = 0; } }
 
 	/// <summary>Fonction virtuelle de calcul des coefficients d'alignement. </summary>
 	///
@@ -115,12 +103,12 @@ protected:
 	/// <param name="xmin">Coordonnée X du coin supérieur gauche du carré.</param>
 	/// <param name="ymin">Coordonnée Y du coin supérieur gauche du carré.</param>
 	/// <param name="pixelSize">Taille du carré (largeur et hauteur identiques).</param>
-	static void clipPolygon(const std::vector<Coord>& poly, std::vector<Coord>& clipped, double xmin, double ymin, double pixelSize);
+	static void clipPolygon(const std::vector<Vec2>& poly, std::vector<Vec2>& clipped, double xmin, double ymin, double pixelSize);
 
 	/// <summary>Calcule l’aire (signée) d’un polygone 2D.
 	/// Le polygone peut être orienté : une aire négative indique un ordre antihoraire des sommets.</summary>
 	/// <param name="poly">Liste des sommets du polygone (fermés ou non).</param>
 	/// <returns>Aire du polygone en unités carrées.</returns>
-	[[nodiscard]] double getArea(const std::vector<Coord>& poly) const;
+	[[nodiscard]] double getArea(const std::vector<Vec2>& poly) const;
 };
 } // namespace palm_tracer

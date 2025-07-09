@@ -195,6 +195,7 @@ void Normalisation(std::vector<double>& a, const bool shift)
 	for (auto& v : a) { v *= Norm; }
 }
 
+//-------------------------------------------------------------------------------------------------
 void PrintVolume(const std::vector<double>& vol, const Coord3D& size)
 {
 	size_t idx = 0;

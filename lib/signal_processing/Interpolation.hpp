@@ -105,10 +105,10 @@ private:
 	static double cubicWeight1D(double x, double a = -0.5);
 
 	/// <summary>Interpolation cubique trivariée dans un volume 3D (64 voxels pris en compte, 4x4x4).</summary>
-/// <param name="volume">Vecteur linéarisé représentant un volume 3D en mémoire ligne-colonne-plan (X-Y-Z).</param>
-/// <param name="size">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
-/// <param name="pos">Coordonnées flottantes où interpoler.</param>
-/// <returns>Valeur interpolée au point donné, ou 0.0 si hors volume.</returns>
+	/// <param name="volume">Vecteur linéarisé représentant un volume 3D en mémoire ligne-colonne-plan (X-Y-Z).</param>
+	/// <param name="size">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
+	/// <param name="pos">Coordonnées flottantes où interpoler.</param>
+	/// <returns>Valeur interpolée au point donné, ou 0.0 si hors volume.</returns>
 	static double cubicWeight3D(const std::vector<double>& volume, const Coord3D& size, const Vec3& pos);
 
 	/// <summary> Effectue une interpolation trilineaire dans un volume 3D. </summary>

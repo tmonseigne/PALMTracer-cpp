@@ -2,8 +2,8 @@
 #include <iostream>
 
 #include "ExportAPI.hpp"
-#include "alignment/Alignment.hpp"
 #include "palm/Palm.hpp"
+#include "signal_processing/Alignment.hpp"
 #include "tracking/Parameters.hpp"
 #include "tracking/Tracking.hpp"
 
@@ -18,7 +18,8 @@ void CALL_CONV Alignment(const uint16_t* input, uint16_t* output, const uint32_t
 	for (size_t i = 0; i < 2; ++i) { for (size_t j = 0; j < 10; ++j, ++idx) { f[i][j] = factors[idx]; } }
 
 	palm_tracer::Alignment align;
-	align.Align(input, output, height, width, planes, f, upsampling);
+	const palm_tracer::Coord3D Size = {.x = width, .y = height, .z = planes};
+	align.Align(input, output, Size, f, upsampling);
 }
 
 //-------------------------------------------------------------------------------------------------
