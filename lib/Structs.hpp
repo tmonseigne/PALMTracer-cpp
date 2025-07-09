@@ -112,6 +112,20 @@ inline Vec2 CoordToVec(const Coord& c) { return Vec2{.x = static_cast<double>(c.
 //-------------------------------------------------------------------------------------------------
 
 /// <summary> Surcharge de l'opérateur d'affichage pour la structure Coord3D. Format : (x, y, z) </summary>
+inline std::ostream& operator<<(std::ostream& os, const Coord& c)
+{
+	os << "(" << c.x << ", " << c.y << ")";
+	return os;
+}
+
+/// <summary> Surcharge de l'opérateur d'affichage pour la structure Coord3D. Format : (x, y, z) </summary>
+inline std::ostream& operator<<(std::ostream& os, const Vec2& c)
+{
+	os << "(" << c.x << ", " << c.y << ")";
+	return os;
+}
+
+/// <summary> Surcharge de l'opérateur d'affichage pour la structure Coord3D. Format : (x, y, z) </summary>
 inline std::ostream& operator<<(std::ostream& os, const Coord3D& c)
 {
 	os << "(" << c.x << ", " << c.y << ", " << c.z << ")";

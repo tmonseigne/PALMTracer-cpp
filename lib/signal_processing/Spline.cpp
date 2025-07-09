@@ -69,7 +69,6 @@ void Spline::setMembers(const Coord3D& size, const size_t roi, const size_t dist
 	beadStackSize_ = beadSize_.GetSize();
 	midBead_       = beadSize_.GetMid();
 
-	distance_     = distance;
 	distanceHalf_ = distance / 2;
 	dz_           = dz;
 	smoothZ_      = smoothZ;
@@ -89,8 +88,8 @@ void Spline::setMembers(const Coord3D& size, const size_t roi, const size_t dist
 	const size_t StartZ = std::max(0, static_cast<int>(midBead_.z - distanceHalf_)),
 	             EndZ   = std::min(static_cast<int>(midBead_.z + distanceHalf_), static_cast<int>(beadSize_.z) - 1);
 	// Génère la plage d’indices du centre de la ROI de taille maximum 13.
-	smallXIndices_.clear();              // Remise à 0 du vecteur (en cas d'appels répétés)
-	smallXIndices_.reserve(beadSize_.x); // taille max du range intégralité de la psf récupéré
+	smallZIndices_.clear();              // Remise à 0 du vecteur (en cas d'appels répétés)
+	smallZIndices_.reserve(beadSize_.x); // taille max du range intégralité de la psf récupéré
 	for (size_t i = StartZ; i <= EndZ; ++i) { smallZIndices_.push_back(i); }
 
 	//Dimansions de la zone d'interet centrale.
@@ -119,8 +118,8 @@ std::vector<std::vector<double>> Spline::extractBeads(const uint16_t* stack, con
 			for (posBead.y = 0; posBead.y < beadSize_.y; ++posBead.y) {
 				pos.y = Yb - midBead_.y + posBead.y;
 				for (posBead.x = 0; posBead.x < beadSize_.x; ++posBead.x) {
-					pos.x                  = Xb - midBead_.x + posBead.x;
-					s[pos.GetIndex(size_)] = static_cast<double>(stack[posBead.GetIndex(beadSize_)]) - Minima;
+					pos.x = Xb - midBead_.x + posBead.x;
+					s[posBead.GetIndex(beadSize_)] = static_cast<double>(stack[pos.GetIndex(size_)] - Minima);
 				}
 			}
 		}
@@ -168,7 +167,6 @@ std::vector<std::vector<double>> Spline::extractBeads(const uint16_t* stack, con
 	std::vector<std::vector<double>> res(Nbeads);
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(Nbeads); ++i) { res[i] = std::move(beadsStack[indices[i]]); }
-
 	return res;
 }
 
@@ -200,7 +198,7 @@ void Spline::registerPSF(std::vector<std::vector<double>>& beads) const
 	}
 }
 
-void Spline::alignToRef(std::vector<double>& ref, std::vector<std::vector<double>>& beads)
+void Spline::alignToRef(std::vector<double>& ref, std::vector<std::vector<double>>& beads, bool smallZ)
 {
 	// Pour chaque bille, stocker la sous-image
 

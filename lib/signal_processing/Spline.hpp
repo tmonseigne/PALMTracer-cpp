@@ -27,7 +27,6 @@ public:
 	       smallBeadImSize_{},
 	       smallBeadStackSize_{},
 
-	       distance_{},
 	       distanceHalf_{},
 	       dz_{},
 	       smoothZ_{};
@@ -44,13 +43,15 @@ public:
 
 	void Save(const std::string& filename);
 
-protected:
+	// Future protected
 	void setMembers(const Coord3D& size, size_t roi, size_t distance, size_t dz, size_t smoothZ);
 
 	std::vector<std::vector<double>> extractBeads(const uint16_t* stack, const std::vector<Coord>& beads) const;
 
 	void registerPSF(std::vector<std::vector<double>>& beads) const;
 
-	void alignToRef(std::vector<double>& ref, std::vector<std::vector<double>>& beads);
+	void alignToRef(std::vector<double>& ref, std::vector<std::vector<double>>& beads, bool smallZ = false);
+
+protected:
 };
 } // namespace palm_tracer
