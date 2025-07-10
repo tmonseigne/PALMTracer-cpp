@@ -51,12 +51,35 @@ struct Coord {
 	size_t x, ///< Coordonnée entière horizontale du pixel (axe X).
 	       y; ///< Coordonnée entière verticale du pixel (axe Y).
 	[[nodiscard]] size_t GetSize() const { return x * y; }
+	// Surcharges arithmétiques avec un autre Coord3D
+	Coord operator+(const Coord& other) const { return {.x = x + other.x, .y = y + other.y}; }
+	Coord operator-(const Coord& other) const { return {.x = x - other.x, .y = y - other.y}; }
+	Coord operator*(const Coord& other) const { return {.x = x * other.x, .y = y * other.y}; }
+	Coord operator/(const Coord& other) const { return {.x = x / other.x, .y = y / other.y}; }
+
+	// Surcharges arithmétiques avec un scalaire
+	Coord operator+(const size_t scalar) const { return {.x = x + scalar, .y = y + scalar}; }
+	Coord operator-(const size_t scalar) const { return {.x = x - scalar, .y = y - scalar}; }
+	Coord operator*(const size_t scalar) const { return {.x = x * scalar, .y = y * scalar}; }
+	Coord operator/(const size_t scalar) const { return {.x = x / scalar, .y = y / scalar}; }
 };
 
 /// <summary> Structure représentant des coordonnées (x, y).</summary>
 struct Vec2 {
 	double x, ///< Coordonnée flottante horizontale du pixel (axe X).
 	       y; ///< Coordonnée flottante verticale du pixel (axe Y).
+
+	// Surcharges arithmétiques avec un autre Vec3
+	Vec2 operator+(const Vec2& other) const { return {.x = x + other.x, .y = y + other.y}; }
+	Vec2 operator-(const Vec2& other) const { return {.x = x - other.x, .y = y - other.y}; }
+	Vec2 operator*(const Vec2& other) const { return {.x = x * other.x, .y = y * other.y}; }
+	Vec2 operator/(const Vec2& other) const { return {.x = x / other.x, .y = y / other.y}; }
+
+	// Surcharges arithmétiques avec un scalaire
+	Vec2 operator+(const double scalar) const { return {.x = x + scalar, .y = y + scalar}; }
+	Vec2 operator-(const double scalar) const { return {.x = x - scalar, .y = y - scalar}; }
+	Vec2 operator*(const double scalar) const { return {.x = x * scalar, .y = y * scalar}; }
+	Vec2 operator/(const double scalar) const { return {.x = x / scalar, .y = y / scalar}; }
 };
 
 /// <summary> Structure représentant des coordonnées (x, y, z).</summary>
@@ -69,6 +92,18 @@ struct Coord3D {
 	[[nodiscard]] size_t GetSize() const { return x * y * z; }
 	[[nodiscard]] size_t GetIndex(const Coord3D& size) const { return (z * size.y + y) * size.x + x; }
 	[[nodiscard]] Coord3D GetMid() const { return Coord3D{.x = x / 2, .y = y / 2, .z = z / 2}; }
+
+	// Surcharges arithmétiques avec un autre Coord3D
+	Coord3D operator+(const Coord3D& other) const { return {.x = x + other.x, .y = y + other.y, .z = z + other.z}; }
+	Coord3D operator-(const Coord3D& other) const { return {.x = x - other.x, .y = y - other.y, .z = z - other.z}; }
+	Coord3D operator*(const Coord3D& other) const { return {.x = x * other.x, .y = y * other.y, .z = z * other.z}; }
+	Coord3D operator/(const Coord3D& other) const { return {.x = x / other.x, .y = y / other.y, .z = z / other.z}; }
+
+	// Surcharges arithmétiques avec un scalaire
+	Coord3D operator+(const size_t scalar) const { return {.x = x + scalar, .y = y + scalar, .z = z + scalar}; }
+	Coord3D operator-(const size_t scalar) const { return {.x = x - scalar, .y = y - scalar, .z = z - scalar}; }
+	Coord3D operator*(const size_t scalar) const { return {.x = x * scalar, .y = y * scalar, .z = z * scalar}; }
+	Coord3D operator/(const size_t scalar) const { return {.x = x / scalar, .y = y / scalar, .z = z / scalar}; }
 };
 
 /// <summary> Structure représentant des coordonnées (x, y, z).</summary>
@@ -76,6 +111,18 @@ struct Vec3 {
 	double x, ///< Coordonnée flottante horizontale du pixel (axe X).
 	       y, ///< Coordonnée flottante verticale du pixel (axe Y).
 	       z; ///< Coordonnée flottante de profondeur du pixel (axe Z).
+
+	// Surcharges arithmétiques avec un autre Vec3
+	Vec3 operator+(const Vec3& other) const { return {.x = x + other.x, .y = y + other.y, .z = z + other.z}; }
+	Vec3 operator-(const Vec3& other) const { return {.x = x - other.x, .y = y - other.y, .z = z - other.z}; }
+	Vec3 operator*(const Vec3& other) const { return {.x = x * other.x, .y = y * other.y, .z = z * other.z}; }
+	Vec3 operator/(const Vec3& other) const { return {.x = x / other.x, .y = y / other.y, .z = z / other.z}; }
+
+	// Surcharges arithmétiques avec un scalaire
+	Vec3 operator+(const double scalar) const { return {.x = x + scalar, .y = y + scalar, .z = z + scalar}; }
+	Vec3 operator-(const double scalar) const { return {.x = x - scalar, .y = y - scalar, .z = z - scalar}; }
+	Vec3 operator*(const double scalar) const { return {.x = x * scalar, .y = y * scalar, .z = z * scalar}; }
+	Vec3 operator/(const double scalar) const { return {.x = x / scalar, .y = y / scalar, .z = z / scalar}; }
 };
 
 
