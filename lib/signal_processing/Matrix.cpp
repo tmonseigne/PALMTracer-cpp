@@ -1,49 +1,203 @@
 #include "Matrix.hpp"
 
+
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <execution>
+#include <numeric>
+#include <ranges>
 #include <vector>
 
-namespace palm_tracer {
-//-------------------------------------------------------------------------------------------------
-void Deriv(double* out, const double i0, const double x, const double y, const double sigma, const bool has_sigma)
-{
-	const auto X_2 = x * x, Y_2 = y * y, Sigma_2 = sigma * sigma;
-	const auto Exp = exp(-(X_2 + Y_2) / (2 * Sigma_2));
-	const auto P   = i0 * Exp;
+namespace palm_tracer::matrix {
+//=============================================
+//==================== I/O ====================
+//=============================================
 
-	out[0] = 1;                                                      // offset	: ∂PSF/∂offset
-	out[1] = Exp;                                                    // I0		: ∂PSF/∂I0
-	out[2] = P * x / Sigma_2;                                        // x0		: ∂PSF/∂x0
-	out[3] = P * y / Sigma_2;                                        // y0		: ∂PSF/∂y0
-	if (has_sigma) { out[4] = P / (sigma * Sigma_2) * (X_2 + Y_2); } // sigma	: ∂PSF/∂sigma
+//-------------------------------------------------------------------------------------------------
+void Print(const std::vector<double>& data, const Coord3D& size)
+{
+	size_t idx = 0;
+	for (size_t z = 0; z < size.z; ++z) {
+		std::cout << "Plane " << z + 1 << " :\n";
+		for (size_t y = 0; y < size.y; ++y) {
+			std::cout << "|\t";
+			for (size_t x = 0; x < size.x; ++x, ++idx) { std::cout << data[idx] << "\t|\t"; }
+			std::cout << "\n";
+		}
+		std::cout << "\n\n";
+	}
+}
+
+//========================================================
+//==================== Basic Computes ====================
+//========================================================
+
+//-------------------------------------------------------------------------------------------------
+std::vector<bool> GetValidIndex(const std::vector<double>& data)
+{
+	std::vector<bool> mask;
+	mask.reserve(data.size());
+
+	for (const double V : data) { mask.push_back(std::isfinite(V)); }
+
+	return mask;
 }
 
 //-------------------------------------------------------------------------------------------------
-void Deriv(double* out, const double i0, const double x, const double y, const double sigmaX, const double sigmaY, const double theta, const bool has_theta)
+size_t CountValid(const std::vector<double>& data)
 {
-	// Calculs préliminaires
-	const auto X_2 = x * x, Y_2 = y * y, X_Y = x * y, SigmaX_2 = sigmaX * sigmaX, SigmaY_2 = sigmaY * sigmaY;
+	auto valid_view = data | std::views::filter([](const double v) { return std::isfinite(v); });
+	return std::ranges::distance(valid_view);
+}
 
-	const auto CosT   = cos(theta), SinT    = sin(theta);
-	const auto CosT_2 = CosT * CosT, SinT_2 = SinT * SinT, CosSinT = CosT * SinT,
-	           XCosT  = x * CosT, XSinT     = x * SinT, YCosT      = y * CosT, YSinT = y * SinT;
+//-------------------------------------------------------------------------------------------------
+double Max(const std::vector<double>& data)
+{
+	return *std::ranges::max_element(data, {}, [](const double x) { return !std::isfinite(x) ? -std::numeric_limits<double>::infinity() : x; });
+}
 
-	const auto Factor1 = (XCosT - YSinT) / sigmaX,
-	           Factor2 = (XSinT + YCosT) / sigmaY,
-	           Factor3 = 2 * X_Y * CosSinT,
-	           Factor4 = 2 * X_Y / SigmaX_2 - 2 * X_Y / SigmaY_2;
-	const auto Exp     = exp(-(Factor1 * Factor1 + Factor2 * Factor2));
-	const auto P       = i0 * Exp;
+//-------------------------------------------------------------------------------------------------
+double SumValid(const std::vector<double>& data)
+{
+	auto valid_view = data | std::ranges::views::filter([](const double v) { return std::isfinite(v); });
+	return std::accumulate(valid_view.begin(), valid_view.end(), 0.0);
+}
 
-	out[0] = 1;                                                                                                                              // offset
-	out[1] = Exp;                                                                                                                            // I0
-	out[2] = P * (-((-2 * CosT_2 * x + 2 * y * CosSinT) / SigmaX_2) - (-2 * SinT_2 * x - 2 * y * CosSinT) / SigmaY_2);                       // x0
-	out[3] = P * (-((2 * SinT_2 * y - 2 * x * CosSinT) / SigmaX_2) - (-2 * CosT_2 * y - 2 * x * CosSinT) / SigmaY_2);                        // y0
-	out[4] = P * (2 * (XCosT * XCosT - Factor3 + YSinT * YSinT) / (sigmaX * SigmaX_2));                                                      // sigma X
-	out[5] = P * (2 * (XSinT * XSinT + Factor3 + YCosT * YCosT) / (sigmaY * SigmaY_2));                                                      // sigma Y
-	if (has_theta) { out[6] = P * (2 * CosSinT * ((X_2 - Y_2) / SigmaX_2 + (Y_2 - X_2) / SigmaY_2) - SinT_2 * Factor4 + CosT_2 * Factor4); } // theta
+//-------------------------------------------------------------------------------------------------
+double MeanValid(const std::vector<double>& data)
+{
+	auto valid       = data | std::views::filter([](const double v) { return std::isfinite(v); });
+	const double Sum = std::accumulate(valid.begin(), valid.end(), 0.0);
+	const auto Count = std::ranges::distance(valid);
+	return (Count > 0) ? Sum / static_cast<double>(Count) : std::numeric_limits<double>::quiet_NaN();
+}
+
+//-------------------------------------------------------------------------------------------------
+double MeanWithMask(const std::vector<double>& data, const std::vector<bool>& mask)
+{
+	const size_t N = std::min(data.size(), mask.size());
+
+	// Matérialiser le range filtré
+	std::vector<double> valid;
+	valid.reserve(N); // Optimisation mémoire
+
+	for (size_t i = 0; i < N; ++i) { if (mask[i] && std::isfinite(data[i])) { valid.push_back(data[i]); } }
+
+	if (valid.empty()) { return std::numeric_limits<double>::quiet_NaN(); }
+
+	const double Sum = std::accumulate(valid.begin(), valid.end(), 0.0);
+	return Sum / static_cast<double>(valid.size());
+}
+
+//-------------------------------------------------------------------------------------------------
+double RmsDifference(const std::vector<double>& a, const std::vector<double>& b)
+{
+	assert(a.size() == b.size());
+
+	size_t count = 0;
+	double sum   = 0.0;
+
+	for (size_t i = 0; i < a.size(); ++i) {
+		if (std::isnan(a[i]) || std::isnan(b[i])) { continue; }
+		const auto D = a[i] - b[i];
+		sum += D * D;
+		++count;
+	}
+
+	return (count > 0) ? std::sqrt(sum / count) : std::numeric_limits<double>::quiet_NaN();
+}
+
+//-------------------------------------------------------------------------------------------------
+void Normalisation(std::vector<double>& a, const bool shift)
+{
+	if (shift) {
+		const double Min = *std::ranges::min_element(a);
+		for (auto& v : a) { v -= Min; }
+	}
+	const double Sum  = std::accumulate(a.begin(), a.end(), 0.0);
+	const double Norm = (Sum > 0.0 ? 1.0 / Sum : 1.0);
+	for (auto& v : a) { v *= Norm; }
+}
+
+//-------------------------------------------------------------------------------------------------
+void Crop(std::vector<double>& data, Coord3D& size, const bool cropX, const bool cropY, const bool cropZ)
+{
+	const Coord3D Offset{
+		.x = static_cast<size_t>(cropX && size.x > 2 ? 1 : 0),
+		.y = static_cast<size_t>(cropY && size.y > 2 ? 1 : 0),
+		.z = static_cast<size_t>(cropZ && size.z > 2 ? 1 : 0)
+	};
+
+	const Coord3D NewSize{.x = size.x - 2 * Offset.x, .y = size.y - 2 * Offset.y, .z = size.z - 2 * Offset.z};
+
+	std::vector<double> crop;
+	crop.reserve(NewSize.GetSize());
+	Coord3D pos{};
+	for (pos.z = Offset.z; pos.z < size.z - Offset.z; ++pos.z) {
+		for (pos.y = Offset.y; pos.y < size.y - Offset.y; ++pos.y) {
+			for (pos.x = Offset.x; pos.x < size.x - Offset.x; ++pos.x) { crop.push_back(data[pos.GetIndex(size)]); }
+		}
+	}
+
+	data = std::move(crop);
+	size = NewSize;
+}
+
+//======================================================
+//==================== Manipulation ====================
+//======================================================
+
+//-------------------------------------------------------------------------------------------------
+void CenterOfMass(const std::vector<Pixel>& data, const size_t n, double& x, double& y)
+{
+	x          = 0.0;
+	y          = 0.0;
+	double sum = 0.0;
+
+	size_t idx = 0;
+	for (size_t i = 0; i < n; ++i) {            // lignes
+		for (size_t j = 0; j < n; ++j, ++idx) { // colonnes
+			const double Value = data[idx].v;
+			y += Value * static_cast<double>(i);
+			x += Value * static_cast<double>(j);
+			sum += Value;
+		}
+	}
+
+	if (sum > 0) {
+		x /= sum;
+		y /= sum;
+	}
+	else { // Valeur nulle partout ⇾ centre géométrique
+		x = static_cast<double>(n) / 2.0;
+		y = static_cast<double>(n) / 2.0;
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+bool Cholesky(const std::vector<double>& a, const size_t n, std::vector<double>& l, std::vector<double>& u)
+{
+	for (size_t i = 0; i < n; ++i) {
+		for (size_t j = 0; j < i + 1; ++j) {
+			double s = 0;
+			// Calcul de la somme des produits scalaires entre lignes/colonnes précédentes
+			for (size_t k = 0; k < j; ++k) { s += u[i * n + k] * u[j * n + k]; }
+
+			if (i == j) {                    // Diagonale
+				if (a[i * n + i] - s >= 0) { // On vérifie que la racine est réelle (matrice définie positive).
+					u[i * n + j] = std::sqrt(a[i * n + i] - s);
+					l[j * n + i] = u[i * n + j];
+				}
+				else { return false; } // La matrice n'est pas définie positive → échec
+			}
+			else { // Hors diagonale : calcul classique de la valeur
+				u[i * n + j] = 1.0 / u[j * n + j] * (a[i * n + j] - s);
+				l[j * n + i] = u[i * n + j];
+			}
+		}
+	}
+	return true;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -130,83 +284,4 @@ void InverseLU(std::vector<double>& in, std::vector<double>& out, const size_t n
 		}
 	}
 }
-
-//-------------------------------------------------------------------------------------------------
-void CenterOfMass(const std::vector<Pixel>& data, const size_t n, double& x, double& y)
-{
-	x          = 0.0;
-	y          = 0.0;
-	double sum = 0.0;
-
-	size_t idx = 0;
-	for (size_t i = 0; i < n; ++i) {            // lignes
-		for (size_t j = 0; j < n; ++j, ++idx) { // colonnes
-			const double Value = data[idx].v;
-			y += Value * static_cast<double>(i);
-			x += Value * static_cast<double>(j);
-			sum += Value;
-		}
-	}
-
-	if (sum > 0) {
-		x /= sum;
-		y /= sum;
-	}
-	else { // Valeur nulle partout ⇾ centre géométrique
-		x = static_cast<double>(n) / 2.0;
-		y = static_cast<double>(n) / 2.0;
-	}
-}
-
-//-------------------------------------------------------------------------------------------------
-bool Cholesky(const std::vector<double>& a, const size_t n, std::vector<double>& l, std::vector<double>& u)
-{
-	for (size_t i = 0; i < n; ++i) {
-		for (size_t j = 0; j < i + 1; ++j) {
-			double s = 0;
-			// Calcul de la somme des produits scalaires entre lignes/colonnes précédentes
-			for (size_t k = 0; k < j; ++k) { s += u[i * n + k] * u[j * n + k]; }
-
-			if (i == j) {                    // Diagonale
-				if (a[i * n + i] - s >= 0) { // On vérifie que la racine est réelle (matrice définie positive).
-					u[i * n + j] = std::sqrt(a[i * n + i] - s);
-					l[j * n + i] = u[i * n + j];
-				}
-				else { return false; } // La matrice n'est pas définie positive → échec
-			}
-			else { // Hors diagonale : calcul classique de la valeur
-				u[i * n + j] = 1.0 / u[j * n + j] * (a[i * n + j] - s);
-				l[j * n + i] = u[i * n + j];
-			}
-		}
-	}
-	return true;
-}
-
-//-------------------------------------------------------------------------------------------------
-void Normalisation(std::vector<double>& a, const bool shift)
-{
-	if (shift) {
-		const double Min = *std::ranges::min_element(a);
-		for (auto& v : a) { v -= Min; }
-	}
-	const double Sum  = std::accumulate(a.begin(), a.end(), 0.0);
-	const double Norm = (Sum > 0.0 ? 1.0 / Sum : 1.0);
-	for (auto& v : a) { v *= Norm; }
-}
-
-//-------------------------------------------------------------------------------------------------
-void PrintVolume(const std::vector<double>& vol, const Coord3D& size)
-{
-	size_t idx = 0;
-	for (size_t z = 0; z < size.z; ++z) {
-		std::cout << "Plane " << z + 1 << " :\n";
-		for (size_t y = 0; y < size.y; ++y) {
-			std::cout << "|\t";
-			for (size_t x = 0; x < size.x; ++x, ++idx) { std::cout << vol[idx] << "\t|\t"; }
-			std::cout << "\n";
-		}
-		std::cout << "\n\n";
-	}
-}
-} // namespace palm_tracer
+} // namespace palm_tracer::matrix

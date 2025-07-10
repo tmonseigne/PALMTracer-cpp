@@ -31,4 +31,25 @@ double PSF(double offset, double i0, double x, double y, double sigma);
 /// <param name="theta">Angle de rotation (en radians).</param>
 /// <returns>Valeur de la PSF en (x, y).</returns>
 double PSF(double offset, double i0, double x, double y, double sigmaX, double sigmaY, double theta);
+
+/// <summary>Dérivées partielles de la PSF 2D isotrope (centrée) par rapport aux paramètres.</summary>
+/// <param name="out">Tableau de sortie (au moins 5 éléments).</param>
+/// <param name="i0">Intensité maximale.</param>
+/// <param name="x">Coordonnée x relative au centre.</param>
+/// <param name="y">Coordonnée y relative au centre.</param>
+/// <param name="sigma">Écart-type commun.</param>
+/// <param name="has_sigma">True si sigma est un paramètre libre, false sinon.</param>
+void Deriv(double* out, double i0, double x, double y, double sigma, bool has_sigma);
+
+/// <summary>Dérivées partielles de la PSF 2D anisotrope avec rotation par rapport aux paramètres.</summary>
+/// <param name="out">Tableau de sortie (au moins 7 éléments).</param>
+/// <param name="i0">Intensité maximale.</param>
+/// <param name="x">Coordonnée x relative au centre.</param>
+/// <param name="y">Coordonnée y relative au centre.</param>
+/// <param name="sigmaX">Écart-type selon X.</param>
+/// <param name="sigmaY">Écart-type selon Y.</param>
+/// <param name="theta">Angle de rotation.</param>
+/// <param name="has_theta">True si theta est un paramètre libre, false sinon.</param>
+void Deriv(double* out, double i0, double x, double y, double sigmaX, double sigmaY, double theta, bool has_theta);
+
 } // namespace palm_tracer

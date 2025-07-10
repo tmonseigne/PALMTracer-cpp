@@ -76,7 +76,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 
 		// Initialisation du/des P :
 		// - Calcul du centre de masse de la région pour x et y
-		CenterOfMass(grid, roi_, x, y);
+		matrix::CenterOfMass(grid, roi_, x, y);
 
 		initP(p, x, y, z, minI, maxI);
 		p[1][1] *= intensityRatio_;                                                                // Change l'intensité pour la position actuelle.
@@ -130,7 +130,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			for (size_t i = 0; i < nParams_; ++i) { hessian[i * nParams_ + i] = hessian[i * nParams_ + i] * mu; }
 
 			//----- Changements de P, mu, lambda -----
-			if (Cholesky(hessian, nParams_, l, u)) { // Si la Factorisation de Cholesky a réussi
+			if (matrix::Cholesky(hessian, nParams_, l, u)) { // Si la Factorisation de Cholesky a réussi
 				// Calcul du vecteur de mise à jour
 				luEvaluate(l, u, jacobian, update);
 				// Mise à jour de la matrice de saut, la matrice update et de P.
@@ -202,7 +202,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		}
 
 		// Matrice inverse (CRLB=F^-1)
-		InverseLU(m, mInv, nParams_);
+		matrix::InverseLU(m, mInv, nParams_);
 
 		for (size_t i = 0; i < nParams_; ++i) { crlb[i] = SqrtReal(mInv[i * nParams_ + i]); }
 
