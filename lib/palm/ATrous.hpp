@@ -69,4 +69,4 @@ private:
 	/// <param name="plane">Indice du plan (échelle) utilisé pour ajuster les pas de la convolution.</param>
 	void b3SplineFiltering2D(const std::vector<double>& in, std::vector<double>& out, size_t plane);
 };
-}  // namespace palm_tracer
+} // namespace palm_tracer

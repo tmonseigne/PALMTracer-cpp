@@ -104,12 +104,12 @@ void Spline::SetMembers(const Coord3D& size, const size_t roi, const size_t dist
 std::vector<std::vector<double>> Spline::ExtractBeads(const uint16_t* stack, const std::vector<Coord>& beads) const
 {
 	const size_t Nbeads   = beads.size();
-	const uint16_t Minima = *std::min_element(stack, stack + (stackSize_));
+	const uint16_t Minima = *std::min_element(stack, stack + stackSize_);
 	std::vector beadsStack(Nbeads, std::vector(beadStackSize_, 0.0));
 
 	// Extraction des PSF individuelles
 	#pragma omp parallel for
-	for (int b = 0; b < Nbeads; ++b) {
+	for (int b = 0; b < static_cast<int>(Nbeads); ++b) {
 		const auto& [Xb, Yb] = beads[b];
 		auto& s              = beadsStack[b];
 
@@ -233,7 +233,7 @@ void Spline::RegisterPSF(std::vector<std::vector<double>>& beads)
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<Vec3> Spline::AlignToRef(const std::vector<double>& ref, std::vector<std::vector<double>>& beads, const bool smallZ)
+std::vector<Vec3> Spline::AlignToRef(const std::vector<double>& ref, std::vector<std::vector<double>>& beads, const bool smallZ) const
 {
 	std::vector<Vec3> shifts(beads.size());
 	const auto SubRef       = GetSubVolume(ref, smallZ); // Stocker la sous-image de la Référence
@@ -317,24 +317,24 @@ void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std
 			maskValid[i] = true;
 		}
 	}
-	const double a = matrix::MeanWithMask(rms, maskValid);
-	double b       = std::numeric_limits<double>::quiet_NaN();
+	const double Mu = matrix::MeanWithMask(rms, maskValid);
+	double b        = std::numeric_limits<double>::quiet_NaN();
 	// Écart-type sur les éléments valides (NaN ignorés)
 	if (matrix::CountValid(rms) > 1) {
 		double sum_sq = 0.0;
 		size_t count  = 0;
 		for (size_t i = 0; i < Nbeads; ++i) {
 			if (maskValid[i]) {
-				const double Diff = rms[i] - a;
+				const double Diff = rms[i] - Mu;
 				sum_sq += Diff * Diff;
 				++count;
 			}
 		}
-		b = (count > 1) ? std::sqrt(sum_sq / static_cast<double>(count - 1)) : std::numeric_limits<double>::quiet_NaN();
+		b = count > 1 ? std::sqrt(sum_sq / static_cast<double>(count - 1)) : std::numeric_limits<double>::quiet_NaN();
 	}
 
 	// Si b est invalide (pas assez de points), fallback complet
-	const double CutOff = std::isfinite(b) ? a + 2.0 * b : std::numeric_limits<double>::infinity();
+	const double CutOff = std::isfinite(b) ? Mu + 2.0 * b : std::numeric_limits<double>::infinity();
 
 	// Maj des bons indices et poids finaux
 	for (size_t i = 0; i < Nbeads; ++i) {
@@ -345,84 +345,4 @@ void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std
 		else { weight[i] = 1.0 / rms[i]; }
 	}
 }
-
-/*
- *
- *
-// Normalise un vecteur (divise par sa moyenne)
-void normalizeVolume(std::vector<double>& vol) {
-    double mean = 0;
-    size_t count = vol.size();
-    for (double v : vol) mean += v;
-    mean /= static_cast<double>(count);
-    if (mean < 1e-15) mean = 1.0; // éviter division par 0
-    for (double& v : vol) v /= mean;
-}
-
-// Recherche du max dans volume 3D (simple max)
-size_t argmax3D(const std::vector<double>& vol) {
-    return std::distance(vol.begin(), std::max_element(vol.begin(), vol.end()));
-}
-
-// Convertit un index 1D en coord 3D (z,y,x)
-Eigen::Vector3i ind2sub3D(size_t ind, size_t Z, size_t Y, size_t X) {
-    int x = (int)(ind % X);
-    ind /= X;
-    int y = (int)(ind % Y);
-    ind /= Y;
-    int z = (int)(ind);
-    return Eigen::Vector3i(z, y, x);
-}
-
-// TODO : implémenter interpolation cubic subpixel locale max refinement (getmaxInterp)
-// Pour l'instant, juste retourne la coord du max
-
-Vec3 getmaxInterp(const std::vector<double>& V, const Eigen::Vector3d& pos, double dx, int w, size_t Z, size_t Y, size_t X) {
-    // À implémenter : interpolation cubique 3D autour de pos
-    // Pour l'instant retourne pos sans raffinements
-    return Vec3{pos(0), pos(1), pos(2)};
-}
-
-// Fonction principale get3Dcorrshift
-Vec3 get3Dcorrshift(const std::vector<double>& refim,
-                    const std::vector<double>& targetim,
-                    size_t roi, size_t zN) {
-
-    // refim et targetim ont taille roi*roi*zN (z,y,x)
-    const size_t volsize = roi * roi * zN;
-
-    // Normaliser les volumes
-    std::vector<double> ref = refim;
-    std::vector<double> target = targetim;
-    normalizeVolume(ref);
-    normalizeVolume(target);
-
-    // FFT 3D des deux volumes
-    std::vector<std::complex<double>> fft_ref, fft_target;
-    fft3D(ref, fft_ref, zN, roi, roi);
-    fft3D(target, fft_target, zN, roi, roi);
-
-    // Produit de Fourier croisé
-    std::vector<std::complex<double>> G;
-    crossPowerSpectrum(fft_ref, fft_target, G);
-
-    // iFFT 3D de G
-    std::vector<double> Gs;
-    ifft3D(G, Gs, zN, roi, roi);
-
-    // Chercher max de Gs (corrélation croisée spatiale)
-    size_t maxind = argmax3D(Gs);
-    Eigen::Vector3i maxPos = ind2sub3D(maxind, zN, roi, roi);
-
-    // Raffinement subpixel (pas encore implémenté)
-    Vec3 shift = getmaxInterp(Gs, maxPos.cast<double>(), 0.05, 1, zN, roi, roi);
-
-    // Calcul du décalage final relatif au centre
-    shift.dx = shift.dx / 4.0 - (double)roi / 2.0 + 0.25; // l'offset 1/4 est présent dans MATLAB
-    shift.dy = shift.dy / 4.0 - (double)roi / 2.0 + 0.25;
-    shift.dz = shift.dz / 4.0 - (double)zN / 2.0 + 0.25;
-
-    return shift;
-}
- */
 } // namespace palm_tracer

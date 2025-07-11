@@ -108,7 +108,6 @@ public:
 	/// <returns>Le seuil calculé correspondant à l’écart type final des pixels hors régions segmentées.</returns>
 	[[nodiscard]] double AutoThreshold();
 
-
 private:
 	// Basic members
 	const uint16_t* stack_;     ///< Image 3D d'entrée (plan x hauteur x largeur) en niveaux de gris.

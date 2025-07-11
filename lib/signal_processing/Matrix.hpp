@@ -11,12 +11,10 @@
 
 #pragma once
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <execution>
 #include <numeric>
 #include <ranges>
-#include <vector>
 #include <vector>
 #include "Structs.hpp"
 

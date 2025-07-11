@@ -46,4 +46,4 @@ constexpr size_t N_IN_PARAMS = 7; ///< Nombre de paramètres reçu lors du track
 constexpr size_t SPLINE_PATCH_SIDE  = 4,  ///< Taille d'un côté du patch spline (nombre de points en X ou Y).
                  SPLINE_PATCH_PLANE = 16, ///< Nombre total de points dans un plan 2D du patch spline : SPLINE_PATCH_SIDE ^ 2.
                  SPLINE_PATCH_SIZE  = 64; ///< Nombre total de coefficients dans un patch spline 3D : SPLINE_PATCH_SIDE ^ 3.
-}  // namespace palm_tracer
+}                                         // namespace palm_tracer

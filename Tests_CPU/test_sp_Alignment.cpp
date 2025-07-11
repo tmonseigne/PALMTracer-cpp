@@ -14,10 +14,7 @@ struct AlignTestParams {
 };
 
 //-------------------------------------------------------------------------------------------------
-class AlignmentTests : public ::testing::TestWithParam<AlignTestParams> { };
-
-//-------------------------------------------------------------------------------------------------
-TEST(AlignmentTests, BaseCreation) { Alignment align; }
+class AlignmentTests : public testing::TestWithParam<AlignTestParams> { };
 
 //-------------------------------------------------------------------------------------------------
 TEST(AlignmentTests, BlankCallWithReference)

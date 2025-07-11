@@ -375,7 +375,7 @@ double Node::simpleLinkageSwap(const double limit, Node* node)
 	//	4-----------2
 
 	if (node->past_ != nullptr && node->past_->Distance(*future_) >= params_->maxSpeed_) { return 0.; } // Distance is not respected
-	if (Distance(*node) >= params_->maxSpeed_) { return 0.; }                                             // Distance is not respected
+	if (Distance(*node) >= params_->maxSpeed_) { return 0.; }                                           // Distance is not respected
 
 	const double DeltaE = Likeness(node) + future_->Likeness(node->past_) - node->Likeness(node->past_) - Likeness(future_);
 	if (!metropolis(DeltaE, limit)) { return 0.; } //deltaLikeness<limit // if the new solution is too bad

@@ -70,7 +70,7 @@ double MeanValid(const std::vector<double>& data)
 	auto valid       = data | std::views::filter([](const double v) { return std::isfinite(v); });
 	const double Sum = std::accumulate(valid.begin(), valid.end(), 0.0);
 	const auto Count = std::ranges::distance(valid);
-	return (Count > 0) ? Sum / static_cast<double>(Count) : std::numeric_limits<double>::quiet_NaN();
+	return Count > 0 ? Sum / static_cast<double>(Count) : std::numeric_limits<double>::quiet_NaN();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ double RmsDifference(const std::vector<double>& a, const std::vector<double>& b)
 		++count;
 	}
 
-	return (count > 0) ? std::sqrt(sum / count) : std::numeric_limits<double>::quiet_NaN();
+	return count > 0 ? std::sqrt(sum / static_cast<double>(count)) : std::numeric_limits<double>::quiet_NaN();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -116,7 +116,7 @@ void Normalisation(std::vector<double>& a, const bool shift)
 		for (auto& v : a) { v -= Min; }
 	}
 	const double Sum  = std::accumulate(a.begin(), a.end(), 0.0);
-	const double Norm = (Sum > 0.0 ? 1.0 / Sum : 1.0);
+	const double Norm = Sum > 0.0 ? 1.0 / Sum : 1.0;
 	for (auto& v : a) { v *= Norm; }
 }
 

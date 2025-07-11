@@ -4,7 +4,6 @@
 #include <cmath>
 #include <complex>
 #include <functional>
-#include <iostream>
 #include <numeric>
 
 #include "FFT.hpp"
@@ -209,7 +208,7 @@ std::vector<double> Interpolation3D::Shift(const std::vector<double>& volume, co
 			pos.y = static_cast<double>(y) - shift.y;
 			for (size_t x = 0; x < size.x; ++x, ++idx) {
 				pos.x    = static_cast<double>(x) - shift.x;
-				out[idx] = (cropBound_ && isOut(pos, size)) ? 0.0 : interp(volume, size, pos);
+				out[idx] = cropBound_ && isOut(pos, size) ? 0.0 : interp(volume, size, pos);
 			}
 		}
 	}

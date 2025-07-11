@@ -51,5 +51,4 @@ void Deriv(double* out, double i0, double x, double y, double sigma, bool has_si
 /// <param name="theta">Angle de rotation.</param>
 /// <param name="has_theta">True si theta est un paramètre libre, false sinon.</param>
 void Deriv(double* out, double i0, double x, double y, double sigmaX, double sigmaY, double theta, bool has_theta);
-
 } // namespace palm_tracer

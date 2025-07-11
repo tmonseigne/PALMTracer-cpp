@@ -31,7 +31,7 @@ public:
 	       dz_{},
 	       smoothZ_{};
 
-	Coord3D size_, beadSize_, midBead_, smallBeadSize_;
+	Coord3D size_{}, beadSize_{}, midBead_{}, smallBeadSize_{};
 	std::vector<size_t> smallXIndices_, smallZIndices_;
 
 	Spline()  = default;
@@ -48,15 +48,16 @@ public:
 
 	std::vector<std::vector<double>> ExtractBeads(const uint16_t* stack, const std::vector<Coord>& beads) const;
 
-	std::vector<double> GetSubVolume(const std::vector<double>& volume, bool smallZ) const;
+	[[nodiscard]] std::vector<double> GetSubVolume(const std::vector<double>& volume, bool smallZ) const;
 
 	void RegisterPSF(std::vector<std::vector<double>>& beads);
 
-	std::vector<Vec3> AlignToRef(const std::vector<double>& ref, std::vector<std::vector<double>>& beads, bool smallZ = false);
+	std::vector<Vec3> AlignToRef(const std::vector<double>& ref, std::vector<std::vector<double>>& beads, bool smallZ = false) const;
 
 	std::vector<std::vector<double>> softNormalization(std::vector<std::vector<double>>& beads);
 
-	void GetOverlap(const std::vector<std::vector<double>>& beads, const std::vector<Vec3>& shift, std::vector<bool>& good, std::vector<double>& weight, double& norm, bool smallZ = false) const;
+	void GetOverlap(const std::vector<std::vector<double>>& beads, const std::vector<Vec3>& shift, std::vector<bool>& good, std::vector<double>& weight,
+	                double& norm, bool smallZ = false) const;
 
 protected:
 };

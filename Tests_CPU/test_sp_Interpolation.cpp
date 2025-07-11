@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 
-#include <algorithm>
 #include <numeric>
 
 #include "signal_processing/Interpolation.hpp"
@@ -28,7 +27,7 @@ TEST(InterpolationTests, ZoomFactor)
 	for (size_t i = 0; i < Zoomed0.size(); ++i) { EXPECT_DOUBLE_EQ(Zoomed0[i], volume[i]); }
 
 	const auto Zoomed1 = Interp.Zoom(volume, Size, 1, newSize);
-	EXPECT_EQ(Zoomed1.size(), (5 * 7 * 9)); // (3-1)*2+1=5, (4-1)*2+1=7, (5-1)*2+1=9
+	EXPECT_EQ(Zoomed1.size(), 5 * 7 * 9); // (3-1)*2+1=5, (4-1)*2+1=7, (5-1)*2+1=9
 
 	const std::vector Ref1 = {
 		1.0000, 1.5000, 2.0000, 2.5000, 3.0000, 2.5000, 3.0000, 3.5000, 4.0000, 4.5000,
@@ -80,13 +79,13 @@ TEST(InterpolationTests, ZoomFactor)
 
 
 	const auto Zoomed2 = Interp.Zoom(volume, Size, 2, newSize);
-	EXPECT_EQ(Zoomed2.size(), (9 * 13 * 17)); // (3-1)*2+1=5, (4-1)*2+1=7, (5-1)*2+1=9
+	EXPECT_EQ(Zoomed2.size(), 9 * 13 * 17); // (3-1)*2+1=5, (4-1)*2+1=7, (5-1)*2+1=9
 
 	const auto Zoomed3 = Interp.Zoom(volume, Size, 3, newSize);
-	EXPECT_EQ(Zoomed3.size(), (25 * 17 * 33));
+	EXPECT_EQ(Zoomed3.size(), 25 * 17 * 33);
 
 	const auto Zoomed4 = Interp.Zoom(volume, Size, 4, newSize);
-	EXPECT_EQ(Zoomed4.size(), (49 * 33 * 65));
+	EXPECT_EQ(Zoomed4.size(), 49 * 33 * 65);
 }
 
 //-------------------------------------------------------------------------------------------------
