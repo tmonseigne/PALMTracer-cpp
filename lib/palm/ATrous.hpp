@@ -17,7 +17,7 @@
 #include "Constants.hpp"
 
 namespace palm_tracer {
-/// <summary> Classe pour la décomposition en ondelettes 2D selon l'algorithme "à trous".</summary>
+/// <summary>Classe pour la décomposition en ondelettes 2D selon l'algorithme "à trous".</summary>
 /// <remarks> Cette classe réalise la transformation en ondelettes sur une image 2D, notamment avec une décomposition multi-échelle utilisant des filtrages spline B3.
 /// Elle gère la mémoire interne, les calculs de convolutions et la gestion des plans. </remarks>
 class ATrous {

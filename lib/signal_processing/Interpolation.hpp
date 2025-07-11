@@ -48,7 +48,7 @@ public:
 	/// <returns>Volume agrandi sous forme linéarisée avec interpolation.</returns>
 	[[nodiscard]] std::vector<double> Zoom(const std::vector<double>& volume, const Coord3D& size, size_t level, Coord3D& newSize) const;
 
-	/// <summary> Applique un décalage (shift) flottant sur tout le volume avec interpolation. </summary>
+	/// <summary>Applique un décalage (shift) flottant sur tout le volume avec interpolation. </summary>
 	/// <param name="volume">Vecteur linéarisé représentant un volume 3D en mémoire ligne-colonne-plan (X-Y-Z).</param>
 	/// <param name="size">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
 	/// <param name="shift">Décalage flottant (x, y, z).</param>
@@ -69,7 +69,7 @@ public:
 	/// <param name="target">Volume cible à aligner (entrée), 3D en mémoire row-major (x, y, z).</param>
 	/// <param name="size">Dimensions des volumes sources (identiques pour les deux).</param>
 	/// <returns>Décallage estimé.</returns>
-	[[nodiscard]] Vec3 GetShift(const std::vector<double>& ref, const std::vector<double>& target, const Coord3D& size) const;
+	[[nodiscard]] Vec3 GetShift(const std::vector<double>& ref, const std::vector<double>& target, const Coord3D& size);
 
 	/// <summary>Recherche la position subvoxel du maximum local d’un volume 3D par interpolation locale.</summary>
 	/// <param name="volume">Vecteur linéarisé représentant un volume 3D en mémoire ligne-colonne-plan (X-Y-Z).</param>
@@ -111,7 +111,7 @@ private:
 	/// <returns>Valeur interpolée au point donné, ou 0.0 si hors volume.</returns>
 	static double cubicWeight3D(const std::vector<double>& volume, const Coord3D& size, const Vec3& pos);
 
-	/// <summary> Effectue une interpolation trilineaire dans un volume 3D. </summary>
+	/// <summary>Effectue une interpolation trilineaire dans un volume 3D. </summary>
 	/// <param name="volume">Vecteur linéarisé représentant le volume 3D (X-Y-Z) en mémoire row-major.</param>
 	/// <param name="size">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
 	/// <param name="pos">Position flottante (x, y, z) où calculer l'interpolation.</param>

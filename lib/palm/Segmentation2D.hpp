@@ -57,7 +57,7 @@ public:
 	/// <remarks>Le mot-clé [[nodiscard]] indique que le résultat ne doit pas être ignoré.</remarks>
 	[[nodiscard]] std::vector<SegmentationInfo> Infos() const { return infos_; }
 
-	/// <summary> Effectue une segmentation intelligente de type watershed.
+	/// <summary>Effectue une segmentation intelligente de type watershed.
 	/// Cette méthode combine une détection des maxima locaux, un premier watershed, un filtrage morphologique optionnel, puis un second watershed.</summary>
 	void WatershedIntelligent();
 
@@ -86,7 +86,7 @@ private:
 	/// Chaque maximum local reçoit un label unique, étendu à ses voisins immédiats s'ils ne sont pas dominés.</summary>
 	void getLocalMax();
 
-	/// <summary> Applique l'algorithme de segmentation watershed à partir des germes préalablement détectés.
+	/// <summary>Applique l'algorithme de segmentation watershed à partir des germes préalablement détectés.
 	/// Utilise une file de priorité pour propager les labels des régions à travers la carte de potentiel. </summary>
 	void watershed();
 };

@@ -55,7 +55,7 @@ public:
 	/// <summary>Opérateur d'affectation par copie par défaut.</summary>
 	SegmentationInfo& operator=(const SegmentationInfo&) = default;
 
-	/// <summary> Réinitialise les données de la région.</summary>
+	/// <summary>Réinitialise les données de la région.</summary>
 	void Reset()
 	{
 		x_         = 0;

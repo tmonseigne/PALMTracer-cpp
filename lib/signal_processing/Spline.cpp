@@ -7,6 +7,8 @@
 #include <iostream>
 #include <numeric>
 #include <vector>
+
+#include "Interpolation.hpp"
 #include "signal_processing/FFT.hpp"
 #include "signal_processing/Matrix.hpp"
 
@@ -40,10 +42,10 @@ void Spline::Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, c
 
 	 *
 	 */
-	setMembers(size, roi, distance, dz, smoothZ);
+	SetMembers(size, roi, distance, dz, smoothZ);
 
 	// Récupération des volumes des billes sur l'image Décallé vers zéro (soustraction du minimum de l'image)
-	auto beadsStack = extractBeads(stack, beads);
+	auto beadsStack = ExtractBeads(stack, beads);
 	std::cout << beadsStack.size() << "\t" << beadsStack[0].size() << "\n";
 	for (size_t i = 0; i < 5; ++i) {
 		const size_t RoiIdx = i * beadSize_.x;
@@ -56,7 +58,7 @@ void Spline::Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, c
 }
 
 //-------------------------------------------------------------------------------------------------
-void Spline::setMembers(const Coord3D& size, const size_t roi, const size_t distance, const size_t dz, const size_t smoothZ)
+void Spline::SetMembers(const Coord3D& size, const size_t roi, const size_t distance, const size_t dz, const size_t smoothZ)
 {
 	const size_t NewRoi = roi % 2 == 0 ? roi - 1 : roi; // ROI doit-être impair. Pour éviter les effets de bords, on soustrait en cas de nombre pair.
 
@@ -64,7 +66,7 @@ void Spline::setMembers(const Coord3D& size, const size_t roi, const size_t dist
 	imSize_    = size_.GetPlaneSize();
 	stackSize_ = size_.GetSize();
 
-	beadSize_      = Coord3D{.x = NewRoi, .y = NewRoi, .z = size_.z};
+	beadSize_      = Coord3D{.x = NewRoi, .y = NewRoi, .z = size_.z % 2 == 0 ? size_.z - 1 : size_.z}; // Garanti un z impair
 	beadImSize_    = beadSize_.GetPlaneSize();
 	beadStackSize_ = beadSize_.GetSize();
 	midBead_       = beadSize_.GetMid();
@@ -87,9 +89,9 @@ void Spline::setMembers(const Coord3D& size, const size_t roi, const size_t dist
 	// Calcul de la zone d'interet centrale sur Z.
 	const size_t StartZ = std::max(0, static_cast<int>(midBead_.z - distanceHalf_)),
 	             EndZ   = std::min(static_cast<int>(midBead_.z + distanceHalf_), static_cast<int>(beadSize_.z) - 1);
-	// Génère la plage d’indices du centre de la ROI de taille maximum 13.
+	// Génère la plage d’indices des plans autour du centre.
 	smallZIndices_.clear();              // Remise à 0 du vecteur (en cas d'appels répétés)
-	smallZIndices_.reserve(beadSize_.x); // taille max du range intégralité de la psf récupéré
+	smallZIndices_.reserve(beadSize_.z); // taille max du range intégralité de la psf récupéré
 	for (size_t i = StartZ; i <= EndZ; ++i) { smallZIndices_.push_back(i); }
 
 	//Dimansions de la zone d'interet centrale.
@@ -99,7 +101,7 @@ void Spline::setMembers(const Coord3D& size, const size_t roi, const size_t dist
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<std::vector<double>> Spline::extractBeads(const uint16_t* stack, const std::vector<Coord>& beads) const
+std::vector<std::vector<double>> Spline::ExtractBeads(const uint16_t* stack, const std::vector<Coord>& beads) const
 {
 	const size_t Nbeads   = beads.size();
 	const uint16_t Minima = *std::min_element(stack, stack + (stackSize_));
@@ -118,7 +120,7 @@ std::vector<std::vector<double>> Spline::extractBeads(const uint16_t* stack, con
 			for (posBead.y = 0; posBead.y < beadSize_.y; ++posBead.y) {
 				pos.y = Yb - midBead_.y + posBead.y;
 				for (posBead.x = 0; posBead.x < beadSize_.x; ++posBead.x) {
-					pos.x = Xb - midBead_.x + posBead.x;
+					pos.x                          = Xb - midBead_.x + posBead.x;
 					s[posBead.GetIndex(beadSize_)] = static_cast<double>(stack[pos.GetIndex(size_)] - Minima);
 				}
 			}
@@ -136,7 +138,7 @@ std::vector<std::vector<double>> Spline::extractBeads(const uint16_t* stack, con
 	}
 
 	// Décalage vers 0 et normalisation de la moyenne
-	Normalisation(mu, true);
+	matrix::Normalisation(mu, true);
 
 	// Calcul des distances quadratiques à la moyenne
 	std::vector dstack(Nbeads, 0.0);
@@ -144,7 +146,7 @@ std::vector<std::vector<double>> Spline::extractBeads(const uint16_t* stack, con
 	for (int b = 0; b < static_cast<int>(Nbeads); ++b) {
 		std::vector<double> tmp = beadsStack[b]; // Copie locale (beadsStack ne doit pas être modifié)
 
-		Normalisation(tmp, true); // Normalisation individuelle
+		matrix::Normalisation(tmp, true); // Normalisation individuelle
 
 		// Calcul distance quadratique
 		double dist2 = 0.0;
@@ -171,7 +173,34 @@ std::vector<std::vector<double>> Spline::extractBeads(const uint16_t* stack, con
 }
 
 //-------------------------------------------------------------------------------------------------
-void Spline::registerPSF(std::vector<std::vector<double>>& beads) const
+std::vector<double> Spline::GetSubVolume(const std::vector<double>& volume, const bool smallZ) const
+{
+	std::vector<double> res;
+	if (smallZ) {
+		res.reserve(smallBeadStackSize_); // On réserve l'espace.
+		for (const size_t Z : smallZIndices_) {
+			const size_t ZIdx = Z * beadImSize_;
+			for (const size_t Y : smallXIndices_) {
+				const size_t YIdx = ZIdx + Y * beadSize_.x;
+				for (const size_t X : smallXIndices_) { res.push_back(volume[YIdx + X]); }
+			}
+		}
+	}
+	else {
+		res.reserve(smallBeadImSize_ * beadSize_.z); // On réserve l'espace.
+		for (size_t z = 0; z < beadSize_.z; ++z) {
+			const size_t ZIdx = z * beadImSize_;
+			for (const size_t Y : smallXIndices_) {
+				const size_t YIdx = ZIdx + Y * beadSize_.x;
+				for (const size_t X : smallXIndices_) { res.push_back(volume[YIdx + X]); }
+			}
+		}
+	}
+	return res;
+}
+
+//-------------------------------------------------------------------------------------------------
+void Spline::RegisterPSF(std::vector<std::vector<double>>& beads)
 {
 	// On prend les N meilleures billes pour faire une moyenne, mais pas moins de 5 sauf si moins de 5 billes au départ.
 	const size_t Nref = std::min<size_t>(std::max<size_t>(5, beads.size() / 2), beads.size());
@@ -185,7 +214,12 @@ void Spline::registerPSF(std::vector<std::vector<double>>& beads) const
 		mu[i] = sum / static_cast<double>(Nref);
 	}
 
+	// Première passe sur l'intégralité du Z.
 	// Alignement
+	AlignToRef(mu, beads, false);
+	//Normalization chelou
+
+	// Seconde passe sur le sous ensemble d'intérêt au niveau du Z.
 
 
 	std::vector<Point3D> shifts(beads.size());
@@ -198,21 +232,123 @@ void Spline::registerPSF(std::vector<std::vector<double>>& beads) const
 	}
 }
 
-void Spline::alignToRef(std::vector<double>& ref, std::vector<std::vector<double>>& beads, bool smallZ)
+//-------------------------------------------------------------------------------------------------
+std::vector<Vec3> Spline::AlignToRef(const std::vector<double>& ref, std::vector<std::vector<double>>& beads, const bool smallZ)
 {
-	// Pour chaque bille, stocker la sous-image
+	std::vector<Vec3> shifts(beads.size());
+	const auto SubRef       = GetSubVolume(ref, smallZ); // Stocker la sous-image de la Référence
+	const Coord3D SmallSize = {.x = smallBeadSize_.x, .y = smallBeadSize_.y, .z = smallZ ? smallBeadSize_.z : beadSize_.z};
 
-	//std::vector<std::vector<double>> smallBeads(beads.size());
-	//size_t idx = 0;
-	//for (size_t i = 0; i < beads.size(); ++i) {
-	//	smallBeads.reserve(newBeadSize);
-	//	for (size_t z = 0; z < smallBeadSize_.z; ++z) {
-	//		for (size_t y = 0; y < smallBeadSize_.y; ++y) { for (size_t x = 0; x < smallBeadSize_.x; ++x, ++idx) { smallBeads[idx] = beads[idx]; } }
-	//	}
-	//}
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(beads.size()); ++i) { // Pour chaque bille
+		Interpolation3D interp(interpolation_mode::trilinear, true);
+		const auto SubB = GetSubVolume(beads[i], smallZ);               // Stocker la sous-image
+		shifts[i]       = interp.GetShift(SubRef, SubB, SmallSize);     // Lancer getShift entre la sous ref et la sous image
+		beads[i]        = interp.Shift(beads[i], beadSize_, shifts[i]); // Lancer Shift sur l'image de base et Remplacer la bille par ce shift
+	}
+	return shifts;
+}
+
+//-------------------------------------------------------------------------------------------------
+void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std::vector<Vec3>& shift, std::vector<bool>& good, std::vector<double>& weight,
+                        double& norm, const bool smallZ) const
+{
+	const size_t Nbeads         = beads.size();
+	const Coord3D SmallSize     = {.x = smallBeadSize_.x, .y = smallBeadSize_.y, .z = smallZ ? smallBeadSize_.z : beadSize_.z};
+	const size_t SmallStackSize = SmallSize.GetSize();
+
+	// Pour un sous volume : const auto Sub = getSubVolume(volume, smallZ);
+	// Récupération des sous volumes des billes
+	std::vector<std::vector<double>> subBeads(Nbeads);
+	for (size_t i = 0; i < Nbeads; ++i) { subBeads[i] = GetSubVolume(beads[i], smallZ); }
+
+	// Moyenne pondérée des sous-volumes valides pour créer une image de référence (refimn)
+	std::vector ref(SmallStackSize, 0.0);
+	double totalWeight = 0.0;
+	for (size_t i = 0; i < Nbeads; ++i) {
+		if (!good[i]) { continue; }
+		for (size_t j = 0; j < SmallStackSize; ++j) { ref[j] += weight[i] * subBeads[i][j]; }
+		totalWeight += weight[i];
+	}
+	matrix::Scale(ref, 1.0 / totalWeight);
+
+	// Corrélation croisée normalisée
+	std::vector cc(Nbeads, 0.0);
+
+	const std::vector<bool> RefMask = matrix::GetValidIndex(ref);
+	for (size_t i = 0; i < Nbeads; ++i) {
+		std::vector<bool> bMask = matrix::GetValidIndex(subBeads[i]);
+		double sumD             = 0.0, sumR = 0.0, sumB = 0.0, valid = 0.0;
+		for (size_t j = 0; j < SmallStackSize; ++j) {
+			if (!bMask[j] || !RefMask[j]) { continue; }
+			sumD += subBeads[i][j] * ref[j];
+			sumR += ref[j];
+			sumB += subBeads[i][j];
+			valid += 1;
+		}
+		cc[i] = valid * (sumD / (sumR * sumB));
+	}
+
+	// Normalisation d’amplitude
+	norm = matrix::Max(ref);
+
+	Coord3D cropSize = SmallSize;
+	matrix::Crop(ref, cropSize, true, true, false);
+	matrix::Scale(ref, 1.0 / norm);
+
+	for (auto& bead : subBeads) {
+		cropSize = SmallSize;
+		matrix::Crop(bead, cropSize, true, true, false);
+		matrix::Scale(bead, 1.0 / norm);
+	}
+
+	// RMS de l’erreur (res)
+	std::vector rms(Nbeads, 0.0);
+	for (size_t i = 0; i < Nbeads; ++i) {
+		if (shift[i].x <= 3 && shift[i].y <= 3) { rms[i] = matrix::RmsDifference(ref, subBeads[i]); }
+		else { rms[i] = std::numeric_limits<double>::quiet_NaN(); }
+	}
+
+	// filtrage robuste
+	std::vector maskValid(Nbeads, false);
+	for (size_t i = 0; i < Nbeads; ++i) {
+		if (good[i] && cc[i] > 0.0 && std::isfinite(rms[i])) {
+			rms[i] /= cc[i];
+			maskValid[i] = true;
+		}
+	}
+	const double a = matrix::MeanWithMask(rms, maskValid);
+	double b       = std::numeric_limits<double>::quiet_NaN();
+	// Écart-type sur les éléments valides (NaN ignorés)
+	if (matrix::CountValid(rms) > 1) {
+		double sum_sq = 0.0;
+		size_t count  = 0;
+		for (size_t i = 0; i < Nbeads; ++i) {
+			if (maskValid[i]) {
+				const double Diff = rms[i] - a;
+				sum_sq += Diff * Diff;
+				++count;
+			}
+		}
+		b = (count > 1) ? std::sqrt(sum_sq / static_cast<double>(count - 1)) : std::numeric_limits<double>::quiet_NaN();
+	}
+
+	// Si b est invalide (pas assez de points), fallback complet
+	const double CutOff = std::isfinite(b) ? a + 2.0 * b : std::numeric_limits<double>::infinity();
+
+	// Maj des bons indices et poids finaux
+	for (size_t i = 0; i < Nbeads; ++i) {
+		if (std::isnan(rms[i]) || rms[i] > CutOff) {
+			good[i]   = false;
+			weight[i] = std::numeric_limits<double>::quiet_NaN();
+		}
+		else { weight[i] = 1.0 / rms[i]; }
+	}
 }
 
 /*
+ *
+ *
 // Normalise un vecteur (divise par sa moyenne)
 void normalizeVolume(std::vector<double>& vol) {
     double mean = 0;

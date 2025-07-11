@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include <algorithm>
+#include <numeric>
 
 #include "Structs.hpp"
 #include "TiffManagement.hpp"
@@ -28,11 +29,11 @@ TEST(SplineTests, setMembers)
 	// Charger l'image des billes
 	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
 
-	spline.setMembers(dim, ROI, DISTANCE, DZ, SMOOTH_Z);
+	spline.SetMembers(dim, ROI, DISTANCE, DZ, SMOOTH_Z);
 	EXPECT_EQ(spline.smallXIndices_.size(), 13);           // Les sous-groupes seront inférieur à la ROI de base.
 	EXPECT_EQ(spline.smallZIndices_.size(), DISTANCE + 1); // Prend un nombre impair de points
 
-	spline.setMembers(dim, 8, 2 * dim.z, 5, 2);
+	spline.SetMembers(dim, 8, 2 * dim.z, 5, 2);
 	EXPECT_EQ(spline.smallXIndices_.size(), 7);     // Prend un nombre impair de points en roi et ne peut descnedre en dessous de la ROI (impair) de base
 	EXPECT_EQ(spline.smallZIndices_.size(), dim.z); // On dépasse le max en Z donc on prend toutes les frames
 }
@@ -56,7 +57,7 @@ TEST(SplineTests, extractBeads)
 		{.x = 28, .y = 118}
 	};
 
-	std::vector<std::vector<double>> Ref = {
+	const std::vector<std::vector<double>> Ref = {
 		{
 			5649, 7067, 5629, 6618, 8244, 6662, 5981, 7379, 6055,
 			5651, 6824, 5960, 7046, 8412, 6794, 6364, 8189, 6576,
@@ -94,20 +95,207 @@ TEST(SplineTests, extractBeads)
 		}
 	};
 
-	spline.setMembers(dim, 3, 3, DZ, SMOOTH_Z);
-	const auto BeadsStack = spline.extractBeads(input.data(), Beads);
+	spline.SetMembers(dim, 3, 3, DZ, SMOOTH_Z);
+	const auto BeadsStack = spline.ExtractBeads(input.data(), Beads);
 
 	// Sélection de 3 plans centraux uniquement pour comparaison
 	for (size_t b = 0; b < BeadsStack.size(); ++b) {
 		size_t idx = 0;
 		for (size_t i = 0; i < spline.smallZIndices_.size(); ++i) {
 			const size_t ZIdx = spline.smallZIndices_[i] * spline.beadImSize_;
-			for (size_t j = 0; j < spline.beadImSize_; ++j, ++idx) {
-				EXPECT_DOUBLE_EQ(Ref[b][idx], BeadsStack[b][ZIdx + j]);
-			}
+			for (size_t j = 0; j < spline.beadImSize_; ++j, ++idx) { EXPECT_DOUBLE_EQ(Ref[b][idx], BeadsStack[b][ZIdx + j]); }
 		}
 	}
 }
+
+//-------------------------------------------------------------------------------------------------
+TEST(SplineTests, GetSubVolume)
+{
+	Spline spline;
+	constexpr Coord3D Size = {.x = 5, .y = 5, .z = 5};
+	std::vector<double> volume(125);
+	std::iota(volume.begin(), volume.end(), 1);
+	matrix::Print(volume, Size);
+
+	spline.SetMembers(Size, 3, 3, DZ, SMOOTH_Z);
+	// On bidouille pour appeler le volume directement
+	spline.beadSize_      = Size;
+	spline.beadImSize_    = spline.beadSize_.GetPlaneSize();
+	spline.beadStackSize_ = spline.beadSize_.GetSize();
+	spline.midBead_       = spline.beadSize_.GetMid();
+	spline.smallXIndices_ = {1, 2, 3};
+
+	auto sub = spline.GetSubVolume(volume, false);
+	matrix::Print(sub, Coord3D{.x = 3, .y = 3, .z = 5});
+
+	sub = spline.GetSubVolume(volume, true);
+	matrix::Print(sub, Coord3D{.x = 3, .y = 3, .z = 3});
+}
+
+//-------------------------------------------------------------------------------------------------
+TEST(SplineTests, Align)
+{
+	Spline spline;
+	std::vector<uint16_t> input;
+	Coord3D dim{};
+	// Charger l'image des billes
+	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
+
+	const std::vector<Coord> Beads = {
+		{.x = 25, .y = 19},
+		{.x = 93, .y = 27},
+		{.x = 122, .y = 61},
+		{.x = 43, .y = 70},
+		{.x = 44, .y = 82},
+		{.x = 90, .y = 110},
+		{.x = 28, .y = 118}
+	};
+
+	spline.SetMembers(dim, ROI, DISTANCE, DZ, SMOOTH_Z);
+	auto beadsStack = spline.ExtractBeads(input.data(), Beads);
+
+	const size_t Nref = std::min<size_t>(std::max<size_t>(5, Beads.size() / 2), Beads.size());
+
+	//Création de la PSF de référence moyenne sur le volume complet
+	std::vector mu(spline.beadStackSize_, 0.0);
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(spline.beadStackSize_); ++i) {
+		double sum = 0.0;
+		for (size_t b = 0; b < Nref; ++b) { sum += beadsStack[b][i]; }
+		mu[i] = sum / static_cast<double>(Nref);
+	}
+	spline.AlignToRef(mu, beadsStack, false);
+	// Shift pour Matlab (je n'ai que des (0,0,0) à cause du zoom sur élément shifté)
+	//   0.0750, -0.3625, 0.0125
+	//	-0.0125, -0.125,  0
+	//	-0.1375,  0.4625, 0
+	//	 0.2,    -0.2,    0
+	//	 0.725,   0.45,   0
+	//	-0.125,   0.25,   0
+	//Print(beadsStack[0], spline.beadSize_);
+	EXPECT_TRUE(false);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+TEST(SplineTests, GetOverlapMinimal)
+{
+	Spline spline;
+	constexpr Coord3D Dim{.x = 5, .y = 5, .z = 3}; // Très petit volume
+
+	// Génère des "billes" artificielles
+	std::vector beads(6, std::vector(Dim.GetSize(), 0.0));
+
+	// Remplit des cas différents pour chaque bille
+	// Bille 0 : bonne bille
+	std::iota(beads[0].begin(), beads[0].end(), 1.0);
+
+	// Bille 1 : contient des NaN
+	std::iota(beads[1].begin(), beads[1].end(), 1.0);
+	beads[1][6] = std::numeric_limits<double>::quiet_NaN();
+
+	// Bille 2 : complètement nulle
+	std::ranges::fill(beads[2], 0.0);
+
+	// Bille 3 : bonne, mais avec poids faible
+	std::iota(beads[3].begin(), beads[3].end(), 1.0);
+	matrix::Scale(beads[3], 0.5);
+
+	// Bille 4 : bonne, mais shift > 3
+	std::iota(beads[4].begin(), beads[4].end(), 1.0);
+
+	// Bille 5 : bonne mais différente (pour filtrage RMS)
+	std::ranges::fill(beads[5], 10.0);
+
+	// Shifts associés
+	const std::vector Shifts = {
+		Vec3{.x = 0.0, .y = 0.0, .z = 0.0}, // Valide
+		Vec3{.x = 0.0, .y = 0.0, .z = 0.0}, // NaN
+		Vec3{.x = 0.0, .y = 0.0, .z = 0.0}, // Nulle
+		Vec3{.x = 0.0, .y = 0.0, .z = 0.0}, // Poids faible
+		Vec3{.x = 4.0, .y = 0.0, .z = 0.0}, // >3 ⇒ filtré
+		Vec3{.x = 0.0, .y = 0.0, .z = 0.0}  // Différente pour test RMS élevé
+	};
+
+	// Poids initiaux
+	std::vector good{true, true, true, true, true, true};
+	std::vector weight{1.0, 1.0, 1.0, 0.1, 1.0, 1.0};
+	double norm = 0.0;
+
+	spline.SetMembers(Dim, 5, DISTANCE, DZ, SMOOTH_Z);
+	// changement des smallBeadSize pour avoir un equivalent
+	spline.smallXIndices_ = {1, 2, 3};
+	spline.smallZIndices_ = {1};
+
+	//Dimansions de la zone d'interet centrale.
+	spline.smallBeadSize_      = Coord3D{.x = spline.smallXIndices_.size(), .y = spline.smallXIndices_.size(), .z = spline.smallZIndices_.size()};
+	spline.smallBeadImSize_    = spline.smallBeadSize_.GetPlaneSize();
+	spline.smallBeadStackSize_ = spline.smallBeadSize_.GetSize();
+	spline.GetOverlap(beads, Shifts, good, weight, norm, false);
+
+	EXPECT_NEAR(norm, 43.2255, 1e-3) << "Mismatch for norm.";
+	const std::vector RefGood{true, true, false, true, false, true};
+	for (size_t i = 0; i < RefGood.size(); ++i) { EXPECT_EQ(RefGood[i], good[i]) << "Mismatch at good[" << i << "]"; }
+	const std::vector RefWeight{3.4486, 3.4486, std::numeric_limits<double>::quiet_NaN(), 8.94678, std::numeric_limits<double>::quiet_NaN(), 2.26343};
+	for (size_t i = 0; i < RefGood.size(); ++i) {
+		if (std::isnan(RefWeight[i])) { EXPECT_TRUE(std::isnan(weight[i])) << "Weight[" << i << "] expected to be NaN"; }
+		else { EXPECT_NEAR(RefWeight[i], weight[i], 1e-3) << "Mismatch at Weight[" << i << "]"; }
+	}
+
+	// Affichage pour vérification
+	//std::cout << "Norm : " << norm << "\n";
+	//std::cout << "Good : [";
+	//for (const auto& G : good) { std::cout << G << ", "; }
+	//std::cout << "]\nWeight : [";
+	//for (const auto& W : weight) { std::cout << W << ", "; }
+	//std::cout << "]\n";
+}
+
+
+//-------------------------------------------------------------------------------------------------
+TEST(SplineTests, GetOverlap)
+{
+	Spline spline;
+	std::vector<uint16_t> input;
+	Coord3D dim{};
+	// Charger l'image des billes
+	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
+
+	const std::vector<Coord> Beads = {
+		{.x = 25, .y = 19},
+		{.x = 93, .y = 27},
+		{.x = 122, .y = 61},
+		{.x = 43, .y = 70},
+		{.x = 44, .y = 82},
+		{.x = 90, .y = 110},
+		{.x = 28, .y = 118}
+	};
+
+	const std::vector<Vec3> Shifts = {
+		{.x = 0.0750, .y = -0.3625, .z = 0.0125},
+		{.x = -0.0125, .y = -0.1250, .z = 0},
+		{.x = -0.1375, .y = 0.4625, .z = 0},
+		{.x = 0.2000, .y = -0.2000, .z = 0},
+		{.x = 0.7250, .y = 0.4500, .z = 0},
+		{.x = -0.1250, .y = 0.2500, .z = 0}
+	};
+	spline.SetMembers(dim, ROI, DISTANCE, DZ, SMOOTH_Z);
+	const auto BeadsStack = spline.ExtractBeads(input.data(), Beads);
+	std::vector good(Beads.size(), true);
+	std::vector weight(Beads.size(), 1.0);
+	double norm;
+	spline.GetOverlap(BeadsStack, Shifts, good, weight, norm, false);
+
+	EXPECT_NEAR(norm, 7860.1429, 1e-3) << "Mismatch for norm.";
+	const std::vector RefGood{true, true, true, true, true, true, false};
+	for (size_t i = 0; i < RefGood.size(); ++i) { EXPECT_EQ(RefGood[i], good[i]) << "Mismatch at good[" << i << "]"; }
+	const std::vector RefWeight{58.646, 57.8895, 55.5306, 52.9919, 49.7937, 42.2984, std::numeric_limits<double>::quiet_NaN()};
+	for (size_t i = 0; i < RefGood.size(); ++i) {
+		if (std::isnan(RefWeight[i])) { EXPECT_TRUE(std::isnan(weight[i])) << "Weight[" << i << "] expected to be NaN"; }
+		else { EXPECT_NEAR(RefWeight[i], weight[i], 1e-3) << "Mismatch at Weight[" << i << "]"; }
+	}
+}
+
 
 //-------------------------------------------------------------------------------------------------
 TEST(SplineTests, Calibrate)

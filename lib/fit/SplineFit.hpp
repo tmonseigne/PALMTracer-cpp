@@ -63,7 +63,7 @@ protected:
 	void derivativeSpline(size_t x, size_t y, size_t z, const std::vector<double>& f, const std::vector<double>& dxf, const std::vector<double>& dyf,
 	                      const std::vector<double>& dzf, const std::vector<double>& p, std::vector<double>& dudt, double& model) const;
 
-	/// <summary> Met à jour le jacobien et l'hessienne pour le modèle MLE (Maximum Likelihood Estimation).
+	/// <summary>Met à jour le jacobien et l'hessienne pour le modèle MLE (Maximum Likelihood Estimation).
 	/// Utilise une vraisemblance basée sur la statistique de Poisson. </summary>
 	/// <param name="data">Valeur observée dans l'image.</param>
 	/// <param name="model">Valeur prédite par le modèle.</param>
@@ -74,7 +74,7 @@ protected:
 	void updateJacobianHessian(double data, double model, double& err, std::vector<double>& jacobian,
 	                           std::vector<double>& hessian, const std::vector<double>& dudt) const;
 
-	/// <summary> Met à jour les paramètres d’ajustement de type Levenberg-Marquardt.
+	/// <summary>Met à jour les paramètres d’ajustement de type Levenberg-Marquardt.
 	/// Modifie mu et lambda selon si l’itération précédente était un succès.</summary>
 	/// <param name="mu">Facteur de régularisation.</param>
 	/// <param name="lambda">Paramètre de contrôle LM.</param>

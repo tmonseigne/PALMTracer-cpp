@@ -44,13 +44,19 @@ public:
 	void Save(const std::string& filename);
 
 	// Future protected
-	void setMembers(const Coord3D& size, size_t roi, size_t distance, size_t dz, size_t smoothZ);
+	void SetMembers(const Coord3D& size, size_t roi, size_t distance, size_t dz, size_t smoothZ);
 
-	std::vector<std::vector<double>> extractBeads(const uint16_t* stack, const std::vector<Coord>& beads) const;
+	std::vector<std::vector<double>> ExtractBeads(const uint16_t* stack, const std::vector<Coord>& beads) const;
 
-	void registerPSF(std::vector<std::vector<double>>& beads) const;
+	std::vector<double> GetSubVolume(const std::vector<double>& volume, bool smallZ) const;
 
-	void alignToRef(std::vector<double>& ref, std::vector<std::vector<double>>& beads, bool smallZ = false);
+	void RegisterPSF(std::vector<std::vector<double>>& beads);
+
+	std::vector<Vec3> AlignToRef(const std::vector<double>& ref, std::vector<std::vector<double>>& beads, bool smallZ = false);
+
+	std::vector<std::vector<double>> softNormalization(std::vector<std::vector<double>>& beads);
+
+	void GetOverlap(const std::vector<std::vector<double>>& beads, const std::vector<Vec3>& shift, std::vector<bool>& good, std::vector<double>& weight, double& norm, bool smallZ = false) const;
 
 protected:
 };

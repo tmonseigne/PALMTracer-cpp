@@ -117,21 +117,24 @@ Vec3 Interpolation3D::SubpixelMax(const std::vector<double>& volume, const Coord
 	const int HalfN = N / 2;
 
 	double bestVal = -std::numeric_limits<double>::infinity();
-	Vec3 bestPos   = pos;
-
+	Vec3 res{};
 	for (int dz = -HalfN; dz <= HalfN; ++dz) {
+		Vec3 shift{};
+		shift.z = dz * delta;
 		for (int dy = -HalfN; dy <= HalfN; ++dy) {
+			shift.y = dy * delta;
 			for (int dx = -HalfN; dx <= HalfN; ++dx) {
-				const Vec3 SamplePos = {.x = pos.x + dx * delta, .y = pos.y + dy * delta, .z = pos.z + dz * delta};
+				shift.x              = dx * delta;
+				const Vec3 SamplePos = pos + shift;
 				const double V       = trilinear(volume, size, SamplePos);
 				if (!std::isnan(V) && V > bestVal) {
 					bestVal = V;
-					bestPos = SamplePos;
+					res     = shift;
 				}
 			}
 		}
 	}
-	return bestPos;
+	return res;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -214,25 +217,31 @@ std::vector<double> Interpolation3D::Shift(const std::vector<double>& volume, co
 }
 
 //-------------------------------------------------------------------------------------------------
-Vec3 Interpolation3D::GetShift(const std::vector<double>& ref, const std::vector<double>& target, const Coord3D& size) const
+Vec3 Interpolation3D::GetShift(const std::vector<double>& ref, const std::vector<double>& target, const Coord3D& size)
 {
 	if (std::accumulate(ref.begin(), ref.end(), 0.0) == 0.0 || std::accumulate(target.begin(), target.end(), 0.0) == 0.0) {
 		return {.x = 0.0, .y = 0.0, .z = 0.0};
 	}
 
-	// Interpolation de facteur 2
+
+	// Interpolation de niveau 2
+	constexpr size_t ZoomLevel  = 2, // Niveau de Zoom de l'image HD
+	                 ZoomFactor = 4; // Diviser le shift final par ce nombre pour revenir à l'échelle initiale (2^ZoomLevel)
 	Coord3D size2X{};
-	auto refHD = Zoom(ref, size, 2, size2X);
-	auto tarHD = Zoom(target, size, 2, size2X);
+	auto refHD = Zoom(ref, size, ZoomLevel, size2X);
+
+	// Changement de mode pour l'élément shifté à cause des 0.
+	// Reproduire le comportement matlab est impossible pour le moment. Cette interpolation est la plus proche.
+	const auto PreviousMode = mode_;
+	mode_                   = interpolation_mode::cubic_weight;
+	auto tarHD              = Zoom(target, size, ZoomLevel, size2X);
+	mode_                   = PreviousMode;
 
 	// Normalisation (mean)
 	const double MuRef = std::accumulate(refHD.begin(), refHD.end(), 0.0) / static_cast<double>(refHD.size());
 	const double MuTar = std::accumulate(tarHD.begin(), tarHD.end(), 0.0) / static_cast<double>(tarHD.size());
-	std::cout << "MuRef " << MuRef << ", MuTar " << MuTar << "\n";
 	for (double& v : refHD) { v /= MuRef; }
 	for (double& v : tarHD) { v /= MuTar; }
-	std::cout << "size " << size << "\n";
-	std::cout << "size2X " << size2X << "\n";
 
 	// FFT3D & Produit croisé
 	std::vector<std::complex<double>> fftRef, fftTar, fftG;
@@ -257,28 +266,15 @@ Vec3 Interpolation3D::GetShift(const std::vector<double>& ref, const std::vector
 
 	// Maximum brut + interpolation locale
 	const auto It = std::ranges::max_element(spatialG, [](const double a, const double b) { return std::isnan(a) || (!std::isnan(b) && a < b); });
-
-	Vec3 peak{};
+	Vec3 shift{};
 	if (It != spatialG.end()) {
 		const size_t Idx = std::distance(spatialG.begin(), It);
-		const Vec3 P = CoordToVec(GetCoord3D(Idx, size2X));
+		const Vec3 P     = CoordToVec(GetCoord3D(Idx, size2X));
 		// Subpixel refinement par interpolation
-		peak = SubpixelMax(spatialG, size2X, P);
-	}
-	else {
-		// Valeur par défaut
-		peak = Vec3{
-			.x = static_cast<double>(size2X.x + 1) / 2.0,
-			.y = static_cast<double>(size2X.y + 1) / 2.0,
-			.z = static_cast<double>(size2X.z + 1) / 2.0
-		};
+		shift = SubpixelMax(spatialG, size2X, P);
 	}
 
-	// Calcul du décalage final (rescale / recentrage)
-	return {
-		.x = (peak.x - 2.0 * static_cast<double>(size.x) + 1) / 4.0,
-		.y = (peak.y - 2.0 * static_cast<double>(size.y) + 1) / 4.0,
-		.z = (peak.z - 2.0 * static_cast<double>(size.z) + 1) / 4.0
-	};
+	// Calcul du décalage final à l'échelle originale
+	return shift / ZoomFactor;
 }
 } // namespace palm_tracer

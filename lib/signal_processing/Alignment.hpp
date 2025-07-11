@@ -16,7 +16,7 @@
 #include "Structs.hpp"
 
 namespace palm_tracer {
-/// <summary> Classe pour l'alignement optique d'une pile d'images 3D avec déformation non linéaire. </summary>
+/// <summary>Classe pour l'alignement optique d'une pile d'images 3D avec déformation non linéaire. </summary>
 ///
 /// Cette classe applique un recalage non linéaire à une pile d'images 3D (Z-stacks) en utilisant un modèle polynomial 3e degré.
 /// Elle peut soit estimer les coefficients à partir de deux images de référence (fort/faible SNR), soit appliquer des coefficients pré-calculés.
@@ -45,7 +45,7 @@ public:
 	void Align(const uint16_t* input, uint16_t* output, const Coord3D& size, const std::array<std::array<double, 10>, 2>& factors, size_t upsampling = 1);
 
 protected:
-	/// <summary> Structure permettant de stocker les contributions sur la sortie. </summary>
+	/// <summary>Structure permettant de stocker les contributions sur la sortie. </summary>
 	struct Contribution {
 		size_t index;  ///< Index sur l'image en entrée.
 		double weight; ///< Poids du pixel.
