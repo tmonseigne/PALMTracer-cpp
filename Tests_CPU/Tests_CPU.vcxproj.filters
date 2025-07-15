@@ -47,6 +47,7 @@
     <ClCompile Include="..\lib\signal_processing\Alignment.cpp">
       <Filter>lib</Filter>
     </ClCompile>
+    <ClCompile Include="test_sp_Matrix.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TiffManagement.hpp" />

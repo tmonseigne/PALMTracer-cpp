@@ -91,6 +91,42 @@ double MeanWithMask(const std::vector<double>& data, const std::vector<bool>& ma
 }
 
 //-------------------------------------------------------------------------------------------------
+double Median(const std::vector<double>& data)
+{
+	std::vector<double> filtered;
+	for (const double V : data) { if (std::isfinite(V)) { filtered.push_back(V); } }
+	if (filtered.empty()) { return std::numeric_limits<double>::quiet_NaN(); }
+
+	const size_t Mid = filtered.size() / 2;
+	// nth_element assure que les n premiers éléments sont plus petits que les n suivants, mais tout n'est pas trié.
+	std::ranges::nth_element(filtered, filtered.begin() + static_cast<int64_t>(Mid));
+	if (filtered.size() % 2 == 1) { return filtered[Mid]; } // Si impair, l'index central est le bon, sinon il s'agit du ratio entre les 2 éléments centraux.
+	const auto A = *std::max_element(filtered.begin(), filtered.begin() + static_cast<int64_t>(Mid));
+	return (A + filtered[Mid]) * 0.5;
+}
+
+//-------------------------------------------------------------------------------------------------
+double Quantile(const std::vector<double>& data, const double q)
+{
+	std::vector<double> filtered;
+	for (const double V : data) { if (std::isfinite(V)) { filtered.push_back(V); } }
+	if (filtered.empty()) { return std::numeric_limits<double>::quiet_NaN(); }
+
+	std::ranges::sort(filtered); // Tri complet du tableau
+
+	// Index réel (interpolation linéaire)
+	const double Pos   = q * static_cast<double>(filtered.size() - 1);
+	const size_t Low   = static_cast<size_t>(std::floor(Pos));
+	const size_t High  = static_cast<size_t>(std::ceil(Pos));
+	const double Alpha = Pos - static_cast<double>(Low);
+
+	// L'index est celui le plus proche du Quantile demandé si l'on veut le quantile précis, il faut interpoler entre les 2 index les plus proches.
+	// const size_t Idx = std::clamp(static_cast<size_t>(pos), static_cast<size_t>(0), filtered.size() - 1);
+	if (Low == High) { return filtered[Low]; }
+	return (1.0 - Alpha) * filtered[Low] + Alpha * filtered[High];
+}
+
+//-------------------------------------------------------------------------------------------------
 double RmsDifference(const std::vector<double>& a, const std::vector<double>& b)
 {
 	assert(a.size() == b.size());
@@ -142,6 +178,16 @@ void Crop(std::vector<double>& data, Coord3D& size, const bool cropX, const bool
 
 	data = std::move(crop);
 	size = NewSize;
+}
+
+//-------------------------------------------------------------------------------------------------
+std::vector<double> ExtractSubVolume(const std::vector<double>& data, const Coord3D& size, const std::vector<size_t>& xrange,
+                                     const std::vector<size_t>& yrange, const std::vector<size_t>& zrange)
+{
+	std::vector<double> out;
+	out.reserve(xrange.size() * yrange.size() * zrange.size());
+	for (const size_t Z : zrange) { for (const size_t Y : yrange) { for (const size_t X : xrange) { out.push_back(data[(Z * size.y + Y) * size.x + X]); } } }
+	return out;
 }
 
 //======================================================

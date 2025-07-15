@@ -88,6 +88,12 @@ double MeanValid(const std::vector<double>& data);
 /// <returns>Moyenne des valeurs valides et masquées, ou NaN si aucune valeur valide.</returns>
 double MeanWithMask(const std::vector<double>& data, const std::vector<bool>& mask);
 
+/// <summary> Renvoie la médiane d’un vecteur de valeurs (en ignorant les NaN). </summary>
+double Median(const std::vector<double>& data);
+
+/// <summary> Renvoie un quantile donné (e.g., 0.75 pour le 75e percentile), en ignorant les NaN.</summary>
+double Quantile(const std::vector<double>& data, double q);
+
 /// <summary>Multiplie tous les éléments d'un vecteur par un facteur donné (modifie en place). </summary>
 /// <param name="data">Vecteur à modifier.</param>
 /// <param name="factor">Facteur multiplicatif.</param>
@@ -123,6 +129,16 @@ void Normalisation(std::vector<double>& a, bool shift = true);
 /// <param name="cropY">Coupe la première et dernière ligne (y).</param>
 /// <param name="cropZ">Coupe le premier et dernier plan (z).</param>
 void Crop(std::vector<double>& data, Coord3D& size, bool cropX = true, bool cropY = true, bool cropZ = true);
+
+/// <summary> Extrait un sous-volume 3D depuis un volume d'entrée 1D donné des indices spécifiques. </summary>
+/// <param name="data">Données 1D représentant un volume 3D.</param>
+/// <param name="size">Dimensions initiales du volume.</param>
+/// <param name="xrange">Indices en X.</param>
+/// <param name="yrange">Indices en Y.</param>
+/// <param name="zrange">Indices en Z.</param>
+/// <returns>Volume extrait (1D, de taille xr.size() * yr.size() * zr.size()).</returns>
+std::vector<double> ExtractSubVolume(const std::vector<double>& data, const Coord3D& size, const std::vector<size_t>& xrange,
+                                     const std::vector<size_t>& yrange, const std::vector<size_t>& zrange);
 
 //======================================================
 //==================== Manipulation ====================
