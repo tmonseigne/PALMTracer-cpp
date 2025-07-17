@@ -156,42 +156,43 @@ std::vector<std::vector<double>> Spline::ExtractBeads(const uint16_t* stack, con
 std::vector<double> Spline::RegisterPSF(std::vector<std::vector<double>>& beads) const
 {
 	// On prend les N meilleures billes pour faire une moyenne, mais pas moins de 5 sauf si moins de 5 billes au départ.
-	const size_t Nref = std::min<size_t>(std::max<size_t>(5, beads.size() / 2), beads.size());
-	std::vector goods(beads.size(), true);  // Liste des billes utilisables
-	std::vector weights(beads.size(), 1.0); // Poids de chaque bille
+	const size_t Nbeads = beads.size();
+	const size_t Nref   = std::min<size_t>(std::max<size_t>(5, Nbeads / 2), Nbeads);
+	std::vector goods(Nbeads, true);  // Liste des billes utilisables
+	std::vector weights(Nbeads, 1.0); // Poids de chaque bille
 	double norm = 0.0;
 
-	//Création de la PSF de référence moyenne sur le volume complet
 	std::vector mu(beadSize_, 0.0);
-	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(beadSize_); ++i) {
-		double sum = 0.0;
-		for (size_t b = 0; b < Nref; ++b) { sum += beads[b][i]; }
-		mu[i] = sum / static_cast<double>(Nref);
-	}
+	// Fonciton locale de calcul de moyenne à travers les billes
+	auto beadMean = [&](const bool update) {
+		#pragma omp parallel for
+		for (int i = 0; i < static_cast<int>(beadSize_); ++i) {
+			double sum   = 0.0;
+			size_t count = 0;
+
+			for (size_t b = 0; b < Nref; ++b) {
+				if (goods[b]) {
+					const double Val = beads[b][i];
+					if (!std::isnan(Val)) {
+						sum += Val;
+						++count;
+					}
+				}
+			}
+			mu[i] = (count > 0) ? sum / static_cast<double>(count) : (update ? mu[i] : std::numeric_limits<double>::quiet_NaN());
+		}
+	};
+
+	//Création de la PSF de référence moyenne sur le volume complet
+	beadMean(false);
 
 	// Première passe sur l'intégralité du Z.
 	const auto Shifts    = AlignToRef(mu, beads, false);        // Alignement
 	const auto BeadsNorm = SoftNormalization(beads);            // Normalization douce
 	GetOverlap(BeadsNorm, Shifts, goods, weights, norm, false); // Suppression des outliers
 
-	// Recalcul de la PSF de référence moyenne des billes utilisables sur le volume complet
-	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(beadSize_); ++i) {
-		double sum   = 0.0;
-		size_t count = 0;
-
-		for (size_t b = 0; b < Nref; ++b) {
-			if (goods[b]) {
-				const double Val = beads[b][i];
-				if (!std::isnan(Val)) {
-					sum += Val;
-					++count;
-				}
-			}
-		}
-		if (count > 0) { mu[i] = sum / static_cast<double>(count); } // Mise à jour uniquement si j'ai eu des valeurs valides.
-	}
+	// Recalcul de la PSF de référence moyenne des billes utilisables sur le volume complet (masi évite d'ajouter des nan
+	beadMean(true);
 
 	// Seconde passe sur le sous-ensemble d'intérêt au niveau du Z.
 	AlignToRef(mu, beads, true);                                                              // Alignement basé sur le sous-ensemble d'intérêt au niveau du Z.
@@ -201,23 +202,7 @@ std::vector<double> Spline::RegisterPSF(std::vector<std::vector<double>>& beads)
 	for (size_t i = 0; i < 3; ++i) { GetOverlap(beads, Shifts, goods, weights, norm, true); } // Lancement 3 fois pour mettre à jour le poids plusieurs fois
 	for (auto& b : beads) { matrix::Scale(b, 1 / norm); }                                     // Scale des billes
 
-
-	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(beadSize_); ++i) {
-		double sum   = 0.0;
-		size_t count = 0;
-
-		for (size_t b = 0; b < Nref; ++b) {
-			if (goods[b]) {
-				const double Val = beads[b][i];
-				if (!std::isnan(Val)) {
-					sum += Val;
-					++count;
-				}
-			}
-		}
-		mu[i] = (count > 0) ? (sum / count) : std::numeric_limits<double>::quiet_NaN();
-	}
+	beadMean(false);
 	return mu;
 }
 
