@@ -23,16 +23,16 @@ public:
 	size_t imSize_{},
 	       stackSize_{},
 	       beadImSize_{},
-	       beadStackSize_{},
+	       beadSize_{},
 	       smallBeadImSize_{},
-	       smallBeadStackSize_{},
+	       smallBeadSize_{},
 
 	       distanceHalf_{},
 	       dz_{},
 	       smoothZ_{};
 
-	Coord3D size_{}, beadSize_{}, midBead_{}, smallBeadSize_{};
-	std::vector<size_t> smallXIndices_, smallZIndices_;
+	Coord3D dim_{}, beadDim_{}, midBead_{}, smallBeadDim_{};
+	std::vector<size_t> smallXIndices_, smallZIndices_, zIndices_;
 
 	Spline()  = default;
 	~Spline() = default;
@@ -44,17 +44,15 @@ public:
 	void Save(const std::string& filename);
 
 	// Future protected
-	void SetMembers(const Coord3D& size, size_t roi, size_t distance, size_t dz, size_t smoothZ);
+	void SetMembers(const Coord3D& dim, size_t roi, size_t distance, size_t dz, size_t smoothZ);
 
 	std::vector<std::vector<double>> ExtractBeads(const uint16_t* stack, const std::vector<Coord>& beads) const;
 
-	[[nodiscard]] std::vector<double> GetSubVolume(const std::vector<double>& volume, bool smallZ) const;
-
-	void RegisterPSF(std::vector<std::vector<double>>& beads);
+	std::vector<double> RegisterPSF(std::vector<std::vector<double>>& beads) const;
 
 	std::vector<Vec3> AlignToRef(const std::vector<double>& ref, std::vector<std::vector<double>>& beads, bool smallZ = false) const;
 
-	std::vector<std::vector<double>> softNormalization(std::vector<std::vector<double>>& beads);
+	std::vector<std::vector<double>> SoftNormalization(const std::vector<std::vector<double>>& beads) const;
 
 	void GetOverlap(const std::vector<std::vector<double>>& beads, const std::vector<Vec3>& shift, std::vector<bool>& good, std::vector<double>& weight,
 	                double& norm, bool smallZ = false) const;

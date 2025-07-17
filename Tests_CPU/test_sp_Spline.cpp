@@ -17,7 +17,7 @@ constexpr size_t ROI      = 29,
                  SMOOTH_Z = 1;
 
 //-------------------------------------------------------------------------------------------------
-TEST(SplineTests, setMembers)
+TEST(SplineTests, SetMembers)
 {
 	Spline spline;
 	std::vector<uint16_t> input;
@@ -35,7 +35,7 @@ TEST(SplineTests, setMembers)
 }
 
 //-------------------------------------------------------------------------------------------------
-TEST(SplineTests, extractBeads)
+TEST(SplineTests, ExtractBeads)
 {
 	Spline spline;
 	std::vector<uint16_t> input;
@@ -105,30 +105,6 @@ TEST(SplineTests, extractBeads)
 }
 
 //-------------------------------------------------------------------------------------------------
-TEST(SplineTests, GetSubVolume)
-{
-	Spline spline;
-	constexpr Coord3D Size = {.x = 5, .y = 5, .z = 5};
-	std::vector<double> volume(125);
-	std::iota(volume.begin(), volume.end(), 1);
-	matrix::Print(volume, Size);
-
-	spline.SetMembers(Size, 3, 3, DZ, SMOOTH_Z);
-	// On bidouille pour appeler le volume directement
-	spline.beadSize_      = Size;
-	spline.beadImSize_    = spline.beadSize_.GetPlaneSize();
-	spline.beadStackSize_ = spline.beadSize_.GetSize();
-	spline.midBead_       = spline.beadSize_.GetMid();
-	spline.smallXIndices_ = {1, 2, 3};
-
-	auto sub = spline.GetSubVolume(volume, false);
-	matrix::Print(sub, Coord3D{.x = 3, .y = 3, .z = 5});
-
-	sub = spline.GetSubVolume(volume, true);
-	matrix::Print(sub, Coord3D{.x = 3, .y = 3, .z = 3});
-}
-
-//-------------------------------------------------------------------------------------------------
 TEST(SplineTests, Align)
 {
 	Spline spline;
@@ -153,9 +129,9 @@ TEST(SplineTests, Align)
 	const size_t Nref = std::min<size_t>(std::max<size_t>(5, Beads.size() / 2), Beads.size());
 
 	//Création de la PSF de référence moyenne sur le volume complet
-	std::vector mu(spline.beadStackSize_, 0.0);
+	std::vector mu(spline.beadSize_, 0.0);
 	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(spline.beadStackSize_); ++i) {
+	for (int i = 0; i < static_cast<int>(spline.beadSize_); ++i) {
 		double sum = 0.0;
 		for (size_t b = 0; b < Nref; ++b) { sum += beadsStack[b][i]; }
 		mu[i] = sum / static_cast<double>(Nref);
@@ -168,10 +144,9 @@ TEST(SplineTests, Align)
 	//	 0.2,    -0.2,    0
 	//	 0.725,   0.45,   0
 	//	-0.125,   0.25,   0
-	//Print(beadsStack[0], spline.beadSize_);
-	EXPECT_TRUE(false);
+	//Print(beadsStack[0], spline.beadDim_);
+	EXPECT_TRUE(false) << "Dans Matlab, l'interpolation d'une matrice contenant des 0 est différente donc ce test utilisant une interpolation sur ce type de matrice échoue également.";
 }
-
 
 //-------------------------------------------------------------------------------------------------
 TEST(SplineTests, GetOverlapMinimal)
@@ -224,9 +199,9 @@ TEST(SplineTests, GetOverlapMinimal)
 	spline.smallZIndices_ = {1};
 
 	//Dimansions de la zone d'interet centrale.
-	spline.smallBeadSize_      = Coord3D{.x = spline.smallXIndices_.size(), .y = spline.smallXIndices_.size(), .z = spline.smallZIndices_.size()};
-	spline.smallBeadImSize_    = spline.smallBeadSize_.GetPlaneSize();
-	spline.smallBeadStackSize_ = spline.smallBeadSize_.GetSize();
+	spline.smallBeadDim_    = Coord3D{.x = spline.smallXIndices_.size(), .y = spline.smallXIndices_.size(), .z = spline.smallZIndices_.size()};
+	spline.smallBeadImSize_ = spline.smallBeadDim_.GetPlaneSize();
+	spline.smallBeadSize_   = spline.smallBeadDim_.GetSize();
 	spline.GetOverlap(beads, Shifts, good, weight, norm, false);
 
 	EXPECT_NEAR(norm, 43.2255, 1e-3) << "Mismatch for norm.";
@@ -290,6 +265,129 @@ TEST(SplineTests, GetOverlap)
 		if (std::isnan(RefWeight[i])) { EXPECT_TRUE(std::isnan(weight[i])) << "Weight[" << i << "] expected to be NaN"; }
 		else { EXPECT_NEAR(RefWeight[i], weight[i], 1e-3) << "Mismatch at Weight[" << i << "]"; }
 	}
+}
+
+//-------------------------------------------------------------------------------------------------
+TEST(SplineTests, SoftNormalizationMinimal)
+{
+	Spline spline;
+	constexpr Coord3D Dim{.x = 5, .y = 5, .z = 3}; // Très petit volume
+	const size_t N        = Dim.GetSize();
+	constexpr size_t Nvol = 3;
+
+	// Génère des "billes" artificielles
+	std::vector<std::vector<double>> beads(Nvol, std::vector<double>(N, 0.0));
+
+	// Bille 0 : gradient croissant
+	std::iota(beads[0].begin(), beads[0].end(), 1.0);
+
+	// Bille 1 : *2 du volume 0
+	std::ranges::transform(beads[0], beads[1].begin(), [](const double v) { return v * 2.0; });
+
+	// Bille 2 : bruité avec NaNs
+	std::iota(beads[2].begin(), beads[2].end(), 1.0);
+	beads[2][6]  = std::numeric_limits<double>::quiet_NaN();
+	beads[2][43] = std::numeric_limits<double>::quiet_NaN();
+
+	spline.SetMembers(Dim, 5, DISTANCE, DZ, SMOOTH_Z);
+	spline.smallZIndices_ = {0, 1, 2};
+	const auto BeadsNorm  = spline.SoftNormalization(beads);
+
+	// Vérifications : les volumes 0 et 1 doivent être très proches après normalisation
+	for (size_t i = 0; i < N; ++i) {
+		if (std::isfinite(BeadsNorm[0][i]) && std::isfinite(BeadsNorm[1][i])) { EXPECT_NEAR(BeadsNorm[0][i], BeadsNorm[1][i], 1e-3); }
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+TEST(SplineTests, SoftNormalization)
+{
+	Spline spline;
+	std::vector<uint16_t> input;
+	Coord3D dim{};
+	// Charger l'image des billes
+	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
+
+	const std::vector<Coord> Beads = {
+		{.x = 25, .y = 19},
+		{.x = 93, .y = 27},
+		{.x = 122, .y = 61},
+		{.x = 43, .y = 70},
+		{.x = 44, .y = 82},
+		{.x = 90, .y = 110},
+		{.x = 28, .y = 118}
+	};
+
+	spline.SetMembers(dim, ROI, DISTANCE, DZ, SMOOTH_Z);
+	const auto BeadsStack = spline.ExtractBeads(input.data(), Beads);
+	const auto BeadsNorm  = spline.SoftNormalization(BeadsStack);
+	// Affichage pour vérification
+	matrix::Print(BeadsNorm[0], spline.beadDim_);
+}
+
+//-------------------------------------------------------------------------------------------------
+TEST(SplineTests, RegisterPSFMinimal)
+{
+	Spline spline;
+	constexpr Coord3D Dim{.x = 7, .y = 7, .z = 5}; // Très petit volume
+	const size_t N        = Dim.GetSize();
+	constexpr size_t Nvol = 3;
+
+	// Génère des "billes" artificielles
+	std::vector<std::vector<double>> beads(Nvol, std::vector<double>(N, 0.0));
+
+	// Bille 0 : gradient croissant
+	std::iota(beads[0].begin(), beads[0].end(), 1.0);
+
+	// Bille 1 : *2 du volume 0
+	std::ranges::transform(beads[0], beads[1].begin(), [](const double v) { return v * 2.0; });
+
+	// Bille 2 : bruité avec NaNs
+	std::iota(beads[2].begin(), beads[2].end(), 1.0);
+	beads[2][8]  = std::numeric_limits<double>::quiet_NaN();
+	beads[2][73] = std::numeric_limits<double>::quiet_NaN();
+	//matrix::Print(beads[2], Dim);
+
+	spline.SetMembers(Dim, 5, DISTANCE, DZ, SMOOTH_Z);
+	// changement des smallBeadSize pour avoir un equivalent
+	spline.smallXIndices_ = {1, 2, 3, 4, 5};
+	spline.smallZIndices_ = {1, 2, 3};
+
+	//Dimansions de la zone d'interet centrale.
+	spline.smallBeadDim_    = Coord3D{.x = spline.smallXIndices_.size(), .y = spline.smallXIndices_.size(), .z = spline.smallZIndices_.size()};
+	spline.smallBeadImSize_ = spline.smallBeadDim_.GetPlaneSize();
+	spline.smallBeadSize_   = spline.smallBeadDim_.GetSize();
+
+	const auto PSF = spline.RegisterPSF(beads);
+	matrix::Print(PSF, Dim);
+	EXPECT_TRUE(false) << "Dans Matlab, l'interpolation d'une matrice contenant des 0 est différente donc l'alignement interne à registerPSF utilisant une interpolation sur ce type de matrice échoue également.";
+}
+
+//-------------------------------------------------------------------------------------------------
+TEST(SplineTests, RegisterPSF)
+{
+	Spline spline;
+	std::vector<uint16_t> input;
+	Coord3D dim{};
+	// Charger l'image des billes
+	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
+
+	const std::vector<Coord> Beads = {
+		{.x = 25, .y = 19},
+		{.x = 93, .y = 27},
+		{.x = 122, .y = 61},
+		{.x = 43, .y = 70},
+		{.x = 44, .y = 82},
+		{.x = 90, .y = 110},
+		{.x = 28, .y = 118}
+	};
+
+	spline.SetMembers(dim, ROI, DISTANCE, DZ, SMOOTH_Z);
+	const auto BeadsStack = spline.ExtractBeads(input.data(), Beads);
+	const auto BeadsNorm  = spline.SoftNormalization(BeadsStack);
+	// Affichage pour vérification
+	matrix::Print(BeadsNorm[0], spline.beadDim_);
+	EXPECT_TRUE(false) << "Dans Matlab, l'interpolation d'une matrice contenant des 0 est différente donc l'alignement interne à registerPSF utilisant une interpolation sur ce type de matrice échoue également.";
 }
 
 

@@ -18,37 +18,13 @@ namespace palm_tracer {
 void Spline::Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, const Coord3D& size, const size_t roi,
                        const size_t distance, const size_t dz, const size_t smoothZ)
 {
-	/**
-	 Pour faire le fichier de calibration : Les billes doivent être pile sur la hauteur de la Frame (Nframe / 2)
-	 les N premiere frame sont au dessus des billes, la frame N/2 est pile sur les billes et les N dernieres frmaes sont en dessous.
-	 On bouge d'un pas de N nanomètres à chaque frame. (donc si 51 frame avec un pas de 10 on vas de -250nm à + 250nm)
-
-	========== calibrate3D_g.m ==========
-	Calcul des positions des billes (x,y)
-	supression des billes non valide
-	midpoint = moitié du nombre de frame
-
-	========== calibrate3D_g.m ==========
-	Récupération des ROI sur les N frames pour les N billes (RoiX, RoiY, Z, N Billes)
-	sstack = size(beads(1).stack.image);
-	beadsStack = zeros(sstack(1), sstack(2), sstack(3), length(beads)) + NaN;
-	allstackst = zeros(sstack(1), sstack(2), sstack(3), length(beads)) + NaN;
-	Récupération de la frame du milieu (Z / 2)
-	halfstoreframes = round((size(beads(1).stack.image, 3) - 1) / 2);
-	Calcul d'une psf moyenne sur X,Y,Z
-	mstack = mean(beadsStack, 4, 'omitnan');				% Moyenne sur le nombre de billes (une somme serait suffisante vu la normalisation
-	mstack = mstack - min(mstack(:), [], 'omitnan');	% Décalage vers 0
-	mstack = mstack / sum(mstack(:), 'omitnan');		% Normalisation
-
-	 *
-	 */
 	SetMembers(size, roi, distance, dz, smoothZ);
 
 	// Récupération des volumes des billes sur l'image Décallé vers zéro (soustraction du minimum de l'image)
 	auto beadsStack = ExtractBeads(stack, beads);
 	std::cout << beadsStack.size() << "\t" << beadsStack[0].size() << "\n";
 	for (size_t i = 0; i < 5; ++i) {
-		const size_t RoiIdx = i * beadSize_.x;
+		const size_t RoiIdx = i * beadDim_.x;
 		std::cout << "[";
 		for (size_t j = 0; j < 5; ++j) { std::cout << beadsStack[0][RoiIdx + j] << "    "; }
 		std::cout << "]\n";
@@ -58,18 +34,18 @@ void Spline::Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, c
 }
 
 //-------------------------------------------------------------------------------------------------
-void Spline::SetMembers(const Coord3D& size, const size_t roi, const size_t distance, const size_t dz, const size_t smoothZ)
+void Spline::SetMembers(const Coord3D& dim, const size_t roi, const size_t distance, const size_t dz, const size_t smoothZ)
 {
 	const size_t NewRoi = roi % 2 == 0 ? roi - 1 : roi; // ROI doit-être impair. Pour éviter les effets de bords, on soustrait en cas de nombre pair.
 
-	size_      = size;
-	imSize_    = size_.GetPlaneSize();
-	stackSize_ = size_.GetSize();
+	dim_       = dim;
+	imSize_    = dim_.GetPlaneSize();
+	stackSize_ = dim_.GetSize();
 
-	beadSize_      = Coord3D{.x = NewRoi, .y = NewRoi, .z = size_.z % 2 == 0 ? size_.z - 1 : size_.z}; // Garanti un z impair
-	beadImSize_    = beadSize_.GetPlaneSize();
-	beadStackSize_ = beadSize_.GetSize();
-	midBead_       = beadSize_.GetMid();
+	beadDim_    = Coord3D{.x = NewRoi, .y = NewRoi, .z = dim_.z % 2 == 0 ? dim_.z - 1 : dim_.z}; // Garanti un z impair
+	beadImSize_ = beadDim_.GetPlaneSize();
+	beadSize_   = beadDim_.GetSize();
+	midBead_    = beadDim_.GetMid();
 
 	distanceHalf_ = distance / 2;
 	dz_           = dz;
@@ -82,22 +58,25 @@ void Spline::SetMembers(const Coord3D& size, const size_t roi, const size_t dist
 	             EndX              = midBead_.x + HalfWindow;                 // Avec la division entière End < roi_
 
 	// Génère la plage d’indices du centre de la ROI de taille maximum 13.
-	smallXIndices_.clear();              // Remise à 0 du vecteur (en cas d'appels répétés)
-	smallXIndices_.reserve(beadSize_.x); // taille max du range intégralité de la psf récupéré
+	smallXIndices_.clear();             // Remise à 0 du vecteur (en cas d'appels répétés)
+	smallXIndices_.reserve(beadDim_.x); // taille max du range intégralité de la psf récupéré
 	for (size_t i = StartX; i <= EndX; ++i) { smallXIndices_.push_back(i); }
 
 	// Calcul de la zone d'interet centrale sur Z.
 	const size_t StartZ = std::max(0, static_cast<int>(midBead_.z - distanceHalf_)),
-	             EndZ   = std::min(static_cast<int>(midBead_.z + distanceHalf_), static_cast<int>(beadSize_.z) - 1);
+	             EndZ   = std::min(static_cast<int>(midBead_.z + distanceHalf_), static_cast<int>(beadDim_.z) - 1);
 	// Génère la plage d’indices des plans autour du centre.
-	smallZIndices_.clear();              // Remise à 0 du vecteur (en cas d'appels répétés)
-	smallZIndices_.reserve(beadSize_.z); // taille max du range intégralité de la psf récupéré
+	smallZIndices_.clear();             // Remise à 0 du vecteur (en cas d'appels répétés)
+	smallZIndices_.reserve(beadDim_.z); // taille max du range intégralité de la psf récupéré
 	for (size_t i = StartZ; i <= EndZ; ++i) { smallZIndices_.push_back(i); }
 
-	//Dimansions de la zone d'interet centrale.
-	smallBeadSize_      = Coord3D{.x = smallXIndices_.size(), .y = smallXIndices_.size(), .z = smallZIndices_.size()};
-	smallBeadImSize_    = smallBeadSize_.GetPlaneSize();
-	smallBeadStackSize_ = smallBeadSize_.GetSize();
+	zIndices_.resize(beadDim_.z);
+	std::iota(zIndices_.begin(), zIndices_.end(), 0); // Remplit avec 0, 1, ..., N-1
+
+	//Dimensions de la zone d'interet centrale.
+	smallBeadDim_    = Coord3D{.x = smallXIndices_.size(), .y = smallXIndices_.size(), .z = smallZIndices_.size()};
+	smallBeadImSize_ = smallBeadDim_.GetPlaneSize();
+	smallBeadSize_   = smallBeadDim_.GetSize();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -105,7 +84,7 @@ std::vector<std::vector<double>> Spline::ExtractBeads(const uint16_t* stack, con
 {
 	const size_t Nbeads   = beads.size();
 	const uint16_t Minima = *std::min_element(stack, stack + stackSize_);
-	std::vector beadsStack(Nbeads, std::vector(beadStackSize_, 0.0));
+	std::vector beadsStack(Nbeads, std::vector(beadSize_, 0.0));
 
 	// Extraction des PSF individuelles
 	#pragma omp parallel for
@@ -114,24 +93,24 @@ std::vector<std::vector<double>> Spline::ExtractBeads(const uint16_t* stack, con
 		auto& s              = beadsStack[b];
 
 		Coord3D posBead{};
-		for (posBead.z = 0; posBead.z < beadSize_.z; ++posBead.z) {
+		for (posBead.z = 0; posBead.z < beadDim_.z; ++posBead.z) {
 			Coord3D pos{};
 			pos.z = posBead.z;
-			for (posBead.y = 0; posBead.y < beadSize_.y; ++posBead.y) {
+			for (posBead.y = 0; posBead.y < beadDim_.y; ++posBead.y) {
 				pos.y = Yb - midBead_.y + posBead.y;
-				for (posBead.x = 0; posBead.x < beadSize_.x; ++posBead.x) {
-					pos.x                          = Xb - midBead_.x + posBead.x;
-					s[posBead.GetIndex(beadSize_)] = static_cast<double>(stack[pos.GetIndex(size_)] - Minima);
+				for (posBead.x = 0; posBead.x < beadDim_.x; ++posBead.x) {
+					pos.x                         = Xb - midBead_.x + posBead.x;
+					s[posBead.GetIndex(beadDim_)] = static_cast<double>(stack[pos.GetIndex(dim_)] - Minima);
 				}
 			}
 		}
 	}
 
 	// Calcul de la PSF moyenne (somme avec NaN ignorés)
-	std::vector mu(beadStackSize_, 0.0);
+	std::vector mu(beadSize_, 0.0);
 
 	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(beadStackSize_); ++i) {
+	for (int i = 0; i < static_cast<int>(beadSize_); ++i) {
 		double sum = 0.0;
 		for (size_t b = 0; b < Nbeads; ++b) { sum += beadsStack[b][i]; }
 		mu[i] = sum / static_cast<double>(Nbeads);
@@ -150,7 +129,7 @@ std::vector<std::vector<double>> Spline::ExtractBeads(const uint16_t* stack, con
 
 		// Calcul distance quadratique
 		double dist2 = 0.0;
-		for (size_t i = 0; i < beadStackSize_; ++i) {
+		for (size_t i = 0; i < beadSize_; ++i) {
 			const double Dist = tmp[i] - mu[i];
 			dist2 += Dist * Dist;
 		}
@@ -172,81 +151,147 @@ std::vector<std::vector<double>> Spline::ExtractBeads(const uint16_t* stack, con
 	return res;
 }
 
-//-------------------------------------------------------------------------------------------------
-std::vector<double> Spline::GetSubVolume(const std::vector<double>& volume, const bool smallZ) const
-{
-	std::vector<double> res;
-	if (smallZ) {
-		res.reserve(smallBeadStackSize_); // On réserve l'espace.
-		for (const size_t Z : smallZIndices_) {
-			const size_t ZIdx = Z * beadImSize_;
-			for (const size_t Y : smallXIndices_) {
-				const size_t YIdx = ZIdx + Y * beadSize_.x;
-				for (const size_t X : smallXIndices_) { res.push_back(volume[YIdx + X]); }
-			}
-		}
-	}
-	else {
-		res.reserve(smallBeadImSize_ * beadSize_.z); // On réserve l'espace.
-		for (size_t z = 0; z < beadSize_.z; ++z) {
-			const size_t ZIdx = z * beadImSize_;
-			for (const size_t Y : smallXIndices_) {
-				const size_t YIdx = ZIdx + Y * beadSize_.x;
-				for (const size_t X : smallXIndices_) { res.push_back(volume[YIdx + X]); }
-			}
-		}
-	}
-	return res;
-}
 
 //-------------------------------------------------------------------------------------------------
-void Spline::RegisterPSF(std::vector<std::vector<double>>& beads)
+std::vector<double> Spline::RegisterPSF(std::vector<std::vector<double>>& beads) const
 {
 	// On prend les N meilleures billes pour faire une moyenne, mais pas moins de 5 sauf si moins de 5 billes au départ.
 	const size_t Nref = std::min<size_t>(std::max<size_t>(5, beads.size() / 2), beads.size());
+	std::vector goods(beads.size(), true);  // Liste des billes utilisables
+	std::vector weights(beads.size(), 1.0); // Poids de chaque bille
+	double norm = 0.0;
 
 	//Création de la PSF de référence moyenne sur le volume complet
-	std::vector mu(beadStackSize_, 0.0);
+	std::vector mu(beadSize_, 0.0);
 	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(beadStackSize_); ++i) {
+	for (int i = 0; i < static_cast<int>(beadSize_); ++i) {
 		double sum = 0.0;
 		for (size_t b = 0; b < Nref; ++b) { sum += beads[b][i]; }
 		mu[i] = sum / static_cast<double>(Nref);
 	}
 
 	// Première passe sur l'intégralité du Z.
-	// Alignement
-	AlignToRef(mu, beads, false);
-	//Normalization chelou
+	const auto Shifts    = AlignToRef(mu, beads, false);        // Alignement
+	const auto BeadsNorm = SoftNormalization(beads);            // Normalization douce
+	GetOverlap(BeadsNorm, Shifts, goods, weights, norm, false); // Suppression des outliers
 
-	// Seconde passe sur le sous ensemble d'intérêt au niveau du Z.
+	// Recalcul de la PSF de référence moyenne des billes utilisables sur le volume complet
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(beadSize_); ++i) {
+		double sum   = 0.0;
+		size_t count = 0;
 
-
-	std::vector<Point3D> shifts(beads.size());
-	for (size_t i = 0; i < beads.size(); ++i) {
-		//get3DShift(mu, beads[i], shifts[i]);
-		// mais si on a plus besoin des autres frames on peut couper les Z en dehors ou quand meme utile durant les calculs ?
-		// new_b = interp3(b, Xq - shift(k, 2), Yq - shift(k, 1), Zq - shift(k, 3), 'cubic', 0);
-		// Si ce n'est pas génant voir pour modifier en place b, peut etre que la transformation des ID sera plus relou
-		// que de faire une copie puis ecraser b apres genre b = new_b;
+		for (size_t b = 0; b < Nref; ++b) {
+			if (goods[b]) {
+				const double Val = beads[b][i];
+				if (!std::isnan(Val)) {
+					sum += Val;
+					++count;
+				}
+			}
+		}
+		if (count > 0) { mu[i] = sum / static_cast<double>(count); } // Mise à jour uniquement si j'ai eu des valeurs valides.
 	}
+
+	// Seconde passe sur le sous-ensemble d'intérêt au niveau du Z.
+	AlignToRef(mu, beads, true);                                                              // Alignement basé sur le sous-ensemble d'intérêt au niveau du Z.
+	beads = SoftNormalization(beads);                                                         // Normalization douce
+	std::fill(goods.begin(), goods.end(), true);                                              // Liste des billes utilisables
+	std::ranges::fill(weights, 1.0);                                                          // Liste des poids des billes
+	for (size_t i = 0; i < 3; ++i) { GetOverlap(beads, Shifts, goods, weights, norm, true); } // Lancement 3 fois pour mettre à jour le poids plusieurs fois
+	for (auto& b : beads) { matrix::Scale(b, 1 / norm); }                                     // Scale des billes
+
+
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(beadSize_); ++i) {
+		double sum   = 0.0;
+		size_t count = 0;
+
+		for (size_t b = 0; b < Nref; ++b) {
+			if (goods[b]) {
+				const double Val = beads[b][i];
+				if (!std::isnan(Val)) {
+					sum += Val;
+					++count;
+				}
+			}
+		}
+		mu[i] = (count > 0) ? (sum / count) : std::numeric_limits<double>::quiet_NaN();
+	}
+	return mu;
 }
 
 //-------------------------------------------------------------------------------------------------
 std::vector<Vec3> Spline::AlignToRef(const std::vector<double>& ref, std::vector<std::vector<double>>& beads, const bool smallZ) const
 {
 	std::vector<Vec3> shifts(beads.size());
-	const auto SubRef       = GetSubVolume(ref, smallZ); // Stocker la sous-image de la Référence
-	const Coord3D SmallSize = {.x = smallBeadSize_.x, .y = smallBeadSize_.y, .z = smallZ ? smallBeadSize_.z : beadSize_.z};
+	// Stocker la sous-image de la Référence
+	const auto SubRef       = matrix::ExtractSubVolume(ref, beadDim_, smallXIndices_, smallXIndices_, smallZ ? smallZIndices_ : zIndices_);
+	const Coord3D SmallSize = {.x = smallBeadDim_.x, .y = smallBeadDim_.y, .z = smallZ ? smallBeadDim_.z : beadDim_.z};
 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(beads.size()); ++i) { // Pour chaque bille
 		Interpolation3D interp(interpolation_mode::trilinear, true);
-		const auto SubB = GetSubVolume(beads[i], smallZ);               // Stocker la sous-image
-		shifts[i]       = interp.GetShift(SubRef, SubB, SmallSize);     // Lancer getShift entre la sous ref et la sous image
-		beads[i]        = interp.Shift(beads[i], beadSize_, shifts[i]); // Lancer Shift sur l'image de base et Remplacer la bille par ce shift
+		// Stocker la sous-image
+		const auto SubB = matrix::ExtractSubVolume(beads[i], beadDim_, smallXIndices_, smallXIndices_, smallZ ? smallZIndices_ : zIndices_);
+		shifts[i]       = interp.GetShift(SubRef, SubB, SmallSize);    // Lancer getShift entre la sous ref et la sous image
+		beads[i]        = interp.Shift(beads[i], beadDim_, shifts[i]); // Lancer Shift sur l'image de base et Remplacer la bille par ce shift
 	}
 	return shifts;
+}
+
+//-------------------------------------------------------------------------------------------------
+std::vector<std::vector<double>> Spline::SoftNormalization(const std::vector<std::vector<double>>& beads) const
+{
+	const size_t CenterSize              = std::min<size_t>(3, midBead_.x);
+	std::vector<std::vector<double>> out = beads;
+
+	// Génère la plage d’indices du centre de la ROI de taille 7.
+	std::vector<size_t> xr;
+	xr.reserve(7);
+	for (size_t i = midBead_.x - CenterSize; i <= midBead_.x + CenterSize; ++i) { xr.push_back(i); }
+
+	// 4 iterations de la soft normalisation
+	for (size_t iter = 0; iter < 4; ++iter) {
+		constexpr double QuantileRatio = 0.75;
+		std::vector<double> meanVolume(beadSize_, 0.0);
+		std::vector<size_t> validCount(beadSize_, 0);
+
+		// Moyenne des billes (NaN-safe)
+		for (const auto& B : out) {
+			for (size_t i = 0; i < beadSize_; ++i) {
+				if (std::isfinite(B[i])) {
+					meanVolume[i] += B[i];
+					validCount[i]++;
+				}
+			}
+		}
+		for (size_t i = 0; i < beadSize_; ++i) {
+			meanVolume[i] = validCount[i] > 0 ? meanVolume[i] / static_cast<double>(validCount[i]) : std::numeric_limits<double>::quiet_NaN();
+		}
+
+		auto subMean     = matrix::ExtractSubVolume(meanVolume, beadDim_, xr, xr, smallZIndices_);
+		const double Q75 = matrix::Quantile(subMean, QuantileRatio); // Calcul du Quantile
+
+		// Mise à jour des billes
+		for (auto& b : out) {
+			if (matrix::IsInvalid(b)) { continue; } // S'il ne reste aucune valeur utile
+			auto sub = matrix::ExtractSubVolume(b, beadDim_, xr, xr, smallZIndices_);
+
+			// Seuillage par intensité sur le 75e percentile
+			std::vector<double> filtered;
+			filtered.reserve(sub.size());
+			for (size_t i = 0; i < sub.size(); ++i) {
+				if (std::isfinite(sub[i]) && !std::isnan(sub[i]) && std::isfinite(subMean[i]) && !std::isnan(subMean[i]) && subMean[i] > Q75) {
+					filtered.push_back(sub[i] / subMean[i]);
+				}
+			}
+
+			const double Factor = matrix::Median(filtered);
+			if (Factor > 0) { matrix::Scale(b, 1.0 / Factor); }
+		}
+	}
+	return out;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -254,13 +299,15 @@ void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std
                         double& norm, const bool smallZ) const
 {
 	const size_t Nbeads         = beads.size();
-	const Coord3D SmallSize     = {.x = smallBeadSize_.x, .y = smallBeadSize_.y, .z = smallZ ? smallBeadSize_.z : beadSize_.z};
+	const Coord3D SmallSize     = {.x = smallBeadDim_.x, .y = smallBeadDim_.y, .z = smallZ ? smallBeadDim_.z : beadDim_.z};
 	const size_t SmallStackSize = SmallSize.GetSize();
 
 	// Pour un sous volume : const auto Sub = getSubVolume(volume, smallZ);
 	// Récupération des sous volumes des billes
 	std::vector<std::vector<double>> subBeads(Nbeads);
-	for (size_t i = 0; i < Nbeads; ++i) { subBeads[i] = GetSubVolume(beads[i], smallZ); }
+	for (size_t i = 0; i < Nbeads; ++i) {
+		subBeads[i] = matrix::ExtractSubVolume(beads[i], beadDim_, smallXIndices_, smallXIndices_, smallZ ? smallZIndices_ : zIndices_);
+	}
 
 	// Moyenne pondérée des sous-volumes valides pour créer une image de référence (refimn)
 	std::vector ref(SmallStackSize, 0.0);

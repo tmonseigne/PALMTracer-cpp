@@ -200,7 +200,7 @@ TEST(InterpolationTests, InterpolateShifted)
 	const double Rms = matrix::RmsDifference(Hd, MatlabRef);
 	std::cout << "Rms = " << Rms << "\n";
 
-	EXPECT_TRUE(false);
+	EXPECT_TRUE(false) << "Matlab utilise une autre interpolation lorsque des 0 sont présents.";
 	//for (size_t i = 0; i < Hd.size(); ++i) { EXPECT_DOUBLE_EQ(Hd[i], MatlabRef[i]); }
 }
 
@@ -248,7 +248,7 @@ TEST(InterpolationTests, GetShift3D)
 	EXPECT_DOUBLE_EQ(Res.x, Ref.x);
 	EXPECT_DOUBLE_EQ(Res.y, Ref.y);
 	EXPECT_DOUBLE_EQ(Res.z, Ref.z);
-	EXPECT_TRUE(false);
+	EXPECT_TRUE(false) << "Matlab L'interpolation d'une matrice contenant des 0 est différente donc ce test échoue également.";
 }
 
 
