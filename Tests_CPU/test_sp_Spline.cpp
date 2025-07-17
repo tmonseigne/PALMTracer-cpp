@@ -136,7 +136,8 @@ TEST(SplineTests, Align)
 		for (size_t b = 0; b < Nref; ++b) { sum += beadsStack[b][i]; }
 		mu[i] = sum / static_cast<double>(Nref);
 	}
-	spline.AlignToRef(mu, beadsStack, false);
+	const auto Shifts = spline.AlignToRef(mu, beadsStack, false);
+	for (auto& S : Shifts) { std::cout << S << "\n"; }
 	// Shift pour Matlab (je n'ai que des (0,0,0) à cause du zoom sur élément shifté)
 	//   0.0750, -0.3625, 0.0125
 	//	-0.0125, -0.125,  0
@@ -334,7 +335,7 @@ TEST(SplineTests, RegisterPSFMinimal)
 	constexpr size_t Nvol = 3;
 
 	// Génère des "billes" artificielles
-	std::vector<std::vector<double>> beads(Nvol, std::vector<double>(N, 0.0));
+	std::vector beads(Nvol, std::vector(N, 0.0));
 
 	// Bille 0 : gradient croissant
 	std::iota(beads[0].begin(), beads[0].end(), 1.0);
@@ -348,9 +349,9 @@ TEST(SplineTests, RegisterPSFMinimal)
 	beads[2][73] = std::numeric_limits<double>::quiet_NaN();
 	//matrix::Print(beads[2], Dim);
 
-	spline.SetMembers(Dim, 5, DISTANCE, DZ, SMOOTH_Z);
+	spline.SetMembers(Dim, 7, DISTANCE, DZ, SMOOTH_Z);
 	// changement des smallBeadSize pour avoir un equivalent
-	spline.smallXIndices_ = {1, 2, 3, 4, 5};
+	spline.smallXIndices_ = {0, 1, 2, 3, 4, 5, 6};
 	spline.smallZIndices_ = {1, 2, 3};
 
 	//Dimansions de la zone d'interet centrale.
