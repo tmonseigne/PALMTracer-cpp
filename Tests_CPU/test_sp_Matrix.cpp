@@ -9,6 +9,28 @@ constexpr double EPSILON = 1e-10;
 const std::vector NAN_VECTOR(3, std::numeric_limits<double>::quiet_NaN());
 
 //-------------------------------------------------------------------------------------------------
+TEST(MatrixTest, HasNaN)
+{
+	const auto Data = std::vector({std::numeric_limits<double>::quiet_NaN(), 2.0, 3.0});
+	EXPECT_TRUE(matrix::HasNaN(Data));
+}
+
+//-------------------------------------------------------------------------------------------------
+TEST(MatrixTest, HasInvalid)
+{
+	const auto Data = std::vector({std::numeric_limits<double>::infinity(), 2.0, 3.0});
+	EXPECT_TRUE(matrix::HasInvalid(Data));
+}
+
+//-------------------------------------------------------------------------------------------------
+TEST(MatrixTest, IsInvalid)
+{
+	const auto Data = std::vector({std::numeric_limits<double>::quiet_NaN(), 2.0, 3.0});
+	EXPECT_FALSE(matrix::IsInvalid(Data));
+	EXPECT_TRUE(matrix::IsInvalid(NAN_VECTOR));
+}
+
+//-------------------------------------------------------------------------------------------------
 TEST(MatrixTest, GetValidIndex)
 {
 	const auto Data = std::vector({std::numeric_limits<double>::quiet_NaN(), 2.0, 3.0});
@@ -76,6 +98,7 @@ TEST(MatrixTest, Quantile)
 {
 	EXPECT_DOUBLE_EQ(matrix::Quantile({ 1, 2, 3, 4 }, 0.75), 3.25);
 	EXPECT_DOUBLE_EQ(matrix::Quantile({ 1, 2, 3, 4, 5 }, 0.5), 3.0);
+	EXPECT_TRUE(std::isnan(matrix::Quantile(NAN_VECTOR, 0.5)));
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -90,7 +113,8 @@ TEST(MatrixTest, RmsDifference)
 //-------------------------------------------------------------------------------------------------
 TEST(MatrixTest, NormalisationWithShift)
 {
-	std::vector<double> vec{2, 4, 6};
+	std::vector<double> vec(27);
+	std::iota(vec.begin(), vec.end(), 0);
 	matrix::Normalisation(vec, true);
 	EXPECT_DOUBLE_EQ(vec.front(), 0.0);
 	EXPECT_NEAR(std::accumulate(vec.begin(), vec.end(), 0.0), 1.0, EPSILON);

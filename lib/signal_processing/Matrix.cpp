@@ -39,7 +39,7 @@ std::vector<bool> GetValidIndex(const std::vector<double>& data)
 	std::vector<bool> mask;
 	mask.reserve(data.size());
 
-	for (const double V : data) { mask.push_back(std::isfinite(V)); }
+	for (const double V : data) { mask.push_back(std::isfinite(V) && !std::isnan(V)); }
 
 	return mask;
 }
@@ -47,27 +47,27 @@ std::vector<bool> GetValidIndex(const std::vector<double>& data)
 //-------------------------------------------------------------------------------------------------
 size_t CountValid(const std::vector<double>& data)
 {
-	auto valid_view = data | std::views::filter([](const double v) { return std::isfinite(v); });
+	auto valid_view = data | std::views::filter([](const double v) { return std::isfinite(v) && !std::isnan(v); });
 	return std::ranges::distance(valid_view);
 }
 
 //-------------------------------------------------------------------------------------------------
 double Max(const std::vector<double>& data)
 {
-	return *std::ranges::max_element(data, {}, [](const double x) { return !std::isfinite(x) ? -std::numeric_limits<double>::infinity() : x; });
+	return *std::ranges::max_element(data, {}, [](const double x) { return !std::isfinite(x) || std::isnan(x) ? -std::numeric_limits<double>::infinity() : x; });
 }
 
 //-------------------------------------------------------------------------------------------------
 double SumValid(const std::vector<double>& data)
 {
-	auto valid_view = data | std::ranges::views::filter([](const double v) { return std::isfinite(v); });
+	auto valid_view = data | std::ranges::views::filter([](const double v) { return std::isfinite(v) && !std::isnan(v); });
 	return std::accumulate(valid_view.begin(), valid_view.end(), 0.0);
 }
 
 //-------------------------------------------------------------------------------------------------
 double MeanValid(const std::vector<double>& data)
 {
-	auto valid       = data | std::views::filter([](const double v) { return std::isfinite(v); });
+	auto valid       = data | std::views::filter([](const double v) { return std::isfinite(v) && !std::isnan(v); });
 	const double Sum = std::accumulate(valid.begin(), valid.end(), 0.0);
 	const auto Count = std::ranges::distance(valid);
 	return Count > 0 ? Sum / static_cast<double>(Count) : std::numeric_limits<double>::quiet_NaN();
@@ -82,7 +82,7 @@ double MeanWithMask(const std::vector<double>& data, const std::vector<bool>& ma
 	std::vector<double> valid;
 	valid.reserve(N); // Optimisation mémoire
 
-	for (size_t i = 0; i < N; ++i) { if (mask[i] && std::isfinite(data[i])) { valid.push_back(data[i]); } }
+	for (size_t i = 0; i < N; ++i) { if (mask[i] && std::isfinite(data[i]) && !std::isnan(data[i])) { valid.push_back(data[i]); } }
 
 	if (valid.empty()) { return std::numeric_limits<double>::quiet_NaN(); }
 
@@ -94,7 +94,7 @@ double MeanWithMask(const std::vector<double>& data, const std::vector<bool>& ma
 double Median(const std::vector<double>& data)
 {
 	std::vector<double> filtered;
-	for (const double V : data) { if (std::isfinite(V)) { filtered.push_back(V); } }
+	for (const double V : data) { if (std::isfinite(V) && !std::isnan(V)) { filtered.push_back(V); } }
 	if (filtered.empty()) { return std::numeric_limits<double>::quiet_NaN(); }
 
 	const size_t Mid = filtered.size() / 2;
@@ -109,7 +109,7 @@ double Median(const std::vector<double>& data)
 double Quantile(const std::vector<double>& data, const double q)
 {
 	std::vector<double> filtered;
-	for (const double V : data) { if (std::isfinite(V)) { filtered.push_back(V); } }
+	for (const double V : data) { if (std::isfinite(V) && !std::isnan(V)) { filtered.push_back(V); } }
 	if (filtered.empty()) { return std::numeric_limits<double>::quiet_NaN(); }
 
 	std::ranges::sort(filtered); // Tri complet du tableau

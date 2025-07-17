@@ -40,7 +40,13 @@ inline bool HasNaN(const std::vector<double>& data) { return std::ranges::any_of
 /// <summary>Vérifie si un vecteur contient au moins une valeur non finie (NaN, infini). </summary>
 /// <param name="data">Vecteur à vérifier.</param>
 /// <returns>True si au moins un élément est NaN, false sinon.</returns>
-inline bool IsValid(const std::vector<double>& data) { return std::ranges::any_of(data, [](const double x) { return !std::isfinite(x); }); }
+inline bool HasInvalid(const std::vector<double>& data) { return std::ranges::any_of(data, [](const double x) { return !std::isfinite(x) || std::isnan(x); }); }
+
+
+/// <summary>Vérifie si un vecteur contient que des valeurs non finies (NaN, infini). </summary>
+/// <param name="data">Vecteur à vérifier.</param>
+/// <returns>True si tous les éléments sont NaN, false sinon.</returns>
+inline bool IsInvalid(const std::vector<double>& data) { return std::ranges::all_of(data, [](const double x) { return !std::isfinite(x) || std::isnan(x); }); }
 
 /// <summary>Génère un masque booléen indiquant les éléments valides (non-NaN) du vecteur. </summary>
 /// <param name="data">Vecteur d'entrée à tester.</param>
