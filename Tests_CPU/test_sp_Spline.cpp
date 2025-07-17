@@ -176,7 +176,7 @@ TEST(SplineTests, GetOverlapMinimal)
 	// Bille 4 : bonne, mais shift > 3
 	std::iota(beads[4].begin(), beads[4].end(), 1.0);
 
-	// Bille 5 : bonne mais différente (pour filtrage RMS)
+	// Bille 5 : bonne, mais différente (pour filtrage RMS)
 	std::ranges::fill(beads[5], 10.0);
 
 	// Shifts associés
@@ -190,7 +190,6 @@ TEST(SplineTests, GetOverlapMinimal)
 	};
 
 	// Poids initiaux
-	std::vector good{true, true, true, true, true, true};
 	std::vector weight{1.0, 1.0, 1.0, 0.1, 1.0, 1.0};
 	double norm = 0.0;
 
@@ -203,13 +202,11 @@ TEST(SplineTests, GetOverlapMinimal)
 	spline.smallBeadDim_    = Coord3D{.x = spline.smallXIndices_.size(), .y = spline.smallXIndices_.size(), .z = spline.smallZIndices_.size()};
 	spline.smallBeadImSize_ = spline.smallBeadDim_.GetPlaneSize();
 	spline.smallBeadSize_   = spline.smallBeadDim_.GetSize();
-	spline.GetOverlap(beads, Shifts, good, weight, norm, false);
+	spline.GetOverlap(beads, Shifts, weight, norm, false);
 
 	EXPECT_NEAR(norm, 43.2255, 1e-3) << "Mismatch for norm.";
-	const std::vector RefGood{true, true, false, true, false, true};
-	for (size_t i = 0; i < RefGood.size(); ++i) { EXPECT_EQ(RefGood[i], good[i]) << "Mismatch at good[" << i << "]"; }
 	const std::vector RefWeight{3.4486, 3.4486, std::numeric_limits<double>::quiet_NaN(), 8.94678, std::numeric_limits<double>::quiet_NaN(), 2.26343};
-	for (size_t i = 0; i < RefGood.size(); ++i) {
+	for (size_t i = 0; i < RefWeight.size(); ++i) {
 		if (std::isnan(RefWeight[i])) { EXPECT_TRUE(std::isnan(weight[i])) << "Weight[" << i << "] expected to be NaN"; }
 		else { EXPECT_NEAR(RefWeight[i], weight[i], 1e-3) << "Mismatch at Weight[" << i << "]"; }
 	}
@@ -253,16 +250,13 @@ TEST(SplineTests, GetOverlap)
 	};
 	spline.SetMembers(dim, ROI, DISTANCE, DZ, SMOOTH_Z);
 	const auto BeadsStack = spline.ExtractBeads(input.data(), Beads);
-	std::vector good(Beads.size(), true);
 	std::vector weight(Beads.size(), 1.0);
 	double norm;
-	spline.GetOverlap(BeadsStack, Shifts, good, weight, norm, false);
+	spline.GetOverlap(BeadsStack, Shifts, weight, norm, false);
 
 	EXPECT_NEAR(norm, 7860.1429, 1e-3) << "Mismatch for norm.";
-	const std::vector RefGood{true, true, true, true, true, true, false};
-	for (size_t i = 0; i < RefGood.size(); ++i) { EXPECT_EQ(RefGood[i], good[i]) << "Mismatch at good[" << i << "]"; }
 	const std::vector RefWeight{58.646, 57.8895, 55.5306, 52.9919, 49.7937, 42.2984, std::numeric_limits<double>::quiet_NaN()};
-	for (size_t i = 0; i < RefGood.size(); ++i) {
+	for (size_t i = 0; i < RefWeight.size(); ++i) {
 		if (std::isnan(RefWeight[i])) { EXPECT_TRUE(std::isnan(weight[i])) << "Weight[" << i << "] expected to be NaN"; }
 		else { EXPECT_NEAR(RefWeight[i], weight[i], 1e-3) << "Mismatch at Weight[" << i << "]"; }
 	}

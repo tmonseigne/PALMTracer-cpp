@@ -54,7 +54,9 @@ size_t CountValid(const std::vector<double>& data)
 //-------------------------------------------------------------------------------------------------
 double Max(const std::vector<double>& data)
 {
-	return *std::ranges::max_element(data, {}, [](const double x) { return !std::isfinite(x) || std::isnan(x) ? -std::numeric_limits<double>::infinity() : x; });
+	return *std::ranges::max_element(data, {}, [](const double x) {
+		return !std::isfinite(x) || std::isnan(x) ? -std::numeric_limits<double>::infinity() : x;
+	});
 }
 
 //-------------------------------------------------------------------------------------------------

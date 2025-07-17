@@ -54,7 +54,7 @@ public:
 
 	std::vector<std::vector<double>> SoftNormalization(const std::vector<std::vector<double>>& beads) const;
 
-	void GetOverlap(const std::vector<std::vector<double>>& beads, const std::vector<Vec3>& shift, std::vector<bool>& good, std::vector<double>& weight,
+	void GetOverlap(const std::vector<std::vector<double>>& beads, const std::vector<Vec3>& shift, std::vector<double>& weight,
 	                double& norm, bool smallZ = false) const;
 
 protected:

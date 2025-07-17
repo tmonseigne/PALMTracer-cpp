@@ -158,7 +158,6 @@ std::vector<double> Spline::RegisterPSF(std::vector<std::vector<double>>& beads)
 	// On prend les N meilleures billes pour faire une moyenne, mais pas moins de 5 sauf si moins de 5 billes au départ.
 	const size_t Nbeads = beads.size();
 	const size_t Nref   = std::min<size_t>(std::max<size_t>(5, Nbeads / 2), Nbeads);
-	std::vector goods(Nbeads, true);  // Liste des billes utilisables
 	std::vector weights(Nbeads, 1.0); // Poids de chaque bille
 	double norm = 0.0;
 
@@ -171,12 +170,11 @@ std::vector<double> Spline::RegisterPSF(std::vector<std::vector<double>>& beads)
 			size_t count = 0;
 
 			for (size_t b = 0; b < Nref; ++b) {
-				if (goods[b]) {
-					const double Val = beads[b][i];
-					if (!std::isnan(Val)) {
-						sum += Val;
-						++count;
-					}
+				if (std::isnan(weights[b])) { continue; }
+				const double Val = beads[b][i];
+				if (!std::isnan(Val)) {
+					sum += Val;
+					++count;
 				}
 			}
 			mu[i] = (count > 0) ? sum / static_cast<double>(count) : (update ? mu[i] : std::numeric_limits<double>::quiet_NaN());
@@ -187,20 +185,20 @@ std::vector<double> Spline::RegisterPSF(std::vector<std::vector<double>>& beads)
 	beadMean(false);
 
 	// Première passe sur l'intégralité du Z.
-	const auto Shifts    = AlignToRef(mu, beads, false);        // Alignement
-	const auto BeadsNorm = SoftNormalization(beads);            // Normalization douce
-	GetOverlap(BeadsNorm, Shifts, goods, weights, norm, false); // Suppression des outliers
+	const auto Shifts = AlignToRef(mu, beads, false);
+	// Alignement (attention, différence du fait de l'interpolation, la suite de l'algorithme est compliqué à comparer)
+	const auto BeadsNorm = SoftNormalization(beads);     // Normalization douce
+	GetOverlap(BeadsNorm, Shifts, weights, norm, false); // Suppression des outliers
 
 	// Recalcul de la PSF de référence moyenne des billes utilisables sur le volume complet (masi évite d'ajouter des nan
 	beadMean(true);
 
 	// Seconde passe sur le sous-ensemble d'intérêt au niveau du Z.
-	AlignToRef(mu, beads, true);                                                              // Alignement basé sur le sous-ensemble d'intérêt au niveau du Z.
-	beads = SoftNormalization(beads);                                                         // Normalization douce
-	std::fill(goods.begin(), goods.end(), true);                                              // Liste des billes utilisables
-	std::ranges::fill(weights, 1.0);                                                          // Liste des poids des billes
-	for (size_t i = 0; i < 3; ++i) { GetOverlap(beads, Shifts, goods, weights, norm, true); } // Lancement 3 fois pour mettre à jour le poids plusieurs fois
-	for (auto& b : beads) { matrix::Scale(b, 1 / norm); }                                     // Scale des billes
+	AlignToRef(mu, beads, true);                                                       // Alignement basé sur le sous-ensemble d'intérêt au niveau du Z.
+	beads = SoftNormalization(beads);                                                  // Normalization douce
+	std::ranges::fill(weights, 1.0);                                                   // Liste des poids des billes
+	for (size_t i = 0; i < 3; ++i) { GetOverlap(beads, Shifts, weights, norm, true); } // Lancement 3 fois pour mettre à jour le poids plusieurs fois
+	for (auto& b : beads) { matrix::Scale(b, 1 / norm); }                              // Scale des billes
 
 	beadMean(false);
 	return mu;
@@ -280,7 +278,7 @@ std::vector<std::vector<double>> Spline::SoftNormalization(const std::vector<std
 }
 
 //-------------------------------------------------------------------------------------------------
-void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std::vector<Vec3>& shift, std::vector<bool>& good, std::vector<double>& weight,
+void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std::vector<Vec3>& shift, std::vector<double>& weights,
                         double& norm, const bool smallZ) const
 {
 	const size_t Nbeads         = beads.size();
@@ -298,9 +296,9 @@ void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std
 	std::vector ref(SmallStackSize, 0.0);
 	double totalWeight = 0.0;
 	for (size_t i = 0; i < Nbeads; ++i) {
-		if (!good[i]) { continue; }
-		for (size_t j = 0; j < SmallStackSize; ++j) { ref[j] += weight[i] * subBeads[i][j]; }
-		totalWeight += weight[i];
+		if (std::isnan(weights[i])) { continue; }
+		for (size_t j = 0; j < SmallStackSize; ++j) { ref[j] += weights[i] * subBeads[i][j]; }
+		totalWeight += weights[i];
 	}
 	matrix::Scale(ref, 1.0 / totalWeight);
 
@@ -344,7 +342,7 @@ void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std
 	// filtrage robuste
 	std::vector maskValid(Nbeads, false);
 	for (size_t i = 0; i < Nbeads; ++i) {
-		if (good[i] && cc[i] > 0.0 && std::isfinite(rms[i])) {
+		if (!std::isnan(weights[i]) && cc[i] > 0.0 && std::isfinite(rms[i])) {
 			rms[i] /= cc[i];
 			maskValid[i] = true;
 		}
@@ -369,12 +367,6 @@ void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std
 	const double CutOff = std::isfinite(b) ? Mu + 2.0 * b : std::numeric_limits<double>::infinity();
 
 	// Maj des bons indices et poids finaux
-	for (size_t i = 0; i < Nbeads; ++i) {
-		if (std::isnan(rms[i]) || rms[i] > CutOff) {
-			good[i]   = false;
-			weight[i] = std::numeric_limits<double>::quiet_NaN();
-		}
-		else { weight[i] = 1.0 / rms[i]; }
-	}
+	for (size_t i = 0; i < Nbeads; ++i) { weights[i] = (std::isnan(rms[i]) || rms[i] > CutOff) ? std::numeric_limits<double>::quiet_NaN() : 1.0 / rms[i]; }
 }
 } // namespace palm_tracer
