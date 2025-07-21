@@ -48,6 +48,10 @@
       <Filter>lib</Filter>
     </ClCompile>
     <ClCompile Include="test_sp_Matrix.cpp" />
+    <ClCompile Include="test_sp_BSpline.cpp" />
+    <ClCompile Include="..\lib\signal_processing\BSpline3D.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TiffManagement.hpp" />
@@ -106,6 +110,9 @@
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\signal_processing\Alignment.hpp">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\signal_processing\BSpline3D.hpp">
       <Filter>lib</Filter>
     </ClInclude>
   </ItemGroup>

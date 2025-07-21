@@ -32,7 +32,6 @@ void Print(const std::vector<double>& data, const Coord3D& size)
 //========================================================
 //==================== Basic Computes ====================
 //========================================================
-
 //-------------------------------------------------------------------------------------------------
 std::vector<bool> GetValidIndex(const std::vector<double>& data)
 {
@@ -331,5 +330,39 @@ void InverseLU(std::vector<double>& in, std::vector<double>& out, const size_t n
 			tmp1             = 0;
 		}
 	}
+}
+
+//-------------------------------------------------------------------------------------------------
+std::vector<size_t> ReflectionIndices(const size_t n, const size_t k0)
+{
+	std::vector<size_t> base;
+	base.reserve(2 * n - 2);
+	for (size_t i = 0; i < n; ++i) { base.push_back(i); }
+	for (size_t i = n - 2; i > 0; --i) { base.push_back(i); }
+
+	std::vector<size_t> out(k0);
+	for (size_t i = 0; i < k0; ++i) { out[i] = base[i % base.size()]; }
+	return out;
+}
+
+//-------------------------------------------------------------------------------------------------
+std::vector<size_t> ReflectIndex1D(const size_t n, const size_t pad)
+{
+	// Construction du motif réfléchi
+	std::vector<size_t> base;
+	base.reserve(2 * n - 2);
+	for (size_t i = 0; i < n; ++i) { base.push_back(i); }
+	for (size_t i = n - 2; i > 0; --i) { base.push_back(i); }
+
+	const size_t Period = 2 * n - 2;
+	std::vector<size_t> idx;
+	idx.reserve(n + 2 * pad);
+
+	for (int i = -static_cast<int>(pad); i <= static_cast<int>(n + pad); ++i) {
+		const size_t Wrapped = (i % Period + Period) % Period;
+		idx.push_back(base[Wrapped]);
+	}
+
+	return idx;
 }
 } // namespace palm_tracer::matrix

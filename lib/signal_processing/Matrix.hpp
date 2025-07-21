@@ -100,6 +100,11 @@ double Median(const std::vector<double>& data);
 /// <summary> Renvoie un quantile donné (e.g., 0.75 pour le 75e percentile), en ignorant les NaN.</summary>
 double Quantile(const std::vector<double>& data, double q);
 
+/// <summary>Additionne tous les éléments d'un vecteur à un élément donné (modifie en place). </summary>
+/// <param name="data">Vecteur à modifier.</param>
+/// <param name="value">élément à ajouter.</param>
+inline void Add(std::vector<double>& data, const double value) { for (auto& x : data) { x += value; } }
+
 /// <summary>Multiplie tous les éléments d'un vecteur par un facteur donné (modifie en place). </summary>
 /// <param name="data">Vecteur à modifier.</param>
 /// <param name="factor">Facteur multiplicatif.</param>
@@ -184,4 +189,26 @@ void InverseGaussJordan(std::vector<double>& in, std::vector<double>& out, size_
 /// <param name="out">Matrice résultat de l'inversion (même format).</param>
 /// <param name="n"> Taille de la matrice (nxn). </param>
 void InverseLU(std::vector<double>& in, std::vector<double>& out, size_t n);
+
+/// <summary>
+/// Génère un vecteur d’indices réfléchis de longueur <c>k0</c>, utilisé pour initialiser les filtres exponentiels symétriques.
+///
+/// Le motif généré est basé sur la réflexion de la séquence [0, 1, ..., n-1] : [0, 1, ..., n-1, n-2, ..., 1], répété autant de fois que nécessaire.
+///
+/// <para>Exemple : ReflectionIndices(5, 10) ⇒ [0,1,2,3,4,3,2,1,0,1]</para>
+///
+/// </summary>
+/// <param name="n">Taille de la dimension originale à réfléchir.</param>
+/// <param name="k0">Longueur finale désirée du vecteur réfléchi.</param>
+/// <returns>Vecteur d’indices réfléchis de taille <c>k0</c>.</returns>
+std::vector<size_t> ReflectionIndices(size_t n, size_t k0);
+
+/// <summary>
+/// Génère un vecteur d’indices réfléchis (type miroir) pour le padding.
+/// Par exemple pour N = 5 et pad = 1 : retourne [1,0,1,2,3,4,3,2]
+/// </summary>
+/// <param name="n">Taille de la dimension originale.</param>
+/// <param name="pad">Nombre d’éléments à ajouter de chaque côté.</param>
+/// <returns>Vecteur d’indices réfléchis de taille N + 2*pad.</returns>
+std::vector<size_t> ReflectIndex1D(size_t n, size_t pad);
 } // namespace palm_tracer::matrix

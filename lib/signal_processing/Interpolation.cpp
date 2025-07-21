@@ -6,6 +6,7 @@
 #include <functional>
 #include <numeric>
 
+#include "BSpline3D.hpp"
 #include "FFT.hpp"
 
 
@@ -137,23 +138,28 @@ Vec3 Interpolation3D::SubpixelMax(const std::vector<double>& volume, const Coord
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<double> Interpolation3D::Zoom(const std::vector<double>& volume, const Coord3D& size, const size_t level, Coord3D& newSize) const
+std::vector<double> Interpolation3D::Zoom(const std::vector<double>& volume, const Coord3D& size, const size_t level, Coord3D& newDim) const
 {
 	if (level == 0) {
-		newSize = size;
+		newDim = size;
 		return volume;
 	}
+	return Upsample(volume, size, static_cast<double>(static_cast<size_t>(1) << level), newDim);
+}
 
-	const size_t Factor = static_cast<size_t>(1) << level; // 2 ^ level
-	const double Ratio  = 1.0 / static_cast<double>(Factor);
-	newSize             = {
-		.x = (size.x - 1) * Factor + 1,
-		.y = (size.y - 1) * Factor + 1,
-		.z = (size.z - 1) * Factor + 1
+//-------------------------------------------------------------------------------------------------
+std::vector<double> Interpolation3D::Upsample(const std::vector<double>& volume, const Coord3D& size, const double factor, Coord3D& newDim) const
+{
+	const double Step = 1.0 / factor;
+
+	newDim = {
+		.x = static_cast<size_t>(std::round(static_cast<double>(size.x - 1) * factor + 1)),
+		.y = static_cast<size_t>(std::round(static_cast<double>(size.y - 1) * factor + 1)),
+		.z = static_cast<size_t>(std::round(static_cast<double>(size.z - 1) * factor + 1))
 	};
-	std::vector out(newSize.x * newSize.y * newSize.z, 0.0);
-	Vec3 pos = {.x = 0, .y = 0, .z = 0};
 
+	std::vector out(newDim.GetSize(), 0.0);
+	Vec3 pos = {.x = 0.0, .y = 0.0, .z = 0.0};
 
 	// Pointeur vers la fonction d'interpolation finale
 	using interp_ptr  = double(*)(const std::vector<double>&, const Coord3D&, const Vec3&);
@@ -168,13 +174,14 @@ std::vector<double> Interpolation3D::Zoom(const std::vector<double>& volume, con
 			break;
 	}
 
+	// Boucle principale
 	size_t idx = 0;
-	for (size_t z = 0; z < newSize.z; ++z) {
-		pos.z = Ratio * static_cast<double>(z);
-		for (size_t y = 0; y < newSize.y; ++y) {
-			pos.y = Ratio * static_cast<double>(y);
-			for (size_t x = 0; x < newSize.x; ++x, ++idx) {
-				pos.x    = Ratio * static_cast<double>(x);
+	for (size_t z = 0; z < newDim.z; ++z) {
+		pos.z = static_cast<double>(z) * Step;
+		for (size_t y = 0; y < newDim.y; ++y) {
+			pos.y = static_cast<double>(y) * Step;
+			for (size_t x = 0; x < newDim.x; ++x, ++idx) {
+				pos.x    = static_cast<double>(x) * Step;
 				out[idx] = (cropBound_ && isOut(pos, size)) ? 0.0 : interp(volume, size, pos);
 			}
 		}

@@ -40,13 +40,13 @@ public:
 	/// <param name="size">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
 	/// <param name="level">Facteur de zoom entier (> 0). Un niveau 1 insère un point entre chaque valeur initiale, un niveau 2 en insère 3, etc.
 	/// Soit `2^factor - 1` points interpolés entre chaque voxel.</param>
-	/// <param name="newSize">Taille du volume de sortie, calculée comme :
+	/// <param name="newDim">Taille du volume de sortie, calculée comme :
 	/// - `(size.x - 1) * 2^level + 1`
 	/// - `(size.y - 1) * 2^level + 1`
 	/// - `(size.z - 1) * 2^level + 1`
 	/// Ce comportement imite fidèlement le comportement de MATLAB `interp3(M, level)`.</param>
 	/// <returns>Volume agrandi sous forme linéarisée avec interpolation.</returns>
-	[[nodiscard]] std::vector<double> Zoom(const std::vector<double>& volume, const Coord3D& size, size_t level, Coord3D& newSize) const;
+	[[nodiscard]] std::vector<double> Zoom(const std::vector<double>& volume, const Coord3D& size, size_t level, Coord3D& newDim) const;
 
 	/// <summary>Applique un décalage (shift) flottant sur tout le volume avec interpolation. </summary>
 	/// <param name="volume">Vecteur linéarisé représentant un volume 3D en mémoire ligne-colonne-plan (X-Y-Z).</param>
@@ -79,6 +79,17 @@ public:
 	/// <param name="w">Demi-taille de la fenêtre (1 ⇒ cube 3x3x3).</param>
 	/// <returns>Coordonnée subvoxel du maximum (x, y, z).</returns>
 	static Vec3 SubpixelMax(const std::vector<double>& volume, const Coord3D& size, const Vec3& pos, double delta = 0.05, double w = 1.0);
+
+	/// <summary>
+	/// Réalise un suréchantillonnage isotrope par un facteur flottant.
+	/// Equivalent à interp3(..., 'method') avec Xq = 1:1/factor:N.
+	/// </summary>
+	/// <param name="volume">Volume 3D linéarisé (X-Y-Z).</param>
+	/// <param name="size">Dimensions originales du volume.</param>
+	/// <param name="factor">Facteur de zoom (> 1.0), ex: 3.0 pour 3x.</param>
+	/// <param name="newDim">Dimensions du volume suréchantillonné en sortie.</param>
+	/// <returns>Volume interpolé (nouvelle taille).</returns>
+	[[nodiscard]] std::vector<double> Upsample(const std::vector<double>& volume, const Coord3D& size, double factor, Coord3D& newDim) const;
 
 private:
 	static bool isOut(const double value, const size_t dim) { return value < 0 || value >= static_cast<double>(dim); }

@@ -44,6 +44,9 @@
     <ClCompile Include="..\lib\signal_processing\Alignment.cpp">
       <Filter>Signal Processing</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\signal_processing\BSpline3D.cpp">
+      <Filter>Signal Processing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\fit\GaussianFit.hpp">
@@ -98,6 +101,9 @@
       <Filter>Signal Processing</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\signal_processing\Alignment.hpp">
+      <Filter>Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\signal_processing\BSpline3D.hpp">
       <Filter>Signal Processing</Filter>
     </ClInclude>
   </ItemGroup>

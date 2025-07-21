@@ -74,6 +74,7 @@
     <ClCompile Include="..\lib\palm\Palm.cpp" />
     <ClCompile Include="..\lib\palm\Segmentation2D.cpp" />
     <ClCompile Include="..\lib\signal_processing\Alignment.cpp" />
+    <ClCompile Include="..\lib\signal_processing\BSpline3D.cpp" />
     <ClCompile Include="..\lib\signal_processing\Interpolation.cpp" />
     <ClCompile Include="..\lib\signal_processing\Matrix.cpp" />
     <ClCompile Include="..\lib\signal_processing\PSF.cpp" />
@@ -97,6 +98,7 @@
     <ClInclude Include="..\lib\palm\SegmentationInfo.hpp" />
     <ClInclude Include="..\lib\palm\Segmentation2D.hpp" />
     <ClInclude Include="..\lib\signal_processing\Alignment.hpp" />
+    <ClInclude Include="..\lib\signal_processing\BSpline3D.hpp" />
     <ClInclude Include="..\lib\signal_processing\FFT.hpp" />
     <ClInclude Include="..\lib\signal_processing\Interpolation.hpp" />
     <ClInclude Include="..\lib\signal_processing\Matrix.hpp" />
