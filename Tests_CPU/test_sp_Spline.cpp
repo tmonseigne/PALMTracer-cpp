@@ -13,8 +13,7 @@ namespace palm_tracer {
 constexpr size_t ROI      = 29,
                  HALF_ROI = 14,
                  DISTANCE = 50,
-                 DZ       = 10,
-                 SMOOTH_Z = 1;
+                 DZ       = 10;
 
 //-------------------------------------------------------------------------------------------------
 TEST(SplineTests, SetMembers)
@@ -25,11 +24,11 @@ TEST(SplineTests, SetMembers)
 	// Charger l'image des billes
 	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
 
-	spline.SetMembers(dim, ROI, DISTANCE, DZ, SMOOTH_Z);
+	spline.SetMembers(dim, ROI, DISTANCE, DZ);
 	EXPECT_EQ(spline.smallXIndices_.size(), 13);           // Les sous-groupes seront inférieur à la ROI de base.
 	EXPECT_EQ(spline.smallZIndices_.size(), DISTANCE + 1); // Prend un nombre impair de points
 
-	spline.SetMembers(dim, 8, 2 * dim.z, 5, 2);
+	spline.SetMembers(dim, 8, 2 * dim.z, 5);
 	EXPECT_EQ(spline.smallXIndices_.size(), 7);     // Prend un nombre impair de points en roi et ne peut descnedre en dessous de la ROI (impair) de base
 	EXPECT_EQ(spline.smallZIndices_.size(), dim.z); // On dépasse le max en Z donc on prend toutes les frames
 }
@@ -87,7 +86,7 @@ TEST(SplineTests, ExtractBeads)
 		}
 	};
 
-	spline.SetMembers(dim, 3, 3, DZ, SMOOTH_Z);
+	spline.SetMembers(dim, 3, 3, DZ);
 	const auto BeadsStack = spline.ExtractBeads(input.data(), Beads);
 
 	// Sélection de 3 plans centraux uniquement pour comparaison
@@ -115,7 +114,7 @@ TEST(SplineTests, Align)
 		{.x = 28, .y = 118}
 	};
 
-	spline.SetMembers(dim, ROI, DISTANCE, DZ, SMOOTH_Z);
+	spline.SetMembers(dim, ROI, DISTANCE, DZ);
 	auto beadsStack = spline.ExtractBeads(input.data(), Beads);
 
 	const size_t Nref = std::min<size_t>(std::max<size_t>(5, Beads.size() / 2), Beads.size());
@@ -186,7 +185,7 @@ TEST(SplineTests, GetOverlapMinimal)
 	std::vector weight{1.0, 1.0, 1.0, 0.1, 1.0, 1.0};
 	double norm = 0.0;
 
-	spline.SetMembers(Dim, 5, DISTANCE, DZ, SMOOTH_Z);
+	spline.SetMembers(Dim, 5, DISTANCE, DZ);
 	// changement des smallBeadSize pour avoir un equivalent
 	spline.smallXIndices_ = {1, 2, 3};
 	spline.smallZIndices_ = {1};
@@ -238,7 +237,7 @@ TEST(SplineTests, GetOverlap)
 		{.x = -0.1250, .y = 0.2500, .z = 0},
 		{.x = -0.1250, .y = 0.2500, .z = 0}
 	};
-	spline.SetMembers(dim, ROI, DISTANCE, DZ, SMOOTH_Z);
+	spline.SetMembers(dim, ROI, DISTANCE, DZ);
 	const auto BeadsStack = spline.ExtractBeads(input.data(), Beads);
 	std::vector weight(Beads.size(), 1.0);
 	double norm;
@@ -274,7 +273,7 @@ TEST(SplineTests, SoftNormalizationMinimal)
 	beads[2][6]  = std::numeric_limits<double>::quiet_NaN();
 	beads[2][43] = std::numeric_limits<double>::quiet_NaN();
 
-	spline.SetMembers(Dim, 5, DISTANCE, DZ, SMOOTH_Z);
+	spline.SetMembers(Dim, 5, DISTANCE, DZ);
 	spline.smallZIndices_ = {0, 1, 2};
 	const auto BeadsNorm  = spline.SoftNormalization(beads);
 
@@ -299,7 +298,7 @@ TEST(SplineTests, SoftNormalization)
 		{.x = 28, .y = 118}
 	};
 
-	spline.SetMembers(dim, ROI, DISTANCE, DZ, SMOOTH_Z);
+	spline.SetMembers(dim, ROI, DISTANCE, DZ);
 	const auto BeadsStack = spline.ExtractBeads(input.data(), Beads);
 	const auto BeadsNorm  = spline.SoftNormalization(BeadsStack);
 	// Affichage pour vérification
@@ -329,7 +328,7 @@ TEST(SplineTests, GetPSFMinimal)
 	beads[2][73] = std::numeric_limits<double>::quiet_NaN();
 	//matrix::Print(beads[2], Dim);
 
-	spline.SetMembers(Dim, 7, DISTANCE, DZ, SMOOTH_Z);
+	spline.SetMembers(Dim, 7, DISTANCE, DZ);
 	// changement des smallBeadSize pour avoir un equivalent
 	spline.smallXIndices_ = {0, 1, 2, 3, 4, 5, 6};
 	spline.smallZIndices_ = {1, 2, 3};
@@ -360,7 +359,7 @@ TEST(SplineTests, GetPSF)
 		{.x = 28, .y = 118}
 	};
 
-	spline.SetMembers(dim, ROI, DISTANCE, DZ, SMOOTH_Z);
+	spline.SetMembers(dim, ROI, DISTANCE, DZ);
 	auto beads     = spline.ExtractBeads(input.data(), Beads);
 	const auto PSF = spline.GetPSF(beads);
 	//matrix::Print(PSF, spline.beadDim_);	// Affichage pour vérification
@@ -383,7 +382,7 @@ TEST(SplineTests, Calibrate)
 		{.x = 43, .y = 70}, {.x = 44, .y = 82}, {.x = 90, .y = 110},
 		{.x = 28, .y = 118}
 	};
-	spline.Calibrate(input.data(), Beads, dim, ROI, DISTANCE, DZ, SMOOTH_Z);
+	spline.Calibrate(input.data(), Beads, dim, ROI, DISTANCE, DZ);
 
 	/*
 	 * Version complète partant de 0.

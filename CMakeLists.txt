@@ -14,6 +14,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 include_directories(${CMAKE_SOURCE_DIR}/lib)
 
 # === CPU ===
+
 add_library(CPU SHARED
     CPU/main.cpp
     lib/Constants.hpp
@@ -78,3 +79,33 @@ endif()
 
 find_package(FFTW3 REQUIRED)
 target_link_libraries(CPU PUBLIC FFTW3::fftw3)
+
+# === Google Test (test_cpu) ===
+enable_testing()
+
+
+file(GLOB_RECURSE CPU_SRC CONFIGURE_DEPENDS "lib/*.cpp")
+list(FILTER CPU_SRC EXCLUDE REGEX "[/\\]cuda[/\\]")
+
+add_executable(test_cpu
+    Tests_CPU/test_sp_Alignment.cpp
+    Tests_CPU/test_sp_BSpline.cpp
+    Tests_CPU/test_sp_FFT.cpp
+    Tests_CPU/test_sp_Interpolation.cpp
+    Tests_CPU/test_sp_Matrix.cpp
+    Tests_CPU/test_sp_Spline.cpp
+    Tests_CPU/TiffManagement.hpp
+    ${CPU_SRC}
+)
+
+find_package(GTest REQUIRED)
+find_package(TIFF REQUIRED)
+target_link_libraries(test_cpu
+    PRIVATE
+        FFTW3::fftw3
+        GTest::gtest
+        GTest::gtest_main
+        TIFF::TIFF
+)
+
+add_test(NAME CPU_Tests COMMAND test_cpu)

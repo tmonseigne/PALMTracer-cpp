@@ -2,7 +2,9 @@
   "name": "palmtracer",
   "version": "1.0.0",
   "dependencies": [
-    "fftw3"
+    "fftw3",
+    "tiff",
+	"gtest"
   ],
-  "builtin-baseline": "9a12c30b56f720e88601261dccf64535ebac45e4"
+  "builtin-baseline": "ef7dbf94b9198bc58f45951adcf1f041fcbc5ea0"
 }
