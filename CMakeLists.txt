@@ -18,15 +18,20 @@ add_library(CPU SHARED
     CPU/main.cpp
     lib/Constants.hpp
     lib/ExportAPI.hpp
-    lib/Matrix.cpp
-    lib/Matrix.hpp
-    lib/PSF.cpp
-    lib/PSF.hpp
-    lib/Spline.cpp
-    lib/Spline.hpp
     lib/Structs.hpp
-    lib/alignment/Alignment.hpp
-    lib/alignment/Alignment.cpp
+    lib/signal_processing/Alignment.hpp
+    lib/signal_processing/Alignment.cpp
+    lib/signal_processing/BSpline3D.cpp
+    lib/signal_processing/BSpline3D.hpp
+    lib/signal_processing/FFT.hpp
+    lib/signal_processing/Interpolation.cpp
+    lib/signal_processing/Interpolation.hpp
+    lib/signal_processing/Matrix.cpp
+    lib/signal_processing/Matrix.hpp
+    lib/signal_processing/PSF.cpp
+    lib/signal_processing/PSF.hpp
+    lib/signal_processing/Spline.cpp
+    lib/signal_processing/Spline.hpp
     lib/fit/Fitting.hpp
     lib/fit/Fitting.cpp
     lib/fit/GaussianFit.hpp
@@ -69,3 +74,7 @@ elseif(WIN32)
         LINK_FLAGS "/DEF:${CMAKE_SOURCE_DIR}/CPU/PALMTracer.def"
     )
 endif()
+
+
+find_package(FFTW3 REQUIRED)
+target_link_libraries(CPU PUBLIC FFTW3::fftw3)

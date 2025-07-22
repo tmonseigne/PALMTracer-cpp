@@ -1,0 +1,8 @@
+{
+  "name": "palmtracer",
+  "version": "1.0.0",
+  "dependencies": [
+    "fftw3"
+  ],
+  "builtin-baseline": "9a12c30b56f720e88601261dccf64535ebac45e4"
+}

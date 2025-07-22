@@ -126,7 +126,7 @@ double Interpolation3D::spline3D(const std::vector<double>& coeffs, const Coord3
 	          Iy = static_cast<int>(std::floor(pos.y)),
 	          Iz = static_cast<int>(std::floor(pos.z));
 
-	double val  = 0.0;
+	double val = 0.0;
 	//double norm = 0.0;
 	for (int dz = -1; dz <= 2; ++dz) {
 		const int Z     = Iz + dz;

@@ -388,5 +388,4 @@ void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std
 	// Maj des bons indices et poids finaux
 	for (size_t i = 0; i < Nbeads; ++i) { weights[i] = (std::isnan(rms[i]) || rms[i] > CutOff) ? std::numeric_limits<double>::quiet_NaN() : 1.0 / rms[i]; }
 }
-
 } // namespace palm_tracer

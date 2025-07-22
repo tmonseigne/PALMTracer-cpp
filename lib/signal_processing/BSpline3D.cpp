@@ -15,10 +15,10 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-	BSpline3D::BSpline3D(const std::vector<double>& volume, const Coord3D& dim, const size_t degree, const Vec3& lambda)
+BSpline3D::BSpline3D(const std::vector<double>& volume, const Coord3D& dim, const size_t degree, const Vec3& lambda)
 	: dim_(dim), degree_(degree), lambda_({lambda.x, lambda.y, lambda.z}), coeffs_(volume)
 {
-	getPolesFilter();                                                                 // Calcul des pôles du filtre B-spline pour une régularisation directe.
+	getPolesFilter();                                                                  // Calcul des pôles du filtre B-spline pour une régularisation directe.
 	for (size_t d = 0; d < N_DIMENSIONS; ++d) { applyFilter(d, filters_[d], c0_[d]); } // Filtrage par dimension
 
 	// Padding final par réflexion
@@ -36,9 +36,9 @@ namespace palm_tracer {
 	for (size_t z = 0; z < dimPadded_.z; ++z) {
 		for (size_t y = 0; y < dimPadded_.y; ++y) {
 			for (size_t x = 0; x < dimPadded_.x; ++x) {
-				const size_t SrcIndex = (IdxZ[z] * dim_.y + IdxY[y]) * dim_.x + IdxX[x];
-				const size_t DstIndex = (z * dimPadded_.y + y) * dimPadded_.x + x;
-				coeffsPadded_[DstIndex]      = coeffs_[SrcIndex];
+				const size_t SrcIndex   = (IdxZ[z] * dim_.y + IdxY[y]) * dim_.x + IdxX[x];
+				const size_t DstIndex   = (z * dimPadded_.y + y) * dimPadded_.x + x;
+				coeffsPadded_[DstIndex] = coeffs_[SrcIndex];
 			}
 		}
 	}
@@ -149,8 +149,8 @@ void BSpline3D::getFinalCoeff()
 					for (size_t j = 0; j < N; ++j) {
 						const size_t Yi = y * 3 + j;
 						for (size_t i = 0; i < N; ++i, ++idx) {
-							const size_t Xi  = x * 3 + i;
-							temp[idx]        = Up[(Zi * upDim.y + Yi) * upDim.x + Xi];
+							const size_t Xi = x * 3 + i;
+							temp[idx]       = Up[(Zi * upDim.y + Yi) * upDim.x + Xi];
 						}
 					}
 				}
@@ -217,7 +217,7 @@ void BSpline3D::getPolesFilter()
 			case 4: {
 				if (lambda_[i] <= std::numeric_limits<double>::epsilon()) {
 					filters_[i] = {{-0.36134122590022}, {-0.0137254292973391}};
-					c0_[i]     = 384.0;
+					c0_[i]      = 384.0;
 				}
 				else { throw std::invalid_argument("Even degree 4 with nonzero lambda_[i] not supported"); }
 				break;
@@ -225,7 +225,7 @@ void BSpline3D::getPolesFilter()
 			case 5: {
 				if (lambda_[i] <= std::numeric_limits<double>::epsilon()) {
 					filters_[i] = {{-0.430575347099973}, {-0.0430962882032647}};
-					c0_[i]     = 120.0;
+					c0_[i]      = 120.0;
 				}
 				else {
 					std::vector<double> p{1, -6, 15, -20, 15, -6, 1};
@@ -245,7 +245,7 @@ void BSpline3D::getPolesFilter()
 			case 6: {
 				if (lambda_[i] <= std::numeric_limits<double>::epsilon()) {
 					filters_[i] = {{-0.488294589303046}, {-0.0816792710762375}, {-0.00141415180832582}};
-					c0_[i]     = 46080.0;
+					c0_[i]      = 46080.0;
 				}
 				else { throw std::invalid_argument("Even degree 6 with nonzero lambda_[i] not supported"); }
 				break;
@@ -253,7 +253,7 @@ void BSpline3D::getPolesFilter()
 			case 7: {
 				if (lambda_[i] <= std::numeric_limits<double>::epsilon()) {
 					filters_[i] = {{-0.535280430796439}, {-0.122554615192327}, {-0.00914869480960828}};
-					c0_[i]     = 5040.0;
+					c0_[i]      = 5040.0;
 				}
 				else {
 					std::vector<double> p{1, -8, 28, -56, 70, -56, 28, -8, 1};

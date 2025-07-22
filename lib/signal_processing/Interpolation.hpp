@@ -13,11 +13,13 @@
 
 #pragma once
 #include <array>
+#include <cstdint>
 #include <vector>
 #include "Structs.hpp"
 
 
 namespace palm_tracer {
+/// <summary>Méthode d'interpolation.</summary>
 enum class interpolation_mode : uint8_t {
 	trilinear,    ///< Interpolation trilineaire (rapide).
 	cubic,        ///< Interpolation Cubique classique (Catmull-Rom).
