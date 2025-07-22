@@ -23,7 +23,7 @@ class BSpline3D {
 public:
 	static constexpr size_t N_DIMENSIONS = 3;
 
-	Coord3D dim_{}, dimCoeffs_{}, dimFinal_{};
+	Coord3D dim_{}, dimPadded_{}, dimFinal_{};
 
 	size_t degree_;                             ///< Degré de la B-spline (0 à 7)
 	std::array<double, N_DIMENSIONS> lambda_{}; ///< Facteur de régularisation (≠ 0 autorisé uniquement pour les degrés impairs).
@@ -31,10 +31,16 @@ public:
 	std::array<std::vector<std::complex<double>>, N_DIMENSIONS> filter_{}; ///< Vecteur de pôles du filtre (réels ou complexes conjugués)
 	std::array<double, N_DIMENSIONS> c0_{};                                ///< Coefficient multiplicatif final à appliquer au signal.
 
-	std::vector<double> coeffs_, coeffsHDR_, coeffsFinal_;
+	std::vector<double> coeffs_, coeffsPadded_, coeffsHDR_, coeffsFinal_;
 
 	BSpline3D(const std::vector<double>& volume, const Coord3D& dim, size_t degree = 3, const Vec3& lambda = {});
 	~BSpline3D() = default;
+
+	/// <summary> Évalue la fonction de base B-spline de degré donné sur un vecteur de positions. </summary>
+	/// <param name="x">position (peut contenir des négatifs, réels, etc).</param>
+	/// <param name="deg">Degré de la B-spline (0 à 7 pris en charge explicitement).</param>
+	/// <returns>Valeur de la base B-spline évaluée.</returns>
+	static double Eval(double x, size_t deg);
 
 protected:
 	void getFinalCoeff();
@@ -69,10 +75,5 @@ protected:
 	static std::vector<std::complex<double>> symExpFilt(const std::vector<std::complex<double>>& x, const std::complex<double>& c0,
 	                                                    const std::complex<double>& zi, size_t k0, const std::vector<size_t>& kVec);
 
-	/// <summary> Évalue la fonction de base B-spline de degré donné sur un vecteur de positions. </summary>
-	/// <param name="x">position (peut contenir des négatifs, réels, etc).</param>
-	/// <param name="deg">Degré de la B-spline (0 à 7 pris en charge explicitement).</param>
-	/// <returns>Valeur de la base B-spline évaluée.</returns>
-	static double eval(double x, size_t deg);
 };
 } // namespace palm_tracer

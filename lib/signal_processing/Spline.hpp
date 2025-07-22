@@ -20,6 +20,8 @@ namespace palm_tracer {
 /// <summary>Classe de calibration de la spline pour l'ajustement.</summary>
 class Spline {
 public:
+	Coord3D dim_{}, beadDim_{}, midBead_{}, smallBeadDim_{};
+
 	size_t imSize_{},
 	       stackSize_{},
 	       beadImSize_{},
@@ -31,7 +33,6 @@ public:
 	       dz_{},
 	       smoothZ_{};
 
-	Coord3D dim_{}, beadDim_{}, midBead_{}, smallBeadDim_{};
 	std::vector<size_t> smallXIndices_, smallZIndices_, zIndices_;
 
 	Spline()  = default;
@@ -48,14 +49,16 @@ public:
 
 	std::vector<std::vector<double>> ExtractBeads(const uint16_t* stack, const std::vector<Coord>& beads) const;
 
-	std::vector<double> RegisterPSF(std::vector<std::vector<double>>& beads) const;
+	std::vector<double> GetPSF(std::vector<std::vector<double>>& beads) const;
 
-	std::vector<Vec3> AlignToRef(const std::vector<double>& ref, std::vector<std::vector<double>>& beads, bool smallZ = false) const;
+	std::vector<Vec3> Align(const std::vector<double>& ref, std::vector<std::vector<double>>& beads, bool smallZ = false) const;
 
-	std::vector<std::vector<double>> SoftNormalization(const std::vector<std::vector<double>>& beads) const;
+	[[nodiscard]] std::vector<std::vector<double>> SoftNormalization(const std::vector<std::vector<double>>& beads) const;
 
-	void GetOverlap(const std::vector<std::vector<double>>& beads, const std::vector<Vec3>& shift, std::vector<double>& weight,
+	void GetOverlap(const std::vector<std::vector<double>>& beads, const std::vector<Vec3>& shift, std::vector<double>& weights,
 	                double& norm, bool smallZ = false) const;
+
+	void GetBSpline(std::vector<double> psf);
 
 protected:
 };

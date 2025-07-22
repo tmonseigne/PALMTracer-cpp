@@ -8,6 +8,7 @@
 #include <numeric>
 #include <vector>
 
+#include "BSpline3D.hpp"
 #include "Interpolation.hpp"
 #include "signal_processing/FFT.hpp"
 #include "signal_processing/Matrix.hpp"
@@ -20,17 +21,44 @@ void Spline::Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, c
 {
 	SetMembers(size, roi, distance, dz, smoothZ);
 
-	// Récupération des volumes des billes sur l'image Décallé vers zéro (soustraction du minimum de l'image)
+	// Récupération des volumes des billes sur l'image Décallé vers zéro (soustraction du minimum de l'image) et triées par différence à la moyenne.
 	auto beadsStack = ExtractBeads(stack, beads);
-	std::cout << beadsStack.size() << "\t" << beadsStack[0].size() << "\n";
-	for (size_t i = 0; i < 5; ++i) {
-		const size_t RoiIdx = i * beadDim_.x;
-		std::cout << "[";
-		for (size_t j = 0; j < 5; ++j) { std::cout << beadsStack[0][RoiIdx + j] << "    "; }
-		std::cout << "]\n";
+
+	// Récupération de la PSF de référence
+	auto psf = GetPSF(beadsStack);
+
+	// Suppression des bords
+	matrix::Crop(psf, beadDim_, true, true, true);
+	// Mise à jour des valeurs utiles
+	beadImSize_ = beadDim_.GetPlaneSize();
+	beadSize_   = beadDim_.GetSize();
+	midBead_    = beadDim_.GetMid();
+
+	// Récupération d'un minimum sur les 3 plans centraux et décallage par ce minimum
+	double min = std::numeric_limits<double>::infinity();
+	for (size_t i = (midBead_.z - 1) * beadImSize_; i < (midBead_.z + 1) * beadImSize_; ++i) {
+		if (!std::isnan(psf[i]) && std::isfinite(psf[i]) && psf[i] < min) { min = psf[i]; }
 	}
-	// Alignement et normalisation des PSFs 3D
-	std::vector<std::vector<double>> aligned;
+	matrix::Add(psf, -min);
+
+	// Récupération du maximumn de la somme de chaque plan (ignorant les nan).
+	double max = -std::numeric_limits<double>::infinity();
+	size_t idx = 0;
+	for (size_t z = 0; z < beadDim_.z; ++z) {
+		double sum = 0.0;
+		for (size_t i = 0; i < beadImSize_; ++i, ++idx) { if (!std::isnan(psf[idx]) && std::isfinite(psf[idx])) { sum += psf[idx]; } }
+		if (sum > max) { max = sum; }
+	}
+
+	const double Ratio = std::fabs(max) < std::numeric_limits<double>::epsilon() ? 1.0 : 1.0 / max; // un max de 0 est fortement improbable masi au cas où.
+	matrix::Scale(psf, Ratio);                                                                      // Normalisation de la psf
+	for (auto& p : psf) { if (std::isnan(p) || !std::isfinite(p) || p < 0) { p = 0; } }             // Remplacement des Nan, infinis et négatifs par des 0.
+
+	//matrix::Print(psf, beadDim_);
+
+	BSpline3D bs(psf, beadDim_, 3, {.x = 0, .y = 0, .z = 100.0 / static_cast<double>(dz_)}); // Calcul des coefficients de la cspline lissé
+	// Calcul du volume lissé avec encore une autre interpolation bien vénère GRRRRR
+	// Calcul des coefficients finaux avec encore une autre interpolation
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -151,9 +179,8 @@ std::vector<std::vector<double>> Spline::ExtractBeads(const uint16_t* stack, con
 	return res;
 }
 
-
 //-------------------------------------------------------------------------------------------------
-std::vector<double> Spline::RegisterPSF(std::vector<std::vector<double>>& beads) const
+std::vector<double> Spline::GetPSF(std::vector<std::vector<double>>& beads) const
 {
 	// On prend les N meilleures billes pour faire une moyenne, mais pas moins de 5 sauf si moins de 5 billes au départ.
 	const size_t Nbeads = beads.size();
@@ -185,7 +212,7 @@ std::vector<double> Spline::RegisterPSF(std::vector<std::vector<double>>& beads)
 	beadMean(false);
 
 	// Première passe sur l'intégralité du Z.
-	const auto Shifts = AlignToRef(mu, beads, false);
+	const auto Shifts = Align(mu, beads, false);
 	// Alignement (attention, différence du fait de l'interpolation, la suite de l'algorithme est compliqué à comparer)
 	const auto BeadsNorm = SoftNormalization(beads);     // Normalization douce
 	GetOverlap(BeadsNorm, Shifts, weights, norm, false); // Suppression des outliers
@@ -194,7 +221,7 @@ std::vector<double> Spline::RegisterPSF(std::vector<std::vector<double>>& beads)
 	beadMean(true);
 
 	// Seconde passe sur le sous-ensemble d'intérêt au niveau du Z.
-	AlignToRef(mu, beads, true);                                                       // Alignement basé sur le sous-ensemble d'intérêt au niveau du Z.
+	Align(mu, beads, true);                                                            // Alignement basé sur le sous-ensemble d'intérêt au niveau du Z.
 	beads = SoftNormalization(beads);                                                  // Normalization douce
 	std::ranges::fill(weights, 1.0);                                                   // Liste des poids des billes
 	for (size_t i = 0; i < 3; ++i) { GetOverlap(beads, Shifts, weights, norm, true); } // Lancement 3 fois pour mettre à jour le poids plusieurs fois
@@ -205,7 +232,7 @@ std::vector<double> Spline::RegisterPSF(std::vector<std::vector<double>>& beads)
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<Vec3> Spline::AlignToRef(const std::vector<double>& ref, std::vector<std::vector<double>>& beads, const bool smallZ) const
+std::vector<Vec3> Spline::Align(const std::vector<double>& ref, std::vector<std::vector<double>>& beads, const bool smallZ) const
 {
 	std::vector<Vec3> shifts(beads.size());
 	// Stocker la sous-image de la Référence
@@ -369,4 +396,6 @@ void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std
 	// Maj des bons indices et poids finaux
 	for (size_t i = 0; i < Nbeads; ++i) { weights[i] = (std::isnan(rms[i]) || rms[i] > CutOff) ? std::numeric_limits<double>::quiet_NaN() : 1.0 / rms[i]; }
 }
+
+//-------------------------------------------------------------------------------------------------
 } // namespace palm_tracer

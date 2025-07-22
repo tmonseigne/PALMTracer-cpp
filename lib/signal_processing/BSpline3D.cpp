@@ -23,7 +23,7 @@ BSpline3D::BSpline3D(const std::vector<double>& volume, const Coord3D& dim, cons
 
 	// Padding final par réflexion
 	const size_t Pad = static_cast<size_t>(std::floor(static_cast<double>(degree_) / 2.0));
-	dimCoeffs_       = {.x = dim_.x + 2 * Pad + 1, .y = dim_.y + 2 * Pad + 1, .z = dim_.z + 2 * Pad + 1};
+	dimPadded_       = {.x = dim_.x + 2 * Pad + 1, .y = dim_.y + 2 * Pad + 1, .z = dim_.z + 2 * Pad + 1};
 
 	// Générer les indices réfléchis pour chaque dimension
 	const auto IdxX = matrix::ReflectIndex1D(dim_.x, Pad),
@@ -31,24 +31,23 @@ BSpline3D::BSpline3D(const std::vector<double>& volume, const Coord3D& dim, cons
 	           IdxZ = matrix::ReflectIndex1D(dim_.z, Pad);
 
 	// Nouveau buffer paddé
-	std::vector<double> padded(dimCoeffs_.GetSize());
+	coeffsPadded_.resize(dimPadded_.GetSize());
 
-	for (size_t z = 0; z < dimCoeffs_.z; ++z) {
-		for (size_t y = 0; y < dimCoeffs_.y; ++y) {
-			for (size_t x = 0; x < dimCoeffs_.x; ++x) {
+	for (size_t z = 0; z < dimPadded_.z; ++z) {
+		for (size_t y = 0; y < dimPadded_.y; ++y) {
+			for (size_t x = 0; x < dimPadded_.x; ++x) {
 				const size_t SrcIndex = (IdxZ[z] * dim_.y + IdxY[y]) * dim_.x + IdxX[x];
-				const size_t DstIndex = (z * dimCoeffs_.y + y) * dimCoeffs_.x + x;
-				padded[DstIndex]      = coeffs_[SrcIndex];
+				const size_t DstIndex = (z * dimPadded_.y + y) * dimPadded_.x + x;
+				coeffsPadded_[DstIndex]      = coeffs_[SrcIndex];
 			}
 		}
 	}
-	coeffs_ = std::move(padded);
 	interpolateHDR();
 	getFinalCoeff();
 }
 
 //-------------------------------------------------------------------------------------------------
-double BSpline3D::eval(const double x, const size_t deg) // NOLINT(misc-no-recursion)
+double BSpline3D::Eval(const double x, const size_t deg) // NOLINT(misc-no-recursion)
 {
 	switch (deg) {
 		case 0: {
@@ -90,7 +89,7 @@ double BSpline3D::eval(const double x, const size_t deg) // NOLINT(misc-no-recur
 		}
 		default: {
 			const double HalfDegP1 = (static_cast<double>(deg) + 1.0) / 2.0;
-			return ((x + HalfDegP1) * eval(x + 0.5, deg - 1) + (HalfDegP1 - x) * eval(x - 0.5, deg - 1)) / static_cast<double>(deg);
+			return ((x + HalfDegP1) * Eval(x + 0.5, deg - 1) + (HalfDegP1 - x) * Eval(x - 0.5, deg - 1)) / static_cast<double>(deg);
 		}
 	}
 
@@ -357,21 +356,21 @@ double BSpline3D::interpolate_at(const double x, const double y, const double z)
 
 	for (size_t q = 0; q <= degree_; ++q) {
 		const int Iz = Kz0 + static_cast<int>(q);
-		if (Iz < 0 || static_cast<size_t>(Iz) >= dimCoeffs_.z) { continue; }
-		const double Bz = eval(z - static_cast<double>(Iz), degree_);
+		if (Iz < 0 || static_cast<size_t>(Iz) >= dimPadded_.z) { continue; }
+		const double Bz = Eval(z - static_cast<double>(Iz), degree_);
 
 		for (size_t i = 0; i <= degree_; ++i) {
 			const int Iy = Ky0 + static_cast<int>(i);
-			if (Iy < 0 || static_cast<size_t>(Iy) >= dimCoeffs_.y) { continue; }
-			const double Byz = eval(y - static_cast<double>(Iy), degree_) * Bz;
+			if (Iy < 0 || static_cast<size_t>(Iy) >= dimPadded_.y) { continue; }
+			const double Byz = Eval(y - static_cast<double>(Iy), degree_) * Bz;
 
 			for (size_t j = 0; j <= degree_; ++j) {
 				const int Ix = Kx0 + static_cast<int>(j);
-				if (Ix < 0 || static_cast<size_t>(Ix) >= dimCoeffs_.x) { continue; }
-				const double Bx = eval(x - static_cast<double>(Ix), degree_);
+				if (Ix < 0 || static_cast<size_t>(Ix) >= dimPadded_.x) { continue; }
+				const double Bx = Eval(x - static_cast<double>(Ix), degree_);
 
-				const size_t Idx = (static_cast<size_t>(Iz) * dimCoeffs_.y + static_cast<size_t>(Iy)) * dimCoeffs_.x + static_cast<size_t>(Ix);
-				result += coeffs_[Idx] * Bx * Byz;
+				const size_t Idx = (static_cast<size_t>(Iz) * dimPadded_.y + static_cast<size_t>(Iy)) * dimPadded_.x + static_cast<size_t>(Ix);
+				result += coeffsPadded_[Idx] * Bx * Byz;
 			}
 		}
 	}

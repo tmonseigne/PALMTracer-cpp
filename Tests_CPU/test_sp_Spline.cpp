@@ -44,12 +44,8 @@ TEST(SplineTests, ExtractBeads)
 	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
 
 	const std::vector<Coord> Beads = {
-		{.x = 25, .y = 19},
-		{.x = 93, .y = 27},
-		{.x = 122, .y = 61},
-		{.x = 43, .y = 70},
-		{.x = 44, .y = 82},
-		{.x = 90, .y = 110},
+		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
+		{.x = 43, .y = 70}, {.x = 44, .y = 82}, {.x = 90, .y = 110},
 		{.x = 28, .y = 118}
 	};
 
@@ -114,12 +110,8 @@ TEST(SplineTests, Align)
 	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
 
 	const std::vector<Coord> Beads = {
-		{.x = 25, .y = 19},
-		{.x = 93, .y = 27},
-		{.x = 122, .y = 61},
-		{.x = 43, .y = 70},
-		{.x = 44, .y = 82},
-		{.x = 90, .y = 110},
+		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
+		{.x = 43, .y = 70}, {.x = 44, .y = 82}, {.x = 90, .y = 110},
 		{.x = 28, .y = 118}
 	};
 
@@ -136,7 +128,7 @@ TEST(SplineTests, Align)
 		for (size_t b = 0; b < Nref; ++b) { sum += beadsStack[b][i]; }
 		mu[i] = sum / static_cast<double>(Nref);
 	}
-	const auto Shifts = spline.AlignToRef(mu, beadsStack, false);
+	const auto Shifts = spline.Align(mu, beadsStack, false);
 	for (auto& S : Shifts) { std::cout << S << "\n"; }
 	// Shift pour Matlab (je n'ai que des (0,0,0) à cause du zoom sur élément shifté)
 	//   0.0750, -0.3625, 0.0125
@@ -146,7 +138,8 @@ TEST(SplineTests, Align)
 	//	 0.725,   0.45,   0
 	//	-0.125,   0.25,   0
 	//Print(beadsStack[0], spline.beadDim_);
-	EXPECT_TRUE(false) << "Dans Matlab, l'interpolation d'une matrice contenant des 0 est différente donc ce test utilisant une interpolation sur ce type de matrice échoue également.";
+	EXPECT_TRUE(false) << "Dans Matlab, l'interpolation d'une matrice contenant des 0 est différente."
+	"Donc ce test utilisant une interpolation sur ce type de matrice échoue également.";
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -231,12 +224,8 @@ TEST(SplineTests, GetOverlap)
 	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
 
 	const std::vector<Coord> Beads = {
-		{.x = 25, .y = 19},
-		{.x = 93, .y = 27},
-		{.x = 122, .y = 61},
-		{.x = 43, .y = 70},
-		{.x = 44, .y = 82},
-		{.x = 90, .y = 110},
+		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
+		{.x = 43, .y = 70}, {.x = 44, .y = 82}, {.x = 90, .y = 110},
 		{.x = 28, .y = 118}
 	};
 
@@ -246,6 +235,7 @@ TEST(SplineTests, GetOverlap)
 		{.x = -0.1375, .y = 0.4625, .z = 0},
 		{.x = 0.2000, .y = -0.2000, .z = 0},
 		{.x = 0.7250, .y = 0.4500, .z = 0},
+		{.x = -0.1250, .y = 0.2500, .z = 0},
 		{.x = -0.1250, .y = 0.2500, .z = 0}
 	};
 	spline.SetMembers(dim, ROI, DISTANCE, DZ, SMOOTH_Z);
@@ -304,12 +294,8 @@ TEST(SplineTests, SoftNormalization)
 	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
 
 	const std::vector<Coord> Beads = {
-		{.x = 25, .y = 19},
-		{.x = 93, .y = 27},
-		{.x = 122, .y = 61},
-		{.x = 43, .y = 70},
-		{.x = 44, .y = 82},
-		{.x = 90, .y = 110},
+		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
+		{.x = 43, .y = 70}, {.x = 44, .y = 82}, {.x = 90, .y = 110},
 		{.x = 28, .y = 118}
 	};
 
@@ -321,7 +307,7 @@ TEST(SplineTests, SoftNormalization)
 }
 
 //-------------------------------------------------------------------------------------------------
-TEST(SplineTests, RegisterPSFMinimal)
+TEST(SplineTests, GetPSFMinimal)
 {
 	Spline spline;
 	constexpr Coord3D Dim{.x = 7, .y = 7, .z = 5}; // Très petit volume
@@ -353,13 +339,14 @@ TEST(SplineTests, RegisterPSFMinimal)
 	spline.smallBeadImSize_ = spline.smallBeadDim_.GetPlaneSize();
 	spline.smallBeadSize_   = spline.smallBeadDim_.GetSize();
 
-	const auto PSF = spline.RegisterPSF(beads);
+	const auto PSF = spline.GetPSF(beads);
 	matrix::Print(PSF, Dim);
-	EXPECT_TRUE(false) << "Dans Matlab, l'interpolation d'une matrice contenant des 0 est différente donc l'alignement interne à registerPSF utilisant une interpolation sur ce type de matrice échoue également.";
+	EXPECT_TRUE(false) << "Dans Matlab, l'interpolation d'une matrice contenant des 0 est différente."
+	"Donc l'alignement interne à registerPSF utilisant une interpolation sur ce type de matrice échoue également.";
 }
 
 //-------------------------------------------------------------------------------------------------
-TEST(SplineTests, RegisterPSF)
+TEST(SplineTests, GetPSF)
 {
 	Spline spline;
 	std::vector<uint16_t> input;
@@ -368,27 +355,38 @@ TEST(SplineTests, RegisterPSF)
 	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
 
 	const std::vector<Coord> Beads = {
-		{.x = 25, .y = 19},
-		{.x = 93, .y = 27},
-		{.x = 122, .y = 61},
-		{.x = 43, .y = 70},
-		{.x = 44, .y = 82},
-		{.x = 90, .y = 110},
+		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
+		{.x = 43, .y = 70}, {.x = 44, .y = 82}, {.x = 90, .y = 110},
 		{.x = 28, .y = 118}
 	};
 
 	spline.SetMembers(dim, ROI, DISTANCE, DZ, SMOOTH_Z);
-	const auto BeadsStack = spline.ExtractBeads(input.data(), Beads);
-	const auto BeadsNorm  = spline.SoftNormalization(BeadsStack);
-	// Affichage pour vérification
-	matrix::Print(BeadsNorm[0], spline.beadDim_);
-	EXPECT_TRUE(false) << "Dans Matlab, l'interpolation d'une matrice contenant des 0 est différente donc l'alignement interne à registerPSF utilisant une interpolation sur ce type de matrice échoue également.";
+	auto beads     = spline.ExtractBeads(input.data(), Beads);
+	const auto PSF = spline.GetPSF(beads);
+	//matrix::Print(PSF, spline.beadDim_);	// Affichage pour vérification
+	EXPECT_TRUE(false) << "Dans Matlab, l'interpolation d'une matrice contenant des 0 est différente."
+	"Donc l'alignement interne à GetPSF utilisant une interpolation sur ce type de matrice échoue également.";
 }
 
 
 //-------------------------------------------------------------------------------------------------
 TEST(SplineTests, Calibrate)
 {
+	Spline spline;
+	std::vector<uint16_t> input;
+	Coord3D dim{};
+	// Charger l'image des billes
+	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
+
+	const std::vector<Coord> Beads = {
+		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
+		{.x = 43, .y = 70}, {.x = 44, .y = 82}, {.x = 90, .y = 110},
+		{.x = 28, .y = 118}
+	};
+	spline.Calibrate(input.data(), Beads, dim, ROI, DISTANCE, DZ, SMOOTH_Z);
+
+/*
+ * Version complète partant de 0.
 	Spline spline;
 
 	std::vector<uint16_t> input;
@@ -422,5 +420,9 @@ TEST(SplineTests, Calibrate)
 	}
 	std::cout << beads.size() << "\n";
 	//spline.Calibrate(input.data(), beads, dim, ROI, 50, 10, 1);
+
+	*/
+	EXPECT_TRUE(false) << "Dans Matlab, l'interpolation d'une matrice contenant des 0 est différente."
+	"Au cours de la calibration, de nombreuses interpolations ont lieu sur des matrices ayant des éléments mis à 0 sur l'intégralité d'un plan, ligne ou colonne.";
 }
 } // namespace palm_tracer

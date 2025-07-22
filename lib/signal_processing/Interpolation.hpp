@@ -21,9 +21,10 @@
 
 namespace palm_tracer {
 enum class interpolation_mode : uint8_t {
-	trilinear,   ///< Interpolation trilineaire
-	cubic,       ///< Interpolation Cubique.
-	cubic_weight ///< Interpolation mathématiquement proche de MATLAB (spline cubique a = –0.5).
+	trilinear,    ///< Interpolation trilineaire
+	cubic,        ///< Interpolation Cubique.
+	cubic_weight, ///< Interpolation mathématiquement proche de MATLAB (spline cubique a = –0.5).
+	spline        ///< Interpolation spline B-cubique (identique MATLAB 'cubic' / 'spline')
 };
 
 /// <summary>Classe d'interpolation 3D.</summary>
@@ -129,5 +130,8 @@ private:
 	/// <returns> Valeur interpolée par interpolation linéaire trivariée au point donné.
 	/// Renvoie 0.0 si la position est en dehors des bornes du volume. </returns>
 	static double trilinear(const std::vector<double>& volume, const Coord3D& size, const Vec3& pos);
+
+	/// <summary>Interpolation B-spline cubique dans un volume 3D avec bord miroir.</summary>
+	static double spline3D(const std::vector<double>& coeffs, const Coord3D& size, const Vec3& pos);
 };
 } // namespace palm_tracer

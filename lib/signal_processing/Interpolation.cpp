@@ -64,23 +64,25 @@ double Interpolation3D::cubicWeight3D(const std::vector<double>& volume, const C
 		return volume[(z * size.y + y) * size.x + x];
 	};
 
-	const int Ix = static_cast<int>(std::floor(pos.x));
-	const int Iy = static_cast<int>(std::floor(pos.y));
-	const int Iz = static_cast<int>(std::floor(pos.z));
+	const int Ix = static_cast<int>(std::floor(pos.x)),
+	          Iy = static_cast<int>(std::floor(pos.y)),
+	          Iz = static_cast<int>(std::floor(pos.z));
 
 	double val = 0.0;
-
+	//double norm = 0.0;
 	for (int dz = -1; dz <= 2; ++dz) {
 		const double Wz = cubicWeight1D(pos.z - (Iz + dz));
 		for (int dy = -1; dy <= 2; ++dy) {
-			const double Wy = cubicWeight1D(pos.y - (Iy + dy));
+			const double Wyz = cubicWeight1D(pos.y - (Iy + dy)) * Wz;
 			for (int dx = -1; dx <= 2; ++dx) {
-				const double Wx = cubicWeight1D(pos.x - (Ix + dx));
-				val += get(Ix + dx, Iy + dy, Iz + dz) * Wx * Wy * Wz;
+				const double W = cubicWeight1D(pos.x - (Ix + dx)) * Wyz;
+				val += get(Ix + dx, Iy + dy, Iz + dz) * W;
+				//norm += W;
 			}
 		}
 	}
-
+	//std::cout << norm << "\n";
+	//return (norm > 0.0) ? val / norm : 0.0;
 	return val;
 }
 
@@ -111,6 +113,39 @@ double Interpolation3D::trilinear(const std::vector<double>& volume, const Coord
 	return C0 * (1 - Dz) + C1 * Dz;
 }
 
+//-------------------------------------------------------------------------------------------------
+double Interpolation3D::spline3D(const std::vector<double>& coeffs, const Coord3D& size, const Vec3& pos)
+{
+	auto get = [&](const int x, const int y, const int z) -> double {
+		if (x < 0 || x >= static_cast<int>(size.x) || y < 0 || y >= static_cast<int>(size.y) || z < 0 || z >= static_cast<int>(size.z)) { return 0.0; }
+		return coeffs[(z * size.y + y) * size.x + x];
+	};
+
+	const int Ix = static_cast<int>(std::floor(pos.x)),
+	          Iy = static_cast<int>(std::floor(pos.y)),
+	          Iz = static_cast<int>(std::floor(pos.z));
+
+	double val  = 0.0;
+	//double norm = 0.0;
+	for (int dz = -1; dz <= 2; ++dz) {
+		const int Z     = Iz + dz;
+		const double Bz = BSpline3D::Eval(pos.z - static_cast<double>(Z), 3);
+		for (int dy = -1; dy <= 2; ++dy) {
+			const int Y      = Iy + dy;
+			const double Byz = BSpline3D::Eval(pos.y - static_cast<double>(Y), 3) * Bz;
+			for (int dx = -1; dx <= 2; ++dx) {
+				const int X    = Ix + dx;
+				const double B = BSpline3D::Eval(pos.x - static_cast<double>(X), 3) * Byz;
+				val += get(X, Y, Z) * B;
+				//norm += B;
+			}
+		}
+	}
+	//return (norm > 0.0) ? val / norm : 0.0;
+	return val;
+}
+
+//-------------------------------------------------------------------------------------------------
 Vec3 Interpolation3D::SubpixelMax(const std::vector<double>& volume, const Coord3D& size, const Vec3& pos, const double delta, const double w)
 {
 	const int N     = static_cast<int>(std::round(2.0 * w / delta)) + 1;
@@ -144,6 +179,11 @@ std::vector<double> Interpolation3D::Zoom(const std::vector<double>& volume, con
 		newDim = size;
 		return volume;
 	}
+
+	if (mode_ == interpolation_mode::spline) {
+		const BSpline3D Bspline(volume, size); // lambda=0.0 pour interpolation pure
+		return Upsample(Bspline.coeffs_, size, static_cast<double>(static_cast<size_t>(1) << level), newDim);
+	}
 	return Upsample(volume, size, static_cast<double>(static_cast<size_t>(1) << level), newDim);
 }
 
@@ -171,6 +211,8 @@ std::vector<double> Interpolation3D::Upsample(const std::vector<double>& volume,
 		case interpolation_mode::cubic: interp = &cubic3D;
 			break;
 		case interpolation_mode::cubic_weight: interp = &cubicWeight3D;
+			break;
+		case interpolation_mode::spline: interp = &spline3D;
 			break;
 	}
 
@@ -206,6 +248,7 @@ std::vector<double> Interpolation3D::Shift(const std::vector<double>& volume, co
 			break;
 		case interpolation_mode::cubic_weight: interp = &cubicWeight3D;
 			break;
+		case interpolation_mode::spline: interp = &spline3D;
 	}
 
 	size_t idx = 0;

@@ -29,8 +29,8 @@ TEST(BSpline3DTests, DiracImpulse)
 	// Application du filtrage B-spline
 	const BSpline3D Bspline(volume, Dim, Degree, Lambda);
 
-	//std::cout << Bspline.dimCoeffs_ << "\n";
-	//matrix::Print(Bspline.coeffs_, Bspline.dimCoeffs_);
+	//std::cout << Bspline.dimPadded_ << "\n";
+	//matrix::Print(Bspline.coeffsPadded_, Bspline.dimPadded_);
 	//std::cout << Bspline.dim_ << "\n";
 	//matrix::Print(Bspline.coeffsHDR_, Bspline.dim_);
 	//std::cout << Bspline.dimFinal_ << "\n";

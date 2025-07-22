@@ -9,7 +9,7 @@
 namespace palm_tracer {
 constexpr auto MODE        = interpolation_mode::trilinear;
 constexpr auto CROP        = true;
-constexpr std::array MODES = {interpolation_mode::trilinear, interpolation_mode::cubic, interpolation_mode::cubic_weight};
+constexpr std::array MODES = {interpolation_mode::trilinear, interpolation_mode::cubic, interpolation_mode::cubic_weight, interpolation_mode::spline};
 constexpr std::array CROPS = {true, false};
 
 //-------------------------------------------------------------------------------------------------
@@ -127,7 +127,6 @@ TEST(InterpolationTests, ShiftOutOfBounds)
 //-------------------------------------------------------------------------------------------------
 TEST(InterpolationTests, InterpolateShifted)
 {
-	constexpr Coord3D Size = {.x = 3, .y = 3, .z = 3};
 	constexpr Coord3D Dim{.x = 4, .y = 4, .z = 4};
 	const size_t N = Dim.GetSize();
 	// Volume : avec un Pic dans un coin
@@ -316,11 +315,11 @@ TEST(InterpolationTests, InterpolateShifted)
 	for (const auto M : MODES) {
 		for (const auto C : CROPS) {
 			const Interpolation3D Interp(M, C);
-			const auto Hd = Interp.Zoom(volume, Size, 1, newSize);
-			//matrix::Print(Hd, Dim);
-			rms[0]        = matrix::RmsDifference(Hd, MatlabRefLinear);
-			rms[1]        = matrix::RmsDifference(Hd, MatlabRefCubic);
-			rms[2]        = matrix::RmsDifference(Hd, MatlabRefSpline);
+			const auto Hd = Interp.Zoom(volume, Dim, 1, newSize);
+			//if (static_cast<int>(M) == 2) { matrix::Print(Hd, newSize); }
+			rms[0] = matrix::RmsDifference(Hd, MatlabRefLinear);
+			rms[1] = matrix::RmsDifference(Hd, MatlabRefCubic);
+			rms[2] = matrix::RmsDifference(Hd, MatlabRefSpline);
 			std::cout << "Rms (M" << static_cast<int>(M) << ", Crop " << C << ") = L(" << rms[0] << "), C(" << rms[1] << "), S(" << rms[2] << ")\n";
 		}
 	}
