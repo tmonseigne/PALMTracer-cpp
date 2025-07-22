@@ -9,16 +9,16 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-void Alignment::Align(const uint16_t* highSNR, const uint16_t* lowSNR, const uint16_t* input, uint16_t* output, const Coord3D& size, const size_t upsampling)
+void Alignment::Align(const uint16_t* highSNR, const uint16_t* lowSNR, const uint16_t* input, uint16_t* output, const Coord3D& dim, const size_t upsampling)
 
 {
 	highSNR_     = highSNR;
 	lowSNR_      = lowSNR;
 	input_       = input;
 	output_      = output;
-	size_        = size;
-	sizeIm_      = size_.GetPlaneSize();
-	sizeStack_   = size_.GetSize();
+	dim_         = dim;
+	sizeIm_      = dim_.GetPlaneSize();
+	sizeStack_   = dim_.GetSize();
 	upsampling_  = upsampling;
 	upsampling2_ = upsampling * upsampling;
 	computeFactor();
@@ -26,7 +26,7 @@ void Alignment::Align(const uint16_t* highSNR, const uint16_t* lowSNR, const uin
 }
 
 //-------------------------------------------------------------------------------------------------
-void Alignment::Align(const uint16_t* input, uint16_t* output, const Coord3D& size, const std::array<std::array<double, 10>, 2>& factors,
+void Alignment::Align(const uint16_t* input, uint16_t* output, const Coord3D& dim, const std::array<std::array<double, 10>, 2>& factors,
                       const size_t upsampling)
 
 {
@@ -34,9 +34,9 @@ void Alignment::Align(const uint16_t* input, uint16_t* output, const Coord3D& si
 	lowSNR_      = nullptr;
 	input_       = input;
 	output_      = output;
-	size_        = size;
-	sizeIm_      = size_.GetPlaneSize();
-	sizeStack_   = size_.GetSize();
+	dim_         = dim;
+	sizeIm_      = dim_.GetPlaneSize();
+	sizeStack_   = dim_.GetSize();
 	upsampling_  = upsampling;
 	upsampling2_ = upsampling * upsampling;
 	factors_     = factors;
@@ -82,26 +82,26 @@ void Alignment::align()
 //-------------------------------------------------------------------------------------------------
 void Alignment::precomputeTransformMap()
 {
-	std::vector transformGrid(size_.y + 1, std::vector<Vec2>(size_.x + 1));
+	std::vector transformGrid(dim_.y + 1, std::vector<Vec2>(dim_.x + 1));
 
 	// 1. computeCoord pour tous les coins
 	#pragma omp parallel for
-	for (int y = 0; y <= static_cast<int>(size_.y); ++y) {
-		for (int x = 0; x <= static_cast<int>(size_.x); ++x) { computeCoord(x, y, transformGrid[y][x].x, transformGrid[y][x].y); }
+	for (int y = 0; y <= static_cast<int>(dim_.y); ++y) {
+		for (int x = 0; x <= static_cast<int>(dim_.x); ++x) { computeCoord(x, y, transformGrid[y][x].x, transformGrid[y][x].y); }
 	}
 
 	// 2. splatting inverse : chaque pixel source distribue à des pixels cibles
 	// Application du suréchantillonnage.
-	const size_t UpW      = size_.x * upsampling_;
-	const size_t UpH      = size_.y * upsampling_;
+	const size_t UpW      = dim_.x * upsampling_;
+	const size_t UpH      = dim_.y * upsampling_;
 	const size_t UpSizeIm = UpW * UpH;
 	const double Step     = 1.0 / static_cast<double>(upsampling_);
 	transformMap_.resize(UpSizeIm); // chaque pixel cible contiendra une liste de contributions
 
 	#pragma omp parallel for
-	for (int y = 0; y < static_cast<int>(size_.y); ++y) {
-		const size_t RowIdx = y * size_.x;
-		for (int x = 0; x < static_cast<int>(size_.x); ++x) {
+	for (int y = 0; y < static_cast<int>(dim_.y); ++y) {
+		const size_t RowIdx = y * dim_.x;
+		for (int x = 0; x < static_cast<int>(dim_.x); ++x) {
 			const size_t SrcIdx = RowIdx + x;
 
 			const std::vector P = {transformGrid[y][x], transformGrid[y][x + 1], transformGrid[y + 1][x + 1], transformGrid[y + 1][x]};
@@ -110,9 +110,9 @@ void Alignment::precomputeTransformMap()
 
 			// Récupération de la boite englobante avec le suréchantillonnage
 			const size_t Xmin = static_cast<size_t>(std::max(0.0, std::floor(x0))) * upsampling_;
-			const size_t Xmax = static_cast<size_t>(std::min(static_cast<double>(size_.x - 1), std::ceil(x1))) * upsampling_;
+			const size_t Xmax = static_cast<size_t>(std::min(static_cast<double>(dim_.x - 1), std::ceil(x1))) * upsampling_;
 			const size_t Ymin = static_cast<size_t>(std::max(0.0, std::floor(y0))) * upsampling_;
-			const size_t Ymax = static_cast<size_t>(std::min(static_cast<double>(size_.y - 1), std::ceil(y1))) * upsampling_;
+			const size_t Ymax = static_cast<size_t>(std::min(static_cast<double>(dim_.y - 1), std::ceil(y1))) * upsampling_;
 
 			for (size_t j = Ymin; j <= Ymax; ++j) {
 				const double Ypix      = static_cast<double>(j) * Step;
@@ -137,7 +137,7 @@ void Alignment::applyTransform() const
 	const int UpSizeIm = static_cast<int>(sizeIm_ * upsampling2_);
 	std::vector tmp(UpSizeIm, 0.0);
 
-	for (size_t p = 0; p < size_.z; ++p) {
+	for (size_t p = 0; p < dim_.z; ++p) {
 		std::ranges::fill(tmp, 0.0);
 		const size_t PlaneOffset = p * sizeIm_; // La source reste inchangé
 

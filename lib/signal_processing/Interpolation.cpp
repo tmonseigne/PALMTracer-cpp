@@ -17,11 +17,11 @@ double Interpolation3D::cubic1D(const std::array<double, 4>& v, const double x)
 	return v[1] + 0.5 * x * (v[2] - v[0] + x * (2.0 * v[0] - 5.0 * v[1] + 4.0 * v[2] - v[3] + x * (3.0 * (v[1] - v[2]) + v[3] - v[0])));
 }
 
-double Interpolation3D::cubic3D(const std::vector<double>& volume, const Coord3D& size, const Vec3& pos)
+double Interpolation3D::cubic3D(const std::vector<double>& volume, const Coord3D& dim, const Vec3& pos)
 {
 	auto get = [&](const int x, const int y, const int z) -> double {
-		if (x < 0 || x >= static_cast<int>(size.x) || y < 0 || y >= static_cast<int>(size.y) || z < 0 || z >= static_cast<int>(size.z)) { return 0.0; }
-		return volume[(z * size.y + y) * size.x + x];
+		if (x < 0 || x >= static_cast<int>(dim.x) || y < 0 || y >= static_cast<int>(dim.y) || z < 0 || z >= static_cast<int>(dim.z)) { return 0.0; }
+		return volume[(z * dim.y + y) * dim.x + x];
 	};
 
 	const int Ix = static_cast<int>(std::floor(pos.x));
@@ -57,11 +57,11 @@ double Interpolation3D::cubicWeight1D(double x, const double a)
 }
 
 //-------------------------------------------------------------------------------------------------
-double Interpolation3D::cubicWeight3D(const std::vector<double>& volume, const Coord3D& size, const Vec3& pos)
+double Interpolation3D::cubicWeight3D(const std::vector<double>& volume, const Coord3D& dim, const Vec3& pos)
 {
 	auto get = [&](const int x, const int y, const int z) -> double {
-		if (x < 0 || x >= static_cast<int>(size.x) || y < 0 || y >= static_cast<int>(size.y) || z < 0 || z >= static_cast<int>(size.z)) { return 0.0; }
-		return volume[(z * size.y + y) * size.x + x];
+		if (x < 0 || x >= static_cast<int>(dim.x) || y < 0 || y >= static_cast<int>(dim.y) || z < 0 || z >= static_cast<int>(dim.z)) { return 0.0; }
+		return volume[(z * dim.y + y) * dim.x + x];
 	};
 
 	const int Ix = static_cast<int>(std::floor(pos.x)),
@@ -87,11 +87,11 @@ double Interpolation3D::cubicWeight3D(const std::vector<double>& volume, const C
 }
 
 //-------------------------------------------------------------------------------------------------
-double Interpolation3D::trilinear(const std::vector<double>& volume, const Coord3D& size, const Vec3& pos)
+double Interpolation3D::trilinear(const std::vector<double>& volume, const Coord3D& dim, const Vec3& pos)
 {
 	auto get = [&](const int x, const int y, const int z) -> double {
-		if (x < 0 || x >= static_cast<int>(size.x) || y < 0 || y >= static_cast<int>(size.y) || z < 0 || z >= static_cast<int>(size.z)) { return 0.0; }
-		return volume[(z * size.y + y) * size.x + x];
+		if (x < 0 || x >= static_cast<int>(dim.x) || y < 0 || y >= static_cast<int>(dim.y) || z < 0 || z >= static_cast<int>(dim.z)) { return 0.0; }
+		return volume[(z * dim.y + y) * dim.x + x];
 	};
 
 	const int X0 = static_cast<int>(std::floor(pos.x)),
@@ -113,12 +113,13 @@ double Interpolation3D::trilinear(const std::vector<double>& volume, const Coord
 	return C0 * (1 - Dz) + C1 * Dz;
 }
 
+
 //-------------------------------------------------------------------------------------------------
-double Interpolation3D::spline3D(const std::vector<double>& coeffs, const Coord3D& size, const Vec3& pos)
+double Interpolation3D::spline3D(const std::vector<double>& coeffs, const Coord3D& dim, const Vec3& pos)
 {
 	auto get = [&](const int x, const int y, const int z) -> double {
-		if (x < 0 || x >= static_cast<int>(size.x) || y < 0 || y >= static_cast<int>(size.y) || z < 0 || z >= static_cast<int>(size.z)) { return 0.0; }
-		return coeffs[(z * size.y + y) * size.x + x];
+		if (x < 0 || x >= static_cast<int>(dim.x) || y < 0 || y >= static_cast<int>(dim.y) || z < 0 || z >= static_cast<int>(dim.z)) { return 0.0; }
+		return coeffs[(z * dim.y + y) * dim.x + x];
 	};
 
 	const int Ix = static_cast<int>(std::floor(pos.x)),
@@ -146,7 +147,7 @@ double Interpolation3D::spline3D(const std::vector<double>& coeffs, const Coord3
 }
 
 //-------------------------------------------------------------------------------------------------
-Vec3 Interpolation3D::SubpixelMax(const std::vector<double>& volume, const Coord3D& size, const Vec3& pos, const double delta, const double w)
+Vec3 Interpolation3D::SubpixelMax(const std::vector<double>& volume, const Coord3D& dim, const Vec3& pos, const double delta, const double w)
 {
 	const int N     = static_cast<int>(std::round(2.0 * w / delta)) + 1;
 	const int HalfN = N / 2;
@@ -161,7 +162,7 @@ Vec3 Interpolation3D::SubpixelMax(const std::vector<double>& volume, const Coord
 			for (int dx = -HalfN; dx <= HalfN; ++dx) {
 				shift.x              = dx * delta;
 				const Vec3 SamplePos = pos + shift;
-				const double V       = trilinear(volume, size, SamplePos);
+				const double V       = trilinear(volume, dim, SamplePos);
 				if (!std::isnan(V) && V > bestVal) {
 					bestVal = V;
 					res     = shift;
@@ -173,29 +174,29 @@ Vec3 Interpolation3D::SubpixelMax(const std::vector<double>& volume, const Coord
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<double> Interpolation3D::Zoom(const std::vector<double>& volume, const Coord3D& size, const size_t level, Coord3D& newDim) const
+std::vector<double> Interpolation3D::Zoom(const std::vector<double>& volume, const Coord3D& dim, const size_t level, Coord3D& newDim) const
 {
 	if (level == 0) {
-		newDim = size;
+		newDim = dim;
 		return volume;
 	}
 
 	if (mode_ == interpolation_mode::spline) {
-		const BSpline3D Bspline(volume, size); // lambda=0.0 pour interpolation pure
-		return Upsample(Bspline.coeffs_, size, static_cast<double>(static_cast<size_t>(1) << level), newDim);
+		const BSpline3D Bspline(volume, dim); // lambda=0.0 pour interpolation pure
+		return Upsample(Bspline.coeffs_, dim, static_cast<double>(static_cast<size_t>(1) << level), newDim);
 	}
-	return Upsample(volume, size, static_cast<double>(static_cast<size_t>(1) << level), newDim);
+	return Upsample(volume, dim, static_cast<double>(static_cast<size_t>(1) << level), newDim);
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<double> Interpolation3D::Upsample(const std::vector<double>& volume, const Coord3D& size, const double factor, Coord3D& newDim) const
+std::vector<double> Interpolation3D::Upsample(const std::vector<double>& volume, const Coord3D& dim, const double factor, Coord3D& newDim) const
 {
 	const double Step = 1.0 / factor;
 
 	newDim = {
-		.x = static_cast<size_t>(std::round(static_cast<double>(size.x - 1) * factor + 1)),
-		.y = static_cast<size_t>(std::round(static_cast<double>(size.y - 1) * factor + 1)),
-		.z = static_cast<size_t>(std::round(static_cast<double>(size.z - 1) * factor + 1))
+		.x = static_cast<size_t>(std::round(static_cast<double>(dim.x - 1) * factor + 1)),
+		.y = static_cast<size_t>(std::round(static_cast<double>(dim.y - 1) * factor + 1)),
+		.z = static_cast<size_t>(std::round(static_cast<double>(dim.z - 1) * factor + 1))
 	};
 
 	std::vector out(newDim.GetSize(), 0.0);
@@ -224,7 +225,7 @@ std::vector<double> Interpolation3D::Upsample(const std::vector<double>& volume,
 			pos.y = static_cast<double>(y) * Step;
 			for (size_t x = 0; x < newDim.x; ++x, ++idx) {
 				pos.x    = static_cast<double>(x) * Step;
-				out[idx] = (cropBound_ && isOut(pos, size)) ? 0.0 : interp(volume, size, pos);
+				out[idx] = (cropBound_ && isOut(pos, dim)) ? 0.0 : interp(volume, dim, pos);
 			}
 		}
 	}
@@ -266,7 +267,7 @@ std::vector<double> Interpolation3D::Shift(const std::vector<double>& volume, co
 }
 
 //-------------------------------------------------------------------------------------------------
-Vec3 Interpolation3D::GetShift(const std::vector<double>& ref, const std::vector<double>& target, const Coord3D& size)
+Vec3 Interpolation3D::GetShift(const std::vector<double>& ref, const std::vector<double>& target, const Coord3D& dim)
 {
 	if (std::accumulate(ref.begin(), ref.end(), 0.0) == 0.0 || std::accumulate(target.begin(), target.end(), 0.0) == 0.0) {
 		return {.x = 0.0, .y = 0.0, .z = 0.0};
@@ -277,13 +278,13 @@ Vec3 Interpolation3D::GetShift(const std::vector<double>& ref, const std::vector
 	constexpr size_t ZoomLevel  = 2, // Niveau de Zoom de l'image HD
 	                 ZoomFactor = 4; // Diviser le shift final par ce nombre pour revenir à l'échelle initiale (2^ZoomLevel)
 	Coord3D size2X{};
-	auto refHD = Zoom(ref, size, ZoomLevel, size2X);
+	auto refHD = Zoom(ref, dim, ZoomLevel, size2X);
 
 	// Changement de mode pour l'élément shifté à cause des 0.
 	// Reproduire le comportement matlab est impossible pour le moment. Cette interpolation est la plus proche.
 	const auto PreviousMode = mode_;
 	mode_                   = interpolation_mode::cubic_weight;
-	auto tarHD              = Zoom(target, size, ZoomLevel, size2X);
+	auto tarHD              = Zoom(target, dim, ZoomLevel, size2X);
 	mode_                   = PreviousMode;
 
 	// Normalisation (mean)

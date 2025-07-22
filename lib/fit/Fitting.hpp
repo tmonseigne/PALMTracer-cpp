@@ -47,7 +47,7 @@ public:
 	virtual ~Fitting() = default;
 
 	/// <summary>Exécute l'ajustement sur tous les points précédemments localisés par la segmentation.</summary>
-	/// <param name="segmentation">Segmentation de l'image initiale. </param>
+	/// <param name="segmentation">Segmentation de l'image initiale.</param>
 	/// <param name="points">Résultat de l'ajustement sur les points localisés.</param>
 	void Fit(const Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points);
 
@@ -66,7 +66,7 @@ protected:
 
 	static constexpr size_t N_ITER = 50; ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
 
-	/// <summary>Initialise les différents membres de la classe. </summary>
+	/// <summary>Initialise les différents membres de la classe.</summary>
 	void initialize();
 
 	/// <summary>Parse les paramètres reçus pour l'ajustement.</summary>

@@ -8,18 +8,16 @@
 #include <numeric>
 #include <vector>
 
-#include "BSpline3D.hpp"
 #include "Interpolation.hpp"
-#include "signal_processing/FFT.hpp"
 #include "signal_processing/Matrix.hpp"
 
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-void Spline::Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, const Coord3D& size, const size_t roi,
-                       const size_t distance, const size_t dz, const size_t smoothZ)
+void Spline::Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, const Coord3D& dim, const size_t roi,
+                       const size_t distance, const size_t dz)
 {
-	SetMembers(size, roi, distance, dz, smoothZ);
+	SetMembers(dim, roi, distance, dz);
 
 	// Récupération des volumes des billes sur l'image Décallé vers zéro (soustraction du minimum de l'image) et triées par différence à la moyenne.
 	auto beadsStack = ExtractBeads(stack, beads);
@@ -53,16 +51,11 @@ void Spline::Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, c
 	const double Ratio = std::fabs(max) < std::numeric_limits<double>::epsilon() ? 1.0 : 1.0 / max; // un max de 0 est fortement improbable masi au cas où.
 	matrix::Scale(psf, Ratio);                                                                      // Normalisation de la psf
 	for (auto& p : psf) { if (std::isnan(p) || !std::isfinite(p) || p < 0) { p = 0; } }             // Remplacement des Nan, infinis et négatifs par des 0.
-
-	//matrix::Print(psf, beadDim_);
-
-	BSpline3D bs(psf, beadDim_, 3, {.x = 0, .y = 0, .z = 100.0 / static_cast<double>(dz_)}); // Calcul des coefficients de la cspline lissé
-	// Calcul du volume lissé avec encore une autre interpolation bien vénère GRRRRR
-	// Calcul des coefficients finaux avec encore une autre interpolation
+	bs_ = BSpline3D(psf, beadDim_, 3, {.x = 0, .y = 0, .z = 100.0 / static_cast<double>(dz_)});     // Calcul des coefficients de la cspline lissé
 }
 
 //-------------------------------------------------------------------------------------------------
-void Spline::SetMembers(const Coord3D& dim, const size_t roi, const size_t distance, const size_t dz, const size_t smoothZ)
+void Spline::SetMembers(const Coord3D& dim, const size_t roi, const size_t distance, const size_t dz)
 {
 	const size_t NewRoi = roi % 2 == 0 ? roi - 1 : roi; // ROI doit-être impair. Pour éviter les effets de bords, on soustrait en cas de nombre pair.
 
@@ -77,7 +70,6 @@ void Spline::SetMembers(const Coord3D& dim, const size_t roi, const size_t dista
 
 	distanceHalf_ = distance / 2;
 	dz_           = dz;
-	smoothZ_      = smoothZ;
 
 	// Calcul de la zone d'interet centrale de largeur maximum 13 pour la PSF (au-delà, les éléments sont éclipsés de certains calculs)
 	constexpr size_t MaxWindowSize = 13;
@@ -189,7 +181,7 @@ std::vector<double> Spline::GetPSF(std::vector<std::vector<double>>& beads) cons
 	double norm = 0.0;
 
 	std::vector mu(beadSize_, 0.0);
-	// Fonciton locale de calcul de moyenne à travers les billes
+	// Fonction locale de calcul de moyenne à travers les billes
 	auto beadMean = [&](const bool update) {
 		#pragma omp parallel for
 		for (int i = 0; i < static_cast<int>(beadSize_); ++i) {
@@ -397,5 +389,4 @@ void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std
 	for (size_t i = 0; i < Nbeads; ++i) { weights[i] = (std::isnan(rms[i]) || rms[i] > CutOff) ? std::numeric_limits<double>::quiet_NaN() : 1.0 / rms[i]; }
 }
 
-//-------------------------------------------------------------------------------------------------
 } // namespace palm_tracer

@@ -19,7 +19,7 @@
 
 namespace palm_tracer {
 /// <summary>Classe de traitement d'images segmentées en 2D, permettant l'allocation de structures,
-/// le calcul de statistiques et le filtrage basé sur des critères morphologiques et d'intensité. </summary>
+/// le calcul de statistiques et le filtrage basé sur des critères morphologiques et d'intensité.</summary>
 ///
 /// Cette classe manipule des structures 2D identifiées dans une image segmentée et stockées sous forme de labels.
 /// Elle permet notamment :
@@ -87,7 +87,7 @@ private:
 	void getLocalMax();
 
 	/// <summary>Applique l'algorithme de segmentation watershed à partir des germes préalablement détectés.
-	/// Utilise une file de priorité pour propager les labels des régions à travers la carte de potentiel. </summary>
+	/// Utilise une file de priorité pour propager les labels des régions à travers la carte de potentiel.</summary>
 	void watershed();
 };
 } // namespace palm_tracer

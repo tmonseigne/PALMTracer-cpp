@@ -64,7 +64,7 @@ protected:
 	                      const std::vector<double>& dzf, const std::vector<double>& p, std::vector<double>& dudt, double& model) const;
 
 	/// <summary>Met à jour le jacobien et l'hessienne pour le modèle MLE (Maximum Likelihood Estimation).
-	/// Utilise une vraisemblance basée sur la statistique de Poisson. </summary>
+	/// Utilise une vraisemblance basée sur la statistique de Poisson.</summary>
 	/// <param name="data">Valeur observée dans l'image.</param>
 	/// <param name="model">Valeur prédite par le modèle.</param>
 	/// <param name="err">Erreur totale accumulée (log-vraisemblance).</param>

@@ -146,12 +146,12 @@ inline Coord3D GetCoord3D(size_t index, const Coord3D& size)
 
 /// <summary>Cast des Coordonnées (entières) vers les Coordonnées (flottantes).</summary>
 /// <param name="c">Coordonnées entières.</param>
-/// <returns> Coordonnées flottantes. </returns>
+/// <returns> Coordonnées flottantes.</returns>
 inline Vec3 CoordToVec(const Coord3D& c) { return Vec3{.x = static_cast<double>(c.x), .y = static_cast<double>(c.y), .z = static_cast<double>(c.z)}; }
 
 /// <summary>Cast des Coordonnées (entières) vers les Coordonnées (flottantes).</summary>
 /// <param name="c">Coordonnées entières.</param>
-/// <returns> Coordonnées flottantes. </returns>
+/// <returns> Coordonnées flottantes.</returns>
 inline Vec2 CoordToVec(const Coord& c) { return Vec2{.x = static_cast<double>(c.x), .y = static_cast<double>(c.y)}; }
 
 //-------------------------------------------------------------------------------------------------

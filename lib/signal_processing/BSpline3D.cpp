@@ -15,11 +15,11 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-BSpline3D::BSpline3D(const std::vector<double>& volume, const Coord3D& dim, const size_t degree, const Vec3& lambda)
+	BSpline3D::BSpline3D(const std::vector<double>& volume, const Coord3D& dim, const size_t degree, const Vec3& lambda)
 	: dim_(dim), degree_(degree), lambda_({lambda.x, lambda.y, lambda.z}), coeffs_(volume)
 {
 	getPolesFilter();                                                                 // Calcul des pôles du filtre B-spline pour une régularisation directe.
-	for (size_t d = 0; d < N_DIMENSIONS; ++d) { applyFilter(d, filter_[d], c0_[d]); } // Filtrage par dimension
+	for (size_t d = 0; d < N_DIMENSIONS; ++d) { applyFilter(d, filters_[d], c0_[d]); } // Filtrage par dimension
 
 	// Padding final par réflexion
 	const size_t Pad = static_cast<size_t>(std::floor(static_cast<double>(degree_) / 2.0));
@@ -170,7 +170,7 @@ void BSpline3D::getFinalCoeff()
 void BSpline3D::getPolesFilter()
 {
 	for (size_t i = 0; i < N_DIMENSIONS; ++i) {
-		filter_[i].clear();
+		filters_[i].clear();
 		if (lambda_[i] < 0.0) { throw std::invalid_argument("lambda_[i] must be non-negative"); }
 
 		switch (degree_) {
@@ -183,14 +183,14 @@ void BSpline3D::getPolesFilter()
 				if (lambda_[i] <= std::numeric_limits<double>::epsilon()) { c0_[i] = 1.0; }
 				else {
 					const double R = 1.0 + 1.0 / (2.0 * lambda_[i]) - std::sqrt(1.0 + 4.0 * lambda_[i]) / (2.0 * lambda_[i]);
-					filter_[i].emplace_back(R);
+					filters_[i].emplace_back(R);
 					c0_[i] = -1.0 / lambda_[i];
 				}
 				break;
 			}
 			case 2: {
 				if (lambda_[i] <= std::numeric_limits<double>::epsilon()) {
-					filter_[i].emplace_back(2.0 * std::numbers::sqrt2 - 3.0);
+					filters_[i].emplace_back(2.0 * std::numbers::sqrt2 - 3.0);
 					c0_[i] = 8.0;
 				}
 				else { throw std::invalid_argument("Even degree 2 with nonzero lambda_[i] not supported"); }
@@ -198,7 +198,7 @@ void BSpline3D::getPolesFilter()
 			}
 			case 3: {
 				if (lambda_[i] <= std::numeric_limits<double>::epsilon()) {
-					filter_[i].emplace_back(std::numbers::sqrt3 - 2.0);
+					filters_[i].emplace_back(std::numbers::sqrt3 - 2.0);
 					c0_[i] = 6.0;
 				}
 				else {
@@ -208,7 +208,7 @@ void BSpline3D::getPolesFilter()
 					p[3] += 1.0 / (6.0 * lambda_[i]);
 
 					auto roots = solvePolynomial(p);
-					std::ranges::copy_if(roots, std::back_inserter(filter_[i]), [](auto z) { return std::abs(z) <= 1.0; });
+					std::ranges::copy_if(roots, std::back_inserter(filters_[i]), [](auto z) { return std::abs(z) <= 1.0; });
 
 					c0_[i] = 1.0 / lambda_[i];
 				}
@@ -216,7 +216,7 @@ void BSpline3D::getPolesFilter()
 			}
 			case 4: {
 				if (lambda_[i] <= std::numeric_limits<double>::epsilon()) {
-					filter_[i] = {{-0.36134122590022}, {-0.0137254292973391}};
+					filters_[i] = {{-0.36134122590022}, {-0.0137254292973391}};
 					c0_[i]     = 384.0;
 				}
 				else { throw std::invalid_argument("Even degree 4 with nonzero lambda_[i] not supported"); }
@@ -224,7 +224,7 @@ void BSpline3D::getPolesFilter()
 			}
 			case 5: {
 				if (lambda_[i] <= std::numeric_limits<double>::epsilon()) {
-					filter_[i] = {{-0.430575347099973}, {-0.0430962882032647}};
+					filters_[i] = {{-0.430575347099973}, {-0.0430962882032647}};
 					c0_[i]     = 120.0;
 				}
 				else {
@@ -236,7 +236,7 @@ void BSpline3D::getPolesFilter()
 					p[5] -= 1.0 / (120.0 * lambda_[i]);
 
 					auto roots = solvePolynomial(p);
-					std::ranges::copy_if(roots, std::back_inserter(filter_[i]), [](auto z) { return std::abs(z) <= 1.0; });
+					std::ranges::copy_if(roots, std::back_inserter(filters_[i]), [](auto z) { return std::abs(z) <= 1.0; });
 
 					c0_[i] = -1.0 / lambda_[i];
 				}
@@ -244,7 +244,7 @@ void BSpline3D::getPolesFilter()
 			}
 			case 6: {
 				if (lambda_[i] <= std::numeric_limits<double>::epsilon()) {
-					filter_[i] = {{-0.488294589303046}, {-0.0816792710762375}, {-0.00141415180832582}};
+					filters_[i] = {{-0.488294589303046}, {-0.0816792710762375}, {-0.00141415180832582}};
 					c0_[i]     = 46080.0;
 				}
 				else { throw std::invalid_argument("Even degree 6 with nonzero lambda_[i] not supported"); }
@@ -252,7 +252,7 @@ void BSpline3D::getPolesFilter()
 			}
 			case 7: {
 				if (lambda_[i] <= std::numeric_limits<double>::epsilon()) {
-					filter_[i] = {{-0.535280430796439}, {-0.122554615192327}, {-0.00914869480960828}};
+					filters_[i] = {{-0.535280430796439}, {-0.122554615192327}, {-0.00914869480960828}};
 					c0_[i]     = 5040.0;
 				}
 				else {
@@ -266,7 +266,7 @@ void BSpline3D::getPolesFilter()
 					p[7] += 1.0 / (5040.0 * lambda_[i]);
 
 					auto roots = solvePolynomial(p);
-					std::ranges::copy_if(roots, std::back_inserter(filter_[i]), [](auto z) { return std::abs(z) <= 1.0; });
+					std::ranges::copy_if(roots, std::back_inserter(filters_[i]), [](auto z) { return std::abs(z) <= 1.0; });
 
 					c0_[i] = 1.0 / lambda_[i];
 				}
