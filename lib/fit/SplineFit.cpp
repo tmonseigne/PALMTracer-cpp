@@ -135,8 +135,11 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 				luEvaluate(l, u, jacobian, update);
 				// Mise à jour de la matrice de saut, la matrice update et de P.
 				for (size_t i = 0; i < nParams_; ++i) {
-					if (update[i] / OldUpdate[i] < -0.5) { jump[i] *= 0.5; }
-					update[i] /= 1 + std::fabs(update[i] / jump[i]);
+					if (std::abs(OldUpdate[i]) > EPSILON) {
+						if (update[i] / OldUpdate[i] < -0.5) { jump[i] *= 0.5; }
+						update[i] /= 1 + std::abs(update[i] / jump[i]);
+					}
+					else { update[i] /= 1 + std::abs(update[i]) / jump[i]; } // Pas de division par une grandeur instable
 					p[1][i] -= update[i];
 					p[1][i] = std::clamp(p[1][i], p[0][i], p[2][i]);
 				}
