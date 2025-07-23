@@ -1,11 +1,16 @@
 #include "gtest/gtest.h"
 
 #include <algorithm>
+#include <filesystem>
 
 #include "TiffManagement.hpp"
-#include "alignment/Alignment.hpp"
+#include "signal_processing//Alignment.hpp"
 
 namespace palm_tracer {
+const std::filesystem::path PATH          = std::filesystem::path(__FILE__).parent_path();
+const std::filesystem::path REF_FILE_PATH = PATH / "Input/Alignement_Reference.tiff";
+const std::filesystem::path OUTPUT_PATH   = PATH / "Output";
+
 //-------------------------------------------------------------------------------------------------
 struct AlignTestParams {
 	std::string outputPath;
@@ -14,10 +19,7 @@ struct AlignTestParams {
 };
 
 //-------------------------------------------------------------------------------------------------
-class AlignmentTests : public ::testing::TestWithParam<AlignTestParams> { };
-
-//-------------------------------------------------------------------------------------------------
-TEST(AlignmentTests, BaseCreation) { Alignment align; }
+class AlignmentTests : public testing::TestWithParam<AlignTestParams> { };
 
 //-------------------------------------------------------------------------------------------------
 TEST(AlignmentTests, BlankCallWithReference)
@@ -28,6 +30,7 @@ TEST(AlignmentTests, BlankCallWithReference)
 	constexpr size_t ImSize     = Height * Width;
 	constexpr size_t Size       = ImSize * Planes;
 	constexpr size_t Upsampling = 1;
+	constexpr Coord3D Dim       = {.x = Width, .y = Height, .z = Planes};
 	const auto HighSNR          = new uint16_t[ImSize],
 	           LowSNR           = new uint16_t[ImSize],
 	           Input            = new uint16_t[Size],
@@ -39,8 +42,7 @@ TEST(AlignmentTests, BlankCallWithReference)
 	std::fill_n(Input, Size, 0);
 	std::fill_n(Output, Size, 0);
 
-	EXPECT_THROW(align.Align(HighSNR, LowSNR, Input, Output, Height, Width, Planes, Upsampling),
-	             std::runtime_error);
+	EXPECT_THROW(align.Align(HighSNR, LowSNR, Input, Output, Dim, Upsampling), std::runtime_error);
 
 
 	delete[] HighSNR;
@@ -58,6 +60,7 @@ TEST(AlignmentTests, BlankCallWithFactor)
 	constexpr size_t ImSize     = Height * Width;
 	constexpr size_t Size       = ImSize * Planes;
 	constexpr size_t Upsampling = 1;
+	constexpr Coord3D Dim       = {.x = Width, .y = Height, .z = Planes};
 	const auto Input            = new uint16_t[Size],
 	           Output           = new uint16_t[Size];
 
@@ -67,7 +70,7 @@ TEST(AlignmentTests, BlankCallWithFactor)
 	std::fill_n(Input, Size, 0);
 	std::fill_n(Output, Size, 0);
 
-	align.Align(Input, Output, Height, Width, Planes, Factors, Upsampling);
+	align.Align(Input, Output, Dim, Factors, Upsampling);
 
 	delete[] Input;
 	delete[] Output;
@@ -75,23 +78,26 @@ TEST(AlignmentTests, BlankCallWithFactor)
 
 TEST_P(AlignmentTests, AlignmentCore)
 {
+	if (!std::filesystem::exists(OUTPUT_PATH)) { std::filesystem::create_directories(OUTPUT_PATH); }
 	const auto& [outputPath, factors, upsampling] = GetParam();
 
 	std::vector<uint16_t> input;
-	size_t width, height, planes;
+	Coord3D dim{};
 
 	// 1. Charger
-	loadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Alignement_Reference.tiff", input, width, height, planes);
+	LoadTiff3D(REF_FILE_PATH.string().c_str(), input, dim);
 
 	// 2. Allouer
 	std::vector<uint16_t> output(input.size() * upsampling * upsampling, 0);
 
 	// 3. Algorithme
 	Alignment align;
-	align.Align(input.data(), output.data(), height, width, planes, factors, upsampling);
+	align.Align(input.data(), output.data(), dim, factors, upsampling);
 
 	// 4. Sauvegarder
-	saveTiff3D(outputPath.c_str(), output.data(), width * upsampling, height * upsampling, planes);
+	const Coord3D Newdim{.x = dim.x * upsampling, .y = dim.y * upsampling, .z = dim.z};
+
+	SaveTiff3D(outputPath.c_str(), output.data(), Newdim);
 
 	SUCCEED();
 }
@@ -99,8 +105,8 @@ TEST_P(AlignmentTests, AlignmentCore)
 INSTANTIATE_TEST_CASE_P(
 	TestSuites, AlignmentTests,
 	::testing::Values(
-		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_1_Blank.tiff", {}, 1 },
-		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_2_Copy.tiff",
+		AlignTestParams{ (OUTPUT_PATH / "Align_1_Blank.tiff").string().c_str(), {}, 1 },
+		AlignTestParams{ (OUTPUT_PATH / "Align_2_Copy.tiff").string().c_str(),
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
@@ -108,7 +114,7 @@ INSTANTIATE_TEST_CASE_P(
 		return factors;
 		}(), 1
 		},
-		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_0.25.tiff",
+		AlignTestParams{ (OUTPUT_PATH / "Align_3_translate_0.25.tiff").string().c_str(),
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
@@ -118,7 +124,7 @@ INSTANTIATE_TEST_CASE_P(
 		return factors;
 		}(), 1
 		},
-		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_0.50.tiff",
+		AlignTestParams{ (OUTPUT_PATH / "Align_3_translate_0.50.tiff").string().c_str(),
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
@@ -128,7 +134,7 @@ INSTANTIATE_TEST_CASE_P(
 		return factors;
 		}(), 1
 		},
-		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_0.75.tiff",
+		AlignTestParams{ (OUTPUT_PATH / "Align_3_translate_0.75.tiff").string().c_str(),
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
@@ -138,7 +144,7 @@ INSTANTIATE_TEST_CASE_P(
 		return factors;
 		}(), 1
 		},
-		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_3_translate_1.00.tiff",
+		AlignTestParams{ (OUTPUT_PATH / "Align_3_translate_1.00.tiff").string().c_str(),
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
@@ -148,7 +154,7 @@ INSTANTIATE_TEST_CASE_P(
 		return factors;
 		}(), 1
 		},
-		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_4_zoom.tiff",
+		AlignTestParams{ (OUTPUT_PATH / "Align_4_zoom.tiff").string().c_str(),
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 2.0;
@@ -156,7 +162,7 @@ INSTANTIATE_TEST_CASE_P(
 		return factors;
 		}(), 1
 		},
-		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_5_transpose.tiff",
+		AlignTestParams{ (OUTPUT_PATH / "Align_5_transpose.tiff").string().c_str(),
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][8] = 1.0;
@@ -164,7 +170,7 @@ INSTANTIATE_TEST_CASE_P(
 		return factors;
 		}(), 1
 		},
-		AlignTestParams{ "C:/Git/PALMTracer-cpp/Tests_CPU/Output/Align_6_translate_0.50_up_sampling_2.tiff",
+		AlignTestParams{ (OUTPUT_PATH / "Align_6_translate_0.50_up_sampling_2.tiff").string().c_str(),
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;

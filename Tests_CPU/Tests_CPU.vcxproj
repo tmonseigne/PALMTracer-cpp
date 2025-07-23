@@ -1,6 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
@@ -15,6 +19,10 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <UseDynamicDebugging>true</UseDynamicDebugging>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="Shared" />
@@ -39,13 +47,70 @@
       <AdditionalDependencies>tiff.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>X64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>../lib;C:\Git\vcpkg\installed\x64-windows\include;../vcpkg/installed/x64-windows/include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <Optimization>Disabled</Optimization>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <AdditionalLibraryDirectories>C:\Git\vcpkg\installed\x64-windows\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>tiff.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\lib\alignment\Alignment.hpp" />
+    <ClInclude Include="..\lib\Constants.hpp" />
+    <ClInclude Include="..\lib\fit\Fitting.hpp" />
+    <ClInclude Include="..\lib\fit\GaussianFit.hpp" />
+    <ClInclude Include="..\lib\fit\SplineFit.hpp" />
+    <ClInclude Include="..\lib\palm\ATrous.hpp" />
+    <ClInclude Include="..\lib\palm\Palm.hpp" />
+    <ClInclude Include="..\lib\palm\Segmentation2D.hpp" />
+    <ClInclude Include="..\lib\palm\SegmentationInfo.hpp" />
+    <ClInclude Include="..\lib\signal_processing\Alignment.hpp" />
+    <ClInclude Include="..\lib\signal_processing\BSpline3D.hpp" />
+    <ClInclude Include="..\lib\signal_processing\FFT.hpp" />
+    <ClInclude Include="..\lib\signal_processing\Interpolation.hpp" />
+    <ClInclude Include="..\lib\signal_processing\Matrix.hpp" />
+    <ClInclude Include="..\lib\signal_processing\PSF.hpp" />
+    <ClInclude Include="..\lib\signal_processing\Spline.hpp" />
+    <ClInclude Include="..\lib\Structs.hpp" />
+    <ClInclude Include="..\lib\tracking\Node.hpp" />
+    <ClInclude Include="..\lib\tracking\Parameters.hpp" />
+    <ClInclude Include="..\lib\tracking\TimeNodes.hpp" />
+    <ClInclude Include="..\lib\tracking\Tracking.hpp" />
     <ClInclude Include="TiffManagement.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\lib\alignment\Alignment.cpp" />
-    <ClCompile Include="test_Alignment.cpp" />
+    <ClCompile Include="..\lib\fit\Fitting.cpp" />
+    <ClCompile Include="..\lib\fit\GaussianFit.cpp" />
+    <ClCompile Include="..\lib\fit\SplineFit.cpp" />
+    <ClCompile Include="..\lib\palm\ATrous.cpp" />
+    <ClCompile Include="..\lib\palm\Palm.cpp" />
+    <ClCompile Include="..\lib\palm\Segmentation2D.cpp" />
+    <ClCompile Include="..\lib\signal_processing\Alignment.cpp" />
+    <ClCompile Include="..\lib\signal_processing\BSpline3D.cpp" />
+    <ClCompile Include="..\lib\signal_processing\Interpolation.cpp" />
+    <ClCompile Include="..\lib\signal_processing\Matrix.cpp" />
+    <ClCompile Include="..\lib\signal_processing\PSF.cpp" />
+    <ClCompile Include="..\lib\signal_processing\Spline.cpp" />
+    <ClCompile Include="..\lib\tracking\Node.cpp" />
+    <ClCompile Include="..\lib\tracking\TimeNodes.cpp" />
+    <ClCompile Include="..\lib\tracking\Tracking.cpp" />
+    <ClCompile Include="test_sp_Alignment.cpp" />
+    <ClCompile Include="test_sp_BSpline.cpp" />
+    <ClCompile Include="test_sp_FFT.cpp" />
+    <ClCompile Include="test_sp_Interpolation.cpp" />
+    <ClCompile Include="test_sp_Matrix.cpp" />
+    <ClCompile Include="test_sp_Spline.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CPU\CPU.vcxproj">

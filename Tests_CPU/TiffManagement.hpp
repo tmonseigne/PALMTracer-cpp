@@ -1,17 +1,17 @@
 #pragma once
 
+#include <stdexcept>
 #include <tiffio.h>
 #include <vector>
-#include <iostream>
-#include <stdexcept>
+#include "Structs.hpp"
 
-inline void loadTiff3D(const char* filename, std::vector<uint16_t>& data, size_t& width, size_t& height, size_t& planes)
+inline void LoadTiff3D(const char* filename, std::vector<uint16_t>& data, palm_tracer::Coord3D& dim)
 {
 	TIFF* tif = TIFFOpen(filename, "r");
-	if (!tif) { throw std::runtime_error("Erreur d'ouverture du fichier TIFF"); }
+	if (tif == nullptr) { throw std::runtime_error("Erreur d'ouverture du fichier TIFF"); }
 
-	uint32 w, h;
-	uint16 depth;
+	uint32_t w, h;
+	uint16_t depth;
 	size_t frame = 0;
 
 	do {
@@ -22,11 +22,11 @@ inline void loadTiff3D(const char* filename, std::vector<uint16_t>& data, size_t
 		if (depth != 16) { throw std::runtime_error("Le TIFF doit être en 16 bits"); }
 
 		if (frame == 0) {
-			width  = w;
-			height = h;
+			dim.x = w;
+			dim.y = h;
 		}
 		else {
-			if (w != width || h != height) {
+			if (w != dim.x || h != dim.y) {
 				TIFFClose(tif);
 				throw std::runtime_error("Toutes les images doivent avoir les mêmes dimensions");
 			}
@@ -34,7 +34,7 @@ inline void loadTiff3D(const char* filename, std::vector<uint16_t>& data, size_t
 
 		std::vector<uint16_t> buf(w * h);
 
-		for (uint32 row = 0; row < h; ++row) {
+		for (uint32_t row = 0; row < h; ++row) {
 			if (TIFFReadScanline(tif, buf.data() + row * w, row) < 0) {
 				TIFFClose(tif);
 				throw std::runtime_error("Erreur de lecture scanline");
@@ -46,29 +46,29 @@ inline void loadTiff3D(const char* filename, std::vector<uint16_t>& data, size_t
 	}
 	while (TIFFReadDirectory(tif));
 
-	planes = frame;
+	dim.z = frame;
 
 	TIFFClose(tif);
 }
 
-inline void saveTiff3D(const char* filename, const uint16_t* data, size_t width, size_t height, size_t planes)
+inline void SaveTiff3D(const char* filename, const uint16_t* data, const palm_tracer::Coord3D& dim)
 {
 	TIFF* tif = TIFFOpen(filename, "w");
-	if (!tif) { throw std::runtime_error("Erreur à l'ouverture du TIFF pour l'écriture"); }
+	if (tif == nullptr) { throw std::runtime_error("Erreur à l'ouverture du TIFF pour l'écriture"); }
 
-	for (size_t k = 0; k < planes; ++k) {
-		TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, width);
-		TIFFSetField(tif, TIFFTAG_IMAGELENGTH, height);
+	for (size_t z = 0; z < dim.z; ++z) {
+		TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, dim.x);
+		TIFFSetField(tif, TIFFTAG_IMAGELENGTH, dim.y);
 		TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, 16);
 		TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, 1);
-		TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, height);
+		TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, dim.y);
 		TIFFSetField(tif, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
 		TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
 		TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
 
-		for (uint32 row = 0; row < height; ++row) {
-			const uint16_t* row_data = data + k * width * height + row * width;
-			TIFFWriteScanline(tif, (void*)row_data, row);
+		for (uint32_t y = 0; y < dim.y; ++y) {
+			const uint16_t* row_data = data + z * dim.x * dim.y + y * dim.x;
+			TIFFWriteScanline(tif, (void*)row_data, y);
 		}
 
 		TIFFWriteDirectory(tif);

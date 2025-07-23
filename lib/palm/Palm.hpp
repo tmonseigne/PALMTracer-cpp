@@ -32,7 +32,7 @@ namespace palm_tracer {
 /// Le résultat est un tableau de points, chacun contenant N_LOCALIZATIONS doubles représentant
 /// des informations telles que la position, l'intensité, les paramètres de l'ajustement, etc.
 ///
-/// Le traitement est lancé via la méthode Processing(). </remarks>
+/// Le traitement est lancé via la méthode Processing().</remarks>
 class Palm {
 public:
 	/// <summary>Constructeur de la classe <c>Palm</c>.</summary>
@@ -107,7 +107,6 @@ public:
 	/// </summary>
 	/// <returns>Le seuil calculé correspondant à l’écart type final des pixels hors régions segmentées.</returns>
 	[[nodiscard]] double AutoThreshold();
-
 
 private:
 	// Basic members

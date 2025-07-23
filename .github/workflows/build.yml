@@ -41,19 +41,13 @@ jobs:
       # - name: Setup CUDA (optional) # trop long et version à vérifier
       #   run: choco install cuda -y
 
-      - name: Build solution (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          cmd /c "msbuild PALMTracer.sln /t:PALMTracer_CPU /p:Configuration=Release /p:Platform=x64"
+      - name: Install vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          vcpkgJsonGlob: '**/vcpkg.json'
 
-      - name: List output DLLs (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-            echo "Listing DLLs in Output folder:"
-            dir Output\*.dll
-
-      - name: Setup CMake (Unix/macOS)
-        if: matrix.os != 'windows-latest'
+      - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1
 
       - name: Install OpenMP (macOS)
@@ -68,29 +62,37 @@ jobs:
           echo "CXXFLAGS=-Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include" >> $GITHUB_ENV
           echo "LIBRARY_PATH=/opt/homebrew/opt/libomp/lib" >> $GITHUB_ENV
 
-      - name: Configure CMake (Unix/macOS)
-        if: matrix.os != 'windows-latest'
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="$CXXFLAGS" -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS"
+      - name: Configure CMake with vcpkg toolchain
+        run: >
+          cmake -B build -S .
+          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+          -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="$CXXFLAGS" -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS"
 
-      - name: Build CPU (Unix/macOS)
-        if: matrix.os != 'windows-latest'
+      - name: Build CPU
         run: cmake --build build --target CPU --config Release
+
+      - name: Create Output folder and copy Windows binaries
+        if: matrix.os == 'windows-latest'
+        run: |
+          copy build\Release\CPU.dll Output\
 
       - name: Create Output folder (Unix/macOS)
         if: matrix.os != 'windows-latest'
         run: mkdir -p Output && cp build/lib*.so* Output/ || true && cp build/lib*.dylib* Output/ || true
-
-      - name: List Output files (Unix/macOS)
-        if: matrix.os != 'windows-latest'
-        run: |
-          echo "Output files:"
-          ls -la Output || dir Output
 
       - name: Upload compiled artifacts
         uses: actions/upload-artifact@v4
         with:
           name: compiled-libs-${{ matrix.os }}
           path: Output/*
+
+      - name: Build test_cpu (Windows only)
+        if: matrix.os == 'windows-latest'
+        run: cmake --build build --target test_cpu --config Release
+
+      - name: Run Google Tests (Windows only)
+        if: matrix.os == 'windows-latest'
+        run: .\build\Release\test_cpu.exe || true
 
   Documentation:
     name: Generate & Deploy Doxygen Docs

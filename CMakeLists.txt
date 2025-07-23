@@ -14,17 +14,25 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 include_directories(${CMAKE_SOURCE_DIR}/lib)
 
 # === CPU ===
+
 add_library(CPU SHARED
     CPU/main.cpp
     lib/Constants.hpp
     lib/ExportAPI.hpp
-    lib/Matrix.cpp
-    lib/Matrix.hpp
-    lib/PSF.cpp
-    lib/PSF.hpp
     lib/Structs.hpp
-    lib/alignment/Alignment.hpp
-    lib/alignment/Alignment.cpp
+    lib/signal_processing/Alignment.hpp
+    lib/signal_processing/Alignment.cpp
+    lib/signal_processing/BSpline3D.cpp
+    lib/signal_processing/BSpline3D.hpp
+    lib/signal_processing/FFT.hpp
+    lib/signal_processing/Interpolation.cpp
+    lib/signal_processing/Interpolation.hpp
+    lib/signal_processing/Matrix.cpp
+    lib/signal_processing/Matrix.hpp
+    lib/signal_processing/PSF.cpp
+    lib/signal_processing/PSF.hpp
+    lib/signal_processing/Spline.cpp
+    lib/signal_processing/Spline.hpp
     lib/fit/Fitting.hpp
     lib/fit/Fitting.cpp
     lib/fit/GaussianFit.hpp
@@ -67,3 +75,43 @@ elseif(WIN32)
         LINK_FLAGS "/DEF:${CMAKE_SOURCE_DIR}/CPU/PALMTracer.def"
     )
 endif()
+
+
+find_package(FFTW3 REQUIRED)
+target_link_libraries(CPU PUBLIC FFTW3::fftw3)
+
+# === Google Test (test_cpu) ===
+enable_testing()
+
+
+file(GLOB_RECURSE CPU_SRC CONFIGURE_DEPENDS "lib/*.cpp")
+list(FILTER CPU_SRC EXCLUDE REGEX "[/\\]cuda[/\\]")
+
+add_executable(test_cpu
+    Tests_CPU/test_sp_Alignment.cpp
+    Tests_CPU/test_sp_BSpline.cpp
+    Tests_CPU/test_sp_FFT.cpp
+    Tests_CPU/test_sp_Interpolation.cpp
+    Tests_CPU/test_sp_Matrix.cpp
+    Tests_CPU/test_sp_Spline.cpp
+    Tests_CPU/TiffManagement.hpp
+    ${CPU_SRC}
+)
+
+find_package(GTest REQUIRED)
+find_package(TIFF REQUIRED)
+target_link_libraries(test_cpu
+    PRIVATE
+        FFTW3::fftw3
+        GTest::gtest
+        GTest::gtest_main
+        TIFF::TIFF
+)
+
+add_test(NAME CPU_Tests COMMAND test_cpu)
+
+# Copy des éléments dans le dossier de build (en cas de pépin avec le CI, on en créé plus)
+file(COPY Tests_CPU/Input/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests_CPU)
+# Créer des dossiers Output au moment de la configuration (en cas de pépin avec le CI, on en créé plus)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Output)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Tests_CPU/Output)
