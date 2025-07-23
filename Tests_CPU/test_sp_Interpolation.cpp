@@ -387,14 +387,14 @@ TEST(InterpolationTests, Upsample)
 {
 	const Interpolation3D Interp(interpolation_mode::trilinear, CROP);
 	// Matrice 3x4x5 = 60 valeurs
-	constexpr Coord3D Size = {.x = 3, .y = 3, .z = 5};
+	constexpr Coord3D Size = {.x = 3, .y = 4, .z = 5};
 	Coord3D newSize{};
-	std::vector<double> volume(45);
+	std::vector<double> volume(60);
 	std::iota(volume.begin(), volume.end(), 1); // valeurs 1 à 60
 
 	const auto Up = Interp.Upsample(volume, Size, 3, newSize);
-	std::cout << newSize << "\n";
-	matrix::Print(Up, newSize);
+	std::cout << "New Size : " << newSize << "\n";
+	//matrix::Print(Up, newSize);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -416,12 +416,12 @@ TEST(InterpolationTests, NonLinearMatrix)
 			Coord3D newSize{};
 			const Interpolation3D Interp(M, C);
 			const auto Zoomed = Interp.Zoom(Volume, Size, 1, newSize);
-			std::cout << "==================================================\n";
-			std::cout << "Mode " << static_cast<int>(M) << ", Crop " << C << "\n";
-			matrix::Print(Zoomed, newSize);
-			constexpr Vec3 Shift = {.x = 0.15, .y = 0.25, .z = 0.5};
-			const auto Shifted   = Interp.Shift(Volume, Size, Shift);
-			matrix::Print(Shifted, Size);
+			//std::cout << "==================================================\n";
+			//std::cout << "Mode " << static_cast<int>(M) << ", Crop " << C << "\n";
+			//matrix::Print(Zoomed, newSize);
+			//constexpr Vec3 Shift = {.x = 0.15, .y = 0.25, .z = 0.5};
+			//const auto Shifted   = Interp.Shift(Volume, Size, Shift);
+			//matrix::Print(Shifted, Size);
 		}
 	}
 }

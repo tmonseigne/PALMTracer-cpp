@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include <algorithm>
+#include <filesystem>
 #include <numeric>
 
 #include "Structs.hpp"
@@ -11,10 +12,10 @@
 
 namespace palm_tracer {
 constexpr size_t ROI      = 29,
-                 HALF_ROI = 14,
                  DISTANCE = 50,
                  DZ       = 10;
 
+const std::filesystem::path BEAD_FILE_PATH = std::filesystem::path(__FILE__).parent_path() / "Input/Beads.tiff";
 //-------------------------------------------------------------------------------------------------
 TEST(SplineTests, SetMembers)
 {
@@ -22,7 +23,7 @@ TEST(SplineTests, SetMembers)
 	std::vector<uint16_t> input;
 	Coord3D dim{};
 	// Charger l'image des billes
-	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
+	LoadTiff3D(BEAD_FILE_PATH.string().c_str(), input, dim);
 
 	spline.SetMembers(dim, ROI, DISTANCE, DZ);
 	EXPECT_EQ(spline.smallXIndices_.size(), 13);           // Les sous-groupes seront inférieur à la ROI de base.
@@ -40,7 +41,7 @@ TEST(SplineTests, ExtractBeads)
 	std::vector<uint16_t> input;
 	Coord3D dim{};
 	// Charger l'image des billes
-	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
+	LoadTiff3D(BEAD_FILE_PATH.string().c_str(), input, dim);
 
 	const std::vector<Coord> Beads = {
 		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
@@ -106,7 +107,7 @@ TEST(SplineTests, Align)
 	std::vector<uint16_t> input;
 	Coord3D dim{};
 	// Charger l'image des billes
-	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
+	LoadTiff3D(BEAD_FILE_PATH.string().c_str(), input, dim);
 
 	const std::vector<Coord> Beads = {
 		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
@@ -220,7 +221,7 @@ TEST(SplineTests, GetOverlap)
 	std::vector<uint16_t> input;
 	Coord3D dim{};
 	// Charger l'image des billes
-	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
+	LoadTiff3D(BEAD_FILE_PATH.string().c_str(), input, dim);
 
 	const std::vector<Coord> Beads = {
 		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
@@ -290,7 +291,7 @@ TEST(SplineTests, SoftNormalization)
 	std::vector<uint16_t> input;
 	Coord3D dim{};
 	// Charger l'image des billes
-	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
+	LoadTiff3D(BEAD_FILE_PATH.string().c_str(), input, dim);
 
 	const std::vector<Coord> Beads = {
 		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
@@ -302,7 +303,7 @@ TEST(SplineTests, SoftNormalization)
 	const auto BeadsStack = spline.ExtractBeads(input.data(), Beads);
 	const auto BeadsNorm  = spline.SoftNormalization(BeadsStack);
 	// Affichage pour vérification
-	matrix::Print(BeadsNorm[0], spline.beadDim_);
+	//matrix::Print(BeadsNorm[0], spline.beadDim_);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -339,7 +340,7 @@ TEST(SplineTests, GetPSFMinimal)
 	spline.smallBeadSize_   = spline.smallBeadDim_.GetSize();
 
 	const auto PSF = spline.GetPSF(beads);
-	matrix::Print(PSF, Dim);
+	//matrix::Print(PSF, Dim);
 	EXPECT_TRUE(false) << "Dans Matlab, l'interpolation d'une matrice contenant des 0 est différente."
 	"Donc l'alignement interne à registerPSF utilisant une interpolation sur ce type de matrice échoue également.";
 }
@@ -351,7 +352,7 @@ TEST(SplineTests, GetPSF)
 	std::vector<uint16_t> input;
 	Coord3D dim{};
 	// Charger l'image des billes
-	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
+	LoadTiff3D(BEAD_FILE_PATH.string().c_str(), input, dim);
 
 	const std::vector<Coord> Beads = {
 		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
@@ -375,7 +376,7 @@ TEST(SplineTests, Calibrate)
 	std::vector<uint16_t> input;
 	Coord3D dim{};
 	// Charger l'image des billes
-	LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
+	LoadTiff3D(BEAD_FILE_PATH.string().c_str(), input, dim);
 
 	const std::vector<Coord> Beads = {
 		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
@@ -391,7 +392,7 @@ TEST(SplineTests, Calibrate)
 		std::vector<uint16_t> input;
 		Coord3D dim{};
 		// Charger l'image des billes
-		LoadTiff3D("C:/Git/PALMTracer-cpp/Tests_CPU/Input/Beads.tiff", input, dim);
+		LoadTiff3D(beadfile_path.string().c_str(), input, dim);
 		const size_t PlaneSize = dim.GetPlaneSize();
 		const size_t HalfPlane = dim.z / 2;
 		std::cout << "Size " << dim << ", Plane Size = " << PlaneSize << ", HalfPlane = " << HalfPlane;

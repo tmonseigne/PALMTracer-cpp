@@ -109,3 +109,9 @@ target_link_libraries(test_cpu
 )
 
 add_test(NAME CPU_Tests COMMAND test_cpu)
+
+# Copy des éléments dans le dossier de build (en cas de pépin avec le CI, on en créé plus)
+file(COPY Tests_CPU/Input/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests_CPU)
+# Créer des dossiers Output au moment de la configuration (en cas de pépin avec le CI, on en créé plus)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Output)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Tests_CPU/Output)
