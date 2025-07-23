@@ -40,11 +40,11 @@ void SplineFit::parseParams()
 	splineSizeZ_   = static_cast<size_t>(fitParams_[idx++]);
 	splineSizeXY_  = splineSizeX_ * splineSizeY_;
 	splineSizeXYZ_ = splineSizeXY_ * splineSizeZ_;
-	initZ_         = fitParams_[idx++] + static_cast<double>(splineSizeZ_) / 2.0;
+	initZ_         = static_cast<double>(splineSizeZ_) / 2.0;
 	deltaZ_        = fitParams_[idx++];
 	coeffs_.resize(splineSizeXYZ_ * SPLINE_PATCH_SIZE);
 	for (double& coeff : coeffs_) { coeff = fitParams_[idx++]; }
-	const double CenterCoeff = coeffs_[splineSizeZ_ / 2 * splineSizeXY_ + splineSizeY_ / 2 * splineSizeX_ + splineSizeX_ / 2];
+	const double CenterCoeff = coeffs_[32 * splineSizeXYZ_ + splineSizeZ_ / 2 * splineSizeXY_ + splineSizeY_ / 2 * splineSizeX_ + splineSizeX_ / 2];
 	intensityRatio_          = std::fabs(CenterCoeff) < std::numeric_limits<double>::epsilon() ? 1.0 : 4.0 / CenterCoeff;
 	splineOffset_            = static_cast<size_t>(std::floor((static_cast<double>(splineSizeX_) + 1.0 - static_cast<double>(roi_)) / 2));
 }
@@ -211,10 +211,11 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		intensity = crlb[1];
 		x         = p[1][2] - static_cast<double>(roiHalf_) + infos.x_;
 		y         = p[1][3] - static_cast<double>(roiHalf_) + infos.y_;
-		z         = deltaZ_ * (p[1][4] - initZ_);
+		z         = deltaZ_ * (p[1][4] - initZ_); //p[1][4]; //deltaZ_ * (p[1][4] - initZ_);
 		rssXY     = (crlb[2] + crlb[3]) / 2;
 		rssZ      = deltaZ_ * crlb[4];
 	}
+	else { z = 0; }
 
 	fill(infos, point, offset, intensity, x, y, z, 0, 0, 0, rssXY, rssZ);
 }
