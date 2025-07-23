@@ -34,7 +34,7 @@ public:
 	        dimPadded_{}, ///< Dimensions après padding réfléchi.
 	        dimFinal_{};  ///< Dimensions des coefficients finaux (dim - 1).
 
-	size_t degree_;                             ///< Degré de la B-spline (entre 0 et 7).
+	size_t degree_ = 3;                         ///< Degré de la B-spline (entre 0 et 7).
 	std::array<double, N_DIMENSIONS> lambda_{}; ///< Facteur de régularisation (0 = pas de régularisation, ≠ 0 autorisé uniquement pour les degrés impairs).
 
 	std::array<std::vector<std::complex<double>>, N_DIMENSIONS> filters_{}; ///< Liste des pôles par dimension. (réels ou complexes conjugués)

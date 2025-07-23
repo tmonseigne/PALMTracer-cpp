@@ -22,8 +22,8 @@ BSpline3D::BSpline3D(const std::vector<double>& volume, const Coord3D& dim, cons
 	for (size_t d = 0; d < N_DIMENSIONS; ++d) { applyFilter(d, filters_[d], c0_[d]); } // Filtrage par dimension
 
 	// Padding final par réflexion
-	const size_t Pad = static_cast<size_t>(std::floor(static_cast<double>(degree_) / 2.0));
-	dimPadded_       = {.x = dim_.x + 2 * Pad + 1, .y = dim_.y + 2 * Pad + 1, .z = dim_.z + 2 * Pad + 1};
+	const auto Pad = static_cast<size_t>(std::floor(static_cast<double>(degree_) / 2.0));
+	dimPadded_     = {.x = dim_.x + 2 * Pad + 1, .y = dim_.y + 2 * Pad + 1, .z = dim_.z + 2 * Pad + 1};
 
 	// Générer les indices réfléchis pour chaque dimension
 	const auto IdxX = matrix::ReflectIndex1D(dim_.x, Pad),
@@ -36,8 +36,8 @@ BSpline3D::BSpline3D(const std::vector<double>& volume, const Coord3D& dim, cons
 	for (size_t z = 0; z < dimPadded_.z; ++z) {
 		for (size_t y = 0; y < dimPadded_.y; ++y) {
 			for (size_t x = 0; x < dimPadded_.x; ++x) {
-				const size_t SrcIndex   = (IdxZ[z] * dim_.y + IdxY[y]) * dim_.x + IdxX[x];
-				const size_t DstIndex   = (z * dimPadded_.y + y) * dimPadded_.x + x;
+				const size_t SrcIndex   = (IdxZ[z] * dim_.y + IdxY[y]) * dim_.x + IdxX[x],
+				             DstIndex   = (z * dimPadded_.y + y) * dimPadded_.x + x;
 				coeffsPadded_[DstIndex] = coeffs_[SrcIndex];
 			}
 		}
@@ -346,11 +346,11 @@ void BSpline3D::interpolateHDR()
 //-------------------------------------------------------------------------------------------------
 double BSpline3D::interpolate_at(const double x, const double y, const double z) const
 {
-	const size_t Pad = static_cast<size_t>(std::floor(static_cast<double>(degree_) / 2.0));
+	const auto Pad = static_cast<size_t>(std::floor(static_cast<double>(degree_) / 2.0));
 
-	const int Kx0 = static_cast<int>(std::floor(x)) - static_cast<int>(Pad);
-	const int Ky0 = static_cast<int>(std::floor(y)) - static_cast<int>(Pad);
-	const int Kz0 = static_cast<int>(std::floor(z)) - static_cast<int>(Pad);
+	const int Kx0 = static_cast<int>(std::floor(x)) - static_cast<int>(Pad),
+	          Ky0 = static_cast<int>(std::floor(y)) - static_cast<int>(Pad),
+	          Kz0 = static_cast<int>(std::floor(z)) - static_cast<int>(Pad);
 
 	double result = 0.0;
 
@@ -433,7 +433,7 @@ std::vector<std::complex<double>> BSpline3D::solvePolynomial(const std::vector<d
 
 		for (size_t i = 0; i < Degree; ++i) {
 			std::complex denom = 1.0;
-			for (size_t j = 0; j < Degree; ++j) { if (j != i) { denom *= (roots[i] - roots[j]); } }
+			for (size_t j = 0; j < Degree; ++j) { if (j != i) { denom *= roots[i] - roots[j]; } }
 			const auto Delta = eval(roots[i]) / denom;
 			next[i]          = roots[i] - Delta;
 			if (std::abs(Delta) > tol) { converged = false; }

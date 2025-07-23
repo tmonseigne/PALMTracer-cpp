@@ -117,8 +117,8 @@ double Quantile(const std::vector<double>& data, const double q)
 
 	// Index réel (interpolation linéaire)
 	const double Pos   = q * static_cast<double>(filtered.size() - 1);
-	const size_t Low   = static_cast<size_t>(std::floor(Pos));
-	const size_t High  = static_cast<size_t>(std::ceil(Pos));
+	const auto Low     = static_cast<size_t>(std::floor(Pos)),
+	           High    = static_cast<size_t>(std::ceil(Pos));
 	const double Alpha = Pos - static_cast<double>(Low);
 
 	// L'index est celui le plus proche du Quantile demandé si l'on veut le quantile précis, il faut interpoler entre les 2 index les plus proches.

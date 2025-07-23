@@ -81,7 +81,7 @@ public:
 	/// <param name="pos">Position entière estimée du maximum [x, y, z].</param>
 	/// <param name="delta">Pas d’échantillonnage dans l’interpolation locale.</param>
 	/// <param name="w">Demi-taille de la fenêtre (1 ⇒ cube 3x3x3).</param>
-	/// <returns>Vecteur (x,y,z) de décalage local subvoxel.</returns>
+	/// <returns>Vecteur (x, y, z) de décalage local subvoxel.</returns>
 	static Vec3 SubpixelMax(const std::vector<double>& volume, const Coord3D& dim, const Vec3& pos, double delta = 0.05, double w = 1.0);
 
 	/// <summary>Réalise un suréchantillonnage isotrope par un facteur flottant.
@@ -98,13 +98,13 @@ private:
 	/// <summary>Teste si une coordonnée réelle est hors des bornes d'une dimension.</summary>
 	/// <param name="value">Coordonnée.</param>
 	/// <param name="dim">Dimensions du volume (width=X, height=Y, depth=Z).</param>
-	/// <returns><c>true</c> Si la valeur est hors cadre, <c>false</c> sinon.</returns>
+	/// <returns><c>True</c> Si la valeur est hors cadre, <c>False</c> sinon.</returns>
 	static bool isOut(const double value, const size_t dim) { return value < 0 || value >= static_cast<double>(dim); }
 
 	/// <summary>Teste si un point 3D est hors volume.</summary>
 	/// <param name="pos">The position.</param>
 	/// <param name="dim">The dim.</param>
-	/// <returns><c>true</c> Si la position est hors cadre, <c>false</c> sinon.</returns>
+	/// <returns><c>True</c> Si la position est hors cadre, <c>False</c> sinon.</returns>
 	static bool isOut(const Vec3& pos, const Coord3D& dim) { return isOut(pos.x, dim.x) || isOut(pos.y, dim.y) || isOut(pos.z, dim.z); }
 
 	/// <summary>Effectue une interpolation cubique 1D sur quatre valeurs. Basé sur la méthode de Catmull-Rom (forme cardinale).</summary>
@@ -113,7 +113,7 @@ private:
 	/// <returns>Valeur interpolée à la position x.</returns>
 	static double cubic1D(const std::array<double, 4>& v, double x);
 
-	/// <summary>Effectue une interpolation cubique 1D (formule pondérée a=-0.5).</summary>
+	/// <summary>Effectue une interpolation cubique 1D (formule pondérée a = -0.5).</summary>
 	/// <param name="x">Position relative entre les points (dans [0, 1]).</param>
 	/// <param name="a">Coefficient de la spline Cubique.</param>
 	/// <returns>Valeur interpolée à la position x.</returns>

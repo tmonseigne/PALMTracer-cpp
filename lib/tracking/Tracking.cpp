@@ -29,7 +29,6 @@ size_t Tracking::Processing()
 	for (size_t step = 0; step < Parameters::N_STEPS; ++step) {
 		if (step == Parameters::N_STEPS - 1) { error = 20; }
 		else { error = 0; }
-		size_t cpt = 0;
 
 		if (step == 0) {
 			computeConstants();
@@ -37,17 +36,18 @@ size_t Tracking::Processing()
 		}
 		else { updateConstants(); }
 
-		do {
+		size_t cpt = 0;
+		while (cpt < 10) {
 			if (step == Parameters::N_STEPS - 1) { error *= 1. - decrease_; }
-			double likeness = 0;
+
+			double likeness = 0.0;
 			for (size_t i = 0; i < Parameters::N_ITERATIONS; ++i) {
 				for (size_t t = 0; t < nbTimes_ - 1; ++t) { likeness += timeNodes_[t].TryRandomChange(error); }
 			}
 
-			if (std::fabs(likeness) < 1e-8) { cpt++; }
+			if (std::fabs(likeness) < 1e-8) { ++cpt; }
 			else { cpt = 0; }
 		}
-		while (cpt < 10);
 	}
 
 	// Result

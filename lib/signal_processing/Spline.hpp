@@ -99,7 +99,7 @@ public:
 	/// <summary>Met à jour les poids des billes selon leur RMS d'erreur vis-à-vis de la référence.</summary>
 	/// <param name="beads">Volumes (normalisés) des billes.</param>
 	/// <param name="shift">Décalages appliqués pour chaque bille.</param>
-	/// <param name="weights">Poids mis à jour (NaN pour rejeté).</param>
+	/// <param name="weights">Poids mis à jour (NaN si rejeté).</param>
 	/// <param name="norm">Valeur de normalisation globale.</param>
 	/// <param name="smallZ">Si vrai : réduction sur Z avant comparaison.</param>
 	void GetOverlap(const std::vector<std::vector<double>>& beads, const std::vector<Vec3>& shift, std::vector<double>& weights,

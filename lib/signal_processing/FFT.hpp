@@ -78,7 +78,7 @@ inline void FFT3D(const std::vector<double>& in, std::vector<std::complex<double
 		fftw_free(temp2D);
 		fftw_free(buffer2D);
 
-		// 2. FFT1D le long de Z pour chaque pixel (x,y)
+		// 2. FFT1D le long de Z pour chaque pixel (x, y)
 		auto* tempZ   = static_cast<fftw_complex*>(fftw_malloc(sizeof(fftw_complex) * dim.z));
 		auto* bufferZ = static_cast<fftw_complex*>(fftw_malloc(sizeof(fftw_complex) * dim.z));
 

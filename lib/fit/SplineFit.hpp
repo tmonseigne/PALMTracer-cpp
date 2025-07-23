@@ -50,9 +50,9 @@ protected:
 
 	/// <summary>Calcule les dérivées du modèle spline 3D en un point donné (x, y, z).
 	/// Remplit le vecteur des dérivées partielles (dudt) et évalue la valeur du modèle.</summary>
-	/// <param name="x">Indice x dans la grille spline (colonne).</param>
-	/// <param name="y">Indice y dans la grille spline (ligne).</param>
-	/// <param name="z">Indice z dans la grille spline (profondeur).</param>
+	/// <param name="x">Indice X dans la grille spline (colonne).</param>
+	/// <param name="y">Indice Y dans la grille spline (ligne).</param>
+	/// <param name="z">Indice Z dans la grille spline (profondeur).</param>
 	/// <param name="f">Valeurs de base spline pour l'intensité.</param>
 	/// <param name="dxf">Dérivées de f par rapport à x (∂f/∂x).</param>
 	/// <param name="dyf">Dérivées de f par rapport à y (∂f/∂y).</param>

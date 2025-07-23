@@ -45,7 +45,7 @@ void Spline::Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, c
 	for (size_t z = 0; z < beadDim_.z; ++z) {
 		double sum = 0.0;
 		for (size_t i = 0; i < beadImSize_; ++i, ++idx) { if (!std::isnan(psf[idx]) && std::isfinite(psf[idx])) { sum += psf[idx]; } }
-		if (sum > max) { max = sum; }
+		max = std::max(sum, max);
 	}
 
 	const double Ratio = std::fabs(max) < std::numeric_limits<double>::epsilon() ? 1.0 : 1.0 / max; // un max de 0 est fortement improbable masi au cas où.
@@ -196,7 +196,7 @@ std::vector<double> Spline::GetPSF(std::vector<std::vector<double>>& beads) cons
 					++count;
 				}
 			}
-			mu[i] = (count > 0) ? sum / static_cast<double>(count) : (update ? mu[i] : std::numeric_limits<double>::quiet_NaN());
+			mu[i] = count > 0 ? sum / static_cast<double>(count) : (update ? mu[i] : std::numeric_limits<double>::quiet_NaN());
 		}
 	};
 
@@ -256,7 +256,7 @@ std::vector<std::vector<double>> Spline::SoftNormalization(const std::vector<std
 	// 4 iterations de la soft normalisation
 	for (size_t iter = 0; iter < 4; ++iter) {
 		constexpr double QuantileRatio = 0.75;
-		std::vector<double> meanVolume(beadSize_, 0.0);
+		std::vector meanVolume(beadSize_, 0.0);
 		std::vector<size_t> validCount(beadSize_, 0);
 
 		// Moyenne des billes (NaN-safe)
