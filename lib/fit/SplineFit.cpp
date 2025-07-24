@@ -94,11 +94,6 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			const std::vector<double> OldUpdate = update;
 			const double OldLambda              = lambda;
 			//----- Remise à zéro des vecteurs -----
-			std::ranges::fill(f, 0.0);
-			std::ranges::fill(dxf, 0.0);
-			std::ranges::fill(dyf, 0.0);
-			std::ranges::fill(dzf, 0.0);
-			std::ranges::fill(dudt, 0.0);
 			std::ranges::fill(jacobian, 0.0);
 			std::ranges::fill(hessian, 0.0);
 			std::ranges::fill(update, 0.0);
@@ -167,10 +162,6 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 
 		//Calcul du CRLB
 		std::vector<double> m(nParams2_, 0.0), mInv(nParams2_, 0.0), crlb(nParams_);
-		std::ranges::fill(f, 0.0);
-		std::ranges::fill(dxf, 0.0);
-		std::ranges::fill(dyf, 0.0);
-		std::ranges::fill(dzf, 0.0);
 		std::ranges::fill(dudt, 0.0);
 
 		const double Xr = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
@@ -307,6 +298,10 @@ void SplineFit::luEvaluate(const std::vector<double>& l, const std::vector<doubl
 void SplineFit::delta3D(const double x, const double y, const double z, std::vector<double>& f, std::vector<double>& dxf, std::vector<double>& dyf,
                         std::vector<double>& dzf)
 {
+	std::ranges::fill(f, 0.0);
+	std::ranges::fill(dxf, 0.0);
+	std::ranges::fill(dyf, 0.0);
+	std::ranges::fill(dzf, 0.0);
 	double cz = 1.0;
 	for (size_t i = 0; i < SPLINE_PATCH_SIDE; ++i) {
 		double cy = 1.0;
