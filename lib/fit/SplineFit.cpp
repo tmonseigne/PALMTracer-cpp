@@ -130,13 +130,11 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 				luEvaluate(l, u, jacobian, update);
 				// Mise à jour de la matrice de saut, la matrice update et de P.
 				for (size_t i = 0; i < nParams_; ++i) {
-					if (std::abs(OldUpdate[i]) > EPSILON) {
-						if (update[i] / OldUpdate[i] < -0.5) { jump[i] *= 0.5; }
-						update[i] /= 1 + std::abs(update[i] / jump[i]);
-					}
-					else { update[i] /= 1 + std::abs(update[i]) / jump[i]; } // Pas de division par une grandeur instable
-					p[1][i] -= update[i];
-					p[1][i] = std::clamp(p[1][i], p[0][i], p[2][i]);
+					if (std::abs(OldUpdate[i]) > EPSILON && update[i] / OldUpdate[i] < -0.5) { jump[i] *= 0.5; }
+					const double Scale = update[i] / (1.0 + std::abs(update[i]) / jump[i]); // Pas de division par une grandeur instable
+					p[1][i] -= Scale;
+					p[1][i]   = std::clamp(p[1][i], p[0][i], p[2][i]);
+					update[i] = Scale;
 				}
 				if (err > OldErr) { // si erreur plus importante, restauration des valeurs et augmentation du lambda
 					err    = OldErr;
@@ -308,11 +306,12 @@ void SplineFit::delta3D(const double x, const double y, const double z, std::vec
 		for (size_t j = 0; j < SPLINE_PATCH_SIDE; ++j) {
 			double cx = 1.0;
 			for (size_t k = 0; k < SPLINE_PATCH_SIDE; ++k) {
-				const double Coef                                     = cz * cy * cx;
-				f[i * SPLINE_PATCH_PLANE + j * SPLINE_PATCH_SIDE + k] = Coef;
-				if (k < SPLINE_PATCH_SIDE - 1) { dxf[i * SPLINE_PATCH_PLANE + j * SPLINE_PATCH_SIDE + k + 1] = static_cast<double>(k + 1) * Coef; }
-				if (j < SPLINE_PATCH_SIDE - 1) { dyf[i * SPLINE_PATCH_PLANE + (j + 1) * SPLINE_PATCH_SIDE + k] = static_cast<double>(j + 1) * Coef; }
-				if (i < SPLINE_PATCH_SIDE - 1) { dzf[(i + 1) * SPLINE_PATCH_PLANE + j * SPLINE_PATCH_SIDE + k] = static_cast<double>(i + 1) * Coef; }
+				const size_t Id   = i * SPLINE_PATCH_PLANE + j * SPLINE_PATCH_SIDE + k;
+				const double Coef = cz * cy * cx;
+				f[Id]             = Coef;
+				if (k + 1 < SPLINE_PATCH_SIDE) { dxf[Id + 1] = static_cast<double>(k + 1) * Coef; }
+				if (j + 1 < SPLINE_PATCH_SIDE) { dyf[Id + SPLINE_PATCH_SIDE] = static_cast<double>(j + 1) * Coef; }
+				if (i + 1 < SPLINE_PATCH_SIDE) { dzf[Id + SPLINE_PATCH_PLANE] = static_cast<double>(i + 1) * Coef; }
 				cx *= x;
 			}
 			cy *= y;

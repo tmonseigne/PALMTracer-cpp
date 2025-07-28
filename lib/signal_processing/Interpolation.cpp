@@ -69,7 +69,6 @@ double Interpolation3D::cubicWeight3D(const std::vector<double>& volume, const C
 	          Iz = static_cast<int>(std::floor(pos.z));
 
 	double val = 0.0;
-	//double norm = 0.0;
 	for (int dz = -1; dz <= 2; ++dz) {
 		const double Wz = cubicWeight1D(pos.z - (Iz + dz));
 		for (int dy = -1; dy <= 2; ++dy) {
@@ -77,12 +76,9 @@ double Interpolation3D::cubicWeight3D(const std::vector<double>& volume, const C
 			for (int dx = -1; dx <= 2; ++dx) {
 				const double W = cubicWeight1D(pos.x - (Ix + dx)) * Wyz;
 				val += get(Ix + dx, Iy + dy, Iz + dz) * W;
-				//norm += W;
 			}
 		}
 	}
-	//std::cout << norm << "\n";
-	//return (norm > 0.0) ? val / norm : 0.0;
 	return val;
 }
 
