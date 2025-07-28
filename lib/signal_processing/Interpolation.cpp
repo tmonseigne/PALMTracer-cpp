@@ -278,10 +278,7 @@ Vec3 Interpolation3D::GetShift(const std::vector<double>& ref, const std::vector
 
 	// Changement de mode pour l'élément shifté à cause des 0.
 	// Reproduire le comportement matlab est impossible pour le moment. Cette interpolation est la plus proche.
-	const auto PreviousMode = mode_;
-	mode_                   = interpolation_mode::cubic_weight;
-	auto tarHD              = Zoom(target, dim, ZoomLevel, size2X);
-	mode_                   = PreviousMode;
+	auto tarHD = Zoom(target, dim, ZoomLevel, size2X);
 
 	// Normalisation (mean)
 	const double MuRef = std::accumulate(refHD.begin(), refHD.end(), 0.0) / static_cast<double>(refHD.size());
