@@ -48,7 +48,7 @@ void Spline::Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, c
 		max = std::max(sum, max);
 	}
 
-	const double Ratio = std::fabs(max) < std::numeric_limits<double>::epsilon() ? 1.0 : 1.0 / max; // un max de 0 est fortement improbable masi au cas où.
+	const double Ratio = std::fabs(max) < std::numeric_limits<double>::epsilon() ? 1.0 : 1.0 / max; // un max de 0 est fortement improbable, mais au cas où.
 	matrix::Scale(psf, Ratio);                                                                      // Normalisation de la psf
 	for (auto& p : psf) { if (std::isnan(p) || !std::isfinite(p) || p < 0) { p = 0; } }             // Remplacement des Nan, infinis et négatifs par des 0.
 	bs_ = BSpline3D(psf, beadDim_, 3, {.x = 0, .y = 0, .z = 100.0 / static_cast<double>(dz_)});     // Calcul des coefficients de la cspline lissé
@@ -209,7 +209,7 @@ std::vector<double> Spline::GetPSF(std::vector<std::vector<double>>& beads) cons
 	const auto BeadsNorm = SoftNormalization(beads);     // Normalization douce
 	GetOverlap(BeadsNorm, Shifts, weights, norm, false); // Suppression des outliers
 
-	// Recalcul de la PSF de référence moyenne des billes utilisables sur le volume complet (masi évite d'ajouter des nan
+	// Recalcul de la PSF de référence moyenne des billes utilisables sur le volume complet (mais évite d'ajouter des nan)
 	beadMean(true);
 
 	// Seconde passe sur le sous-ensemble d'intérêt au niveau du Z.
@@ -233,7 +233,7 @@ std::vector<Vec3> Spline::Align(const std::vector<double>& ref, std::vector<std:
 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(beads.size()); ++i) { // Pour chaque bille
-		Interpolation3D interp(interpolation_mode::trilinear, true);
+		Interpolation3D interp(interpolation_mode::cubic_weight, true);
 		// Stocker la sous-image
 		const auto SubB = matrix::ExtractSubVolume(beads[i], beadDim_, smallXIndices_, smallXIndices_, smallZ ? smallZIndices_ : zIndices_);
 		shifts[i]       = interp.GetShift(SubRef, SubB, SmallSize);    // Lancer getShift entre la sous ref et la sous image

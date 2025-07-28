@@ -366,20 +366,18 @@ TEST(InterpolationTests, GetShift3D)
 	constexpr Vec3 Shift = {.x = 0.15, .y = 0.25, .z = 0.5};
 	const auto Shifted   = interp.Shift(volume, Size, Shift);
 	//const std::vector Shifted = {
-	//	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-	//	0.0, 0.0, 0.0, 0.0, 10.1, 11.1, 0.0, 13.1, 14.1, 0.0, 16.1, 17.1,
-	//	0.0, 0.0, 0.0, 0.0, 22.1, 23.1, 0.0, 25.1, 26.1, 0.0, 28.1, 29.1,
-	//	0.0, 0.0, 0.0, 0.0, 34.1, 35.1, 0.0, 37.1, 38.1, 0.0, 40.1, 41.1,
-	//	0.0, 0.0, 0.0, 0.0, 46.1, 47.1, 0.0, 49.1, 50.1, 0.0, 52.1, 53.1,
+	//	0.0, 0.0, 0.0,  0.0, 0.0,  0.0,   0.0, 0.0,  0.0,  0.0, 0.0,  0.0,
+	//	0.0, 0.0, 0.0,  0.0, 10.1, 11.1,  0.0, 13.1, 14.1, 0.0, 16.1, 17.1,
+	//	0.0, 0.0, 0.0,  0.0, 22.1, 23.1,  0.0, 25.1, 26.1, 0.0, 28.1, 29.1,
+	//	0.0, 0.0, 0.0,  0.0, 34.1, 35.1,  0.0, 37.1, 38.1, 0.0, 40.1, 41.1,
+	//	0.0, 0.0, 0.0,  0.0, 46.1, 47.1,  0.0, 49.1, 50.1, 0.0, 52.1, 53.1,
 	//};
-	//constexpr Vec3 MatLabShift = {.x = 0.0375, .y = 0.0375, .z = 0}; // interpolated shifted matrix result is different
-	constexpr Vec3 Ref = {.x = 0, .y = 0, .z = 0}; // Résultat avec mon interpolation
+	constexpr Vec3 Ref = {.x = 0.0375, .y = 0.0375, .z = 0}; // interpolated shifted matrix result is different
 
 	const auto Res = interp.GetShift(volume, Shifted, Size);
 	EXPECT_DOUBLE_EQ(Res.x, Ref.x);
 	EXPECT_DOUBLE_EQ(Res.y, Ref.y);
 	EXPECT_DOUBLE_EQ(Res.z, Ref.z);
-	EXPECT_TRUE(false) << "Matlab L'interpolation d'une matrice contenant des 0 est différente donc ce test échoue également.";
 }
 
 //-------------------------------------------------------------------------------------------------

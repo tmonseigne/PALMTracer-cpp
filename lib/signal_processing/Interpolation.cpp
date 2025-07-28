@@ -162,7 +162,7 @@ Vec3 Interpolation3D::SubpixelMax(const std::vector<double>& volume, const Coord
 			for (int dx = -HalfN; dx <= HalfN; ++dx) {
 				shift.x              = dx * delta;
 				const Vec3 SamplePos = pos + shift;
-				const double V       = trilinear(volume, dim, SamplePos);
+				const double V       = cubicWeight3D(volume, dim, SamplePos);
 				if (!std::isnan(V) && V > bestVal) {
 					bestVal = V;
 					res     = shift;
