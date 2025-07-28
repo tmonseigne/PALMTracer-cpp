@@ -7,13 +7,27 @@ et ce projet adhère à [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
-<!-- run command git log v1.2.0..HEAD --pretty=format:"- %s"-->
+<!-- run command git log v1.2.1..HEAD --pretty=format:"- %s"-->
+
+## [1.2.1] - 2025-07-28
+
+### Ajouté
+
+- Ajout d'une première calibration pour l'ajustement par Splines à améliorer avec des tests poussés ([#18](https://github.com/tmonseigne/PALMTracer-cpp/pull/18))
+  - Ajout de nombreuses fonctions de traitement d'images : Interpolation, FFT, opérations sur matrices
+- Ajout du calcul automatique du seuil en interne.
+- Ajout de tests unitaires simples.
+
+### Modifié
+
+- Première correction pour l'ajustement par Splines, descente de gradient à améliorer ([#21](https://github.com/tmonseigne/PALMTracer-cpp/pull/21))
+- Corrections mineures sur les Clang code Issues
 
 ## [1.2.0] - 2025-06-18
 
 ### Ajouté
 
-- Ajout d'un premier ajustement par splines à améliorer avec des tests poussés ([#15](https://github.com/tmonseigne/PALMTracer-cpp/pull/15))
+- Ajout d'un premier ajustement par Splines à améliorer avec des tests poussés ([#15](https://github.com/tmonseigne/PALMTracer-cpp/pull/15))
 
 ### Modifié
 
