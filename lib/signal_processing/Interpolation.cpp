@@ -69,7 +69,6 @@ double Interpolation3D::cubicWeight3D(const std::vector<double>& volume, const C
 	          Iz = static_cast<int>(std::floor(pos.z));
 
 	double val = 0.0;
-	//double norm = 0.0;
 	for (int dz = -1; dz <= 2; ++dz) {
 		const double Wz = cubicWeight1D(pos.z - (Iz + dz));
 		for (int dy = -1; dy <= 2; ++dy) {
@@ -77,12 +76,9 @@ double Interpolation3D::cubicWeight3D(const std::vector<double>& volume, const C
 			for (int dx = -1; dx <= 2; ++dx) {
 				const double W = cubicWeight1D(pos.x - (Ix + dx)) * Wyz;
 				val += get(Ix + dx, Iy + dy, Iz + dz) * W;
-				//norm += W;
 			}
 		}
 	}
-	//std::cout << norm << "\n";
-	//return (norm > 0.0) ? val / norm : 0.0;
 	return val;
 }
 
@@ -282,10 +278,7 @@ Vec3 Interpolation3D::GetShift(const std::vector<double>& ref, const std::vector
 
 	// Changement de mode pour l'élément shifté à cause des 0.
 	// Reproduire le comportement matlab est impossible pour le moment. Cette interpolation est la plus proche.
-	const auto PreviousMode = mode_;
-	mode_                   = interpolation_mode::cubic_weight;
-	auto tarHD              = Zoom(target, dim, ZoomLevel, size2X);
-	mode_                   = PreviousMode;
+	auto tarHD = Zoom(target, dim, ZoomLevel, size2X);
 
 	// Normalisation (mean)
 	const double MuRef = std::accumulate(refHD.begin(), refHD.end(), 0.0) / static_cast<double>(refHD.size());

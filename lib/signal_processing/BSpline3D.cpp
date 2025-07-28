@@ -129,7 +129,7 @@ void BSpline3D::getFinalCoeff()
 	matrix::InverseGaussJordan(a, aInv, Size);
 
 	// Upsample l’image (x3)
-	const Interpolation3D Interp(interpolation_mode::trilinear, true); // Attention il faut l'interpolation Spline pas trilineaire
+	const Interpolation3D Interp(interpolation_mode::spline, true); // Attention interpolation Spline Matlab différente
 	Coord3D upDim{};
 	const auto Up = Interp.Upsample(coeffsHDR_, dim_, 3, upDim);
 

@@ -36,7 +36,7 @@ public:
 	/// <summary>Constructeur de la classe <c>Interpolation3D</c>.</summary>
 	/// <param name="mode">Mode d'interpolation à utiliser.</param>
 	/// <param name="cropBound">Active la suppression hors-bord.</param>
-	explicit Interpolation3D(const interpolation_mode mode = interpolation_mode::trilinear, const bool cropBound = false)
+	explicit Interpolation3D(const interpolation_mode mode = interpolation_mode::cubic_weight, const bool cropBound = false)
 		: mode_(mode), cropBound_(cropBound) { }
 
 	/// <summary>Applique un zoom isotrope sur un volume 3D avec interpolation selon le mode.</summary>
