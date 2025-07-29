@@ -31,7 +31,7 @@ namespace palm_tracer {
 /// <param name="dim">Dimensions du volume 3D (width=X, height=Y, depth=Z).</param>
 /// <param name="real3D">Si vrai, effectue une FFT 3D complète. Sinon, FFT2D par plan puis FFT1D sur Z (comme MATLAB).</param>
 /// <remarks>Le volume résultant est non normalisé (i.e. de même échelle que l'entrée).</remarks>
-inline void FFT3D(const std::vector<double>& in, std::vector<std::complex<double>>& out, const Coord3D& dim, const bool real3D = false)
+inline void FFT3D(const std::vector<double>& in, std::vector<std::complex<double>>& out, const Vec3I& dim, const bool real3D = false)
 {
 	const size_t S = dim.GetSize();
 	out.resize(S);
@@ -111,7 +111,7 @@ inline void FFT3D(const std::vector<double>& in, std::vector<std::complex<double
 /// <param name="out">Volume réel en sortie (normalisé par la taille totale), taille z*y*x.</param>
 /// <param name="dim">Dimensions du volume 3D (X, Y, Z).</param>
 /// <remarks>Le volume de sortie est toujours réel, les parties imaginaires sont ignorées.</remarks>
-inline void IFFT3D(const std::vector<std::complex<double>>& in, std::vector<double>& out, const Coord3D& dim)
+inline void IFFT3D(const std::vector<std::complex<double>>& in, std::vector<double>& out, const Vec3I& dim)
 {
 	const size_t S = dim.GetSize();
 	out.resize(S);
@@ -154,14 +154,14 @@ inline void CrossPowerSpectrum(const std::vector<std::complex<double>>& ref, con
 /// <param name="volume">Volume réel (typiquement une magnitude spectrale) en mémoire linéaire (row-major x, y, z).</param>
 /// <param name="dim">Dimensions du volume 3D (width=X, height=Y, depth=Z).</param>
 /// <remarks>Effectue un décalage cyclique de la fréquence nulle vers le centre, comme en MATLAB.</remarks>
-inline void FFTShift3D(std::vector<double>& volume, const Coord3D& dim)
+inline void FFTShift3D(std::vector<double>& volume, const Vec3I& dim)
 {
 	std::vector temp(volume.size(), 0.0);
-	const Coord3D Mid = dim.GetMid();
+	const Vec3I Mid = dim.GetMid();
 
-	Coord3D pos{};
+	Vec3I pos{};
 	for (pos.z = 0; pos.z < dim.z; ++pos.z) {
-		Coord3D shifted{};
+		Vec3I shifted{};
 		shifted.z = (pos.z + Mid.z) % dim.z;
 		for (pos.y = 0; pos.y < dim.y; ++pos.y) {
 			shifted.y = (pos.y + Mid.y) % dim.y;

@@ -19,8 +19,8 @@ namespace palm_tracer {
 /// <summary>Classe d'ajustement par spline.</summary>
 class SplineFit final : public Fitting {
 public:
-	explicit SplineFit(const fit_mode mode, const uint16_t* image, const size_t height, const size_t width, const size_t maxPoints,
-	                   const double* fitParams) : Fitting(mode, image, height, width, maxPoints, fitParams) { initialize(); }
+	explicit SplineFit(const fit_mode mode, const uint16_t* image, const Vec2I& dim, const size_t maxPoints,
+	                   const double* fitParams) : Fitting(mode, image, dim, maxPoints, fitParams) { initialize(); }
 
 protected:
 	static constexpr double LAMBDA_0   = 0.1,   ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.
@@ -31,11 +31,9 @@ protected:
 	static constexpr double EPSILON_1  = 1e-6,  ///< Seuil de convergence pour le changement de la fonction objectif.
 	                        EPSILON_2  = 1e-10; ///< avant calcul de la matrice inverse
 
-	size_t splineSizeX_{},       ///< Taille de la spline en X (nombre de points dans la direction horizontale).
-	       splineSizeY_{},       ///< Taille de la spline en Y (nombre de points dans la direction verticale).
-	       splineSizeZ_{},       ///< Taille de la spline en Z (nombre de plans en profondeur).
-	       splineSizeXY_{},      ///< Taille totale d’un plan XY (splineSizeX_ * splineSizeY_). Utilisé pour accéder rapidement aux coefficients.
-	       splineSizeXYZ_{},     ///< Taille totale de l’ensemble du volume spline (splineSizeX_ * splineSizeY_ * splineSizeZ_).
+	Vec3I splineDim_{};          ///< Dimensions de la spline (X, Y, Z)
+	size_t splineSizeXY_{},      ///< Taille totale d’un plan XY. Utilisé pour accéder rapidement aux coefficients.
+	       splineSize_{},        ///< Taille totale de l’ensemble du volume spline.
 	       splineOffset_{};      ///< Offset utilisé pour indexer ou accéder efficacement aux sous-blocs ou aux patchs de la spline.
 	double initZ_{},             ///< Position initiale en Z (origine physique ou de modélisation de la spline en profondeur).
 	       deltaZ_{},            ///< Pas ou résolution entre deux couches Z successives dans la spline.
@@ -50,18 +48,13 @@ protected:
 
 	/// <summary>Calcule les dérivées du modèle spline 3D en un point donné (x, y, z).
 	/// Remplit le vecteur des dérivées partielles (dudt) et évalue la valeur du modèle.</summary>
-	/// <param name="x">Indice X dans la grille spline (colonne).</param>
-	/// <param name="y">Indice Y dans la grille spline (ligne).</param>
-	/// <param name="z">Indice Z dans la grille spline (profondeur).</param>
+	/// <param name="pos">Position entière (X, Y, Z) dans la grille spline.</param>
 	/// <param name="f">Valeurs de base spline pour l'intensité.</param>
-	/// <param name="dxf">Dérivées de f par rapport à x (∂f/∂x).</param>
-	/// <param name="dyf">Dérivées de f par rapport à y (∂f/∂y).</param>
-	/// <param name="dzf">Dérivées de f par rapport à z (∂f/∂z).</param>
+	/// <param name="df">Référence vers les vecteurs contenant les dérivées de f par rapport à x (∂f/∂x), y (∂f/∂y) et z (∂f/∂z).</param>
 	/// <param name="p">Vecteur des paramètres de la PSF (offset, intensité, position).</param>
 	/// <param name="dudt">Vecteur des dérivées partielles du modèle par rapport aux paramètres.</param>
 	/// <param name="model">>Valeur du modèle au point considéré.</param>
-	void derivativeSpline(size_t x, size_t y, size_t z, const std::vector<double>& f, const std::vector<double>& dxf, const std::vector<double>& dyf,
-	                      const std::vector<double>& dzf, const std::vector<double>& p, std::vector<double>& dudt, double& model) const;
+	void derivativeSpline(Vec3I& pos, const std::vector<double>& f, const std::array<std::vector<double>, 3>& df, const std::vector<double>& p, std::vector<double>& dudt, double& model) const;
 
 	/// <summary>Met à jour le jacobien et l'hessienne pour le modèle MLE (Maximum Likelihood Estimation).
 	/// Utilise une vraisemblance basée sur la statistique de Poisson.</summary>
@@ -97,9 +90,7 @@ protected:
 	/// <param name="y">Coordonnée y (locale).</param>
 	/// <param name="z">Coordonnée z (locale).</param>
 	/// <param name="f">Référence vers le vecteur contenant les valeurs des fonctions de base.</param>
-	/// <param name="dxf">Référence vers le vecteur contenant les dérivées de f par rapport à x (∂f/∂x).</param>
-	/// <param name="dyf">Référence vers le vecteur contenant les dérivées de f par rapport à y (∂f/∂y).</param>
-	/// <param name="dzf">Référence vers le vecteur contenant les dérivées de f par rapport à z (∂f/∂z).</param>
-	static void delta3D(double x, double y, double z, std::vector<double>& f, std::vector<double>& dxf, std::vector<double>& dyf, std::vector<double>& dzf);
+	/// <param name="df">Référence vers les vecteurs contenant les dérivées de f par rapport à x (∂f/∂x), y (∂f/∂y) et z (∂f/∂z).</param>
+	static void delta3D(double x, double y, double z, std::vector<double>& f, std::array<std::vector<double>, 3>& df);
 };
 } // namespace palm_tracer

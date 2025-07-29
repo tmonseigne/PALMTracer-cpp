@@ -1,10 +1,8 @@
 #include "Spline.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cmath>
 #include <complex>
-#include <iostream>
 #include <numeric>
 #include <vector>
 
@@ -14,7 +12,7 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-void Spline::Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, const Coord3D& dim, const size_t roi,
+void Spline::Calibrate(const uint16_t* stack, const std::vector<Vec2I>& beads, const Vec3I& dim, const size_t roi,
                        const size_t distance, const size_t dz)
 {
 	SetMembers(dim, roi, distance, dz);
@@ -55,7 +53,7 @@ void Spline::Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, c
 }
 
 //-------------------------------------------------------------------------------------------------
-void Spline::SetMembers(const Coord3D& dim, const size_t roi, const size_t distance, const size_t dz)
+void Spline::SetMembers(const Vec3I& dim, const size_t roi, const size_t distance, const size_t dz)
 {
 	const size_t NewRoi = roi % 2 == 0 ? roi - 1 : roi; // ROI doit-être impair. Pour éviter les effets de bords, on soustrait en cas de nombre pair.
 
@@ -63,7 +61,7 @@ void Spline::SetMembers(const Coord3D& dim, const size_t roi, const size_t dista
 	imSize_    = dim_.GetPlaneSize();
 	stackSize_ = dim_.GetSize();
 
-	beadDim_    = Coord3D{.x = NewRoi, .y = NewRoi, .z = dim_.z % 2 == 0 ? dim_.z - 1 : dim_.z}; // Garanti un z impair
+	beadDim_    = Vec3I{.x = NewRoi, .y = NewRoi, .z = dim_.z % 2 == 0 ? dim_.z - 1 : dim_.z}; // Garanti un z impair
 	beadImSize_ = beadDim_.GetPlaneSize();
 	beadSize_   = beadDim_.GetSize();
 	midBead_    = beadDim_.GetMid();
@@ -94,13 +92,13 @@ void Spline::SetMembers(const Coord3D& dim, const size_t roi, const size_t dista
 	std::iota(zIndices_.begin(), zIndices_.end(), 0); // Remplit avec 0, 1, ..., N-1
 
 	//Dimensions de la zone d'interet centrale.
-	smallBeadDim_    = Coord3D{.x = smallXIndices_.size(), .y = smallXIndices_.size(), .z = smallZIndices_.size()};
+	smallBeadDim_    = Vec3I{.x = smallXIndices_.size(), .y = smallXIndices_.size(), .z = smallZIndices_.size()};
 	smallBeadImSize_ = smallBeadDim_.GetPlaneSize();
 	smallBeadSize_   = smallBeadDim_.GetSize();
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<std::vector<double>> Spline::ExtractBeads(const uint16_t* stack, const std::vector<Coord>& beads) const
+std::vector<std::vector<double>> Spline::ExtractBeads(const uint16_t* stack, const std::vector<Vec2I>& beads) const
 {
 	const size_t Nbeads   = beads.size();
 	const uint16_t Minima = *std::min_element(stack, stack + stackSize_);
@@ -112,9 +110,9 @@ std::vector<std::vector<double>> Spline::ExtractBeads(const uint16_t* stack, con
 		const auto& [Xb, Yb] = beads[b];
 		auto& s              = beadsStack[b];
 
-		Coord3D posBead{};
+		Vec3I posBead{};
 		for (posBead.z = 0; posBead.z < beadDim_.z; ++posBead.z) {
-			Coord3D pos{};
+			Vec3I pos{};
 			pos.z = posBead.z;
 			for (posBead.y = 0; posBead.y < beadDim_.y; ++posBead.y) {
 				pos.y = Yb - midBead_.y + posBead.y;
@@ -224,20 +222,20 @@ std::vector<double> Spline::GetPSF(std::vector<std::vector<double>>& beads) cons
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<Vec3> Spline::Align(const std::vector<double>& ref, std::vector<std::vector<double>>& beads, const bool smallZ) const
+std::vector<Vec3D> Spline::Align(const std::vector<double>& ref, std::vector<std::vector<double>>& beads, const bool smallZ) const
 {
-	std::vector<Vec3> shifts(beads.size());
+	std::vector<Vec3D> shifts(beads.size());
 	// Stocker la sous-image de la Référence
-	const auto SubRef       = matrix::ExtractSubVolume(ref, beadDim_, smallXIndices_, smallXIndices_, smallZ ? smallZIndices_ : zIndices_);
-	const Coord3D SmallSize = {.x = smallBeadDim_.x, .y = smallBeadDim_.y, .z = smallZ ? smallBeadDim_.z : beadDim_.z};
+	const auto SubRef     = matrix::ExtractSubVolume(ref, beadDim_, smallXIndices_, smallXIndices_, smallZ ? smallZIndices_ : zIndices_);
+	const Vec3I SmallDim = {.x = smallBeadDim_.x, .y = smallBeadDim_.y, .z = smallZ ? smallBeadDim_.z : beadDim_.z};
 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(beads.size()); ++i) { // Pour chaque bille
-		Interpolation3D interp(interpolation_mode::cubic_weight, true);
+		const Interpolation3D Interp(interpolation_mode::cubic_weight, true);
 		// Stocker la sous-image
 		const auto SubB = matrix::ExtractSubVolume(beads[i], beadDim_, smallXIndices_, smallXIndices_, smallZ ? smallZIndices_ : zIndices_);
-		shifts[i]       = interp.GetShift(SubRef, SubB, SmallSize);    // Lancer getShift entre la sous ref et la sous image
-		beads[i]        = interp.Shift(beads[i], beadDim_, shifts[i]); // Lancer Shift sur l'image de base et Remplacer la bille par ce shift
+		shifts[i]       = Interp.GetShift(SubRef, SubB, SmallDim);    // Lancer getShift entre la sous ref et la sous image
+		beads[i]        = Interp.Shift(beads[i], beadDim_, shifts[i]); // Lancer Shift sur l'image de base et Remplacer la bille par ce shift
 	}
 	return shifts;
 }
@@ -297,12 +295,12 @@ std::vector<std::vector<double>> Spline::SoftNormalization(const std::vector<std
 }
 
 //-------------------------------------------------------------------------------------------------
-void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std::vector<Vec3>& shift, std::vector<double>& weights,
+void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std::vector<Vec3D>& shift, std::vector<double>& weights,
                         double& norm, const bool smallZ) const
 {
 	const size_t Nbeads         = beads.size();
-	const Coord3D SmallSize     = {.x = smallBeadDim_.x, .y = smallBeadDim_.y, .z = smallZ ? smallBeadDim_.z : beadDim_.z};
-	const size_t SmallStackSize = SmallSize.GetSize();
+	const Vec3I SmallDim       = {.x = smallBeadDim_.x, .y = smallBeadDim_.y, .z = smallZ ? smallBeadDim_.z : beadDim_.z};
+	const size_t SmallStackSize = SmallDim.GetSize();
 
 	// Pour un sous volume : const auto Sub = getSubVolume(volume, smallZ);
 	// Récupération des sous volumes des billes
@@ -341,13 +339,13 @@ void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std
 	// Normalisation d’amplitude
 	norm = matrix::Max(ref);
 
-	Coord3D cropSize = SmallSize;
-	matrix::Crop(ref, cropSize, true, true, false);
+	Vec3I cropDim = SmallDim;
+	matrix::Crop(ref, cropDim, true, true, false);
 	matrix::Scale(ref, 1.0 / norm);
 
 	for (auto& bead : subBeads) {
-		cropSize = SmallSize;
-		matrix::Crop(bead, cropSize, true, true, false);
+		cropDim = SmallDim;
+		matrix::Crop(bead, cropDim, true, true, false);
 		matrix::Scale(bead, 1.0 / norm);
 	}
 

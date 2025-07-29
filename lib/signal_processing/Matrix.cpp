@@ -15,14 +15,14 @@ namespace palm_tracer::matrix {
 //=============================================
 
 //-------------------------------------------------------------------------------------------------
-void Print(const std::vector<double>& data, const Coord3D& size)
+void Print(const std::vector<double>& data, const Vec3I& dim)
 {
 	size_t idx = 0;
-	for (size_t z = 0; z < size.z; ++z) {
+	for (size_t z = 0; z < dim.z; ++z) {
 		std::cout << "Plane " << z + 1 << " :\n";
-		for (size_t y = 0; y < size.y; ++y) {
+		for (size_t y = 0; y < dim.y; ++y) {
 			std::cout << "|\t";
-			for (size_t x = 0; x < size.x; ++x, ++idx) { std::cout << data[idx] << "\t|\t"; }
+			for (size_t x = 0; x < dim.x; ++x, ++idx) { std::cout << data[idx] << "\t|\t"; }
 			std::cout << "\n";
 		}
 		std::cout << "\n\n";
@@ -158,19 +158,19 @@ void Normalisation(std::vector<double>& a, const bool shift)
 }
 
 //-------------------------------------------------------------------------------------------------
-void Crop(std::vector<double>& data, Coord3D& size, const bool cropX, const bool cropY, const bool cropZ)
+void Crop(std::vector<double>& data, Vec3I& size, const bool cropX, const bool cropY, const bool cropZ)
 {
-	const Coord3D Offset{
+	const Vec3I Offset{
 		.x = static_cast<size_t>(cropX && size.x > 2 ? 1 : 0),
 		.y = static_cast<size_t>(cropY && size.y > 2 ? 1 : 0),
 		.z = static_cast<size_t>(cropZ && size.z > 2 ? 1 : 0)
 	};
 
-	const Coord3D NewSize{.x = size.x - 2 * Offset.x, .y = size.y - 2 * Offset.y, .z = size.z - 2 * Offset.z};
+	const Vec3I NewSize{.x = size.x - 2 * Offset.x, .y = size.y - 2 * Offset.y, .z = size.z - 2 * Offset.z};
 
 	std::vector<double> crop;
 	crop.reserve(NewSize.GetSize());
-	Coord3D pos{};
+	Vec3I pos{};
 	for (pos.z = Offset.z; pos.z < size.z - Offset.z; ++pos.z) {
 		for (pos.y = Offset.y; pos.y < size.y - Offset.y; ++pos.y) {
 			for (pos.x = Offset.x; pos.x < size.x - Offset.x; ++pos.x) { crop.push_back(data[pos.GetIndex(size)]); }
@@ -182,12 +182,12 @@ void Crop(std::vector<double>& data, Coord3D& size, const bool cropX, const bool
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<double> ExtractSubVolume(const std::vector<double>& data, const Coord3D& size, const std::vector<size_t>& xrange,
+std::vector<double> ExtractSubVolume(const std::vector<double>& data, const Vec3I& dim, const std::vector<size_t>& xrange,
                                      const std::vector<size_t>& yrange, const std::vector<size_t>& zrange)
 {
 	std::vector<double> out;
 	out.reserve(xrange.size() * yrange.size() * zrange.size());
-	for (const size_t Z : zrange) { for (const size_t Y : yrange) { for (const size_t X : xrange) { out.push_back(data[(Z * size.y + Y) * size.x + X]); } } }
+	for (const size_t Z : zrange) { for (const size_t Y : yrange) { for (const size_t X : xrange) { out.push_back(data[(Z * dim.y + Y) * dim.x + X]); } } }
 	return out;
 }
 

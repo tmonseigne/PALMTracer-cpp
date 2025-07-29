@@ -50,14 +50,14 @@ public:
 	/// - `(size.z - 1) * 2^level + 1`
 	/// Ce comportement imite fidèlement le comportement de MATLAB `interp3(M, level)`.</param>
 	/// <returns>Volume agrandi sous forme linéarisée avec interpolation.</returns>
-	[[nodiscard]] std::vector<double> Zoom(const std::vector<double>& volume, const Coord3D& dim, size_t level, Coord3D& newDim) const;
+	[[nodiscard]] std::vector<double> Zoom(const std::vector<double>& volume, const Vec3I& dim, size_t level, Vec3I& newDim) const;
 
 	/// <summary>Applique un décalage (shift) flottant sur un volume 3D avec interpolation.</summary>
 	/// <param name="volume">Vecteur linéarisé représentant un volume 3D en mémoire ligne-colonne-plan (X-Y-Z).</param>
-	/// <param name="size">Dimensions du volume 3D (width=X, height=Y, depth=Z).</param>
+	/// <param name="dim">Dimensions du volume 3D (width=X, height=Y, depth=Z).</param>
 	/// <param name="shift">Décalage flottant (x, y, z).</param>
 	/// <returns>Volume décalé, même taille que l'entrée.</returns>
-	[[nodiscard]] std::vector<double> Shift(const std::vector<double>& volume, const Coord3D& size, const Vec3& shift) const;
+	[[nodiscard]] std::vector<double> Shift(const std::vector<double>& volume, const Vec3I& dim, const Vec3D& shift) const;
 
 	/// <summary>Estime le décalage 3D subpixel entre deux volumes par corrélation croisée en haute résolution.
 	///
@@ -73,7 +73,7 @@ public:
 	/// <param name="target">Volume cible à aligner (entrée), 3D en mémoire row-major (x, y, z).</param>
 	/// <param name="dim">Dimensions des volumes sources (identiques pour les deux).</param>
 	/// <returns>Décallage 3D subpixel estimé.</returns>
-	[[nodiscard]] Vec3 GetShift(const std::vector<double>& ref, const std::vector<double>& target, const Coord3D& dim);
+	[[nodiscard]] Vec3D GetShift(const std::vector<double>& ref, const std::vector<double>& target, const Vec3I& dim) const;
 
 	/// <summary>Recherche la position subvoxel du maximum local d’un volume 3D par interpolation locale.</summary>
 	/// <param name="volume">Vecteur linéarisé représentant un volume 3D en mémoire ligne-colonne-plan (X-Y-Z).</param>
@@ -82,7 +82,7 @@ public:
 	/// <param name="delta">Pas d’échantillonnage dans l’interpolation locale.</param>
 	/// <param name="w">Demi-taille de la fenêtre (1 ⇒ cube 3x3x3).</param>
 	/// <returns>Vecteur (x, y, z) de décalage local subvoxel.</returns>
-	static Vec3 SubpixelMax(const std::vector<double>& volume, const Coord3D& dim, const Vec3& pos, double delta = 0.05, double w = 1.0);
+	static Vec3D SubpixelMax(const std::vector<double>& volume, const Vec3I& dim, const Vec3D& pos, double delta = 0.05, double w = 1.0);
 
 	/// <summary>Réalise un suréchantillonnage isotrope par un facteur flottant.
 	/// Equivalent à interp3(..., 'method') avec Xq = 1:1/factor:N.
@@ -92,7 +92,7 @@ public:
 	/// <param name="factor">Facteur d'agrandissement (> 1.0), ex: 3.0 pour 3x.</param>
 	/// <param name="newDim">Dimensions du volume suréchantillonné en sortie.</param>
 	/// <returns>Volume interpolé à la taille souhaitée.</returns>
-	[[nodiscard]] std::vector<double> Upsample(const std::vector<double>& volume, const Coord3D& dim, double factor, Coord3D& newDim) const;
+	[[nodiscard]] std::vector<double> Upsample(const std::vector<double>& volume, const Vec3I& dim, double factor, Vec3I& newDim) const;
 
 private:
 	/// <summary>Teste si une coordonnée réelle est hors des bornes d'une dimension.</summary>
@@ -105,7 +105,7 @@ private:
 	/// <param name="pos">The position.</param>
 	/// <param name="dim">The dim.</param>
 	/// <returns><c>True</c> Si la position est hors cadre, <c>False</c> sinon.</returns>
-	static bool isOut(const Vec3& pos, const Coord3D& dim) { return isOut(pos.x, dim.x) || isOut(pos.y, dim.y) || isOut(pos.z, dim.z); }
+	static bool isOut(const Vec3D& pos, const Vec3I& dim) { return isOut(pos.x, dim.x) || isOut(pos.y, dim.y) || isOut(pos.z, dim.z); }
 
 	/// <summary>Effectue une interpolation cubique 1D sur quatre valeurs. Basé sur la méthode de Catmull-Rom (forme cardinale).</summary>
 	/// <param name="v">Tableau de 4 valeurs consécutives.</param>
@@ -124,27 +124,27 @@ private:
 	/// <param name="dim">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
 	/// <param name="pos">Coordonnées flottantes où interpoler.</param>
 	/// <returns>Valeur interpolée au point donné, ou 0.0 si hors volume.</returns>
-	static double cubic3D(const std::vector<double>& volume, const Coord3D& dim, const Vec3& pos);
+	static double cubic3D(const std::vector<double>& volume, const Vec3I& dim, const Vec3D& pos);
 
 	/// <summary>Interpolation cubique trivariée dans un volume 3D (64 voxels pris en compte, 4x4x4).</summary>
 	/// <param name="volume">Vecteur linéarisé représentant un volume 3D en mémoire ligne-colonne-plan (X-Y-Z).</param>
 	/// <param name="dim">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
 	/// <param name="pos">Coordonnées flottantes où interpoler.</param>
 	/// <returns>Valeur interpolée au point donné, ou 0.0 si hors volume.</returns>
-	static double cubicWeight3D(const std::vector<double>& volume, const Coord3D& dim, const Vec3& pos);
+	static double cubicWeight3D(const std::vector<double>& volume, const Vec3I& dim, const Vec3D& pos);
 
 	/// <summary>Effectue une interpolation trilineaire dans un volume 3D (rapide, linéaire dans les 3 axes).</summary>
 	/// <param name="volume">Vecteur linéarisé représentant le volume 3D (X-Y-Z) en mémoire row-major.</param>
 	/// <param name="dim">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
 	/// <param name="pos">Position flottante (x, y, z) où calculer l'interpolation.</param>
 	/// <returns>Valeur interpolée au point donné, ou 0.0 si hors volume.</returns>
-	static double trilinear(const std::vector<double>& volume, const Coord3D& dim, const Vec3& pos);
+	static double trilinear(const std::vector<double>& volume, const Vec3I& dim, const Vec3D& pos);
 
 	/// <summary>Interpolation spline B-cubique avec coefficients spline préalablement calculés.</summary>
 	/// <param name="coeffs">Coefficients de la spline pour le volume.</param>
 	/// <param name="dim">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
 	/// <param name="pos">Position flottante (x, y, z) où calculer l'interpolation.</param>
 	/// <returns>Valeur interpolée au point donné, ou 0.0 si hors volume.</returns>
-	static double spline3D(const std::vector<double>& coeffs, const Coord3D& dim, const Vec3& pos);
+	static double spline3D(const std::vector<double>& coeffs, const Vec3I& dim, const Vec3D& pos);
 };
 } // namespace palm_tracer

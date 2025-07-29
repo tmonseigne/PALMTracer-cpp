@@ -4,7 +4,6 @@
 #include <array>
 #include <cmath>
 #include <complex>
-#include <iostream>
 #include <numbers>
 #include <numeric>
 #include <vector>
@@ -15,7 +14,7 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-BSpline3D::BSpline3D(const std::vector<double>& volume, const Coord3D& dim, const size_t degree, const Vec3& lambda)
+BSpline3D::BSpline3D(const std::vector<double>& volume, const Vec3I& dim, const size_t degree, const Vec3D& lambda)
 	: dim_(dim), degree_(degree), lambda_({lambda.x, lambda.y, lambda.z}), coeffs_(volume)
 {
 	getPolesFilter();                                                                  // Calcul des pôles du filtre B-spline pour une régularisation directe.
@@ -130,7 +129,7 @@ void BSpline3D::getFinalCoeff()
 
 	// Upsample l’image (x3)
 	const Interpolation3D Interp(interpolation_mode::spline, true); // Attention interpolation Spline Matlab différente
-	Coord3D upDim{};
+	Vec3I upDim{};
 	const auto Up = Interp.Upsample(coeffsHDR_, dim_, 3, upDim);
 
 	// Calcul des coefficients finaux

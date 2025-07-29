@@ -40,7 +40,7 @@ bool CheckFilter(const Filter& f, const double value, const bool lessThan) { ret
 
 //-------------------------------------------------------------------------------------------------
 Segmentation2D::Segmentation2D(const ATrous& decomposition, const double threshold, const double ratio)
-	: height_(decomposition.height_), width_(decomposition.width_), size_(decomposition.size_), ratio_(ratio)
+	: dim_(decomposition.dim_), size_(decomposition.size_), ratio_(ratio)
 {
 	// Initialization
 	map_.resize(size_);
@@ -80,14 +80,14 @@ void Segmentation2D::FilterData()
 	// Marquage des régions sur les bords
 	std::vector bounds(infos_.size(), false);
 	if (SEGMENTATION_FILTER[12].enabled) {
-		for (size_t i = 0; i < height_; ++i) {
-			const auto Idx = i * width_;
+		for (size_t i = 0; i < dim_.y; ++i) {
+			const auto Idx = i * dim_.x;
 			if (map_[Idx] != 0) { bounds[map_[Idx]] = true; }
-			if (map_[Idx + width_ - 1] != 0) { bounds[map_[Idx + width_ - 1]] = true; }
+			if (map_[Idx + dim_.x - 1] != 0) { bounds[map_[Idx + dim_.x - 1]] = true; }
 		}
-		for (size_t i = 1; i < width_ - 1; ++i) {
+		for (size_t i = 1; i < dim_.x - 1; ++i) {
 			if (map_[i] != 0) { bounds[map_[i]] = true; }
-			if (map_[(height_ - 1) * width_ + i] != 0) { bounds[map_[(height_ - 1) * width_ + i]] = true; }
+			if (map_[(dim_.y - 1) * dim_.x + i] != 0) { bounds[map_[(dim_.y - 1) * dim_.x + i]] = true; }
 		}
 	}
 
@@ -135,8 +135,8 @@ void Segmentation2D::ComputeStatistics()
 	for (auto& info : infos_) { info.Reset(); }
 
 	// Accumulation des mesures ne pas paralléliser
-	for (size_t i = 0, idx = 0; i < height_; ++i) {
-		for (size_t j = 0; j < width_; ++j, ++idx) {
+	for (size_t i = 0, idx = 0; i < dim_.y; ++i) {
+		for (size_t j = 0; j < dim_.x; ++j, ++idx) {
 			const uint16_t S = map_[idx];
 			if (S == 0) { continue; }
 			auto& info       = infos_[S - 1];
@@ -197,8 +197,8 @@ void Segmentation2D::filterStructureWS()
 		}
 
 		// Analyse des structures
-		for (size_t i = 0, idx = 0; i < height_; ++i) {
-			for (size_t j = 0; j < width_; ++j, ++idx) {
+		for (size_t i = 0, idx = 0; i < dim_.y; ++i) {
+			for (size_t j = 0; j < dim_.x; ++j, ++idx) {
 				const uint16_t Sid = map_[idx];
 				if (Sid == 0) { continue; }
 				auto& s = wsFusions[Sid - 1];
@@ -212,11 +212,11 @@ void Segmentation2D::filterStructureWS()
 				}
 
 				// Recherche des voisins
-				for (size_t ii = std::max(i, static_cast<size_t>(1)) - 1; ii <= std::min(i + 1, height_ - 1); ++ii) {
-					for (size_t jj = std::max(j, static_cast<size_t>(1)) - 1; jj <= std::min(j + 1, width_ - 1); ++jj) {
+				for (size_t ii = std::max(i, static_cast<size_t>(1)) - 1; ii <= std::min(i + 1, dim_.y - 1); ++ii) {
+					for (size_t jj = std::max(j, static_cast<size_t>(1)) - 1; jj <= std::min(j + 1, dim_.x - 1); ++jj) {
 						if (ii == i && jj == j) { continue; }
 
-						const uint16_t NeighborSid = map_[ii * width_ + jj];
+						const uint16_t NeighborSid = map_[ii * dim_.x + jj];
 						if (NeighborSid != 0 && NeighborSid != Sid) {
 							if (output_[idx] > s.maxPotentialWithNeighbor) {
 								s.maxPotentialWithNeighbor = output_[idx];
@@ -278,7 +278,7 @@ void Segmentation2D::filterStructureWS()
 	// Marquage d'un seul point par structure pour Watershed final
 	std::ranges::fill(map_, 0);
 	for (int i = 0; i < static_cast<int>(wsFusions.size()); ++i) {
-		if (wsFusions[i].structToBecome == i) { map_[wsFusions[i].x * width_ + wsFusions[i].y] = static_cast<uint16_t>(wsFusions[i].newIndex); }
+		if (wsFusions[i].structToBecome == i) { map_[wsFusions[i].x * dim_.x + wsFusions[i].y] = static_cast<uint16_t>(wsFusions[i].newIndex); }
 	}
 }
 
@@ -288,22 +288,22 @@ void Segmentation2D::getLocalMax()
 	std::ranges::fill(map_, 0);
 	uint16_t label = 1;
 
-	for (size_t i = 0, idx = 0; i < height_; ++i) {
-		for (size_t j = 0; j < width_; ++j, ++idx) {
+	for (size_t i = 0, idx = 0; i < dim_.y; ++i) {
+		for (size_t j = 0; j < dim_.x; ++j, ++idx) {
 			if (output_[idx] > THRESHOLD) {
 				bool err = false;
 				//test if it is a new maximum from the vicinity
-				for (size_t ii = i == 0 ? 0 : i - 1; ii <= std::min(i + 1, height_ - 1) && !err; ++ii) {
-					for (size_t jj = j == 0 ? 0 : j - 1; jj <= std::min(j + 1, width_ - 1) && !err; ++jj) {
-						if (ii != i || jj != j) { if (output_[idx] < output_[ii * width_ + jj]) { err = true; } }
+				for (size_t ii = i == 0 ? 0 : i - 1; ii <= std::min(i + 1, dim_.y - 1) && !err; ++ii) {
+					for (size_t jj = j == 0 ? 0 : j - 1; jj <= std::min(j + 1, dim_.x - 1) && !err; ++jj) {
+						if (ii != i || jj != j) { if (output_[idx] < output_[ii * dim_.x + jj]) { err = true; } }
 					}
 				}
 				if (!err) { //new maximum found
 					uint16_t maxi = 0;
 					err           = false;
-					for (size_t ii = i == 0 ? 0 : i - 1; ii <= std::min(i + 1, height_ - 1) && !err; ++ii) {
-						const size_t Idx1 = ii * width_;
-						for (size_t jj = j == 0 ? 0 : j - 1; jj <= std::min(j + 1, width_ - 1) && !err; ++jj) {
+					for (size_t ii = i == 0 ? 0 : i - 1; ii <= std::min(i + 1, dim_.y - 1) && !err; ++ii) {
+						const size_t Idx1 = ii * dim_.x;
+						for (size_t jj = j == 0 ? 0 : j - 1; jj <= std::min(j + 1, dim_.x - 1) && !err; ++jj) {
 							if (ii != i || jj != j) {
 								if (maxi < map_[Idx1 + jj]) {
 									maxi = map_[Idx1 + jj];
@@ -329,19 +329,19 @@ void Segmentation2D::watershed()
 {
 	std::priority_queue<Pixel> heap;
 
-	for (size_t x = 0, idx = 0; x < height_; ++x) {
-		for (size_t y = 0; y < width_; ++y, ++idx) {
+	for (size_t x = 0, idx = 0; x < dim_.y; ++x) {
+		for (size_t y = 0; y < dim_.x; ++y, ++idx) {
 			if (map_[idx] == 0) { continue; }
 
 			bool vois = false;
 			for (int dx = -1; dx <= 1 && !vois; ++dx) {
 				const int Nx = static_cast<int>(x) + dx;
-				if (Nx < 0 || Nx >= static_cast<int>(height_)) { continue; }
-				const size_t RowOffset = static_cast<size_t>(Nx) * width_;
+				if (Nx < 0 || Nx >= static_cast<int>(dim_.y)) { continue; }
+				const size_t RowOffset = static_cast<size_t>(Nx) * dim_.x;
 
 				for (int dy = -1; dy <= 1 && !vois; ++dy) {
 					const int Ny = static_cast<int>(y) + dy;
-					if ((dx == 0 && dy == 0) || Ny < 0 || Ny >= static_cast<int>(width_)) { continue; }
+					if ((dx == 0 && dy == 0) || Ny < 0 || Ny >= static_cast<int>(dim_.x)) { continue; }
 
 					if (map_[RowOffset + Ny] == 0) { vois = true; }
 				}
@@ -359,17 +359,17 @@ void Segmentation2D::watershed()
 
 		for (int dx = -1; dx <= 1; ++dx) {
 			const int Nx = static_cast<int>(P.x) + dx;
-			if (Nx < 0 || Nx >= static_cast<int>(height_)) { continue; }
+			if (Nx < 0 || Nx >= static_cast<int>(dim_.y)) { continue; }
 
 			for (int dy = -1; dy <= 1; ++dy) {
 				const int Ny = static_cast<int>(P.y) + dy;
-				if ((dx == 0 && dy == 0) || Ny < 0 || Ny >= static_cast<int>(width_)) { continue; }
+				if ((dx == 0 && dy == 0) || Ny < 0 || Ny >= static_cast<int>(dim_.x)) { continue; }
 
-				const size_t Nid = Nx * width_ + Ny;
+				const size_t Nid = Nx * dim_.x + Ny;
 				if (output_[Nid] > THRESHOLD && map_[Nid] == 0) {
 					const double Cle = -output_[Nid] + static_cast<double>(it) * EPSILON;
 					heap.emplace(Pixel{.x = static_cast<size_t>(Nx), .y = static_cast<size_t>(Ny), .v = Cle});
-					map_[Nid] = map_[P.x * width_ + P.y];
+					map_[Nid] = map_[P.x * dim_.x + P.y];
 				}
 			}
 		}

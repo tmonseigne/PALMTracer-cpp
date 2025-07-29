@@ -123,7 +123,7 @@ TEST(MatrixTest, NormalisationWithShift)
 //-------------------------------------------------------------------------------------------------
 TEST(MatrixTest, CropVolume)
 {
-	Coord3D size{.x = 3, .y = 3, .z = 3};
+	Vec3I size{.x = 3, .y = 3, .z = 3};
 	std::vector<double> vol(27);
 	std::iota(vol.begin(), vol.end(), 0);
 	matrix::Crop(vol, size);
@@ -137,7 +137,7 @@ TEST(MatrixTest, CropVolume)
 //-------------------------------------------------------------------------------------------------
 TEST(MatrixTest, ExtractSubVolume)
 {
-	constexpr Coord3D Size{.x = 3, .y = 3, .z = 1};
+	constexpr Vec3I Size{.x = 3, .y = 3, .z = 1};
 	std::vector<double> data(9);
 	std::iota(data.begin(), data.end(), 0);
 	const auto Sub = matrix::ExtractSubVolume(data, Size, {1, 2}, {0, 1}, {0});

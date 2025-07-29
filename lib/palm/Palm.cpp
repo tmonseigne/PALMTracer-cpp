@@ -22,10 +22,10 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-Palm::Palm(const uint16_t* image, double* points, const size_t pointsListSize, const size_t height, const size_t width, const size_t planes,
+Palm::Palm(const uint16_t* image, double* points, const size_t pointsListSize, const Vec3I& dim,
            const double thresholdVal, const double watershedRatio, const size_t fit, const double* fitParams)
-	: stack_(image), points_(points), height_(height), width_(width), planes_(planes), size_(height * width),
-	  nPointsMaxPerPlane_((pointsListSize / N_LOCALIZATIONS) / planes),
+	: stack_(image), points_(points), dim_(dim), size_(dim.GetPlaneSize()),
+	  nPointsMaxPerPlane_((pointsListSize / N_LOCALIZATIONS) / dim.z),
 	  thresholdVal_(thresholdVal), watershedRatio_(watershedRatio), fit_(fit), fitParams_(fitParams) { }
 
 //-------------------------------------------------------------------------------------------------
@@ -34,14 +34,14 @@ int Palm::Processing() const
 	omp_set_dynamic(1); // Autorise l’adaptation automatique du nombre de threads.
 	//omp_set_num_threads(static_cast<int>(std::thread::hardware_concurrency())); // Fixe un max
 
-	std::vector<std::vector<std::array<double, N_LOCALIZATIONS>>> allPoints(planes_);
+	std::vector<std::vector<std::array<double, N_LOCALIZATIONS>>> allPoints(dim_.z);
 
 	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(planes_); ++i) { processingPlane(i, allPoints[i]); }
+	for (int i = 0; i < static_cast<int>(dim_.z); ++i) { processingPlane(i, allPoints[i]); }
 
 	// Copy et remplissage Remplissage de l'index global, du plan et de l'index par plan
 	size_t count = 0, global = 1;
-	for (int i = 0; i < static_cast<int>(planes_); ++i) {
+	for (int i = 0; i < static_cast<int>(dim_.z); ++i) {
 		size_t local       = 1;
 		const double Plane = i + 1;
 		for (const auto& Point : allPoints[i]) {
@@ -79,10 +79,10 @@ double Palm::AutoThreshold()
 		std::fill(mask.begin(), mask.end(), false);
 		for (auto& p : points) {
 			const auto Xmin = static_cast<size_t>(std::max(0, static_cast<int>(p[4] - HalfRoi))),
-			           Xmax = std::min(width_, static_cast<size_t>(p[4] + HalfRoi)),
+			           Xmax = std::min(dim_.x, static_cast<size_t>(p[4] + HalfRoi)),
 			           Ymin = static_cast<size_t>(std::max(0, static_cast<int>(p[5] - HalfRoi))),
-			           Ymax = std::min(height_, static_cast<size_t>(p[5] + HalfRoi));
-			for (size_t y = Ymin; y < Ymax; ++y) { for (size_t x = Xmin; x < Xmax; ++x) { mask[y * width_ + x] = true; } }
+			           Ymax = std::min(dim_.y, static_cast<size_t>(p[5] + HalfRoi));
+			for (size_t y = Ymin; y < Ymax; ++y) { for (size_t x = Xmin; x < Xmax; ++x) { mask[y * dim_.x + x] = true; } }
 		}
 		// Extraction des pixels non masqués (hors ROI)
 		std::vector<double> tmp;
@@ -113,9 +113,10 @@ double Palm::AutoThreshold()
 void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const
 {
 	const uint16_t* image = stack_ + plane * size_;
+	const Vec2I Dim       = {.x = dim_.x, .y = dim_.y};
 
 	//----- Décomposition en ondelette -----
-	const ATrous Decomposition(image, height_, width_); // Objet pour la décomposition ondelettes (algorithme à trous).
+	const ATrous Decomposition(image, Dim); // Objet pour la décomposition ondelettes (algorithme à trous).
 
 	//----- Segmentation -----
 	const Segmentation2D Segmentation(Decomposition, thresholdVal_, watershedRatio_); // Objet de segmentation intelligente 2D.
@@ -123,37 +124,37 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 	//----- Fitting -----
 	switch (fit_) {
 		case 1: {
-			GaussianFit fit(fit_mode::gaussian_2d_fixed, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
+			GaussianFit fit(fit_mode::gaussian_2d_fixed, image, Dim, nPointsMaxPerPlane_, fitParams_);
 			fit.Fit(Segmentation, points);
 			break;
 		}
 
 		case 2: { // Gaussian fit of 2D
-			GaussianFit fit(fit_mode::gaussian_2d_sigma, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
+			GaussianFit fit(fit_mode::gaussian_2d_sigma, image, Dim, nPointsMaxPerPlane_, fitParams_);
 			fit.Fit(Segmentation, points);
 			break;
 		}
 
 		case 3: { // Gaussian fit of 3D Theta is constant
-			GaussianFit fit(fit_mode::gaussian_3d_fixed, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
+			GaussianFit fit(fit_mode::gaussian_3d_fixed, image, Dim, nPointsMaxPerPlane_, fitParams_);
 			fit.Fit(Segmentation, points);
 			break;
 		}
 
 		case 4: { // Gaussian fit of 3D
-			GaussianFit fit(fit_mode::gaussian_3d_theta, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
+			GaussianFit fit(fit_mode::gaussian_3d_theta, image, Dim, nPointsMaxPerPlane_, fitParams_);
 			fit.Fit(Segmentation, points);
 			break;
 		}
 
 		case 5: { // Spline fit for Z on EMCCD sensor (maybe same call for sCMOS)
-			SplineFit fit(fit_mode::spline_3d_emccd, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
+			SplineFit fit(fit_mode::spline_3d_emccd, image, Dim, nPointsMaxPerPlane_, fitParams_);
 			fit.Fit(Segmentation, points);
 			break;
 		}
 
 		default: {
-			Fitting fit(fit_mode::none, image, height_, width_, nPointsMaxPerPlane_, fitParams_);
+			Fitting fit(fit_mode::none, image, Dim, nPointsMaxPerPlane_, fitParams_);
 			fit.Fit(Segmentation, points);
 			break;
 		}

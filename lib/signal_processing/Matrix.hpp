@@ -26,9 +26,9 @@ namespace palm_tracer::matrix {
 /// <summary>Affiche le contenu d’un volume 3D (stocké en 1D) dans la console, plan par plan.
 /// Format lisible avec délimitation par lignes et colonnes.</summary>
 /// <param name="data">Vecteur de données 1D (flattened) représentant un volume 3D.</param>
-/// <param name="size">Dimensions du volume (x, y, z).</param>
+/// <param name="dim">Dimensions du volume (x, y, z).</param>
 /// <remarks>Les valeurs sont affichées plan par plan avec une mise en forme tabulaire.</remarks>
-void Print(const std::vector<double>& data, const Coord3D& size);
+void Print(const std::vector<double>& data, const Vec3I& dim);
 
 //========================================================
 //==================== Basic Computes ====================
@@ -132,7 +132,7 @@ inline double DotProduct(const std::vector<double>& a, const std::vector<double>
 double RmsDifference(const std::vector<double>& a, const std::vector<double>& b);
 
 /// <summary>Normalise une matrice en la centrant puis en divisant par la somme totale.
-/// Si `shift` est vrai, la fonction soustrait le minimum à tous les éléments, puis divise par le maximum pour obtenir un tableau entre 0 et 1.
+/// Si `shift` est vrai, la fonction soustrait le minimum à tous les éléments et divise par le maximum pour obtenir un tableau entre 0 et 1.
 /// Si `shift` est faux, seule la division par le maximum est appliquée.</summary>
 /// <param name="a">Vecteur à normaliser (modifié en place).</param>
 /// <param name="shift">Si true, retire le minimum avant normalisation.</param>
@@ -149,16 +149,16 @@ void Normalisation(std::vector<double>& a, bool shift = true);
 /// <param name="cropX">Coupe la première et la dernière colonne (x).</param>
 /// <param name="cropY">Coupe la première et la dernière ligne (y).</param>
 /// <param name="cropZ">Coupe le premier et le dernier plan (z).</param>
-void Crop(std::vector<double>& data, Coord3D& size, bool cropX = true, bool cropY = true, bool cropZ = true);
+void Crop(std::vector<double>& data, Vec3I& size, bool cropX = true, bool cropY = true, bool cropZ = true);
 
 /// <summary>Extrait un sous-volume 3D donné des plages d'indices spécifiées.</summary>
 /// <param name="data">Données 1D représentant un volume 3D.</param>
-/// <param name="size">Dimensions initiales du volume.</param>
+/// <param name="dim">Dimensions initiales du volume.</param>
 /// <param name="xrange">Indices en X.</param>
 /// <param name="yrange">Indices en Y.</param>
 /// <param name="zrange">Indices en Z.</param>
 /// <returns>Sous-volume vectorisé extrait (1D, de taille xr.size() * yr.size() * zr.size()).</returns>
-std::vector<double> ExtractSubVolume(const std::vector<double>& data, const Coord3D& size, const std::vector<size_t>& xrange,
+std::vector<double> ExtractSubVolume(const std::vector<double>& data, const Vec3I& dim, const std::vector<size_t>& xrange,
                                      const std::vector<size_t>& yrange, const std::vector<size_t>& zrange);
 
 //======================================================

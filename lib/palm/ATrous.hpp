@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "Constants.hpp"
+#include "Structs.hpp"
 
 namespace palm_tracer {
 /// <summary>Classe pour la décomposition en ondelettes 2D selon l'algorithme "à trous".</summary>
@@ -22,16 +23,14 @@ namespace palm_tracer {
 /// Elle gère la mémoire interne, les calculs de convolutions et la gestion des plans.</remarks>
 class ATrous {
 public:
-	size_t height_,                                     ///< Hauteur de l'image analysée.
-	       width_,                                      ///< Largeur de l'image analysée.
-	       size_;                                       ///< Taille totale (hauteur × largeur).
+	Vec2I dim_;                                         ///< Dimensions de l'image (X, Y).
+	size_t size_;                                       ///< Taille totale (hauteur × largeur).
 	std::array<std::vector<double>, N_PLANES> wDecomp_; ///< Résultat de la décomposition en ondelettes : tableau des plans.
 
 	/// <summary>Constructeur de la classe <c>ATrous</c>.</summary>
 	/// <param name="image">Pointeur vers l'image 2D d'entrée (tableau d'uint16_t).</param>
-	/// <param name="height">Hauteur de l'image.</param>
-	/// <param name="width">Largeur de l'image.</param>
-	ATrous(const uint16_t* image, size_t height, size_t width);
+	/// <param name="dim">Dimensions de l'image (X, Y).</param>
+	ATrous(const uint16_t* image, const Vec2I& dim);
 
 	/// <summary>Destructeur de la classe <c>ATrous</c>.</summary>
 	~ATrous() = default;
@@ -61,7 +60,7 @@ private:
 	/// <param name="i">Indice de ligne (doit être valide).</param>
 	/// <param name="j">Indice de colonne (doit être valide).</param>
 	/// <returns>Offset 1D dans le tableau.</returns>
-	[[nodiscard]] size_t offset(const size_t i, const size_t j) const { return i * width_ + j; }
+	[[nodiscard]] size_t offset(const size_t i, const size_t j) const { return i * dim_.x + j; }
 
 	/// <summary>Applique le filtre B3-spline 2D à l'image d'entrée pour générer une image de sortie à une certaine échelle.</summary>
 	/// <param name="in">Image d'entrée (provenant d'un niveau de décomposition précédent).</param>

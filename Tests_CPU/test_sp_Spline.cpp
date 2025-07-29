@@ -21,7 +21,7 @@ TEST(SplineTests, SetMembers)
 {
 	Spline spline;
 	std::vector<uint16_t> input;
-	Coord3D dim{};
+	Vec3I dim{};
 	// Charger l'image des billes
 	LoadTiff3D(BEAD_FILE_PATH.string().c_str(), input, dim);
 
@@ -39,11 +39,11 @@ TEST(SplineTests, ExtractBeads)
 {
 	Spline spline;
 	std::vector<uint16_t> input;
-	Coord3D dim{};
+	Vec3I dim{};
 	// Charger l'image des billes
 	LoadTiff3D(BEAD_FILE_PATH.string().c_str(), input, dim);
 
-	const std::vector<Coord> Beads = {
+	const std::vector<Vec2I> Beads = {
 		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
 		{.x = 43, .y = 70}, {.x = 44, .y = 82}, {.x = 90, .y = 110},
 		{.x = 28, .y = 118}
@@ -105,11 +105,11 @@ TEST(SplineTests, Align)
 {
 	Spline spline;
 	std::vector<uint16_t> input;
-	Coord3D dim{};
+	Vec3I dim{};
 	// Charger l'image des billes
 	LoadTiff3D(BEAD_FILE_PATH.string().c_str(), input, dim);
 
-	const std::vector<Coord> Beads = {
+	const std::vector<Vec2I> Beads = {
 		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
 		{.x = 43, .y = 70}, {.x = 44, .y = 82}, {.x = 90, .y = 110},
 		{.x = 28, .y = 118}
@@ -129,7 +129,7 @@ TEST(SplineTests, Align)
 		mu[i] = sum / static_cast<double>(Nref);
 	}
 	const auto Shifts           = spline.Align(mu, beadsStack, false);
-	const std::vector<Vec3> Ref = {
+	const std::vector<Vec3D> Ref = {
 		{.x = -0.0375, .y = 0.025, .z = 0},
 		{.x = -0.0125, .y = 0.1, .z = 0},
 		{.x = -0.1, .y = -0.025, .z = 0},
@@ -158,7 +158,7 @@ TEST(SplineTests, Align)
 TEST(SplineTests, GetOverlapMinimal)
 {
 	Spline spline;
-	constexpr Coord3D Dim{.x = 5, .y = 5, .z = 3}; // Très petit volume
+	constexpr Vec3I Dim{.x = 5, .y = 5, .z = 3}; // Très petit volume
 
 	// Génère des "billes" artificielles
 	std::vector beads(6, std::vector(Dim.GetSize(), 0.0));
@@ -186,12 +186,12 @@ TEST(SplineTests, GetOverlapMinimal)
 
 	// Shifts associés
 	const std::vector Shifts = {
-		Vec3{.x = 0.0, .y = 0.0, .z = 0.0}, // Valide
-		Vec3{.x = 0.0, .y = 0.0, .z = 0.0}, // NaN
-		Vec3{.x = 0.0, .y = 0.0, .z = 0.0}, // Nulle
-		Vec3{.x = 0.0, .y = 0.0, .z = 0.0}, // Poids faible
-		Vec3{.x = 4.0, .y = 0.0, .z = 0.0}, // >3 ⇒ filtré
-		Vec3{.x = 0.0, .y = 0.0, .z = 0.0}  // Différente pour test RMS élevé
+		Vec3D{.x = 0.0, .y = 0.0, .z = 0.0}, // Valide
+		Vec3D{.x = 0.0, .y = 0.0, .z = 0.0}, // NaN
+		Vec3D{.x = 0.0, .y = 0.0, .z = 0.0}, // Nulle
+		Vec3D{.x = 0.0, .y = 0.0, .z = 0.0}, // Poids faible
+		Vec3D{.x = 4.0, .y = 0.0, .z = 0.0}, // >3 ⇒ filtré
+		Vec3D{.x = 0.0, .y = 0.0, .z = 0.0}  // Différente pour test RMS élevé
 	};
 
 	// Poids initiaux
@@ -204,7 +204,7 @@ TEST(SplineTests, GetOverlapMinimal)
 	spline.smallZIndices_ = {1};
 
 	//Dimansions de la zone d'interet centrale.
-	spline.smallBeadDim_    = Coord3D{.x = spline.smallXIndices_.size(), .y = spline.smallXIndices_.size(), .z = spline.smallZIndices_.size()};
+	spline.smallBeadDim_    = Vec3I{.x = spline.smallXIndices_.size(), .y = spline.smallXIndices_.size(), .z = spline.smallZIndices_.size()};
 	spline.smallBeadImSize_ = spline.smallBeadDim_.GetPlaneSize();
 	spline.smallBeadSize_   = spline.smallBeadDim_.GetSize();
 	spline.GetOverlap(beads, Shifts, weight, norm, false);
@@ -231,17 +231,17 @@ TEST(SplineTests, GetOverlap)
 {
 	Spline spline;
 	std::vector<uint16_t> input;
-	Coord3D dim{};
+	Vec3I dim{};
 	// Charger l'image des billes
 	LoadTiff3D(BEAD_FILE_PATH.string().c_str(), input, dim);
 
-	const std::vector<Coord> Beads = {
+	const std::vector<Vec2I> Beads = {
 		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
 		{.x = 43, .y = 70}, {.x = 44, .y = 82}, {.x = 90, .y = 110},
 		{.x = 28, .y = 118}
 	};
 
-	const std::vector<Vec3> Shifts = {
+	const std::vector<Vec3D> Shifts = {
 		{.x = 0.0750, .y = -0.3625, .z = 0.0125},
 		{.x = -0.0125, .y = -0.1250, .z = 0},
 		{.x = -0.1375, .y = 0.4625, .z = 0},
@@ -268,7 +268,7 @@ TEST(SplineTests, GetOverlap)
 TEST(SplineTests, SoftNormalizationMinimal)
 {
 	Spline spline;
-	constexpr Coord3D Dim{.x = 5, .y = 5, .z = 3}; // Très petit volume
+	constexpr Vec3I Dim{.x = 5, .y = 5, .z = 3}; // Très petit volume
 	const size_t N        = Dim.GetSize();
 	constexpr size_t Nvol = 3;
 
@@ -301,11 +301,11 @@ TEST(SplineTests, SoftNormalization)
 {
 	Spline spline;
 	std::vector<uint16_t> input;
-	Coord3D dim{};
+	Vec3I dim{};
 	// Charger l'image des billes
 	LoadTiff3D(BEAD_FILE_PATH.string().c_str(), input, dim);
 
-	const std::vector<Coord> Beads = {
+	const std::vector<Vec2I> Beads = {
 		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
 		{.x = 43, .y = 70}, {.x = 44, .y = 82}, {.x = 90, .y = 110},
 		{.x = 28, .y = 118}
@@ -322,7 +322,7 @@ TEST(SplineTests, SoftNormalization)
 TEST(SplineTests, GetPSFMinimal)
 {
 	Spline spline;
-	constexpr Coord3D Dim{.x = 7, .y = 7, .z = 5}; // Très petit volume
+	constexpr Vec3I Dim{.x = 7, .y = 7, .z = 5}; // Très petit volume
 	const size_t N        = Dim.GetSize();
 	constexpr size_t Nvol = 3;
 
@@ -347,7 +347,7 @@ TEST(SplineTests, GetPSFMinimal)
 	spline.smallZIndices_ = {1, 2, 3};
 
 	//Dimansions de la zone d'interet centrale.
-	spline.smallBeadDim_    = Coord3D{.x = spline.smallXIndices_.size(), .y = spline.smallXIndices_.size(), .z = spline.smallZIndices_.size()};
+	spline.smallBeadDim_    = Vec3I{.x = spline.smallXIndices_.size(), .y = spline.smallXIndices_.size(), .z = spline.smallZIndices_.size()};
 	spline.smallBeadImSize_ = spline.smallBeadDim_.GetPlaneSize();
 	spline.smallBeadSize_   = spline.smallBeadDim_.GetSize();
 
@@ -361,11 +361,11 @@ TEST(SplineTests, GetPSF)
 {
 	Spline spline;
 	std::vector<uint16_t> input;
-	Coord3D dim{};
+	Vec3I dim{};
 	// Charger l'image des billes
 	LoadTiff3D(BEAD_FILE_PATH.string().c_str(), input, dim);
 
-	const std::vector<Coord> Beads = {
+	const std::vector<Vec2I> Beads = {
 		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
 		{.x = 43, .y = 70}, {.x = 44, .y = 82}, {.x = 90, .y = 110},
 		{.x = 28, .y = 118}
@@ -385,11 +385,11 @@ TEST(SplineTests, Calibrate)
 {
 	Spline spline;
 	std::vector<uint16_t> input;
-	Coord3D dim{};
+	Vec3I dim{};
 	// Charger l'image des billes
 	LoadTiff3D(BEAD_FILE_PATH.string().c_str(), input, dim);
 
-	const std::vector<Coord> Beads = {
+	const std::vector<Vec2I> Beads = {
 		{.x = 25, .y = 19}, {.x = 93, .y = 27}, {.x = 122, .y = 61},
 		{.x = 43, .y = 70}, {.x = 44, .y = 82}, {.x = 90, .y = 110},
 		{.x = 28, .y = 118}
@@ -401,7 +401,7 @@ TEST(SplineTests, Calibrate)
 		Spline spline;
 
 		std::vector<uint16_t> input;
-		Coord3D dim{};
+		Vec3I dim{};
 		// Charger l'image des billes
 		LoadTiff3D(beadfile_path.string().c_str(), input, dim);
 		const size_t PlaneSize = dim.GetPlaneSize();
@@ -420,14 +420,14 @@ TEST(SplineTests, Calibrate)
 		size_t nBeads = palm.Processing();
 		nBeads /= N_LOCALIZATIONS;
 		std::cout << nBeads << " Beads found " << "\n";
-		std::vector<Coord> beads;
+		std::vector<Vec2I> beads;
 		beads.reserve(nBeads);
 		for (size_t i = 0; i < nBeads; ++i) {
 			const size_t Idx = i * N_LOCALIZATIONS,
 			             X   = static_cast<size_t>(std::round(pointsList[Idx + 4])),
 			             Y   = static_cast<size_t>(std::round(pointsList[Idx + 5]));
 			std::cout << "Bead " << i + 1 << " (" << X << ", " << Y << ")\n";
-			if (HALF_ROI <= X && X < dim.x - HALF_ROI && HALF_ROI <= Y && Y < dim.y - HALF_ROI) { beads.emplace_back(Coord{.x = X, .y = Y}); }
+			if (HALF_ROI <= X && X < dim.x - HALF_ROI && HALF_ROI <= Y && Y < dim.y - HALF_ROI) { beads.emplace_back(Vec2I{.x = X, .y = Y}); }
 		}
 		std::cout << beads.size() << "\n";
 		//spline.Calibrate(input.data(), beads, dim, ROI, 50, 10, 1);

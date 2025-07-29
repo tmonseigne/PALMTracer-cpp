@@ -14,7 +14,7 @@ namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
 TEST(BSpline3DTests, DiracImpulse)
 {
-	constexpr Coord3D Dim{.x = 5, .y = 5, .z = 5};
+	constexpr Vec3I Dim{.x = 5, .y = 5, .z = 5};
 	const size_t N = Dim.GetSize();
 
 	// Volume : Dirac au centre
@@ -24,7 +24,7 @@ TEST(BSpline3DTests, DiracImpulse)
 
 	// Paramètres du filtre
 	constexpr size_t Degree = 3;
-	constexpr Vec3 Lambda{.x = 0.1, .y = 0.1, .z = 0.1}; // Régularisation modérée
+	constexpr Vec3D Lambda{.x = 0.1, .y = 0.1, .z = 0.1}; // Régularisation modérée
 
 	// Application du filtrage B-spline
 	const BSpline3D Bspline(volume, Dim, Degree, Lambda);

@@ -9,7 +9,7 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-void Alignment::Align(const uint16_t* highSNR, const uint16_t* lowSNR, const uint16_t* input, uint16_t* output, const Coord3D& dim, const size_t upsampling)
+void Alignment::Align(const uint16_t* highSNR, const uint16_t* lowSNR, const uint16_t* input, uint16_t* output, const Vec3I& dim, const size_t upsampling)
 
 {
 	highSNR_     = highSNR;
@@ -26,7 +26,7 @@ void Alignment::Align(const uint16_t* highSNR, const uint16_t* lowSNR, const uin
 }
 
 //-------------------------------------------------------------------------------------------------
-void Alignment::Align(const uint16_t* input, uint16_t* output, const Coord3D& dim, const std::array<std::array<double, 10>, 2>& factors,
+void Alignment::Align(const uint16_t* input, uint16_t* output, const Vec3I& dim, const std::array<std::array<double, 10>, 2>& factors,
                       const size_t upsampling)
 
 {
@@ -82,7 +82,7 @@ void Alignment::align()
 //-------------------------------------------------------------------------------------------------
 void Alignment::precomputeTransformMap()
 {
-	std::vector transformGrid(dim_.y + 1, std::vector<Vec2>(dim_.x + 1));
+	std::vector transformGrid(dim_.y + 1, std::vector<Vec2D>(dim_.x + 1));
 
 	// 1. computeCoord pour tous les coins
 	#pragma omp parallel for
@@ -119,7 +119,7 @@ void Alignment::precomputeTransformMap()
 				const size_t RowdstIdx = j * UpW;
 				for (size_t i = Xmin; i <= Xmax; ++i) {
 					const double Xpix = static_cast<double>(i) * Step;
-					std::vector<Vec2> clipped;
+					std::vector<Vec2D> clipped;
 					clipPolygon(P, clipped, Xpix, Ypix, Step);
 					if (!clipped.empty()) {
 						#pragma omp critical // Evite la concurrence lors d'écriture simultanée à transformMap_[dstIdx]
@@ -152,11 +152,11 @@ void Alignment::applyTransform() const
 }
 
 //-------------------------------------------------------------------------------------------------
-void Alignment::clipPolygon(const std::vector<Vec2>& poly, std::vector<Vec2>& clipped, const double xmin, const double ymin, const double pixelSize)
+void Alignment::clipPolygon(const std::vector<Vec2D>& poly, std::vector<Vec2D>& clipped, const double xmin, const double ymin, const double pixelSize)
 {
 	const double Xmax = xmin + pixelSize, Ymax = ymin + pixelSize;
 
-	auto inside = [](const Vec2& c, const int edge, const double bound) {
+	auto inside = [](const Vec2D& c, const int edge, const double bound) {
 		switch (edge) {
 			case 0: return c.x >= bound; // left
 			case 1: return c.x <= bound; // right
@@ -166,15 +166,15 @@ void Alignment::clipPolygon(const std::vector<Vec2>& poly, std::vector<Vec2>& cl
 		}
 	};
 
-	auto intersect = [](const Vec2& a, const Vec2& b, const int edge, const double bound) {
-		if (edge < 2) { return Vec2{.x = bound, .y = a.y + (b.y - a.y) * (bound - a.x) / (b.x - a.x)}; } // vertical clip
-		return Vec2{.x = a.x + (b.x - a.x) * (bound - a.y) / (b.y - a.y), .y = bound};                   // horizontal clip
+	auto intersect = [](const Vec2D& a, const Vec2D& b, const int edge, const double bound) {
+		if (edge < 2) { return Vec2D{.x = bound, .y = a.y + (b.y - a.y) * (bound - a.x) / (b.x - a.x)}; } // vertical clip
+		return Vec2D{.x = a.x + (b.x - a.x) * (bound - a.y) / (b.y - a.y), .y = bound};                   // horizontal clip
 	};
 
 	clipped.reserve(4);
 	for (const auto& P : poly) { clipped.push_back(P); }
 	for (int edge = 0; edge < 4; ++edge) {
-		std::vector<Vec2> input = clipped;
+		std::vector<Vec2D> input = clipped;
 		clipped.clear();
 
 		if (input.empty()) { break; }
@@ -209,7 +209,7 @@ void Alignment::clipPolygon(const std::vector<Vec2>& poly, std::vector<Vec2>& cl
 }
 
 //-------------------------------------------------------------------------------------------------
-double Alignment::getArea(const std::vector<Vec2>& poly) const
+double Alignment::getArea(const std::vector<Vec2D>& poly) const
 {
 	double area    = 0.0;
 	const size_t N = poly.size();

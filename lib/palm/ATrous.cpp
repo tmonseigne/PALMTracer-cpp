@@ -6,8 +6,8 @@
 #include "Constants.hpp"
 
 namespace palm_tracer {
-ATrous::ATrous(const uint16_t* image, const size_t height, const size_t width)
-	: height_(height), width_(width), size_(height * width)
+ATrous::ATrous(const uint16_t* image, const Vec2I& dim)
+	: dim_(dim), size_(dim.GetSize())
 {
 	tmp_.resize(size_);
 	for (auto& wavelet : wDecomp_) { wavelet.resize(size_); }
@@ -53,8 +53,8 @@ void ATrous::decomposition2D(const uint16_t* image)
 //-------------------------------------------------------------------------------------------------
 size_t ATrous::offsetTest(const int i, const int j) const
 {
-	const auto Clamped_I = static_cast<size_t>(std::clamp(i, 0, static_cast<int>(height_) - 1));
-	const auto Clamped_J = static_cast<size_t>(std::clamp(j, 0, static_cast<int>(width_) - 1));
+	const auto Clamped_I = static_cast<size_t>(std::clamp(i, 0, static_cast<int>(dim_.y) - 1));
+	const auto Clamped_J = static_cast<size_t>(std::clamp(j, 0, static_cast<int>(dim_.x) - 1));
 	return offset(Clamped_I, Clamped_J);
 }
 
@@ -85,10 +85,10 @@ void ATrous::b3SplineFiltering2D(const std::vector<double>& in, std::vector<doub
 
 	// Convolution horizontale (Y-axis)
 	#pragma omp parallel for
-	for (int idx = 0; idx < static_cast<int>(size_); ++idx) { tmp_[idx] = convolutionY(idx, idx / static_cast<int>(width_), idx % static_cast<int>(width_)); }
+	for (int idx = 0; idx < static_cast<int>(size_); ++idx) { tmp_[idx] = convolutionY(idx, idx / static_cast<int>(dim_.x), idx % static_cast<int>(dim_.x)); }
 
 	// Convolution verticale (X-axis)
 	#pragma omp parallel for
-	for (int idx = 0; idx < static_cast<int>(size_); ++idx) { out[idx] = convolutionX(idx, idx / static_cast<int>(width_), idx % static_cast<int>(width_)); }
+	for (int idx = 0; idx < static_cast<int>(size_); ++idx) { out[idx] = convolutionX(idx, idx / static_cast<int>(dim_.x), idx % static_cast<int>(dim_.x)); }
 }
 } // namespace palm_tracer

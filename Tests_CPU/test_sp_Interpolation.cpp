@@ -17,8 +17,8 @@ TEST(InterpolationTests, ZoomFactor)
 {
 	const Interpolation3D Interp(MODE, CROP);
 	// Matrice 3x4x5 = 60 valeurs
-	constexpr Coord3D Size = {.x = 3, .y = 4, .z = 5};
-	Coord3D newSize{};
+	constexpr Vec3I Size = {.x = 3, .y = 4, .z = 5};
+	Vec3I newSize{};
 	std::vector<double> volume(60);
 	std::iota(volume.begin(), volume.end(), 1); // valeurs 1 à 60
 
@@ -92,11 +92,11 @@ TEST(InterpolationTests, ZoomFactor)
 TEST(InterpolationTests, ShiftInsideBounds)
 {
 	const Interpolation3D Interp(MODE, CROP);
-	constexpr Coord3D Size = {.x = 3, .y = 4, .z = 5};
+	constexpr Vec3I Size = {.x = 3, .y = 4, .z = 5};
 	std::vector<double> volume(60);
 	std::iota(volume.begin(), volume.end(), 1);
 
-	constexpr Vec3 Shift  = {.x = 0.15, .y = 0.25, .z = 0.5};
+	constexpr Vec3D Shift  = {.x = 0.15, .y = 0.25, .z = 0.5};
 	const auto Shifted    = Interp.Shift(volume, Size, Shift);
 	const std::vector Ref = {
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
@@ -114,11 +114,11 @@ TEST(InterpolationTests, ShiftInsideBounds)
 TEST(InterpolationTests, ShiftOutOfBounds)
 {
 	const Interpolation3D Interp(MODE, CROP);
-	constexpr Coord3D Size = {.x = 3, .y = 4, .z = 5};
+	constexpr Vec3I Size = {.x = 3, .y = 4, .z = 5};
 	std::vector<double> volume(60);
 	std::iota(volume.begin(), volume.end(), 1);
 
-	constexpr Vec3 Shift = {.x = 3.0, .y = 4.0, .z = 5.0}; // shift trop grand, tout doit être à 0.
+	constexpr Vec3D Shift = {.x = 3.0, .y = 4.0, .z = 5.0}; // shift trop grand, tout doit être à 0.
 	const auto Shifted   = Interp.Shift(volume, Size, Shift);
 
 	for (const double V : Shifted) { EXPECT_DOUBLE_EQ(V, 0.0); }
@@ -127,14 +127,14 @@ TEST(InterpolationTests, ShiftOutOfBounds)
 //-------------------------------------------------------------------------------------------------
 TEST(InterpolationTests, InterpolateShifted)
 {
-	constexpr Coord3D Dim{.x = 4, .y = 4, .z = 4};
+	constexpr Vec3I Dim{.x = 4, .y = 4, .z = 4};
 	const size_t N = Dim.GetSize();
 	// Volume : avec un Pic dans un coin
 	std::vector volume(N, 0.0);
 	volume[Dim.GetPlaneSize() + Dim.x + 1] = 1.0;
 	//matrix::Print(volume, Dim);
 
-	Coord3D newSize{};
+	Vec3I newSize{};
 	const std::vector<double> MatlabRefLinear = {
 		0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0,
@@ -339,14 +339,14 @@ TEST(InterpolationTests, InterpolateShifted)
 //-------------------------------------------------------------------------------------------------
 TEST(InterpolationTests, SubpixelMaxInterp3D)
 {
-	constexpr Coord3D Size = {.x = 3, .y = 3, .z = 3};
-	std::vector volume(Size.x * Size.y * Size.z, 0.0);
+	constexpr Vec3I Size = {.x = 3, .y = 3, .z = 3};
+	std::vector volume(Size.GetSize(), 0.0);
 
 	// Coordonnées du maximum entre les voxels (1,1,1) et (2,2,2)
 	volume[(1 * Size.y + 1) * Size.x + 1] = 1.0;
 	volume[(2 * Size.y + 2) * Size.x + 2] = 8.0; // maximum, mais non aligné avec grille
 
-	constexpr Vec3 Start   = {.x = 1.5, .y = 1.5, .z = 1.5};
+	constexpr Vec3D Start   = {.x = 1.5, .y = 1.5, .z = 1.5};
 	constexpr double Delta = 0.05, Window = 1.0;
 
 	const auto Shift = Interpolation3D::SubpixelMax(volume, Size, Start, Delta, Window);
@@ -361,10 +361,10 @@ TEST(InterpolationTests, SubpixelMaxInterp3D)
 TEST(InterpolationTests, GetShift3D)
 {
 	Interpolation3D interp(MODE, CROP);
-	constexpr Coord3D Size = {.x = 3, .y = 4, .z = 5};
+	constexpr Vec3I Size = {.x = 3, .y = 4, .z = 5};
 	std::vector<double> volume(60);
 	std::iota(volume.begin(), volume.end(), 1);
-	constexpr Vec3 Shift = {.x = 0.15, .y = 0.25, .z = 0.5};
+	constexpr Vec3D Shift = {.x = 0.15, .y = 0.25, .z = 0.5};
 	const auto Shifted   = interp.Shift(volume, Size, Shift);
 	//const std::vector Shifted = {
 	//	0.0, 0.0, 0.0,  0.0, 0.0,  0.0,   0.0, 0.0,  0.0,  0.0, 0.0,  0.0,
@@ -373,7 +373,7 @@ TEST(InterpolationTests, GetShift3D)
 	//	0.0, 0.0, 0.0,  0.0, 34.1, 35.1,  0.0, 37.1, 38.1, 0.0, 40.1, 41.1,
 	//	0.0, 0.0, 0.0,  0.0, 46.1, 47.1,  0.0, 49.1, 50.1, 0.0, 52.1, 53.1,
 	//};
-	constexpr Vec3 Ref = {.x = 0.025, .y = 0.025, .z = 0}; // interpolated shifted matrix result is different
+	constexpr Vec3D Ref = {.x = 0.025, .y = 0.025, .z = 0}; // interpolated shifted matrix result is different
 
 	const auto Res = interp.GetShift(volume, Shifted, Size);
 	EXPECT_DOUBLE_EQ(Res.x, Ref.x);
@@ -386,8 +386,8 @@ TEST(InterpolationTests, Upsample)
 {
 	const Interpolation3D Interp(interpolation_mode::trilinear, CROP);
 	// Matrice 3x4x5 = 60 valeurs
-	constexpr Coord3D Size = {.x = 3, .y = 4, .z = 5};
-	Coord3D newSize{};
+	constexpr Vec3I Size = {.x = 3, .y = 4, .z = 5};
+	Vec3I newSize{};
 	std::vector<double> volume(60);
 	std::iota(volume.begin(), volume.end(), 1); // valeurs 1 à 60
 
@@ -400,7 +400,7 @@ TEST(InterpolationTests, Upsample)
 // A petite dimension, l'interpolation lineaire fonctionne comme sous Matlab sans probleme même avec des 0.
 TEST(InterpolationTests, NonLinearMatrix)
 {
-	constexpr Coord3D Size           = {.x = 3, .y = 3, .z = 2};
+	constexpr Vec3I Size           = {.x = 3, .y = 3, .z = 2};
 	const std::vector<double> Volume = {
 		0, 2, 1,
 		3, 5, 4,
@@ -412,13 +412,13 @@ TEST(InterpolationTests, NonLinearMatrix)
 	};
 	for (const auto M : MODES) {
 		for (const auto C : CROPS) {
-			Coord3D newSize{};
+			Vec3I newSize{};
 			const Interpolation3D Interp(M, C);
 			const auto Zoomed = Interp.Zoom(Volume, Size, 1, newSize);
 			//std::cout << "==================================================\n";
 			//std::cout << "Mode " << static_cast<int>(M) << ", Crop " << C << "\n";
 			//matrix::Print(Zoomed, newSize);
-			//constexpr Vec3 Shift = {.x = 0.15, .y = 0.25, .z = 0.5};
+			//constexpr Vec3D Shift = {.x = 0.15, .y = 0.25, .z = 0.5};
 			//const auto Shifted   = Interp.Shift(Volume, Size, Shift);
 			//matrix::Print(Shifted, Size);
 		}

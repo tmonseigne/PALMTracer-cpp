@@ -18,8 +18,8 @@ namespace palm_tracer {
 /// <summary>Classe d'ajustement gaussien.</summary>
 class GaussianFit final : public Fitting {
 public:
-	explicit GaussianFit(const fit_mode mode, const uint16_t* image, const size_t height, const size_t width, const size_t maxPoints,
-	                     const double* fitParams) : Fitting(mode, image, height, width, maxPoints, fitParams) { initialize(); }
+	explicit GaussianFit(const fit_mode mode, const uint16_t* image, const Vec2I& dim, const size_t maxPoints,
+	                     const double* fitParams) : Fitting(mode, image, dim, maxPoints, fitParams) { initialize(); }
 
 protected:
 	static constexpr double LAMBDA_0   = 1e-2, ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.

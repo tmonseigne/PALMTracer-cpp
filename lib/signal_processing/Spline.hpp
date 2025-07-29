@@ -22,10 +22,10 @@ namespace palm_tracer {
 /// <summary>Classe de calibration de spline pour PSF 3D pour l'ajustement à partir d'un stack de billes.</summary>
 class Spline {
 public:
-	Coord3D dim_{},          ///< Dimensions complètes du volume 3D d'origine (X, Y, Z).
-	        beadDim_{},      ///< Dimensions d'une ROI centrée sur une bille (cube impair).
-	        midBead_{},      ///< Coordonnées du centre de la ROI (en voxels).
-	        smallBeadDim_{}; ///< Dimensions de la zone centrale de la ROI utilisée pour l'alignement/normalisation.
+	Vec3I dim_{},          ///< Dimensions complètes du volume 3D d'origine (X, Y, Z).
+	      beadDim_{},      ///< Dimensions d'une ROI centrée sur une bille (cube impair).
+	      midBead_{},      ///< Coordonnées du centre de la ROI (en voxels).
+	      smallBeadDim_{}; ///< Dimensions de la zone centrale de la ROI utilisée pour l'alignement/normalisation.
 
 	size_t imSize_{},          ///< Taille d'une image 2D (X*Y).
 	       stackSize_{},       ///< Taille totale du stack (X*Y*Z).
@@ -52,7 +52,7 @@ public:
 	/// <param name="distance">Nombre de plans Z utilisés autour du centre (pour smallZ).</param>
 	/// <param name="dz">Pas Z en nm (utilisé pour pondérer la régularisation de la spline sur Z).</param>
 	/// <remarks>Cette fonction calcule une PSF moyenne spline à partir d'un ensemble de billes, aligne, filtre et normalise.</remarks>
-	void Calibrate(const uint16_t* stack, const std::vector<Coord>& beads, const Coord3D& dim, size_t roi, size_t distance, size_t dz);
+	void Calibrate(const uint16_t* stack, const std::vector<Vec2I>& beads, const Vec3I& dim, size_t roi, size_t distance, size_t dz);
 
 	/// <summary>Charge une spline depuis un fichier (non implémenté ici).</summary>
 	void Load(const std::string& filename) = delete;
@@ -71,13 +71,13 @@ public:
 	/// <param name="roi">Taille carrée de la ROI autour de chaque bille (sera rendue impaire automatiquement).</param>
 	/// <param name="distance">Nombre de plans Z utilisés autour du centre (pour smallZ).</param>
 	/// <param name="dz">Pas Z en nm (utilisé pour pondérer la régularisation de la spline sur Z).</param>
-	void SetMembers(const Coord3D& dim, size_t roi, size_t distance, size_t dz);
+	void SetMembers(const Vec3I& dim, size_t roi, size_t distance, size_t dz);
 
 	/// <summary>Extrait les volumes centrés autour de chaque bille depuis le stack brut.</summary>
 	/// <param name="stack">Volume brut d'acquisition (stack 3D d'uint16_t).</param>
 	/// <param name="beads">Liste des positions XY des billes.</param>
 	/// <returns>Vecteur de volumes double (un par bille, linéarisé).</returns>
-	std::vector<std::vector<double>> ExtractBeads(const uint16_t* stack, const std::vector<Coord>& beads) const;
+	std::vector<std::vector<double>> ExtractBeads(const uint16_t* stack, const std::vector<Vec2I>& beads) const;
 
 	/// <summary>Calcule la PSF moyenne alignée à partir d'une liste de sous-volumes.</summary>
 	/// <param name="beads">Volumes individuels des billes.</param>
@@ -89,7 +89,7 @@ public:
 	/// <param name="beads">Volumes des billes à aligner (modifiés en place).</param>
 	/// <param name="smallZ">Si vrai, utilise un sous-volume centré en Z.</param>
 	/// <returns>Liste des vecteurs de décalage appliqués.</returns>
-	std::vector<Vec3> Align(const std::vector<double>& ref, std::vector<std::vector<double>>& beads, bool smallZ = false) const;
+	std::vector<Vec3D> Align(const std::vector<double>& ref, std::vector<std::vector<double>>& beads, bool smallZ = false) const;
 
 	/// <summary>Normalisation douce des intensités des billes, par rapport à la PSF moyenne locale.</summary>
 	/// <param name="beads">Volumes individuels.</param>
@@ -102,7 +102,7 @@ public:
 	/// <param name="weights">Poids mis à jour (NaN si rejeté).</param>
 	/// <param name="norm">Valeur de normalisation globale.</param>
 	/// <param name="smallZ">Si vrai : réduction sur Z avant comparaison.</param>
-	void GetOverlap(const std::vector<std::vector<double>>& beads, const std::vector<Vec3>& shift, std::vector<double>& weights,
+	void GetOverlap(const std::vector<std::vector<double>>& beads, const std::vector<Vec3D>& shift, std::vector<double>& weights,
 	                double& norm, bool smallZ = false) const;
 
 protected:

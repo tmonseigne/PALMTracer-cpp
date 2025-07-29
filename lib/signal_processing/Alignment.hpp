@@ -37,7 +37,7 @@ public:
 	/// <param name="dim">Dimensions du volume 3D (width=X, height=Y, depth=Z).</param>
 	/// <param name="upsampling">Taux de suréchantillonnage à appliquer avant recalage.</param>
 	/// <remarks>Cette méthode lance une exception, car le calcul automatique n'est pas implémenté dans cette version.</remarks>
-	void Align(const uint16_t* highSNR, const uint16_t* lowSNR, const uint16_t* input, uint16_t* output, const Coord3D& dim, size_t upsampling = 1);
+	void Align(const uint16_t* highSNR, const uint16_t* lowSNR, const uint16_t* input, uint16_t* output, const Vec3I& dim, size_t upsampling = 1);
 
 	/// <summary>Mode d'alignement avec coefficients déjà calculés.</summary>
 	/// <param name="input">Données d'entrée (pile d'images à réaligner).</param>
@@ -45,7 +45,7 @@ public:
 	/// <param name="dim">Dimensions du volume 3D (width=X, height=Y, depth=Z).</param>
 	/// <param name="factors">Coefficients du modèle non linéaire, séparés pour X et Y (2x10 coefficients).</param>
 	/// <param name="upsampling">Taux de suréchantillonnage à appliquer avant recalage (>=1).</param>
-	void Align(const uint16_t* input, uint16_t* output, const Coord3D& dim, const std::array<std::array<double, 10>, 2>& factors, size_t upsampling = 1);
+	void Align(const uint16_t* input, uint16_t* output, const Vec3I& dim, const std::array<std::array<double, 10>, 2>& factors, size_t upsampling = 1);
 
 protected:
 	/// <summary>Structure décrivant la contribution d'un pixel source à un pixel cible.</summary>
@@ -58,7 +58,7 @@ protected:
 	               *lowSNR_{},                            ///< Image de référence désalignée (faible SNR).
 	               *input_{};                             ///< Pointeur vers la pile d'entrée à aligner.
 	uint16_t* output_{};                                  ///< Pointeur vers la zone de sortie (résultat de l'alignement).
-	Coord3D dim_{};                                       ///< Dimensions du volume 3D (width=X, height=Y, depth=Z).
+	Vec3I dim_{};                                         ///< Dimensions du volume 3D (width=X, height=Y, depth=Z).
 	size_t sizeIm_{},                                     ///< Nombre total de pixels d'une image (height × width).
 	       sizeStack_{},                                  ///< Nombre total de pixels (height × width × planes).
 	       upsampling_{},                                 ///< Taux de suréchantillonnage.
@@ -100,11 +100,11 @@ protected:
 	/// <param name="xmin">Coordonnée X du coin supérieur gauche du pixel cible.</param>
 	/// <param name="ymin">Coordonnée Y du coin supérieur gauche du pixel cible.</param>
 	/// <param name="pixelSize">Taille d'un pixel (souvent 1 / suréchantillonnage).</param>
-	static void clipPolygon(const std::vector<Vec2>& poly, std::vector<Vec2>& clipped, double xmin, double ymin, double pixelSize);
+	static void clipPolygon(const std::vector<Vec2D>& poly, std::vector<Vec2D>& clipped, double xmin, double ymin, double pixelSize);
 
 	/// <summary>Calcule l'aire d'un polygone (utile pour les poids de contribution).</summary>
 	/// <param name="poly">Polygone (doit être convexe pour validité des poids).</param>
 	/// <returns>Aire (toujours positive, avec normalisation par le suréchantillonnage).</returns>
-	[[nodiscard]] double getArea(const std::vector<Vec2>& poly) const;
+	[[nodiscard]] double getArea(const std::vector<Vec2D>& poly) const;
 };
 } // namespace palm_tracer

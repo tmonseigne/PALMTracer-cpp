@@ -33,20 +33,18 @@ static double SqrtReal(const double value)
 //-------------------------------------------------------------------------------------------------
 void SplineFit::parseParams()
 {
-	size_t idx     = 0;
-	roi_           = static_cast<size_t>(fitParams_[idx++]);
-	splineSizeX_   = static_cast<size_t>(fitParams_[idx++]);
-	splineSizeY_   = static_cast<size_t>(fitParams_[idx++]);
-	splineSizeZ_   = static_cast<size_t>(fitParams_[idx++]);
-	splineSizeXY_  = splineSizeX_ * splineSizeY_;
-	splineSizeXYZ_ = splineSizeXY_ * splineSizeZ_;
-	initZ_         = static_cast<double>(splineSizeZ_) / 2.0;
-	deltaZ_        = fitParams_[idx++];
-	coeffs_.resize(splineSizeXYZ_ * SPLINE_PATCH_SIZE);
+	size_t idx = 0;
+	roi_       = static_cast<size_t>(fitParams_[idx++]);
+	for (size_t i = 0; i < 3; ++i) { splineDim_[i] = static_cast<size_t>(fitParams_[idx++]); }
+	splineSizeXY_ = splineDim_.GetPlaneSize();
+	splineSize_   = splineDim_.GetSize();
+	initZ_        = static_cast<double>(splineDim_.z) / 2.0;
+	deltaZ_       = fitParams_[idx++];
+	coeffs_.resize(splineSize_ * SPLINE_PATCH_SIZE);
 	for (double& coeff : coeffs_) { coeff = fitParams_[idx++]; }
-	const double CenterCoeff = coeffs_[32 * splineSizeXYZ_ + splineSizeZ_ / 2 * splineSizeXY_ + splineSizeY_ / 2 * splineSizeX_ + splineSizeX_ / 2];
+	const double CenterCoeff = coeffs_[32 * splineSize_ + splineDim_.z / 2 * splineSizeXY_ + splineDim_.y / 2 * splineDim_.x + splineDim_.x / 2];
 	intensityRatio_          = std::fabs(CenterCoeff) < std::numeric_limits<double>::epsilon() ? 1.0 : 4.0 / CenterCoeff;
-	splineOffset_            = static_cast<size_t>(std::floor((static_cast<double>(splineSizeX_) + 1.0 - static_cast<double>(roi_)) / 2));
+	splineOffset_            = static_cast<size_t>(std::floor((static_cast<double>(splineDim_.x) + 1.0 - static_cast<double>(roi_)) / 2));
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -62,12 +60,13 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 
 	// Vérification si la zone d'intérêt est entièrement dans l'image (évite les bords)
 	const auto Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
-	if (roiHalf_ <= Ux && Ux < width_ - roiHalf_ && roiHalf_ <= Uy && Uy < height_ - roiHalf_) {
+	if (roiHalf_ <= Ux && Ux < dim_.x - roiHalf_ && roiHalf_ <= Uy && Uy < dim_.y - roiHalf_) {
 		// Création des variables
 		double lambda = LAMBDA_0, minI = 0, maxI = 0, model = 0, err = std::numeric_limits<double>::max(), mu = 1 + lambda;
 		std::vector<double> hessian(nParams2_), l(nParams2_), u(nParams2_),
 		                    dudt(nParams_), jacobian(nParams_), jump(nParams_), update(nParams_),
-		                    f(SPLINE_PATCH_SIZE), dxf(SPLINE_PATCH_SIZE), dyf(SPLINE_PATCH_SIZE), dzf(SPLINE_PATCH_SIZE);
+		                    f(SPLINE_PATCH_SIZE);
+		std::array df{std::vector<double>(SPLINE_PATCH_SIZE), std::vector<double>(SPLINE_PATCH_SIZE), std::vector<double>(SPLINE_PATCH_SIZE)};
 		std::vector<Pixel> grid(n_);
 		std::array<std::vector<double>, 3> p;
 
@@ -80,9 +79,9 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 
 		initP(p, x, y, z, minI, maxI);
 		p[1][1] *= intensityRatio_;                                                                // Change l'intensité pour la position actuelle.
-		p[2][4] = static_cast<double>(splineSizeZ_);                                               // Change le maximum pour Z.
+		p[2][4] = static_cast<double>(splineDim_.z);                                               // Change le maximum pour Z.
 		for (size_t i = 0; i < nParams_; ++i) { p[1][i] = std::clamp(p[1][i], p[0][i], p[2][i]); } // Clamp en cas de problème.
-		jump = {std::max(20.0, p[1][1]), std::max(100.0, p[1][1]), 1.0, 1.0, std::max(static_cast<double>(splineSizeZ_) / 3.0, 2.0)};
+		jump = {std::max(20.0, p[1][1]), std::max(100.0, p[1][1]), 1.0, 1.0, std::max(static_cast<double>(splineDim_.z) / 3.0, 2.0)};
 
 		bool stop        = false;
 		size_t iteration = 0;
@@ -110,13 +109,16 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			          Zi = static_cast<int>(std::floor(p[1][4]));
 
 			const double Xc = Xr - Xi, Yc = Yr - Yi, Zc = p[1][4] - Zi;
-			delta3D(Xc, Yc, Zc, f, dxf, dyf, dzf);
+			delta3D(Xc, Yc, Zc, f, df);
 			// Calcul des dérivées et initialisation du model
 			// offset utile, car la ROI et les coeffs ont peut-être des tailles différentes donc on recentre sur X et sur Y
 			// Exemple : ROI de 7 splineX de 11 : La ROI 7x7 est centrée à partir du point 2 dans la spline
+			Vec3I pos = {.x = 0, .y = 0, .z = static_cast<size_t>(Zi)};
 			for (size_t i = 0, idx = 0; i < roi_; ++i) {
+				pos.x = Xi + i + splineOffset_;
 				for (size_t j = 0; j < roi_; ++j, ++idx) {
-					derivativeSpline(Xi + i + splineOffset_, Yi + j + splineOffset_, Zi, f, dxf, dyf, dzf, p[1], dudt, model);
+					pos.y = Yi + j + splineOffset_;
+					derivativeSpline(pos, f, df, p[1], dudt, model);
 					updateJacobianHessian(grid[idx].v, model, err, jacobian, hessian, dudt);
 				}
 			}
@@ -170,13 +172,16 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		          Zi = static_cast<int>(std::floor(p[1][4]));
 
 		const double Xc = Xr - Xi, Yc = Yr - Yi, Zc = p[1][4] - Zi;
-		delta3D(Xc, Yc, Zc, f, dxf, dyf, dzf);
+		delta3D(Xc, Yc, Zc, f, df);
 		// Calcul des dérivées et initialisation du model
 		// offset utile, car la ROI et les coeffs ont peut-être des tailles différentes donc on recentre sur X et sur Y
 		// Exemple : ROI de 7 splineX de 11 : La ROI 7x7 est centrée à partir du point 2 dans la spline
+		Vec3I pos = {.x = 0, .y = 0, .z = static_cast<size_t>(Zi)};
 		for (size_t i = 0, idx = 0; i < roi_; ++i) {
+			pos.x = Xi + i + splineOffset_;
 			for (size_t j = 0; j < roi_; ++j, ++idx) {
-				derivativeSpline(Xi + i + splineOffset_, Yi + j + splineOffset_, Zi, f, dxf, dyf, dzf, p[1], dudt, model);
+				pos.y = Yi + j + splineOffset_;
+				derivativeSpline(pos, f, df, p[1], dudt, model);
 				// Calcul de la matrice d'information de Fisher
 				for (size_t i2 = 0; i2 < nParams_; ++i2) {
 					for (size_t j2 = i2; j2 < nParams_; ++j2) {
@@ -213,24 +218,21 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 }
 
 //-------------------------------------------------------------------------------------------------
-void SplineFit::derivativeSpline(size_t x, size_t y, size_t z, const std::vector<double>& f,
-                                 const std::vector<double>& dxf, const std::vector<double>& dyf, const std::vector<double>& dzf,
+void SplineFit::derivativeSpline(Vec3I& pos, const std::vector<double>& f, const std::array<std::vector<double>, 3>& df,
                                  const std::vector<double>& p, std::vector<double>& dudt, double& model) const
 {
-	x = std::clamp<size_t>(x, 0, splineSizeX_ - 1);
-	y = std::clamp<size_t>(y, 0, splineSizeY_ - 1);
-	z = std::clamp<size_t>(z, 0, splineSizeZ_ - 1);
+	pos = pos.Clamp(splineDim_ - 1);
 
-	const size_t Pos = z * splineSizeXY_ + y * splineSizeX_ + x;
+	const size_t Pos = pos.GetIndex(splineDim_);
 	std::ranges::fill(dudt, 0.0); // Initialise toutes les dérivées à zéro
 
 
 	for (size_t i = 0; i < SPLINE_PATCH_SIZE; ++i) {
-		const size_t Id = i * splineSizeXYZ_ + Pos;
-		dudt[1] += f[i] * coeffs_[Id];   // Contribution à l’intensité.
-		dudt[2] += dxf[i] * coeffs_[Id]; // Dérivée en x.
-		dudt[3] += dyf[i] * coeffs_[Id]; // Dérivée en y.
-		dudt[4] += dzf[i] * coeffs_[Id]; // Dérivée en z.
+		const size_t Id = i * splineSize_ + Pos;
+		dudt[1] += f[i] * coeffs_[Id];     // Contribution à l’intensité.
+		dudt[2] += df[0][i] * coeffs_[Id]; // Dérivée en x.
+		dudt[3] += df[1][i] * coeffs_[Id]; // Dérivée en y.
+		dudt[4] += df[2][i] * coeffs_[Id]; // Dérivée en z.
 	}
 	dudt[0] = 1;                   // Dérivée par rapport à l’offset
 	dudt[2] *= -1 * p[1];          // Ajustement en x.
@@ -293,13 +295,10 @@ void SplineFit::luEvaluate(const std::vector<double>& l, const std::vector<doubl
 	}
 }
 
-void SplineFit::delta3D(const double x, const double y, const double z, std::vector<double>& f, std::vector<double>& dxf, std::vector<double>& dyf,
-                        std::vector<double>& dzf)
+void SplineFit::delta3D(const double x, const double y, const double z, std::vector<double>& f, std::array<std::vector<double>, 3>& df)
 {
 	std::ranges::fill(f, 0.0);
-	std::ranges::fill(dxf, 0.0);
-	std::ranges::fill(dyf, 0.0);
-	std::ranges::fill(dzf, 0.0);
+	for (size_t i = 0; i < 3; ++i) { std::ranges::fill(df[i], 0.0); }
 	double cz = 1.0;
 	for (size_t i = 0; i < SPLINE_PATCH_SIDE; ++i) {
 		double cy = 1.0;
@@ -309,9 +308,9 @@ void SplineFit::delta3D(const double x, const double y, const double z, std::vec
 				const size_t Id   = i * SPLINE_PATCH_PLANE + j * SPLINE_PATCH_SIDE + k;
 				const double Coef = cz * cy * cx;
 				f[Id]             = Coef;
-				if (k + 1 < SPLINE_PATCH_SIDE) { dxf[Id + 1] = static_cast<double>(k + 1) * Coef; }
-				if (j + 1 < SPLINE_PATCH_SIDE) { dyf[Id + SPLINE_PATCH_SIDE] = static_cast<double>(j + 1) * Coef; }
-				if (i + 1 < SPLINE_PATCH_SIDE) { dzf[Id + SPLINE_PATCH_PLANE] = static_cast<double>(i + 1) * Coef; }
+				if (k + 1 < SPLINE_PATCH_SIDE) { df[0][Id + 1] = static_cast<double>(k + 1) * Coef; }
+				if (j + 1 < SPLINE_PATCH_SIDE) { df[1][Id + SPLINE_PATCH_SIDE] = static_cast<double>(j + 1) * Coef; }
+				if (i + 1 < SPLINE_PATCH_SIDE) { df[2][Id + SPLINE_PATCH_PLANE] = static_cast<double>(i + 1) * Coef; }
 				cx *= x;
 			}
 			cy *= y;

@@ -30,9 +30,9 @@ class BSpline3D {
 public:
 	static constexpr size_t N_DIMENSIONS = 3; ///< Nombre de dimensions (X, Y, Z).
 
-	Coord3D dim_{},       ///< Dimensions d'origine du volume (sans padding).
-	        dimPadded_{}, ///< Dimensions après padding réfléchi.
-	        dimFinal_{};  ///< Dimensions des coefficients finaux (dim - 1).
+	Vec3I dim_{},       ///< Dimensions d'origine du volume (sans padding).
+	      dimPadded_{}, ///< Dimensions après padding réfléchi.
+	      dimFinal_{};  ///< Dimensions des coefficients finaux (dim - 1).
 
 	size_t degree_ = 3;                         ///< Degré de la B-spline (entre 0 et 7).
 	std::array<double, N_DIMENSIONS> lambda_{}; ///< Facteur de régularisation (0 = pas de régularisation, ≠ 0 autorisé uniquement pour les degrés impairs).
@@ -53,7 +53,7 @@ public:
 	/// <param name="dim">Dimensions du volume (X, Y, Z).</param>
 	/// <param name="degree">Degré de la B-spline (0 à 7).</param>
 	/// <param name="lambda">Paramètres de régularisation pour chaque dimension.</param>
-	BSpline3D(const std::vector<double>& volume, const Coord3D& dim, size_t degree = 3, const Vec3& lambda = {});
+	BSpline3D(const std::vector<double>& volume, const Vec3I& dim, size_t degree = 3, const Vec3D& lambda = {});
 
 	/// <summary>Destructeur de la classe <c>BSpline3D</c>.</summary>
 	~BSpline3D() = default;

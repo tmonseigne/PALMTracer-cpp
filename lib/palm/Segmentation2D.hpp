@@ -63,9 +63,8 @@ public:
 
 private:
 	static constexpr double THRESHOLD = 1e-8; ///< Seuil minimal utilisé pour certaines comparaisons flottantes.
-	size_t height_,                           ///< Hauteur de l'image d'entrée.
-	       width_,                            ///< Largeur de l'image d'entrée.
-	       size_;                             ///< Taille totale de l'image (height_ * width_).
+	Vec2I dim_;                               ///< Dimensions de l'image (X, Y).
+	size_t size_;                             ///< Taille totale de l'image (height_ * width_).
 	double ratio_;                            ///< Rapport utilisé dans l'algorithme de Watershed.
 	std::vector<SegmentationInfo> infos_;     ///< Vecteur de structures 2D analysées ou filtrées.
 	std::vector<uint16_t> map_;               ///< Image segmentée (carte binaire des objets détectés).

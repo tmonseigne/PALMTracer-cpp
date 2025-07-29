@@ -36,12 +36,11 @@ public:
 	/// <summary>Constructeur de la classe <c>Fitting</c>. Initialise le nombre de paramètres du modèle en fonction du mode d'ajustement choisi.</summary>
 	/// <param name="mode">Mode de fitting gaussien (2D, 2D avec sigma, 3D, 3D avec rotation).</param>
 	/// <param name="image">Image 2D d'entrée (hauteur x largeur) en niveaux de gris.</param>
-	/// <param name="height">Hauteur de l'image.</param>
-	/// <param name="width">Largeur de l'image.</param>
+	/// <param name="dim">Dimensions de l'image (X, Y).</param>
 	/// <param name="maxPoints">Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).</param>
 	/// <param name="fitParams"> Paramètres pour l'ajustement.</param>
-	explicit Fitting(const fit_mode mode, const uint16_t* image, const size_t height, const size_t width, const size_t maxPoints, const double* fitParams)
-		: mode_(mode), image_(image), height_(height), width_(width), maxPoints_(maxPoints), fitParams_(fitParams) { initialize(); }
+	explicit Fitting(const fit_mode mode, const uint16_t* image, const Vec2I& dim, const size_t maxPoints, const double* fitParams)
+		: mode_(mode), image_(image), dim_(dim), maxPoints_(maxPoints), fitParams_(fitParams) { initialize(); }
 
 	/// <summary>Destructeur de la classe <c>Fitting</c>.</summary>
 	virtual ~Fitting() = default;
@@ -54,11 +53,10 @@ public:
 protected:
 	fit_mode mode_;           ///< Mode de fitting utilisé (ex. position seulement, ou position + orientation...).
 	const uint16_t* image_;   ///< Image 2D d'entrée (hauteur x largeur) en niveaux de gris.
+	Vec2I dim_;               ///< Dimensions de l'image (X, Y).
 	size_t n_{0},             ///< Nombre d'échantillons ou points de données à fitter.
 	       nParams_{4},       ///< Nombre total de paramètres du modèle.
 	       nParams2_{},       ///< Nombre de paramètres au carré (utile pour les matrices jacobiennes ou hessiennes).
-	       height_,           ///< Hauteur de l'image.
-	       width_,            ///< Largeur de l'image.
 	       maxPoints_,        ///< Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).
 	       roi_{},            ///< Taille de la région d'intérêt autour du point.
 	       roiHalf_{};        ///< Demi taille de la région d'intérêt autour du point.

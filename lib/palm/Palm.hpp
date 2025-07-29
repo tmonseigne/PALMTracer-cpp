@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "Constants.hpp"
+#include "Structs.hpp"
 
 namespace palm_tracer {
 /// <summary>Classe principale pour la détection de points lumineux dans une image 2D en niveaux de gris,
@@ -42,9 +43,7 @@ public:
 	/// <param name="image">Image d'entrée au format tableau 2D (grayscale, taille height × width).</param>
 	/// <param name="points">Pointeur vers le tableau de sortie où seront stockés les points détectés (x, y, intensité, etc.).</param>
 	/// <param name="pointsListSize">Taille totale allouée pour le tableau de points (doit être un multiple de N_LOCALIZATIONS).</param>
-	/// <param name="height">Hauteur d'une image (en pixels).</param>
-	/// <param name="width">Largeur d'une image (en pixels).</param>
-	/// <param name="planes">Nombre de plans de la pile</param>
+	/// <param name="dim">Dimensions de la pile (X, Y, Z).</param>
 	/// <param name="thresholdVal">Seuil de détection appliqué sur les coefficients du plan d'ondelettes choisi.</param>
 	/// <param name="watershedRatio">Ratio utilisé par l'algorithme de Watershed pour la séparation des objets.</param>
 	/// <param name="fit">Mode d'ajustement à appliquer :
@@ -65,7 +64,7 @@ public:
 	///		- Tableau de Coefficients d'une PSF optimale ? pour chaque Z ? (tableau 4D TODO Voir quelles dimensions est pour quoi)
 	///		- Image de fond pour le CMOS et 0 pour le EMCD (pour définir le bruit standard). (taille standard d'une image)
 	/// </param>
-	Palm(const uint16_t* image, double* points, size_t pointsListSize, size_t height, size_t width, size_t planes,
+	Palm(const uint16_t* image, double* points, size_t pointsListSize, const Vec3I& dim,
 	     double thresholdVal, double watershedRatio, size_t fit, const double* fitParams);
 
 	/// <summary>Destructeur de la classe <c>Palm</c>.</summary>
@@ -112,10 +111,8 @@ private:
 	// Basic members
 	const uint16_t* stack_;     ///< Image 3D d'entrée (plan x hauteur x largeur) en niveaux de gris.
 	double* points_;            ///< Tableau de points de sortie (rempli avec les résultats de détection).
-	size_t height_,             ///< Hauteur de l'image.
-	       width_,              ///< Largeur de l'image.
-	       planes_,             ///< Nombre de plans de la pile.
-	       size_,               ///< Taille totale d'une image (height × width).
+	Vec3I dim_;                 ///< Dimensions de la pile (X, Y, Z).
+	size_t size_,               ///< Taille totale d'une image (height × width).
 	       nPointsMaxPerPlane_; ///< Nombre maximum de points par plan (pour éviter le débordement dans le tableau `points_`).
 
 	// Decomposition members

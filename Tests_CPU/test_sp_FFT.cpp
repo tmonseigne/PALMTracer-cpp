@@ -8,7 +8,7 @@ namespace palm_tracer {
 TEST(FFTTest, ForwardInverseIdentity)
 {
 	constexpr size_t X = 4, Y = 4, Z = 4;
-	constexpr Coord3D Size{.x = X, .y = Y, .z = Z};
+	constexpr Vec3I Size{.x = X, .y = Y, .z = Z};
 	std::vector<double> input(X * Y * Z);
 
 	// Remplissage avec un pattern simple.

@@ -5,7 +5,7 @@
 #include <vector>
 #include "Structs.hpp"
 
-inline void LoadTiff3D(const char* filename, std::vector<uint16_t>& data, palm_tracer::Coord3D& dim)
+inline void LoadTiff3D(const char* filename, std::vector<uint16_t>& data, palm_tracer::Vec3I& dim)
 {
 	TIFF* tif = TIFFOpen(filename, "r");
 	if (tif == nullptr) { throw std::runtime_error("Erreur d'ouverture du fichier TIFF"); }
@@ -51,7 +51,7 @@ inline void LoadTiff3D(const char* filename, std::vector<uint16_t>& data, palm_t
 	TIFFClose(tif);
 }
 
-inline void SaveTiff3D(const char* filename, const uint16_t* data, const palm_tracer::Coord3D& dim)
+inline void SaveTiff3D(const char* filename, const uint16_t* data, const palm_tracer::Vec3I& dim)
 {
 	TIFF* tif = TIFFOpen(filename, "w");
 	if (tif == nullptr) { throw std::runtime_error("Erreur à l'ouverture du TIFF pour l'écriture"); }

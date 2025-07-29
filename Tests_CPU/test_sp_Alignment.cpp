@@ -30,7 +30,7 @@ TEST(AlignmentTests, BlankCallWithReference)
 	constexpr size_t ImSize     = Height * Width;
 	constexpr size_t Size       = ImSize * Planes;
 	constexpr size_t Upsampling = 1;
-	constexpr Coord3D Dim       = {.x = Width, .y = Height, .z = Planes};
+	constexpr Vec3I Dim       = {.x = Width, .y = Height, .z = Planes};
 	const auto HighSNR          = new uint16_t[ImSize],
 	           LowSNR           = new uint16_t[ImSize],
 	           Input            = new uint16_t[Size],
@@ -60,7 +60,7 @@ TEST(AlignmentTests, BlankCallWithFactor)
 	constexpr size_t ImSize     = Height * Width;
 	constexpr size_t Size       = ImSize * Planes;
 	constexpr size_t Upsampling = 1;
-	constexpr Coord3D Dim       = {.x = Width, .y = Height, .z = Planes};
+	constexpr Vec3I Dim       = {.x = Width, .y = Height, .z = Planes};
 	const auto Input            = new uint16_t[Size],
 	           Output           = new uint16_t[Size];
 
@@ -82,7 +82,7 @@ TEST_P(AlignmentTests, AlignmentCore)
 	const auto& [outputPath, factors, upsampling] = GetParam();
 
 	std::vector<uint16_t> input;
-	Coord3D dim{};
+	Vec3I dim{};
 
 	// 1. Charger
 	LoadTiff3D(REF_FILE_PATH.string().c_str(), input, dim);
@@ -95,7 +95,7 @@ TEST_P(AlignmentTests, AlignmentCore)
 	align.Align(input.data(), output.data(), dim, factors, upsampling);
 
 	// 4. Sauvegarder
-	const Coord3D Newdim{.x = dim.x * upsampling, .y = dim.y * upsampling, .z = dim.z};
+	const Vec3I Newdim{.x = dim.x * upsampling, .y = dim.y * upsampling, .z = dim.z};
 
 	SaveTiff3D(outputPath.c_str(), output.data(), Newdim);
 
