@@ -69,23 +69,23 @@ protected:
 	/// <summary>Calcule les matrices alpha et beta du système linéaire de l'ajustement de Levenberg-Marquardt, ainsi que la valeur de chi² pondéré entre modèle et données.</summary>
 	/// <param name="alpha">Matrice des coefficients (nParams x nParams), remplie par la fonction.</param>
 	/// <param name="beta">Vecteur des termes constants du système linéaire.</param>
-	/// <param name="dydp">Dérivées partielles des valeurs ajustées par rapport aux paramètres.</param>
+	/// <param name="jacob">Dérivées partielles des valeurs ajustées par rapport aux paramètres.</param>
 	/// <param name="weight">Poids associés à chaque point.</param>
-	/// <param name="deltaY">Résidus entre données observées et ajustées.</param>
+	/// <param name="delta">Résidus entre données observées et ajustées.</param>
 	/// <returns>Valeur du chi² pondéré.</returns>
-	double chi2(std::vector<double>& alpha, std::vector<double>& beta, const std::vector<double>& dydp,
-	            const std::vector<double>& weight, const std::vector<double>& deltaY) const;
+	double chi2(std::vector<double>& alpha, std::vector<double>& beta, const std::vector<double>& jacob,
+	            const std::vector<double>& weight, const std::vector<double>& delta) const;
 
 	/// <summary>Calcule la matrice alpha, le vecteur beta, et retourne le chi² (erreur) pour l'itération courante.
 	/// Utilisé dans l'algorithme de Levenberg-Marquardt.</summary>
 	/// <param name="grid">Vecteur des pixels de la zone d'intérêt : coordonnées (x, y) et valeur.</param>
 	/// <param name="p">Paramètres du modèle</param>
 	/// <param name="weight">Poids pour chaque point</param>
-	/// <param name="alpha">Matrice approximative d'Hessienne</param>
-	/// <param name="beta">Gradient du χ²</param>
-	/// <param name="hat">Vecteur des données ajustées (modifié en place).</param>
-	/// <returns>Valeur du χ²</returns>
-	double lm_matx(const std::vector<Pixel>& grid, const std::vector<double>& p, const std::vector<double>& weight,
-	               std::vector<double>& alpha, std::vector<double>& beta, std::vector<double>& hat) const;
+	/// <param name="alpha">Matrice de "courbure" Gauss-Newton, alpha = J^T W J</param>
+	/// <param name="beta">Gradient du χ², beta  = J^T W r  (r = delta = résidus)</param>
+	/// <param name="hat">Vecteur des données ajustées (modifié en place), image "prédite" par le modèle au niveau de chaque pixel de la ROI.</param>
+	/// <returns>Valeur du χ², chi²  = r^T W r  (erreur quadratique totale)</returns>
+	double lm(const std::vector<Pixel>& grid, const std::vector<double>& p, const std::vector<double>& weight,
+	          std::vector<double>& alpha, std::vector<double>& beta, std::vector<double>& hat) const;
 };
 } // namespace palm_tracer

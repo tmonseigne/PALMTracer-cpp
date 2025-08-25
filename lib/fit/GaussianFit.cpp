@@ -33,62 +33,55 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 	const auto Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
 	if (roiHalf_ <= Ux && Ux < dim_.x - roiHalf_ && roiHalf_ <= Uy && Uy < dim_.y - roiHalf_) {
 		// Création des variables
-		double lambda = LAMBDA_0;
+		double lambda = LAMBDA_0, minI, maxI;
 		std::vector<double> alpha(nParams2_), alphaR(nParams2_), alphaRi(nParams2_),
 		                    beta(nParams_), beta_l_deltaP(nParams_), p_try(nParams_), deltaP(nParams_),
 		                    hat(n_), weight(n_), deltaY(n_), deltaY_w(n_);
 		std::vector<Pixel> grid(n_);
+		std::array<std::vector<double>, 3> p;
 
-		// Initialization of data & t (A vérifier)
-		double minI, maxI;
+		// Initialization of data & t
 		preCompute(Ux, Uy, grid, minI, maxI);
 		std::ranges::fill(weight, 1);
 
-		std::array<std::vector<double>, 3> p;
-
 		initP(p, x, y, z, minI, maxI);
 
-		double x2     = lm_matx(grid, p[1], weight, alpha, beta, hat);
+		// Première itération de Levenberg-Marquardt
+		double x2     = lm(grid, p[1], weight, alpha, beta, hat);
 		double x2_old = x2;
 
 		// Trouver la valeur absolue maximale
 		double m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::fabs(b); }));
 
-		bool stop = false;
-		if (m < EPSILON_1) { stop = true; }
+		bool stop = (m < EPSILON_1);
 
 		size_t iteration = 0;
 		while (!stop) { // Main Loop
 			iteration++;
+
+			std::ranges::copy(alpha, alphaR.begin());                                                               // Copy du alpha
+			for (size_t i = 0; i < nParams_; ++i) { alphaR[i * nParams_ + i] += lambda * alpha[i * nParams_ + i]; } // alphaR = alpha + λ diag(alpha)
+			matrix::InverseGaussJordan(alphaR, alphaRi, nParams_);                                                  // Inversion (Gauss-Jordan) et pas LM
+
 			std::ranges::fill(deltaP, 0.0);
-
-			std::copy_n(alpha.begin(), nParams2_, alphaR.begin()); // Copy du alpha
-			for (size_t i = 0; i < nParams_; ++i) { alphaR[i * nParams_ + i] += lambda * alpha[i * nParams_ + i]; }
-			matrix::InverseGaussJordan(alphaR, alphaRi, nParams_);
-
-			for (size_t i = 0; i < nParams_; ++i) { for (size_t j = 0; j < nParams_; ++j) { deltaP[i] += alphaRi[i * nParams_ + j] * beta[j]; } }
-
 			for (size_t i = 0; i < nParams_; ++i) {
-				p_try[i] = p[1][i] + deltaP[i];
-				p_try[i] = std::clamp(p_try[i], p[0][i], p[2][i]);
+				for (size_t j = 0; j < nParams_; ++j) { deltaP[i] += alphaRi[i * nParams_ + j] * beta[j]; }
+				p_try[i] = std::clamp(p[1][i] + deltaP[i], p[0][i], p[2][i]);
 			}
 
-			for (size_t i = 0; i < n_; ++i) { deltaY[i] = grid[i].v - psf(p_try, static_cast<double>(grid[i].x), static_cast<double>(grid[i].y)); }
-
 			// deltaY .* weight
+			for (size_t i = 0; i < n_; ++i) { deltaY[i] = grid[i].v - psf(p_try, static_cast<double>(grid[i].x), static_cast<double>(grid[i].y)); }
 			std::ranges::transform(deltaY, weight, deltaY_w.begin(), std::multiplies());
-			const double X2_Try = std::transform_reduce(deltaY.begin(), deltaY.end(), deltaY_w.begin(), 0.0, std::plus(), std::multiplies());
+			const double X2_Try = std::inner_product(deltaY.begin(), deltaY.end(), deltaY_w.begin(), 0.0);
 
-			// lambda * deltaP + beta
+			// // m = deltaPᵀ * (λ deltaP + beta)
 			std::ranges::transform(deltaP, beta, beta_l_deltaP.begin(), [lambda](const double d, const double b) { return lambda * d + b; });
-
 			m = std::inner_product(deltaP.begin(), deltaP.end(), beta_l_deltaP.begin(), 0.0);
 
 			if ((x2 - X2_Try) / (2 * m) > EPSILON_4) { // it IS significantly better
 				x2_old = x2;
-				std::copy_n(p_try.begin(), nParams_, p[1].begin()); // accept p_try
-
-				x2     = lm_matx(grid, p[1], weight, alpha, beta, hat);
+				p[1]   = p_try;
+				x2     = lm(grid, p[1], weight, alpha, beta, hat);
 				lambda = std::max(lambda / LAMBDA_DN, LAMBDA_MIN);
 			}
 			else {               // it IS NOT better
@@ -108,6 +101,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 			if (iteration >= N_ITER) { stop = true; }
 		}
 
+		// Mise à jour des différents éléments
 		offset    = p[1][0];
 		intensity = p[1][1];
 		x         = p[1][2];
@@ -169,12 +163,12 @@ double GaussianFit::computeR2(std::vector<Pixel>& grid, std::vector<double>& hat
 	}
 
 	// Calcul des t1, t2, t3
-	const double T1 = std::inner_product(grid.begin(), grid.end(), hat.begin(), 0.0,
-	                                     std::plus(), [](const auto& a, double b) { return a.v * b; }), // data * hat
-	             T2 = std::inner_product(grid.begin(), grid.end(), grid.begin(), 0.0,
-	                                     std::plus(), [](const auto& a, const auto& b) { return a.v * b.v; }), // data * data
-	             T3 = std::inner_product(hat.begin(), hat.end(), hat.begin(), 0.0),                            // hat * hat
-	             R  = T1 / std::sqrt(T2 * T3);                                                                 // Calcul du R
+	const double T1 = std::inner_product(grid.begin(), grid.end(), hat.begin(), 0.0, std::plus(), [](const auto& a, double b) { return a.v * b; }),
+	             // data * hat
+	             T2 = std::inner_product(grid.begin(), grid.end(), grid.begin(), 0.0, std::plus(),
+	                                     [](const auto& a, const auto& b) { return a.v * b.v; }), // data * data
+	             T3 = std::inner_product(hat.begin(), hat.end(), hat.begin(), 0.0),               // hat * hat
+	             R  = T1 / std::sqrt(T2 * T3);                                                    // Calcul du R
 
 	return std::isnan(R) ? 0 : R * R;
 }
@@ -216,52 +210,57 @@ void GaussianFit::deriv(double* out, const std::vector<double>& p, const double 
 }
 
 //-------------------------------------------------------------------------------------------------
-double GaussianFit::chi2(std::vector<double>& alpha, std::vector<double>& beta, const std::vector<double>& dydp, const std::vector<double>& weight,
-                         const std::vector<double>& deltaY) const
+double GaussianFit::chi2(std::vector<double>& alpha, std::vector<double>& beta, const std::vector<double>& jacob, const std::vector<double>& weight,
+                         const std::vector<double>& delta) const
 {
+	// tmp = W * J (on multiplie chaque ligne de J par le poids du pixel)
 	std::vector<double> tmp(n_ * nParams_);
-	for (size_t i = 0; i < n_; ++i) { for (size_t j = 0; j < nParams_; ++j) { tmp[i * nParams_ + j] = weight[i] * dydp[i * nParams_ + j]; } }
+	for (size_t i = 0; i < n_; ++i) { for (size_t j = 0; j < nParams_; ++j) { tmp[i * nParams_ + j] = weight[i] * jacob[i * nParams_ + j]; } }
 
-	// Computing alpha (A vérifier)
+	// alpha = J^T * tmp (produit matriciel classique)
 	for (size_t i = 0; i < nParams_; ++i) {
 		for (size_t j = 0; j < nParams_; ++j) {
 			alpha[nParams_ * i + j] = 0;
-			for (size_t k = 0; k < n_; ++k) { alpha[nParams_ * i + j] += dydp[k * nParams_ + i] * tmp[k * nParams_ + j]; }
+			for (size_t k = 0; k < n_; ++k) { alpha[nParams_ * i + j] += jacob[k * nParams_ + i] * tmp[k * nParams_ + j]; }
 		}
 	}
 
-	// Computing beta
+	// beta = J^T * tmp (multiplication matrice-vecteur)
 	tmp.resize(n_);
-	std::ranges::transform(weight, deltaY, tmp.begin(), std::multiplies{});
-
+	std::ranges::transform(weight, delta, tmp.begin(), std::multiplies{});
 	for (size_t i = 0; i < nParams_; ++i) {
 		beta[i] = 0;
-		for (size_t j = 0; j < n_; ++j) { beta[i] += dydp[j * nParams_ + i] * tmp[j]; }
+		for (size_t j = 0; j < n_; ++j) { beta[i] += jacob[j * nParams_ + i] * tmp[j]; }
 	}
 
-	// Computing Chi_sq
+	// chi² = ∂ * tmp (somme des carrés pondérée)
 	#ifdef __APPLE__
-		// Pas de support de std::execution sous macOS (Clang/libc++)
-		return std::transform_reduce(deltaY.begin(), deltaY.end(), tmp.begin(), 0.0);
+	return std::transform_reduce(delta.begin(), delta.end(), tmp.begin(), 0.0);	 // Pas de support de std::execution sous macOS (Clang/libc++)
 	#else
-	return std::transform_reduce(std::execution::seq, deltaY.begin(), deltaY.end(), tmp.begin(), 0.0);
+	return std::transform_reduce(std::execution::seq, delta.begin(), delta.end(), tmp.begin(), 0.0);
 	#endif
 }
 
 //-------------------------------------------------------------------------------------------------
-double GaussianFit::lm_matx(const std::vector<Pixel>& grid, const std::vector<double>& p, const std::vector<double>& weight,
-                            std::vector<double>& alpha, std::vector<double>& beta, std::vector<double>& hat) const
+double GaussianFit::lm(const std::vector<Pixel>& grid, const std::vector<double>& p, const std::vector<double>& weight,
+                       std::vector<double>& alpha, std::vector<double>& beta, std::vector<double>& hat) const
 {
-	std::vector<double> delta(n_);
+	std::vector<double> delta(n_);           // Différence entre la vraie image (grid[i].v) et la prédiction (hat[i])
+	std::vector<double> dydp(n_ * nParams_); //  Jacobienne J (sensibilité de chaque pixel à chaque paramètre)
+	// Calcule l'image prédite (hat) et les résidus (delta) pour chaque pixel i de la ROI :
 	for (size_t i = 0; i < n_; ++i) {
-		hat[i]   = psf(p, static_cast<double>(grid[i].x), static_cast<double>(grid[i].y));
-		delta[i] = grid[i].v - hat[i];
+		hat[i]   = psf(p, static_cast<double>(grid[i].x), static_cast<double>(grid[i].y)); // PSF théorique au pixel (x, y) selon les paramètres p
+		delta[i] = grid[i].v - hat[i];                                                     // Résidu = mesure - prédiction
 	}
 
-	// Computing Jacobian matrix (dydp)
-	std::vector<double> dydp(n_ * nParams_);
-	for (size_t i = 0; i < n_; ++i) { deriv(&dydp[i * nParams_], p, static_cast<double>(grid[i].x), static_cast<double>(grid[i].y)); }
+	// Calcule la Jacobienne J (= dydp), c’est-à-dire les dérivées de la PSF par rapport à chacun des paramètres, et ce pour chaque pixel.
+	for (size_t i = 0; i < n_; ++i) {
+		// Remplit un bloc de nParams_ valeurs dans dydp : [ ∂PSF/∂offset, ∂PSF/∂I0, ∂PSF/∂x0, ∂PSF/∂y0, ... ] au pixel i
+		deriv(&dydp[i * nParams_], p, static_cast<double>(grid[i].x), static_cast<double>(grid[i].y));
+	}
 
+	// Construit alpha (matrice nParams_ x nParams_), beta (vecteur de taille nParams_), chi² (scalaire).
+	// À partir de J (=dydp), des poids W et des résidus r (=delta), ces trois objets sont la "matière première" du pas LM suivant.
 	return chi2(alpha, beta, dydp, weight, delta);
 }
 } // namespace palm_tracer
