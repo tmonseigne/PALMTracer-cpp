@@ -33,7 +33,7 @@ void Fitting::initialize()
 
 // ==================== Fit Computes ====================
 //-------------------------------------------------------------------------------------------------
-void Fitting::Fit(const Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points)
+void Fitting::Fit(const Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const
 {
 	const auto& P = segmentation.Infos();
 	points.resize(P.size());

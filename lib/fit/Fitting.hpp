@@ -48,7 +48,7 @@ public:
 	/// <summary>Exécute l'ajustement sur tous les points précédemments localisés par la segmentation.</summary>
 	/// <param name="segmentation">Segmentation de l'image initiale.</param>
 	/// <param name="points">Résultat de l'ajustement sur les points localisés.</param>
-	void Fit(const Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points);
+	void Fit(const Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const;
 
 protected:
 	fit_mode mode_;           ///< Mode de fitting utilisé (ex. position seulement, ou position + orientation...).
@@ -74,7 +74,7 @@ protected:
 	/// L'algorithme utilise une méthode de Levenberg-Marquardt pour minimiser l'erreur entre le modèle et les données.</summary>
 	/// <param name="infos">Informations sur le point localisé.</param>
 	/// <param name="point">Résultat de l'ajustement sur le point localisé.</param>
-	virtual void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) { fill(infos, point, 0, 0, infos.x_, infos.y_, infos.z_); }
+	virtual void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const { fill(infos, point, 0, 0, infos.x_, infos.y_, infos.z_); }
 
 	/// <summary></summary>
 	/// <param name="infos">Informations initiales sur le point localisé.</param>

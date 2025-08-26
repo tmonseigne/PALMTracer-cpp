@@ -36,12 +36,13 @@ protected:
 	       sigmaY_{2.0}, ///< Écart-type initial sur Y.
 	       theta_{0.0};  ///< Angle d'orientation (en radians) de la gaussienne si applicable.
 
+
 	/// <summary>Parse les paramètres reçus pour l'ajustement.</summary>
 	void parseParams() override;
 
 	/// <summary>Exécute un ajustement de modèle Gaussien sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.
 	/// L'algorithme utilise une méthode de Levenberg-Marquardt pour minimiser l'erreur entre le modèle et les données.</summary>
-	void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) override;
+	void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const override;
 
 	//==================== Run Computes ====================
 	/// <summary>Calcule le coefficient de corrélation au carré (R²) entre deux vecteurs normalisés.
@@ -66,26 +67,19 @@ protected:
 	/// <param name="y">Coordonnée y d'évaluation.</param>
 	void deriv(double* out, const std::vector<double>& p, double x, double y) const;
 
-	/// <summary>Calcule les matrices alpha et beta du système linéaire de l'ajustement de Levenberg-Marquardt, ainsi que la valeur de chi² pondéré entre modèle et données.</summary>
-	/// <param name="alpha">Matrice des coefficients (nParams x nParams), remplie par la fonction.</param>
-	/// <param name="beta">Vecteur des termes constants du système linéaire.</param>
-	/// <param name="jacob">Dérivées partielles des valeurs ajustées par rapport aux paramètres.</param>
-	/// <param name="weight">Poids associés à chaque point.</param>
-	/// <param name="delta">Résidus entre données observées et ajustées.</param>
-	/// <returns>Valeur du chi² pondéré.</returns>
-	double chi2(std::vector<double>& alpha, std::vector<double>& beta, const std::vector<double>& jacob,
-	            const std::vector<double>& weight, const std::vector<double>& delta) const;
-
 	/// <summary>Calcule la matrice alpha, le vecteur beta, et retourne le chi² (erreur) pour l'itération courante.
 	/// Utilisé dans l'algorithme de Levenberg-Marquardt.</summary>
 	/// <param name="grid">Vecteur des pixels de la zone d'intérêt : coordonnées (x, y) et valeur.</param>
 	/// <param name="p">Paramètres du modèle</param>
 	/// <param name="weight">Poids pour chaque point</param>
+	/// <param name="hat">Vecteur des données ajustées (modifié en place), image "prédite" par le modèle au niveau de chaque pixel de la ROI.</param>
 	/// <param name="alpha">Matrice de "courbure" Gauss-Newton, alpha = J^T W J</param>
 	/// <param name="beta">Gradient du χ², beta  = J^T W r  (r = delta = résidus)</param>
-	/// <param name="hat">Vecteur des données ajustées (modifié en place), image "prédite" par le modèle au niveau de chaque pixel de la ROI.</param>
 	/// <returns>Valeur du χ², chi²  = r^T W r  (erreur quadratique totale)</returns>
-	double lm(const std::vector<Pixel>& grid, const std::vector<double>& p, const std::vector<double>& weight,
-	          std::vector<double>& alpha, std::vector<double>& beta, std::vector<double>& hat) const;
+	[[nodiscard]] double lm(const std::vector<Pixel>& grid, const std::vector<double>& p, const std::vector<double>& weight,
+	                        std::vector<double>& hat, std::vector<double>& alpha, std::vector<double>& beta,
+	                        std::vector<double>& delta, std::vector<double>& deltaW, std::vector<double>& grad) const;
+
+	[[nodiscard]] double gain(const std::vector<double>& deltaP, const std::vector<double>& alpha, const std::vector<double>& beta) const;
 };
 } // namespace palm_tracer

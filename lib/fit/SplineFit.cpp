@@ -48,7 +48,7 @@ void SplineFit::parseParams()
 }
 
 //-------------------------------------------------------------------------------------------------
-void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point)
+void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
 {
 	double offset    = 0,
 	       intensity = 0,
