@@ -44,7 +44,7 @@ protected:
 	void parseParams() override;
 
 	/// <summary>Exécute un ajustement de modèle spline sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.</summary>
-	void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) override;
+	void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const override;
 
 	/// <summary>Calcule les dérivées du modèle spline 3D en un point donné (x, y, z).
 	/// Remplit le vecteur des dérivées partielles (dudt) et évalue la valeur du modèle.</summary>

@@ -23,8 +23,9 @@ void GaussianFit::parseParams()
 }
 
 //-------------------------------------------------------------------------------------------------
-void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point)
+void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
 {
+	// Valeurs par défaut
 	double offset = 0, intensity    = 0, rss         = -1,
 	       x      = infos.x_, y     = infos.y_, z    = infos.z_,
 	       sigmaX = sigmaX_, sigmaY = sigmaY_, theta = theta_;
@@ -33,81 +34,86 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 	const auto Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
 	if (roiHalf_ <= Ux && Ux < dim_.x - roiHalf_ && roiHalf_ <= Uy && Uy < dim_.y - roiHalf_) {
 		// Création des variables
-		double lambda = LAMBDA_0;
+		double lambda = LAMBDA_0, minI = 0, maxI = 0;
 		std::vector<double> alpha(nParams2_), alphaR(nParams2_), alphaRi(nParams2_),
-		                    beta(nParams_), beta_l_deltaP(nParams_), p_try(nParams_), deltaP(nParams_),
-		                    hat(n_), weight(n_), deltaY(n_), deltaY_w(n_);
+		                    beta(nParams_), grad(nParams_), deltaP(nParams_), lBetaDeltaP(nParams_), p_try(nParams_),
+		                    hat(n_), weight(n_, 1), delta(n_), deltaW(n_);
 		std::vector<Pixel> grid(n_);
-
-		// Initialization of data & t (A vérifier)
-		double minI, maxI;
-		preCompute(Ux, Uy, grid, minI, maxI);
-		std::ranges::fill(weight, 1);
-
 		std::array<std::vector<double>, 3> p;
 
+		// Initialisation des données (Récupération des min/max, de la ROI et initialisation du P et de ses bornes)
+		preCompute(Ux, Uy, grid, minI, maxI);
 		initP(p, x, y, z, minI, maxI);
 
-		double x2     = lm_matx(grid, p[1], weight, alpha, beta, hat);
-		double x2_old = x2;
+		// Première itération de Levenberg-Marquardt
+		double chi2 = lm(grid, p[1], weight, hat, alpha, beta, delta, deltaW, grad);
+		double chi2_old = chi2;
 
 		// Trouver la valeur absolue maximale
 		double m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::fabs(b); }));
 
-		bool stop = false;
-		if (m < EPSILON_1) { stop = true; }
+		const bool Stop = (m < EPSILON_1);
 
-		size_t iteration = 0;
-		while (!stop) { // Main Loop
-			iteration++;
+		for (size_t iteration = (Stop ? N_ITER : 0); iteration < N_ITER; ++iteration) { // Main Loop
+			alphaR = alpha;
+			for (size_t i = 0; i < nParams_; ++i) { alphaR[i * nParams_ + i] += lambda * alpha[i * nParams_ + i]; } // alphaR = alpha + λ diag(alpha)
+			matrix::InverseGaussJordan(alphaR, alphaRi, nParams_);                                                  // Inversion (Gauss-Jordan) et pas LM
+
 			std::ranges::fill(deltaP, 0.0);
-
-			std::copy_n(alpha.begin(), nParams2_, alphaR.begin()); // Copy du alpha
-			for (size_t i = 0; i < nParams_; ++i) { alphaR[i * nParams_ + i] += lambda * alpha[i * nParams_ + i]; }
-			matrix::InverseGaussJordan(alphaR, alphaRi, nParams_);
-
-			for (size_t i = 0; i < nParams_; ++i) { for (size_t j = 0; j < nParams_; ++j) { deltaP[i] += alphaRi[i * nParams_ + j] * beta[j]; } }
-
 			for (size_t i = 0; i < nParams_; ++i) {
-				p_try[i] = p[1][i] + deltaP[i];
-				p_try[i] = std::clamp(p_try[i], p[0][i], p[2][i]);
+				for (size_t j = 0; j < nParams_; ++j) { deltaP[i] += alphaRi[i * nParams_ + j] * beta[j]; } // δP
+				p_try[i] = std::clamp(p[1][i] + deltaP[i], p[0][i], p[2][i]);                               // p_try = clamp(p + δP)
 			}
 
-			for (size_t i = 0; i < n_; ++i) { deltaY[i] = grid[i].v - psf(p_try, static_cast<double>(grid[i].x), static_cast<double>(grid[i].y)); }
+			// Gain prédit (pas d’éval d’image ici)
+			// m = deltaPᵀ * (λ deltaP + beta)
+			for (size_t i = 0; i < nParams_; ++i) { lBetaDeltaP[i] = lambda * deltaP[i] + beta[i]; }
+			m = std::inner_product(deltaP.begin(), deltaP.end(), lBetaDeltaP.begin(), 0.0);
 
-			// deltaY .* weight
-			std::ranges::transform(deltaY, weight, deltaY_w.begin(), std::multiplies());
-			const double X2_Try = std::transform_reduce(deltaY.begin(), deltaY.end(), deltaY_w.begin(), 0.0, std::plus(), std::multiplies());
+			const double Gain = gain(deltaP, alpha, beta);
+			if (Gain <= 0.0) {
+				// clairement pas bon → on n’évalue pas, on augmente λ et on retente
+				if (lambda >= LAMBDA_MAX) { break; }               // On est déjà au max, on arrête
+				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX); // Augmentation de lambda
+				// critères d’arrêt “petit pas”
+				m = 0.0;
+				for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::fabs(deltaP[i]) / std::max(std::fabs(p[1][i]), 1e-12)); }
+				if (m < EPSILON_2 && iteration >= 2) { break; } // On est trop faible est déjà 2 iterations, on arrête
+				continue;                                       // On repart au début de la boucle
+			}
 
-			// lambda * deltaP + beta
-			std::ranges::transform(deltaP, beta, beta_l_deltaP.begin(), [lambda](const double d, const double b) { return lambda * d + b; });
+			// On calcule les nouvelles valeurs : évalue image + lm pour p_try
+			double chi2_try = 0.0;
+			for (size_t i = 0; i < n_; ++i) {
+				const double Dx = grid[i].v - psf(p_try, static_cast<double>(grid[i].x), static_cast<double>(grid[i].y));
+				chi2_try += weight[i] * Dx * Dx;
+			}
+			const double Rho = (chi2 - chi2_try) / (2.0 * m);
 
-			m = std::inner_product(deltaP.begin(), deltaP.end(), beta_l_deltaP.begin(), 0.0);
-
-			if ((x2 - X2_Try) / (2 * m) > EPSILON_4) { // it IS significantly better
-				x2_old = x2;
-				std::copy_n(p_try.begin(), nParams_, p[1].begin()); // accept p_try
-
-				x2     = lm_matx(grid, p[1], weight, alpha, beta, hat);
+			if (Rho > EPSILON_4) { // On accepte : on remplace l’état courant par _try
+				// On accepte : on remplace l’état courant par _try
+				chi2_old = chi2;
+				p[1] = p_try;
+				chi2 = lm(grid, p[1], weight, hat, alpha, beta, delta, deltaW, grad);
 				lambda = std::max(lambda / LAMBDA_DN, LAMBDA_MIN);
 			}
-			else {               // it IS NOT better
-				x2     = x2_old; // do not accept a_try
-				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX);
+			else {                                                 // On refuse : on garde l’état courant
+				chi2 = chi2_old;
+				if (lambda >= LAMBDA_MAX) { break; }               // On est déjà au max, on arrête
+				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX); // Augmentation de lambda
 			}
 
-			m = 0;
-			for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::fabs(deltaP[i] / p[1][i])); }
-
-			if (m < EPSILON_2 && iteration > 2) { stop = true; }
-			if (x2 / static_cast<double>(n_) < EPSILON_3 && iteration > 2) { stop = true; }
-
-			m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::fabs(b); }));
-
-			if (m < EPSILON_1 && iteration > 2) { stop = true; }
-			if (iteration >= N_ITER) { stop = true; }
+			// Critères d'arrêts
+			m = 0.0;
+			for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::abs(deltaP[i]) / std::max(std::abs(p[1][i]), 1e-12)); }
+			if (iteration >= 2) { // Si on est déjà à 2 iterations, on arrête
+				if (m < EPSILON_2) { break; }
+				if (chi2 / static_cast<double>(n_) < EPSILON_3) { break; }
+				if (std::ranges::max(std::views::transform(beta, [](const double b) { return std::fabs(b); })) < EPSILON_1) { break; }
+			}
 		}
 
+		// Mise à jour des différents éléments
 		offset    = p[1][0];
 		intensity = p[1][1];
 		x         = p[1][2];
@@ -133,9 +139,10 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 				break;
 			}
 		}
-		rss = computeR2(grid, hat);
+		rss = computeR2(grid, hat); // Calcul du RSS sur XY
 	}
 
+	// Post-normalisation selon mode
 	switch (mode_) {
 		case fit_mode::gaussian_2d_fixed: sigmaX = sigmaY = sigmaX_;
 			theta = 0;
@@ -169,12 +176,12 @@ double GaussianFit::computeR2(std::vector<Pixel>& grid, std::vector<double>& hat
 	}
 
 	// Calcul des t1, t2, t3
-	const double T1 = std::inner_product(grid.begin(), grid.end(), hat.begin(), 0.0,
-	                                     std::plus(), [](const auto& a, double b) { return a.v * b; }), // data * hat
-	             T2 = std::inner_product(grid.begin(), grid.end(), grid.begin(), 0.0,
-	                                     std::plus(), [](const auto& a, const auto& b) { return a.v * b.v; }), // data * data
-	             T3 = std::inner_product(hat.begin(), hat.end(), hat.begin(), 0.0),                            // hat * hat
-	             R  = T1 / std::sqrt(T2 * T3);                                                                 // Calcul du R
+	const double T1 = std::inner_product(grid.begin(), grid.end(), hat.begin(), 0.0, std::plus(), [](const auto& a, double b) { return a.v * b; }),
+	             // data * hat
+	             T2 = std::inner_product(grid.begin(), grid.end(), grid.begin(), 0.0, std::plus(),
+	                                     [](const auto& a, const auto& b) { return a.v * b.v; }), // data * data
+	             T3 = std::inner_product(hat.begin(), hat.end(), hat.begin(), 0.0),               // hat * hat
+	             R  = T1 / std::sqrt(T2 * T3);                                                    // Calcul du R
 
 	return std::isnan(R) ? 0 : R * R;
 }
@@ -216,52 +223,45 @@ void GaussianFit::deriv(double* out, const std::vector<double>& p, const double 
 }
 
 //-------------------------------------------------------------------------------------------------
-double GaussianFit::chi2(std::vector<double>& alpha, std::vector<double>& beta, const std::vector<double>& dydp, const std::vector<double>& weight,
-                         const std::vector<double>& deltaY) const
+double GaussianFit::lm(const std::vector<Pixel>& grid, const std::vector<double>& p, const std::vector<double>& weight, std::vector<double>& hat,
+                       std::vector<double>& alpha, std::vector<double>& beta, std::vector<double>& delta, std::vector<double>& deltaW,
+                       std::vector<double>& grad) const
 {
-	std::vector<double> tmp(n_ * nParams_);
-	for (size_t i = 0; i < n_; ++i) { for (size_t j = 0; j < nParams_; ++j) { tmp[i * nParams_ + j] = weight[i] * dydp[i * nParams_ + j]; } }
+	std::ranges::fill(alpha, 0.0);
+	std::ranges::fill(beta, 0.0);
+	double chi2 = 0.0;
 
-	// Computing alpha (A vérifier)
-	for (size_t i = 0; i < nParams_; ++i) {
-		for (size_t j = 0; j < nParams_; ++j) {
-			alpha[nParams_ * i + j] = 0;
-			for (size_t k = 0; k < n_; ++k) { alpha[nParams_ * i + j] += dydp[k * nParams_ + i] * tmp[k * nParams_ + j]; }
+	for (size_t i = 0; i < n_; ++i) {
+		const double X = static_cast<double>(grid[i].x), Y = static_cast<double>(grid[i].y);
+		hat[i]         = psf(p, X, Y);         // PSF théorique au pixel (x, y) selon les paramètres p
+		delta[i]       = grid[i].v - hat[i];   // Résidu (∂) = mesure - prédiction
+		deltaW[i]      = weight[i] * delta[i]; // Résidu pondéré (W * ∂)
+		chi2 += delta[i] * deltaW[i];          // mise à jour du Chi² (somme des carrés pondérée W * ∂ * ∂)
+		deriv(grad.data(), p, X, Y);           // dérivées au pixel
+
+		// Accumulations alpha += w * grad * gradᵀ  et  beta += w * grad * r
+		for (size_t a = 0; a < nParams_; ++a) {
+			beta[a] += grad[a] * deltaW[i];
+			// rang-1 symétrique
+			const size_t Row = a * nParams_;
+			for (size_t b = 0; b < nParams_; ++b) { alpha[Row + b] += weight[i] * grad[a] * grad[b]; }
 		}
 	}
-
-	// Computing beta
-	tmp.resize(n_);
-	std::ranges::transform(weight, deltaY, tmp.begin(), std::multiplies{});
-
-	for (size_t i = 0; i < nParams_; ++i) {
-		beta[i] = 0;
-		for (size_t j = 0; j < n_; ++j) { beta[i] += dydp[j * nParams_ + i] * tmp[j]; }
-	}
-
-	// Computing Chi_sq
-	#ifdef __APPLE__
-		// Pas de support de std::execution sous macOS (Clang/libc++)
-		return std::transform_reduce(deltaY.begin(), deltaY.end(), tmp.begin(), 0.0);
-	#else
-	return std::transform_reduce(std::execution::seq, deltaY.begin(), deltaY.end(), tmp.begin(), 0.0);
-	#endif
+	return chi2;
 }
 
 //-------------------------------------------------------------------------------------------------
-double GaussianFit::lm_matx(const std::vector<Pixel>& grid, const std::vector<double>& p, const std::vector<double>& weight,
-                            std::vector<double>& alpha, std::vector<double>& beta, std::vector<double>& hat) const
+double GaussianFit::gain(const std::vector<double>& deltaP, const std::vector<double>& alpha, const std::vector<double>& beta) const
 {
-	std::vector<double> delta(n_);
-	for (size_t i = 0; i < n_; ++i) {
-		hat[i]   = psf(p, static_cast<double>(grid[i].x), static_cast<double>(grid[i].y));
-		delta[i] = grid[i].v - hat[i];
+	// t = alpha * deltaP
+	double quad = 0.0, lin = 0.0;
+	for (size_t i = 0; i < nParams_; ++i) {
+		double ti        = 0.0;
+		const size_t Row = i * nParams_;
+		for (size_t j = 0; j < nParams_; ++j) { ti += alpha[Row + j] * deltaP[j]; }
+		quad += deltaP[i] * ti;     // δPᵀ α δP
+		lin += deltaP[i] * beta[i]; // δPᵀ β
 	}
-
-	// Computing Jacobian matrix (dydp)
-	std::vector<double> dydp(n_ * nParams_);
-	for (size_t i = 0; i < n_; ++i) { deriv(&dydp[i * nParams_], p, static_cast<double>(grid[i].x), static_cast<double>(grid[i].y)); }
-
-	return chi2(alpha, beta, dydp, weight, delta);
+	return 2.0 * lin - quad; // diff_pred
 }
 } // namespace palm_tracer
