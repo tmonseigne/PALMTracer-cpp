@@ -4,7 +4,6 @@
 #include <array>
 #include <cmath>
 #include <execution>
-#include <iomanip>
 #include <numbers>
 #include <numeric>
 #include <ranges>
@@ -50,15 +49,6 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 		double chi2 = lm(grid, p[1], weight, hat, alpha, beta, delta, deltaW, grad);
 		double chi2_old = chi2;
 
-		std::cout << std::setprecision(6) << std::fixed;
-		if (Ux == 182 && Uy == 36 && mode_ == fit_mode::gaussian_3d_theta) {
-			std::cout << "\t min/max sigmaX=" << p[0][3] << ".." << p[1][3] << ", sigmaY=" << p[0][4] << ".." << p[1][4]
-				<< ", theta=" << p[0][5] << ".." << p[1][5] << "\n";
-			std::cout << "\t beta : ";
-			for (size_t i = 0; i < nParams_; ++i) { std::cout << beta[i] << " "; }
-			std::cout << "\n";
-		}
-
 		// Trouver la valeur absolue maximale
 		double m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::fabs(b); }));
 
@@ -95,27 +85,16 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 			// On calcule les nouvelles valeurs : évalue image + lm pour p_try
 			double chi2_try = 0.0;
 			for (size_t i = 0; i < n_; ++i) {
-				const double dx = grid[i].v - psf(p_try, static_cast<double>(grid[i].x), static_cast<double>(grid[i].y));
-				chi2_try += weight[i] * dx * dx;
+				const double Dx = grid[i].v - psf(p_try, static_cast<double>(grid[i].x), static_cast<double>(grid[i].y));
+				chi2_try += weight[i] * Dx * Dx;
 			}
 			const double Rho = (chi2 - chi2_try) / (2.0 * m);
-
-			if (Ux == 182 && Uy == 36 && mode_ == fit_mode::gaussian_3d_theta) {
-				std::cout << "\tNew : Point (" << p[1][2] << ", " << p[1][3] << ", " << p[1][4] << ", " << p[1][5] << ", " << p[1][6]
-					<< ")\n\t\t Iteration " << iteration << "\t chi2 = " << chi2 << "\t chi2_try = " << chi2_try << "\t m = " << m
-					<< "\t Rho = " << Rho << "\t lambda = " << lambda << "\n";
-			}
 
 			if (Rho > EPSILON_4) { // On accepte : on remplace l’état courant par _try
 				// On accepte : on remplace l’état courant par _try
 				chi2_old = chi2;
 				p[1] = p_try;
 				chi2 = lm(grid, p[1], weight, hat, alpha, beta, delta, deltaW, grad);
-				if (Ux == 182 && Uy == 36 && mode_ == fit_mode::gaussian_3d_theta) {
-					std::cout << "\t\tUpdate: chi2 = " << chi2 << "\t beta : [";
-					for (size_t i = 0; i < nParams_; ++i) { std::cout << beta[i] << ",\t"; }
-					std::cout << "]\n";
-				}
 				lambda = std::max(lambda / LAMBDA_DN, LAMBDA_MIN);
 			}
 			else {                                                 // On refuse : on garde l’état courant
@@ -176,9 +155,6 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 		case fit_mode::gaussian_3d_theta:
 		case fit_mode::spline_3d_emccd:
 		case fit_mode::spline_3d_scmos: break;
-	}
-	if (Ux == 182 && Uy == 36 && mode_ == fit_mode::gaussian_3d_theta) {
-		std::cout << "Final Point : " << offset << ", " << intensity << ", " << x << ", " << y << ", " << sigmaX << ", " << sigmaY << ", " << theta << "\n";
 	}
 	fill(infos, point, offset, intensity, x, y, z, sigmaX, sigmaY, theta, rss);
 }
