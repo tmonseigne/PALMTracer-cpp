@@ -79,12 +79,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 			// m = deltaPᵀ * (λ deltaP + beta)
 			for (size_t i = 0; i < nParams_; ++i) { lBetaDeltaP[i] = lambda * deltaP[i] + beta[i]; }
 			m = std::inner_product(deltaP.begin(), deltaP.end(), lBetaDeltaP.begin(), 0.0);
-			if (m <= 0.0) {
-				if (lambda >= LAMBDA_MAX) { break; } // On est déjà au max, on arrête
-				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX);
-				continue;
-			}
-			/*
+
 			const double Gain = gain(deltaP, alpha, beta);
 			if (Gain <= 0.0) {
 				// clairement pas bon → on n’évalue pas, on augmente λ et on retente
@@ -96,7 +91,6 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 				if (m < EPSILON_2 && iteration >= 2) { break; } // On est trop faible est déjà 2 iterations, on arrête
 				continue;                                       // On repart au début de la boucle
 			}
-			*/
 
 			// On calcule les nouvelles valeurs : évalue image + lm pour p_try
 			double chi2_try = 0.0;
