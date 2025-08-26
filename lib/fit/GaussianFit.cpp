@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <execution>
+#include <iomanip>
 #include <numbers>
 #include <numeric>
 #include <ranges>
@@ -36,9 +37,8 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 		// Création des variables
 		double lambda = LAMBDA_0, minI = 0, maxI = 0;
 		std::vector<double> alpha(nParams2_), alphaR(nParams2_), alphaRi(nParams2_),
-		                    beta(nParams_), grad(nParams_), deltaP(nParams_), lBetaDeltaP(nParams_),
+		                    beta(nParams_), grad(nParams_), deltaP(nParams_), lBetaDeltaP(nParams_), p_try(nParams_),
 		                    hat(n_), weight(n_, 1), delta(n_), deltaW(n_);
-		std::vector<double> alpha_try(nParams2_), beta_try(nParams_), hat_try(n_), p_try(nParams_);
 		std::vector<Pixel> grid(n_);
 		std::array<std::vector<double>, 3> p;
 
@@ -48,6 +48,16 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 
 		// Première itération de Levenberg-Marquardt
 		double chi2 = lm(grid, p[1], weight, hat, alpha, beta, delta, deltaW, grad);
+		double chi2_old = chi2;
+
+		std::cout << std::setprecision(6) << std::fixed;
+		if (Ux == 182 && Uy == 36 && mode_ == fit_mode::gaussian_3d_theta) {
+			std::cout << "\t min/max sigmaX=" << p[0][3] << ".." << p[1][3] << ", sigmaY=" << p[0][4] << ".." << p[1][4]
+				<< ", theta=" << p[0][5] << ".." << p[1][5] << "\n";
+			std::cout << "\t beta : ";
+			for (size_t i = 0; i < nParams_; ++i) { std::cout << beta[i] << " "; }
+			std::cout << "\n";
+		}
 
 		// Trouver la valeur absolue maximale
 		double m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::fabs(b); }));
@@ -69,7 +79,12 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 			// m = deltaPᵀ * (λ deltaP + beta)
 			for (size_t i = 0; i < nParams_; ++i) { lBetaDeltaP[i] = lambda * deltaP[i] + beta[i]; }
 			m = std::inner_product(deltaP.begin(), deltaP.end(), lBetaDeltaP.begin(), 0.0);
-
+			if (m <= 0.0) {
+				if (lambda >= LAMBDA_MAX) { break; } // On est déjà au max, on arrête
+				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX);
+				continue;
+			}
+			/*
 			const double Gain = gain(deltaP, alpha, beta);
 			if (Gain <= 0.0) {
 				// clairement pas bon → on n’évalue pas, on augmente λ et on retente
@@ -81,21 +96,36 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 				if (m < EPSILON_2 && iteration >= 2) { break; } // On est trop faible est déjà 2 iterations, on arrête
 				continue;                                       // On repart au début de la boucle
 			}
+			*/
 
 			// On calcule les nouvelles valeurs : évalue image + lm pour p_try
-			const double Chi2_Try = lm(grid, p_try, weight, hat_try, alpha_try, beta_try, delta, deltaW, grad);
-			const double Rho      = (chi2 - Chi2_Try) / (2.0 * m);
+			double chi2_try = 0.0;
+			for (size_t i = 0; i < n_; ++i) {
+				const double dx = grid[i].v - psf(p_try, static_cast<double>(grid[i].x), static_cast<double>(grid[i].y));
+				chi2_try += weight[i] * dx * dx;
+			}
+			const double Rho = (chi2 - chi2_try) / (2.0 * m);
+
+			if (Ux == 182 && Uy == 36 && mode_ == fit_mode::gaussian_3d_theta) {
+				std::cout << "\tNew : Point (" << p[1][2] << ", " << p[1][3] << ", " << p[1][4] << ", " << p[1][5] << ", " << p[1][6]
+					<< ")\n\t\t Iteration " << iteration << "\t chi2 = " << chi2 << "\t chi2_try = " << chi2_try << "\t m = " << m
+					<< "\t Rho = " << Rho << "\t lambda = " << lambda << "\n";
+			}
 
 			if (Rho > EPSILON_4) { // On accepte : on remplace l’état courant par _try
 				// On accepte : on remplace l’état courant par _try
-				p[1]   = p_try;
-				hat    = hat_try;
-				alpha  = alpha_try;
-				beta   = beta_try;
-				chi2   = Chi2_Try;
+				chi2_old = chi2;
+				p[1] = p_try;
+				chi2 = lm(grid, p[1], weight, hat, alpha, beta, delta, deltaW, grad);
+				if (Ux == 182 && Uy == 36 && mode_ == fit_mode::gaussian_3d_theta) {
+					std::cout << "\t\tUpdate: chi2 = " << chi2 << "\t beta : [";
+					for (size_t i = 0; i < nParams_; ++i) { std::cout << beta[i] << ",\t"; }
+					std::cout << "]\n";
+				}
 				lambda = std::max(lambda / LAMBDA_DN, LAMBDA_MIN);
 			}
 			else {                                                 // On refuse : on garde l’état courant
+				chi2 = chi2_old;
 				if (lambda >= LAMBDA_MAX) { break; }               // On est déjà au max, on arrête
 				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX); // Augmentation de lambda
 			}
@@ -152,6 +182,9 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 		case fit_mode::gaussian_3d_theta:
 		case fit_mode::spline_3d_emccd:
 		case fit_mode::spline_3d_scmos: break;
+	}
+	if (Ux == 182 && Uy == 36 && mode_ == fit_mode::gaussian_3d_theta) {
+		std::cout << "Final Point : " << offset << ", " << intensity << ", " << x << ", " << y << ", " << sigmaX << ", " << sigmaY << ", " << theta << "\n";
 	}
 	fill(infos, point, offset, intensity, x, y, z, sigmaX, sigmaY, theta, rss);
 }
