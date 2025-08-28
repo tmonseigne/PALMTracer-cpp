@@ -23,13 +23,16 @@ public:
 	                   const double* fitParams) : Fitting(mode, image, dim, maxPoints, fitParams) { initialize(); }
 
 protected:
-	static constexpr double LAMBDA_0   = 0.1,   ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.
-	                        LAMBDA_MAX = 1e7,   ///< Valeur maximale autorisée pour lambda.
-	                        LAMBDA_MIN = 1e-7,  ///< Valeur minimale autorisée pour lambda.
-	                        LAMBDA_UP  = 10,    ///< Facteur multiplicatif lorsque la mise à jour est inefficace (augmentation de lambda).
-	                        LAMBDA_DN  = 0.1;   ///< Facteur de réduction de lambda lorsque la mise à jour est réussie.
-	static constexpr double EPSILON_1  = 1e-6,  ///< Seuil de convergence pour le changement de la fonction objectif.
-	                        EPSILON_2  = 1e-10; ///< avant calcul de la matrice inverse
+	static constexpr double LAMBDA_0   = 1e-2, ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.
+	                        LAMBDA_MAX = 1e7,  ///< Valeur maximale autorisée pour lambda.
+	                        LAMBDA_MIN = 1e-7, ///< Valeur minimale autorisée pour lambda.
+	                        LAMBDA_UP  = 11,   ///< Facteur multiplicatif lorsque la mise à jour est inefficace (augmentation de lambda).
+	                        LAMBDA_DN  = 9;    ///< Facteur de réduction de lambda lorsque la mise à jour est réussie.
+	static constexpr double EPSILON_1  = 1e-6, ///< Seuil de convergence pour le changement de la fonction objectif.
+	                        EPSILON_2  = 1e-6, ///< Seuil de convergence pour le gradient.
+	                        EPSILON_3  = 1e-5, ///< Seuil de convergence pour la variation des paramètres.
+	                        EPSILON_4  = 1e-2; ///< Tolérance utilisée pour juger la stagnation ou instabilité.
+
 
 	Vec3I splineDim_{};          ///< Dimensions de la spline (X, Y, Z)
 	size_t splineSizeXY_{},      ///< Taille totale d’un plan XY. Utilisé pour accéder rapidement aux coefficients.
@@ -54,7 +57,8 @@ protected:
 	/// <param name="p">Vecteur des paramètres de la PSF (offset, intensité, position).</param>
 	/// <param name="dudt">Vecteur des dérivées partielles du modèle par rapport aux paramètres.</param>
 	/// <param name="model">>Valeur du modèle au point considéré.</param>
-	void derivativeSpline(Vec3I& pos, const std::vector<double>& f, const std::array<std::vector<double>, 3>& df, const std::vector<double>& p, std::vector<double>& dudt, double& model) const;
+	void derivativeSpline(Vec3I& pos, const std::vector<double>& f, const std::array<std::vector<double>, 3>& df, const std::vector<double>& p,
+	                      std::vector<double>& dudt, double& model) const;
 
 	/// <summary>Met à jour le jacobien et l'hessienne pour le modèle MLE (Maximum Likelihood Estimation).
 	/// Utilise une vraisemblance basée sur la statistique de Poisson.</summary>
@@ -63,24 +67,9 @@ protected:
 	/// <param name="err">Erreur totale accumulée (log-vraisemblance).</param>
 	/// <param name="jacobian">Vecteur du gradient (jacobien).</param>
 	/// <param name="hessian">Matrice Hessienne (seconde dérivée).</param>
-	/// <param name="dudt">Vecteur des dérivées partielles du modèle.</param>
+	/// <param name="grad">Vecteur des dérivées partielles du modèle.</param>
 	void updateJacobianHessian(double data, double model, double& err, std::vector<double>& jacobian,
-	                           std::vector<double>& hessian, const std::vector<double>& dudt) const;
-
-	/// <summary>Met à jour les paramètres d’ajustement de type Levenberg-Marquardt.
-	/// Modifie mu et lambda selon si l’itération précédente était un succès.</summary>
-	/// <param name="mu">Facteur de régularisation.</param>
-	/// <param name="lambda">Paramètre de contrôle LM.</param>
-	/// <param name="up">True si l’itération précédente a échoué (augmentation du lambda).</param>
-	static void updateMuLambda(double& mu, double& lambda, bool up);
-
-	/// <summary>Résout un système linéaire LU x = b avec matrices l (lower) et u (upper).
-	/// Effectue une substitution avant (Ly = b) puis arrière (Ux = y).</summary>
-	/// <param name="l">Matrice triangulaire inférieure (L).</param>
-	/// <param name="u">Matrice triangulaire supérieure (U).</param>
-	/// <param name="b">Vecteur second membre (b).</param>
-	/// <param name="x">Vecteur solution du système (x).</param>
-	void luEvaluate(const std::vector<double>& l, const std::vector<double>& u, const std::vector<double>& b, std::vector<double>& x) const;
+	                           std::vector<double>& hessian, const std::vector<double>& grad) const;
 
 	/// <summary>Calcule les contributions d'une base de fonctions splines 3D (valeurs et dérivées).
 	/// Cette fonction calcule la valeur et les dérivées par rapport à x, y et z d'une fonction spline 3D basée sur des monômes (cx, cy, cz) à chaque point de l'espace (x, y, z).
@@ -91,6 +80,17 @@ protected:
 	/// <param name="z">Coordonnée z (locale).</param>
 	/// <param name="f">Référence vers le vecteur contenant les valeurs des fonctions de base.</param>
 	/// <param name="df">Référence vers les vecteurs contenant les dérivées de f par rapport à x (∂f/∂x), y (∂f/∂y) et z (∂f/∂z).</param>
-	static void delta3D(double x, double y, double z, std::vector<double>& f, std::array<std::vector<double>, 3>& df);
+	void delta3D(const std::vector<double>& p, std::vector<double>& f, std::array<std::vector<double>, 3>& df, int& xi, int& yi, int& zi) const;
+
+	/// <summary>Calcule la matrice alpha, le vecteur beta, et retourne le chi² (erreur) pour l'itération courante.
+	/// Utilisé dans l'algorithme de Levenberg-Marquardt.</summary>
+	/// <param name="grid">Vecteur des pixels de la zone d'intérêt : coordonnées (x, y) et valeur.</param>
+	/// <param name="p">Paramètres du modèle</param>
+	/// <returns>Valeur du χ², chi²  = r^T W r  (erreur quadratique totale)</returns>
+	[[nodiscard]] double lm(const std::vector<Pixel>& grid, const std::vector<double>& p, std::vector<double>& alpha, std::vector<double>& beta,
+	                        std::vector<double>& f, std::array<std::vector<double>, 3>& df, std::vector<double>& grad, int mode) const;
+
+
+	[[nodiscard]] double gain(const std::vector<double>& deltaP, const std::vector<double>& alpha, const std::vector<double>& beta) const;
 };
 } // namespace palm_tracer

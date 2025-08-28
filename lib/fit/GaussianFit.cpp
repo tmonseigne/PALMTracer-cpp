@@ -106,7 +106,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX); // Augmentation de λ.
 			}
 
-			// Critères d'arrêts
+			// Critères d'arrêt après quelques itérations
 			m = 0.0;
 			for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::abs(ws.deltaP[i]) / std::max(std::abs(ws.p[1][i]), 1e-12)); }
 			if (iteration >= 2) {                                         // Si on est déjà à 2 iterations

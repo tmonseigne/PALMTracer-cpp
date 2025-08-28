@@ -139,9 +139,9 @@ void Fitting::initP(std::array<std::vector<double>, 3>& p, const double x, const
 			const double Dmin = RoiC - RoiD,
 			             Dmax = RoiC + RoiD;
 
-			p[0] = {-0.01, -1, Dmin, Dmin, 0};
+			p[0] = {MinI, MinI, Dmin, Dmin, 0};
 			p[1] = {minI, maxI - minI, x, y, z};
-			p[2] = {0.01, 1, Dmax, Dmax, 1}; // le maximum pour Z est défini dans les paramètres par splineSizeZ_.
+			p[2] = {MaxI, MaxI, Dmax, Dmax, 1}; // le maximum pour Z est défini dans les paramètres par splineSizeZ_.
 			break;
 		}
 	}
