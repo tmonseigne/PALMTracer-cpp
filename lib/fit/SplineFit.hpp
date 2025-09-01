@@ -24,8 +24,8 @@ public:
 
 protected:
 	static constexpr double LAMBDA_0   = 1e-2, ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.
-	                        LAMBDA_MAX = 1e7,  ///< Valeur maximale autorisée pour lambda.
 	                        LAMBDA_MIN = 1e-7, ///< Valeur minimale autorisée pour lambda.
+	                        LAMBDA_MAX = 1e7,  ///< Valeur maximale autorisée pour lambda.
 	                        LAMBDA_UP  = 11,   ///< Facteur multiplicatif lorsque la mise à jour est inefficace (augmentation de lambda).
 	                        LAMBDA_DN  = 9;    ///< Facteur de réduction de lambda lorsque la mise à jour est réussie.
 	static constexpr double EPSILON_1  = 1e-6, ///< Seuil de convergence pour le changement de la fonction objectif.
@@ -40,7 +40,7 @@ protected:
 	       splineOffset_{};      ///< Offset utilisé pour indexer ou accéder efficacement aux sous-blocs ou aux patchs de la spline.
 	double initZ_{},             ///< Position initiale en Z (origine physique ou de modélisation de la spline en profondeur).
 	       deltaZ_{},            ///< Pas ou résolution entre deux couches Z successives dans la spline.
-	       intensityRatio_{};    ///< Rapport d’intensité entre l’image et le modèle spline (pour corriger une mise à l’échelle ou un gain).
+	       coeffRatio_{};        ///< Rapport d’intensité entre l’image et le modèle spline (pour corriger une mise à l’échelle ou un gain).
 	std::vector<double> coeffs_; ///< Coefficients du modèle spline 3D, stockés de manière linéaire (ordre : [z][y][x]) pour un accès rapide.
 
 	/// <summary>Parse les paramètres reçus pour l'ajustement.</summary>
@@ -60,17 +60,6 @@ protected:
 	void derivativeSpline(Vec3I& pos, const std::vector<double>& f, const std::array<std::vector<double>, 3>& df, const std::vector<double>& p,
 	                      std::vector<double>& dudt, double& model) const;
 
-	/// <summary>Met à jour le jacobien et l'hessienne pour le modèle MLE (Maximum Likelihood Estimation).
-	/// Utilise une vraisemblance basée sur la statistique de Poisson.</summary>
-	/// <param name="data">Valeur observée dans l'image.</param>
-	/// <param name="model">Valeur prédite par le modèle.</param>
-	/// <param name="err">Erreur totale accumulée (log-vraisemblance).</param>
-	/// <param name="jacobian">Vecteur du gradient (jacobien).</param>
-	/// <param name="hessian">Matrice Hessienne (seconde dérivée).</param>
-	/// <param name="grad">Vecteur des dérivées partielles du modèle.</param>
-	void updateJacobianHessian(double data, double model, double& err, std::vector<double>& jacobian,
-	                           std::vector<double>& hessian, const std::vector<double>& grad) const;
-
 	/// <summary>Calcule les contributions d'une base de fonctions splines 3D (valeurs et dérivées).
 	/// Cette fonction calcule la valeur et les dérivées par rapport à x, y et z d'une fonction spline 3D basée sur des monômes (cx, cy, cz) à chaque point de l'espace (x, y, z).
 	/// Le résultat est stocké dans trois tableaux (valeur, dérivées partielles) de taille SPLINE_PATCH_SIDE^3.
@@ -87,8 +76,8 @@ protected:
 	/// <param name="grid">Vecteur des pixels de la zone d'intérêt : coordonnées (x, y) et valeur.</param>
 	/// <param name="p">Paramètres du modèle</param>
 	/// <returns>Valeur du χ², chi²  = r^T W r  (erreur quadratique totale)</returns>
-	[[nodiscard]] double lm(const std::vector<Pixel>& grid, const std::vector<double>& p, std::vector<double>& alpha, std::vector<double>& beta,
-	                        std::vector<double>& f, std::array<std::vector<double>, 3>& df, std::vector<double>& grad, int mode) const;
+	double lm(const std::vector<Pixel>& grid, const std::vector<double>& p, std::vector<double>& alpha, std::vector<double>& beta,
+	          std::vector<double>& f, std::array<std::vector<double>, 3>& df, std::vector<double>& grad, int mode) const;
 
 
 	[[nodiscard]] double gain(const std::vector<double>& deltaP, const std::vector<double>& alpha, const std::vector<double>& beta) const;

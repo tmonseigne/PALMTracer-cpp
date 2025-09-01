@@ -26,6 +26,22 @@ void GaussianFit::parseParams()
 //-------------------------------------------------------------------------------------------------
 void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
 {
+	[[maybe_unused]] auto printBeta = [&](const std::vector<double>& b) {
+		std::cout << "\t beta [";
+		for (size_t i = 0; i < nParams_; ++i) { std::cout << b[i] << " "; }
+		std::cout << "]\n";
+	};
+
+	[[maybe_unused]] auto printAlpha = [&](const std::vector<double>& a) {
+		std::cout << "\t Alpha : \n";
+		for (size_t i = 0, id = 0; i < nParams_; ++i) {
+			std::cout << "\t| ";
+			for (size_t j = 0; j < nParams_; ++j, ++id) { std::cout << a[id] << " | "; }
+			std::cout << "\n";
+		}
+		std::cout << "\n";
+	};
+
 	// Valeurs par défaut
 	double offset = 0, intensity    = 0, rss         = -1,
 	       x      = infos.x_, y     = infos.y_, z    = infos.z_,
