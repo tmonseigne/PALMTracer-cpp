@@ -5,6 +5,7 @@
 #include <cmath>
 #include <complex>
 #include <execution>
+#include <iomanip>
 #include <limits>
 #include <ranges>
 #include <vector>
@@ -45,6 +46,7 @@ void SplineFit::parseParams()
 
 	// Ratio d'intensité pour initialisation (normalisé sur le coeff central de la spline)
 	const double CenterCoeff = coeffs_[32 * splineSize_ + (splineDim_.z / 2) * splineSizeXY_ + (splineDim_.y / 2) * splineDim_.x + (splineDim_.x / 2)];
+	std::cout << "Center Coeff = " << CenterCoeff << "\n";
 	intensityRatio_          = std::fabs(CenterCoeff) < std::numeric_limits<double>::epsilon() ? 1.0 : 4.0 / CenterCoeff;
 	// Décalage pour recaler la ROI sur la grille de spline (en cas de tailles différentes)
 	splineOffset_ = static_cast<size_t>(std::floor((static_cast<double>(splineDim_.x) + 1.0 - static_cast<double>(roi_)) / 2));
@@ -86,6 +88,14 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		// Trouver la valeur absolue maximale
 		double m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::fabs(b); }));
 
+		std::cout << std::setprecision(6) << std::fixed;
+		std::cout << "\t [min .. val .. max]\n";
+		constexpr std::array PName{"B", "I", "X", "Y", "Z"};
+		for (size_t i = 0; i < nParams_; ++i) { std::cout << "\t" << PName[i] << "= [" << p[0][i] << " .. " << p[1][i] << " .. " << p[2][i] << "]\n"; }
+		std::cout << "\t beta [";
+		for (size_t i = 0; i < nParams_; ++i) { std::cout << beta[i] << " "; }
+		std::cout << "\n]";
+
 		const bool Stop = (m < EPSILON_1);
 
 		for (size_t iteration = (Stop ? N_ITER : 0); iteration < N_ITER; ++iteration) { // Main Loop
@@ -119,11 +129,18 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			const double Err_Try   = lm(grid, p_try, alpha, beta, f, df, grad, 1);
 			const double Rho = (err - Err_Try) / (2.0 * m);
 
+			std::cout << "\tPoint (" << p[1][2] << ", " << p[1][3] << ", " << p[1][4]
+				<< ")\n\t\t Iteration " << iteration << "\t err = " << err << "\t err_try = " << Err_Try << "\t m = " << m
+				<< "\t Rho = " << Rho << "\t lambda = " << lambda << "\n";
+
 			if (Rho > EPSILON_4) { // On accepte : on remplace l'état courant et on recalcule alpha/beta
 				err_old = err;
 				p[1]    = p_try;
 				err     = lm(grid, p[1], alpha, beta, f, df, grad, 0);
-				lambda  = std::max(lambda / LAMBDA_DN, LAMBDA_MIN);
+				std::cout << "\t\tUpdate: err = " << err << "\t beta [";
+				for (size_t i = 0; i < nParams_; ++i) { std::cout << beta[i] << " "; }
+				std::cout << "]\n";
+				lambda = std::max(lambda / LAMBDA_DN, LAMBDA_MIN);
 			}
 			else { // On refuse : on garde l'état courant et on augmente λ
 				err = err_old;
