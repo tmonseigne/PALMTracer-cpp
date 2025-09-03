@@ -71,6 +71,12 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		}
 		std::cout << "\n";
 	};
+
+	[[maybe_unused]] auto printGrad = [&](const std::vector<double>& g) {
+		std::cout << "\t grad [";
+		for (size_t i = 0; i < nParams_; ++i) { std::cout << g[i] << " "; }
+		std::cout << "]\n";
+	};
 	//--------------------------------------------------------------------------------------------------------------------------------------------
 
 	// Valeurs de sortie par défaut
@@ -107,6 +113,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		for (size_t i = 0; i < nParams_; ++i) { std::cout << "\t" << PName[i] << "= [" << ws.p[0][i] << " .. " << ws.p[1][i] << " .. " << ws.p[2][i] << "]\n"; }
 		printAlpha(ws.alpha);
 		printBeta(ws.beta);
+		printGrad(ws.grad);
 		//--------------------------------------------------------------------------------------------------------------------------------------------
 
 		for (size_t iteration = ((m < EPSILON_1) ? N_ITER : 0); iteration < N_ITER; ++iteration) { // Main Loop
@@ -143,24 +150,26 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			m = std::inner_product(ws.deltaP.begin(), ws.deltaP.end(), ws.lBetaDeltaP.begin(), 0.0);
 
 			// On calcule les nouvelles valeurs : évalue image + lm pour p_try
-			double err_try = 0.0;
-			for (size_t i = 0; i < n_; ++i) {
-				const double Dx = ws.grid[i].v - (ws.p_try[0] + ws.p_try[1] * ws.grad[1]);
-				err_try += ws.weight[i] * Dx * Dx;
-			}
-			const double Rho = (err - err_try) / (2.0 * m);
+			const double Err_Try = getErr(ws);
+			const double Rho     = (err - Err_Try) / (2.0 * m);
 
 			//--------------------------------------------------------------------------------------------------------------------------------------------
 			std::cout << "\tPoint (" << ws.p[1][2] << ", " << ws.p[1][3] << ", " << ws.p[1][4]
-				<< ")\n\t\t Iteration " << iteration << "\t err = " << err << "\t err_try = " << err_try << "\t m = " << m
+				<< ")\n\t\t Iteration " << iteration << "\t err = " << err << "\t err_try = " << Err_Try << "\t m = " << m
 				<< "\t Rho = " << Rho << "\t lambda = " << lambda << "\n";
 			//--------------------------------------------------------------------------------------------------------------------------------------------
 
-			if (Rho > EPSILON_4) {                                  // On accepte : on remplace l’état courant par _try
-				err_old = err;                                      // Mise à jour de l'erreur de reference
-				ws.p[1] = ws.p_try;                                 // Mise à jour du modèle
-				err     = lm(ws);                                   // Mise à jour de la ROI du modèle, la matrice alpha, le vecteur beta et de l'erreur.
-				lambda  = std::max(lambda / LAMBDA_DN, LAMBDA_MIN); // Diminution du lambda
+			if (Rho > EPSILON_4) {  // On accepte : on remplace l’état courant par _try
+				err_old = err;      // Mise à jour de l'erreur de reference
+				ws.p[1] = ws.p_try; // Mise à jour du modèle
+				err     = lm(ws);   // Mise à jour de la ROI du modèle, la matrice alpha, le vecteur beta et de l'erreur.
+				//--------------------------------------------------------------------------------------------------------------------------------------------
+				std::cout << "\t\t Rho > EPSILON_4 Update Alpha and beta " << iteration << "\t lambda = " << lambda << "\n";
+				printAlpha(ws.alpha);
+				printBeta(ws.beta);
+				printGrad(ws.grad);
+				//--------------------------------------------------------------------------------------------------------------------------------------------
+				lambda = std::max(lambda / LAMBDA_DN, LAMBDA_MIN); // Diminution du lambda
 			}
 			else {                                                 // On refuse : on garde l’état courant
 				err = err_old;                                     // On reprend l'errur de reference
@@ -195,40 +204,20 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 }
 
 //-------------------------------------------------------------------------------------------------
-void SplineFit::derivativeSpline(Vec3I& pos, const std::vector<double>& f, const std::array<std::vector<double>, 3>& df,
-                                 const std::vector<double>& p, std::vector<double>& grad, double& model) const
-{
-	pos = pos.Clamp(splineDim_ - 1);
-
-	const size_t Pos = pos.GetIndex(splineDim_);
-	std::ranges::fill(grad, 0.0); // Initialise toutes les dérivées à zéro
-
-
-	for (size_t i = 0; i < SPLINE_PATCH_SIZE; ++i) {
-		const size_t Id = i * splineSize_ + Pos;
-		grad[1] += f[i] * coeffs_[Id];     // Contribution à l’intensité.
-		grad[2] += df[0][i] * coeffs_[Id]; // Dérivée en x.
-		grad[3] += df[1][i] * coeffs_[Id]; // Dérivée en y.
-		grad[4] += df[2][i] * coeffs_[Id]; // Dérivée en z.
-	}
-	grad[0] = 1;                   // Dérivée par rapport à l’offset
-	grad[2] *= -1 * p[1];          // Ajustement en x.
-	grad[3] *= -1 * p[1];          // Ajustement en y.
-	grad[4] *= p[1];               // Ajustement en z.
-	model = p[0] + p[1] * grad[1]; // Évaluation du modèle spline : offset + amplitude * contribution
-}
-
-//-------------------------------------------------------------------------------------------------
 void SplineFit::delta3D(LM_Workspace& ws) const
 {
+	// Coordonnées fractionnaires (ROI locale)
 	const double Xr = -1.0 * (ws.p[1][2] - static_cast<double>(roiHalf_) + 0.5), Yr = -1.0 * (ws.p[1][3] - static_cast<double>(roiHalf_) + 0.5);
 
+	// Parties entières pour l’ancrage du patch
 	const int Xi = static_cast<int>(std::floor(Xr)), Yi = static_cast<int>(std::floor(Yr)), Zi = static_cast<int>(std::floor(ws.p[1][4]));
 
+	// Parties fractionnaires à l’intérieur de la cellule
 	const double Xc = Xr - Xi, Yc = Yr - Yi, Zc = ws.p[1][4] - Zi;
 
 	std::ranges::fill(ws.f, 0.0);
-	for (size_t i = 0; i < 3; ++i) { std::ranges::fill(ws.df[i], 0.0); }
+	for (auto& df : ws.df) { std::ranges::fill(df, 0.0); }
+
 	double cz = 1.0;
 	for (size_t i = 0; i < SPLINE_PATCH_SIDE; ++i) {
 		double cy = 1.0;
@@ -257,24 +246,26 @@ double SplineFit::lm(LM_Workspace& ws) const
 	double err = 0.0;
 
 	delta3D(ws); // Mise à jour des contributions d'une base de fonctions splines 3D (valeurs et dérivées).
+	// On se base sur les décimales donc f et df mis à jour ici ne changent pas pour toute la ROI
+	// (ça à l'air d'etre une sorte de "poids" pour chacun des 64 coeffs)
 
 	Vec3I pos{.x = 0, .y = 0, .z = static_cast<size_t>(ws.p[1][4])};
-	for (size_t i = 0, idx = 0; i < roi_; ++i) {
-		pos.x = static_cast<int>(i) + static_cast<int>(splineOffset_);
-		for (size_t j = 0; j < roi_; ++j, ++idx) {
-			pos.y = static_cast<int>(j) + static_cast<int>(splineOffset_);
-			deriv(ws, pos);                                      // dérivées au pixel
-			ws.hat[i]    = ws.p[1][0] + ws.p[1][1] * ws.grad[1]; // PSF théorique au pixel (x, y) selon les paramètres p
-			ws.delta[i]  = ws.grid[i].v - ws.hat[i];             // Résidu (∂) = mesure - prédiction
-			ws.deltaW[i] = ws.weight[i] * ws.delta[i];           // Résidu pondéré (W * ∂)
-			err += ws.delta[i] * ws.deltaW[i];                   // mise à jour du Chi² (somme des carrés pondérée W * ∂ * ∂)
+	for (size_t y = 0, idx = 0; y < roi_; ++y) {
+		pos.y = static_cast<int>(y) + static_cast<int>(splineOffset_);
+		for (size_t x = 0; x < roi_; ++x, ++idx) {
+			pos.x          = static_cast<int>(x) + static_cast<int>(splineOffset_);
+			ws.hat[idx]    = psf(ws, ws.p[1], pos);          // PSF théorique au pixel (x, y) selon les paramètres p
+			ws.delta[idx]  = ws.grid[idx].v - ws.hat[idx];   // Résidu (∂) = mesure - prédiction
+			ws.deltaW[idx] = ws.weight[idx] * ws.delta[idx]; // Résidu pondéré (W * ∂)
+			err += ws.delta[idx] * ws.deltaW[idx];           // mise à jour du Chi² (somme des carrés pondérée W * ∂ * ∂)
+			deriv(ws, pos);                                  // dérivées au pixel
 
 			// Accumulations alpha += w * grad * gradᵀ  et  beta += w * grad * r
 			for (size_t a = 0; a < nParams_; ++a) {
-				ws.beta[a] += ws.grad[a] * ws.deltaW[i];
+				ws.beta[a] += ws.grad[a] * ws.deltaW[idx];
 				// rang-1 symétrique
 				const size_t Row = a * nParams_;
-				for (size_t b = 0; b < nParams_; ++b) { ws.alpha[Row + b] += ws.weight[i] * ws.grad[a] * ws.grad[b]; }
+				for (size_t b = 0; b < nParams_; ++b) { ws.alpha[Row + b] += ws.weight[idx] * ws.grad[a] * ws.grad[b]; }
 			}
 		}
 	}
@@ -315,5 +306,30 @@ void SplineFit::deriv(LM_Workspace& ws, Vec3I& pos) const
 	ws.grad[2] *= -1 * ws.p[1][1]; // Ajustement en x.
 	ws.grad[3] *= -1 * ws.p[1][1]; // Ajustement en y.
 	ws.grad[4] *= ws.p[1][1];      // Ajustement en z.
+}
+
+//-------------------------------------------------------------------------------------------------
+double SplineFit::psf(const LM_Workspace& ws, const std::vector<double>& p, const Vec3I& pos) const
+{
+	const size_t Pos = pos.GetIndex(splineDim_);
+	double s         = 0.0;
+	for (size_t i = 0; i < SPLINE_PATCH_SIZE; ++i) { s += ws.f[i] * coeffs_[i * splineSize_ + Pos]; }
+	return p[0] + p[1] * s;
+}
+
+//-------------------------------------------------------------------------------------------------
+double SplineFit::getErr(const LM_Workspace& ws) const
+{
+	double res = 0.0;
+	Vec3I pos{.x = 0, .y = 0, .z = static_cast<size_t>(ws.p_try[4])};
+	for (size_t y = 0, idx = 0; y < roi_; ++y) {
+		pos.y = static_cast<int>(y) + static_cast<int>(splineOffset_);
+		for (size_t x = 0; x < roi_; ++x, ++idx) {
+			pos.x           = static_cast<int>(x) + static_cast<int>(splineOffset_);
+			const double Dx = ws.grid[idx].v - psf(ws, ws.p_try, pos); // PSF théorique au pixel (x, y) selon les paramètres p
+			res += ws.weight[idx] * Dx * Dx;
+		}
+	}
+	return res;
 }
 } // namespace palm_tracer

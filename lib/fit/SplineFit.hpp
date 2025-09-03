@@ -97,37 +97,30 @@ protected:
 	/// <summary>Exécute un ajustement de modèle spline sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.</summary>
 	void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const override;
 
-	/// <summary>Calcule les dérivées du modèle spline 3D en un point donné (x, y, z).
-	/// Remplit le vecteur des dérivées partielles (dudt) et évalue la valeur du modèle.</summary>
-	/// <param name="pos">Position entière (X, Y, Z) dans la grille spline.</param>
-	/// <param name="f">Valeurs de base spline pour l'intensité.</param>
-	/// <param name="df">Référence vers les vecteurs contenant les dérivées de f par rapport à x (∂f/∂x), y (∂f/∂y) et z (∂f/∂z).</param>
-	/// <param name="p">Vecteur des paramètres de la PSF (offset, intensité, position).</param>
-	/// <param name="grad">Vecteur des dérivées partielles du modèle par rapport aux paramètres.</param>
-	/// <param name="model">>Valeur du modèle au point considéré.</param>
-	void derivativeSpline(Vec3I& pos, const std::vector<double>& f, const std::array<std::vector<double>, 3>& df, const std::vector<double>& p,
-	                      std::vector<double>& grad, double& model) const;
-
 	/// <summary>Calcule les contributions d'une base de fonctions splines 3D (valeurs et dérivées).
 	/// Cette fonction calcule la valeur et les dérivées par rapport à x, y et z d'une fonction spline 3D basée sur des monômes (cx, cy, cz) à chaque point de l'espace (x, y, z).
 	/// Le résultat est stocké dans trois tableaux (valeur, dérivées partielles) de taille SPLINE_PATCH_SIDE^3.
 	/// </summary>
-	/// <param name="x">Coordonnée x (locale, typiquement entre 0 et 1).</param>
-	/// <param name="y">Coordonnée y (locale).</param>
-	/// <param name="z">Coordonnée z (locale).</param>
-	/// <param name="f">Référence vers le vecteur contenant les valeurs des fonctions de base.</param>
-	/// <param name="df">Référence vers les vecteurs contenant les dérivées de f par rapport à x (∂f/∂x), y (∂f/∂y) et z (∂f/∂z).</param>
 	void delta3D(LM_Workspace& ws) const;
 
 	/// <summary>Calcule la matrice alpha, le vecteur beta, et retourne le chi² (erreur) pour l'itération courante.
 	/// Utilisé dans l'algorithme de Levenberg-Marquardt.</summary>
-	/// <param name="grid">Vecteur des pixels de la zone d'intérêt : coordonnées (x, y) et valeur.</param>
-	/// <param name="p">Paramètres du modèle</param>
+	/// <param name="ws">Ensemble des objets nécessaires au déroulement de l’algorithme de Levenberg-Marquardt.</param>
 	/// <returns>Valeur du χ², chi²  = r^T W r  (erreur quadratique totale)</returns>
 	double lm(LM_Workspace& ws) const;
 
+	/// <summary>Gains the specified ws.</summary>
+	/// <param name="ws">Ensemble des objets nécessaires au déroulement de l’algorithme de Levenberg-Marquardt.</param>
+	/// <returns></returns>
 	[[nodiscard]] double gain(const LM_Workspace& ws) const;
 
+	/// <summary>Derivs the specified ws.</summary>
+	/// <param name="ws">Ensemble des objets nécessaires au déroulement de l’algorithme de Levenberg-Marquardt.</param>
+	/// <param name="pos">The position.</param>
 	void deriv(LM_Workspace& ws, Vec3I& pos) const;
+
+	double psf(const LM_Workspace& ws, const std::vector<double>& p, const Vec3I& pos) const;
+
+	double getErr(const LM_Workspace& ws) const;
 };
 } // namespace palm_tracer
