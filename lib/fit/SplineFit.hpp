@@ -11,8 +11,10 @@
 ///-------------------------------------------------------------------------------------------------
 
 #pragma once
+#include <array>
 #include <vector>
 
+#include "Constants.hpp"
 #include "Fitting.hpp"
 
 namespace palm_tracer {
@@ -43,6 +45,52 @@ protected:
 	       coeffRatio_{};        ///< Rapport d’intensité entre l’image et le modèle spline (pour corriger une mise à l’échelle ou un gain).
 	std::vector<double> coeffs_; ///< Coefficients du modèle spline 3D, stockés de manière linéaire (ordre : [z][y][x]) pour un accès rapide.
 
+
+	/// <summary>Ensemble des objets nécessaires au déroulement de l’algorithme de Levenberg-Marquardt.
+	/// Chaque membre correspond à une variable intermédiaire utilisée dans les calculs d’ajustement non-linéaire.</summary>
+	struct LM_Workspace {
+		std::vector<double> alpha,            ///< Matrice de courbure (Gauss-Newton), de taille np² : α = Jᵀ W J.
+		                    alphaR,           ///< Copie de alpha avec régularisation diagonale par λ (αR = α + λ diag(α)).
+		                    alphaRi,          ///< Inverse d'alphaR  (obtenue par inversion de Gauss-Jordan).
+		                    beta,             ///< Gradient du χ² (β = Jᵀ W r), taille np.
+		                    delta,            ///< Résidus non pondérés : différence entre données observées et modèle (δ = y - ŷ).
+		                    deltaW,           ///< Résidus pondérés : δW = W * δ.
+		                    deltaP,           ///< Incrément de mise à jour des paramètres (δp), calculé à chaque itération.
+		                    lBetaDeltaP,      ///< Terme auxiliaire : λ δp + β, utilisé pour calculer le gain prédictif.
+		                    grad,             ///< Gradient de la PSF par rapport aux paramètres, évalué pixel par pixel.
+		                    p_try,            ///< Paramètres candidats (p + δp) après mise à jour et clampés aux bornes.
+		                    hat,              ///< Valeurs prédites par le modèle (ŷ) pour chaque pixel de la ROI.
+		                    weight;           ///< Poids associés à chaque pixel (permet d’ajuster l’influence des points).
+		std::vector<Pixel> grid;              ///< Liste des pixels de la ROI, contenant coordonnées (x, y) et intensité mesurée.
+		std::array<std::vector<double>, 3> p; ///< Paramètres du modèle : borne inférieure, valeur courante et borne supérieure de chaque paramètre.
+
+		std::array<double, SPLINE_PATCH_SIZE> f{};                 ///< Valeurs des fonctions de base de la spline
+		std::array<std::array<double, SPLINE_PATCH_SIZE>, 3> df{}; ///< Dérivées de f par rapport à x (∂f/∂x), y (∂f/∂y) et z (∂f/∂z)
+
+		/// <summary>Redimensionne et initialise les différents vecteurs nécessaires à l’algorithme de Levenberg-Marquardt.</summary>
+		/// <param name="n">Nombre de pixels de la ROI (taille de grid, hat, delta...).</param>
+		/// <param name="np">Nombre de paramètres du modèle.</param>
+		/// <param name="np2">Nombre de paramètres au carré (np²).</param>
+		void Resize(const size_t n, const size_t np, const size_t np2)
+		{
+			alpha.resize(np2);
+			alphaR.resize(np2);
+			alphaRi.resize(np2);
+
+			beta.resize(np);
+			grad.resize(np);
+			deltaP.resize(np);
+			lBetaDeltaP.resize(np);
+			p_try.resize(np);
+
+			hat.resize(n);
+			weight.resize(n, 1);
+			delta.resize(n);
+			deltaW.resize(n);
+			grid.resize(n);
+		}
+	};
+
 	/// <summary>Parse les paramètres reçus pour l'ajustement.</summary>
 	void parseParams() override;
 
@@ -55,10 +103,10 @@ protected:
 	/// <param name="f">Valeurs de base spline pour l'intensité.</param>
 	/// <param name="df">Référence vers les vecteurs contenant les dérivées de f par rapport à x (∂f/∂x), y (∂f/∂y) et z (∂f/∂z).</param>
 	/// <param name="p">Vecteur des paramètres de la PSF (offset, intensité, position).</param>
-	/// <param name="dudt">Vecteur des dérivées partielles du modèle par rapport aux paramètres.</param>
+	/// <param name="grad">Vecteur des dérivées partielles du modèle par rapport aux paramètres.</param>
 	/// <param name="model">>Valeur du modèle au point considéré.</param>
 	void derivativeSpline(Vec3I& pos, const std::vector<double>& f, const std::array<std::vector<double>, 3>& df, const std::vector<double>& p,
-	                      std::vector<double>& dudt, double& model) const;
+	                      std::vector<double>& grad, double& model) const;
 
 	/// <summary>Calcule les contributions d'une base de fonctions splines 3D (valeurs et dérivées).
 	/// Cette fonction calcule la valeur et les dérivées par rapport à x, y et z d'une fonction spline 3D basée sur des monômes (cx, cy, cz) à chaque point de l'espace (x, y, z).
@@ -69,17 +117,17 @@ protected:
 	/// <param name="z">Coordonnée z (locale).</param>
 	/// <param name="f">Référence vers le vecteur contenant les valeurs des fonctions de base.</param>
 	/// <param name="df">Référence vers les vecteurs contenant les dérivées de f par rapport à x (∂f/∂x), y (∂f/∂y) et z (∂f/∂z).</param>
-	void delta3D(const std::vector<double>& p, std::vector<double>& f, std::array<std::vector<double>, 3>& df, int& xi, int& yi, int& zi) const;
+	void delta3D(LM_Workspace& ws) const;
 
 	/// <summary>Calcule la matrice alpha, le vecteur beta, et retourne le chi² (erreur) pour l'itération courante.
 	/// Utilisé dans l'algorithme de Levenberg-Marquardt.</summary>
 	/// <param name="grid">Vecteur des pixels de la zone d'intérêt : coordonnées (x, y) et valeur.</param>
 	/// <param name="p">Paramètres du modèle</param>
 	/// <returns>Valeur du χ², chi²  = r^T W r  (erreur quadratique totale)</returns>
-	double lm(const std::vector<Pixel>& grid, const std::vector<double>& p, std::vector<double>& alpha, std::vector<double>& beta,
-	          std::vector<double>& f, std::array<std::vector<double>, 3>& df, std::vector<double>& grad, int mode) const;
+	double lm(LM_Workspace& ws) const;
 
+	[[nodiscard]] double gain(const LM_Workspace& ws) const;
 
-	[[nodiscard]] double gain(const std::vector<double>& deltaP, const std::vector<double>& alpha, const std::vector<double>& beta) const;
+	void deriv(LM_Workspace& ws, Vec3I& pos) const;
 };
 } // namespace palm_tracer
