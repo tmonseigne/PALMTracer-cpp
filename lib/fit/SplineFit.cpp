@@ -122,15 +122,31 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			//--------------------------------------------------------------------------------------------------------------------------------------------
 
 			// Calcul de l'inverse de la matrice de courbure α
-			ws.alphaR = ws.alpha;                                                                                         // Copie de α
-			for (size_t i = 0; i < nParams_; ++i) { ws.alphaR[i * nParams_ + i] += lambda * ws.alpha[i * nParams_ + i]; } // αR = α + λ diag(α)
-			matrix::InverseGaussJordan(ws.alphaR, ws.alphaRi, nParams_);                                                  // Inversion (Gauss-Jordan)
+			ws.alphaR = ws.alpha; // Copie de α
+			// αR = α + λ diag(α)
+			for (size_t i = 0; i < nParams_; ++i) {
+				const size_t I = i * nParams_ + i;
+				const double D = ws.alpha[I];
+				ws.alphaR[I] += lambda * ((std::fabs(D) > 1e-12) ? D : 1.0); // évite "λ * 0"
+			}
+			matrix::InverseGaussJordan(ws.alphaR, ws.alphaRi, nParams_); // Inversion (Gauss-Jordan)
 
 			// Calcul du candidat (p + δp)
 			std::ranges::fill(ws.deltaP, 0.0);
 			for (size_t i = 0; i < nParams_; ++i) {
 				for (size_t j = 0; j < nParams_; ++j) { ws.deltaP[i] += ws.alphaRi[i * nParams_ + j] * ws.beta[j]; } // δP = αRi * β
 				ws.p_try[i] = std::clamp(ws.p[1][i] + ws.deltaP[i], ws.p[0][i], ws.p[2][i]);                         // p_try = clamp(p + δP)
+			}
+
+			// Les splines partent vite, donc on prend le pas réel final (après clamp du p_try).
+			for (size_t i = 0; i < nParams_; ++i) { ws.deltaP[i] = ws.p_try[i] - ws.p[1][i]; }
+			// Petit garde-fou : si le pas réel est ~0, inutile d’évaluer
+			bool tiny = true;
+			for (const double V : ws.deltaP) { tiny &= (std::abs(V) < 1e-15); }
+			if (tiny) {
+				if (lambda >= LAMBDA_MAX) { break; }               // On est déjà au max, on arrête
+				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX); // Augmentation de lambda
+				continue;                                          // On repart au début de la boucle
 			}
 
 			// Gain prédit (pas d’éval d’image ici) m = δPᵀ * (λ δP + β)
@@ -149,7 +165,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			for (size_t i = 0; i < nParams_; ++i) { ws.lBetaDeltaP[i] = lambda * ws.deltaP[i] + ws.beta[i]; }
 			m = std::inner_product(ws.deltaP.begin(), ws.deltaP.end(), ws.lBetaDeltaP.begin(), 0.0);
 
-			// On calcule les nouvelles valeurs : évalue image + lm pour p_try
+			// Calcul des nouvelles valeurs : évalue image + lm pour p_try
 			const double Err_Try = getErr(ws);
 			const double Rho     = (err - Err_Try) / (2.0 * m);
 
@@ -199,42 +215,56 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 	}
 	else { z = 0; }
 
-	std::cout << "Final Point : " << offset << ", " << intensity << ", " << x << ", " << y << ", " << z << "\n";
+	std::cout << "***** Final Point : " << offset << ", " << intensity << ", " << x << ", " << y << ", " << z << " *****\n";
 	fill(infos, point, offset, intensity, x, y, z, 0, 0, 0, rss, rss);
 }
 
 //-------------------------------------------------------------------------------------------------
-void SplineFit::delta3D(LM_Workspace& ws) const
+void SplineFit::delta3D(LM_Workspace& ws, const std::vector<double>& p) const
 {
 	// Coordonnées fractionnaires (ROI locale)
-	const double Xr = -1.0 * (ws.p[1][2] - static_cast<double>(roiHalf_) + 0.5), Yr = -1.0 * (ws.p[1][3] - static_cast<double>(roiHalf_) + 0.5);
+	const double Xr = -1.0 * (p[2] - static_cast<double>(roiHalf_) + 0.5), Yr = -1.0 * (p[3] - static_cast<double>(roiHalf_) + 0.5);
 
 	// Parties entières pour l’ancrage du patch
-	const int Xi = static_cast<int>(std::floor(Xr)), Yi = static_cast<int>(std::floor(Yr)), Zi = static_cast<int>(std::floor(ws.p[1][4]));
+	const int Xi = static_cast<int>(std::floor(Xr)), Yi = static_cast<int>(std::floor(Yr)), Zi = static_cast<int>(std::floor(p[4]));
 
 	// Parties fractionnaires à l’intérieur de la cellule
-	const double Xc = Xr - Xi, Yc = Yr - Yi, Zc = ws.p[1][4] - Zi;
+	const double Xc = Xr - Xi, Yc = Yr - Yi, Zc = p[4] - Zi;
+
+	auto powers = [](const double t, std::array<double, SPLINE_PATCH_SIDE>& p) {
+		p[0] = 1.0;
+		p[1] = t;
+		p[2] = t * t;
+		p[3] = p[2] * t;
+	};
+	auto dpowers = [](const double t, std::array<double, SPLINE_PATCH_SIDE>& dp) {
+		dp[0] = 0.0;
+		dp[1] = 1.0;
+		dp[2] = 2.0 * t;
+		dp[3] = 3.0 * t * t;
+	};
+
+	std::array<double, SPLINE_PATCH_SIDE> px, py, pz, dpx, dpy, dpz;
+	powers(Xc, px);
+	powers(Yc, py);
+	powers(Zc, pz);
+	dpowers(Xc, dpx);
+	dpowers(Yc, dpy);
+	dpowers(Zc, dpz);
 
 	std::ranges::fill(ws.f, 0.0);
 	for (auto& df : ws.df) { std::ranges::fill(df, 0.0); }
 
-	double cz = 1.0;
-	for (size_t i = 0; i < SPLINE_PATCH_SIDE; ++i) {
-		double cy = 1.0;
-		for (size_t j = 0; j < SPLINE_PATCH_SIDE; ++j) {
-			double cx = 1.0;
-			for (size_t k = 0; k < SPLINE_PATCH_SIDE; ++k) {
-				const size_t Id   = i * SPLINE_PATCH_PLANE + j * SPLINE_PATCH_SIDE + k;
-				const double Coef = cz * cy * cx;
-				ws.f[Id]          = Coef;
-				if (k > 0) { ws.df[0][Id - 1] += static_cast<double>(k) * Coef; }                  // x : −1
-				if (j > 0) { ws.df[1][Id - SPLINE_PATCH_SIDE] += static_cast<double>(j) * Coef; }  // y : −4
-				if (i > 0) { ws.df[2][Id - SPLINE_PATCH_PLANE] += static_cast<double>(i) * Coef; } // z : −16
-				cx *= Xc;
+	for (size_t iz = 0, id = 0; iz < SPLINE_PATCH_SIDE; ++iz) {
+		for (size_t iy = 0; iy < SPLINE_PATCH_SIDE; ++iy) {
+			for (size_t ix = 0; ix < SPLINE_PATCH_SIDE; ++ix, ++id) {
+				const double Base = pz[iz] * py[iy] * px[ix];
+				ws.f[id]          = Base;
+				ws.df[0][id]      = pz[iz] * py[iy] * dpx[ix]; // ∂/∂Xc
+				ws.df[1][id]      = pz[iz] * dpy[iy] * px[ix]; // ∂/∂Yc
+				ws.df[2][id]      = dpz[iz] * py[iy] * px[ix]; // ∂/∂Zc
 			}
-			cy *= Yc;
 		}
-		cz *= Zc;
 	}
 }
 
@@ -245,7 +275,7 @@ double SplineFit::lm(LM_Workspace& ws) const
 	std::ranges::fill(ws.beta, 0.0);
 	double err = 0.0;
 
-	delta3D(ws); // Mise à jour des contributions d'une base de fonctions splines 3D (valeurs et dérivées).
+	delta3D(ws, ws.p[1]); // Mise à jour des contributions d'une base de fonctions splines 3D (valeurs et dérivées).
 	// On se base sur les décimales donc f et df mis à jour ici ne changent pas pour toute la ROI
 	// (ça à l'air d'etre une sorte de "poids" pour chacun des 64 coeffs)
 
@@ -311,16 +341,17 @@ void SplineFit::deriv(LM_Workspace& ws, Vec3I& pos) const
 //-------------------------------------------------------------------------------------------------
 double SplineFit::psf(const LM_Workspace& ws, const std::vector<double>& p, const Vec3I& pos) const
 {
-	const size_t Pos = pos.GetIndex(splineDim_);
+	const size_t Pos = pos.Clamp(splineDim_ - 1).GetIndex(splineDim_);
 	double s         = 0.0;
 	for (size_t i = 0; i < SPLINE_PATCH_SIZE; ++i) { s += ws.f[i] * coeffs_[i * splineSize_ + Pos]; }
 	return p[0] + p[1] * s;
 }
 
 //-------------------------------------------------------------------------------------------------
-double SplineFit::getErr(const LM_Workspace& ws) const
+double SplineFit::getErr(LM_Workspace& ws) const
 {
 	double res = 0.0;
+	delta3D(ws, ws.p_try); // Mise à jour des contributions d'une base de fonctions splines 3D (valeurs et dérivées).
 	Vec3I pos{.x = 0, .y = 0, .z = static_cast<size_t>(ws.p_try[4])};
 	for (size_t y = 0, idx = 0; y < roi_; ++y) {
 		pos.y = static_cast<int>(y) + static_cast<int>(splineOffset_);

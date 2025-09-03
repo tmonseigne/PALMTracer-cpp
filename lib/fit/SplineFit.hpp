@@ -101,7 +101,7 @@ protected:
 	/// Cette fonction calcule la valeur et les dérivées par rapport à x, y et z d'une fonction spline 3D basée sur des monômes (cx, cy, cz) à chaque point de l'espace (x, y, z).
 	/// Le résultat est stocké dans trois tableaux (valeur, dérivées partielles) de taille SPLINE_PATCH_SIDE^3.
 	/// </summary>
-	void delta3D(LM_Workspace& ws) const;
+	void delta3D(LM_Workspace& ws, const std::vector<double>& p) const;
 
 	/// <summary>Calcule la matrice alpha, le vecteur beta, et retourne le chi² (erreur) pour l'itération courante.
 	/// Utilisé dans l'algorithme de Levenberg-Marquardt.</summary>
@@ -121,6 +121,6 @@ protected:
 
 	double psf(const LM_Workspace& ws, const std::vector<double>& p, const Vec3I& pos) const;
 
-	double getErr(const LM_Workspace& ws) const;
+	double getErr(LM_Workspace& ws) const;
 };
 } // namespace palm_tracer
