@@ -146,8 +146,8 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 				for (size_t j = 0; j < nParams_; ++j) { ws.alphaS[i * nParams_ + j] = ws.sCol[i] * ws.alphaR[i * nParams_ + j] * ws.sCol[j]; }
 			}
 
-			//βS = S * β
-			for (size_t j = 0; j < nParams_; ++j) { ws.betaS[j] = ws.sCol[j] * ws.beta[j]; }
+			//βS = S * -β
+			for (size_t j = 0; j < nParams_; ++j) { ws.betaS[j] = -ws.sCol[j] * ws.beta[j]; }
 			matrix::InverseGaussJordan(ws.alphaS, ws.alphaSi, nParams_); // Inversion (Gauss-Jordan)
 
 			// Calcul du candidat (p + δp)
@@ -179,7 +179,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			}
 
 			// m = δPᵀ * (λ diag(α) δP + β) (diag(α)^pour retourner dnas l'échelle courante)
-			for (size_t i = 0; i < nParams_; ++i) { ws.lBetaDeltaP[i] = lambda * ws.alpha[i * nParams_ + i] * ws.deltaP[i] + ws.beta[i]; }
+			for (size_t i = 0; i < nParams_; ++i) { ws.lBetaDeltaP[i] = lambda * ws.alpha[i * nParams_ + i] * ws.deltaP[i] - ws.beta[i]; }
 			m = std::inner_product(ws.deltaP.begin(), ws.deltaP.end(), ws.lBetaDeltaP.begin(), 0.0);
 
 			// Calcul des nouvelles valeurs : évalue image + lm pour p_try
@@ -193,7 +193,6 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			//--------------------------------------------------------------------------------------------------------------------------------------------
 
 			if (err < Err_Try) { // REJET inconditionnel si l’erreur augmente (ou stagne)
-				err = err_old;
 				if (lambda >= LAMBDA_MAX) { break; }
 				lambda = std::min(lambda * (clamped ? LAMBDA_UP * std::sqrt(LAMBDA_UP) : LAMBDA_UP), LAMBDA_MAX);
 				continue;
@@ -332,7 +331,7 @@ double SplineFit::lm(LM_Workspace& ws) const
 
 			// Accumulations alpha += w * grad * gradᵀ  et  beta += w * grad * r
 			for (size_t a = 0; a < nParams_; ++a) {
-				ws.beta[a] += ws.grad[a] * ws.deltaW[idx];
+				ws.beta[a] -= ws.grad[a] * ws.deltaW[idx];
 				// rang-1 symétrique
 				const size_t Row = a * nParams_;
 				for (size_t b = 0; b < nParams_; ++b) { ws.alpha[Row + b] += ws.weight[idx] * ws.grad[a] * ws.grad[b]; }
@@ -378,7 +377,7 @@ void SplineFit::deriv(LM_Workspace& ws, Vec3I& pos) const
 	ws.grad[0]     = 1;                             // Dérivée par rapport à l’offset
 	ws.grad[2] *= -1 * I;                           // Ajustement en x.
 	ws.grad[3] *= -1 * I;                           // Ajustement en y.
-	ws.grad[4] *= -1 * I;                           // Ajustement en z. (TODO vérifier correction +1 → -1 ?)
+	ws.grad[4] *= I;                                // Ajustement en z.
 }
 
 //-------------------------------------------------------------------------------------------------
