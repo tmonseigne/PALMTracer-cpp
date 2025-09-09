@@ -257,26 +257,27 @@ void SplineFit::delta3D(LM_Workspace& ws, const std::vector<double>& p) const
 	// Parties fractionnaires à l’intérieur de la cellule
 	const double Xc = Xr - Xi, Yc = Yr - Yi, Zc = p[4] - Zi;
 
-	auto powers = [](const double t, std::array<double, SPLINE_PATCH_SIDE>& p) {
-		p[0] = 1.0;
-		p[1] = t;
-		p[2] = t * t;
-		p[3] = p[2] * t;
-	};
-	auto dpowers = [](const double t, std::array<double, SPLINE_PATCH_SIDE>& dp) {
-		dp[0] = 0.0;
-		dp[1] = 1.0;
-		dp[2] = 2.0 * t;
-		dp[3] = 3.0 * t * t;
+	auto bspline3 = [](const double u, std::array<double, SPLINE_PATCH_SIDE>& w, std::array<double, SPLINE_PATCH_SIDE>& dw) {
+		const double U2 = u * u, U3    = U2 * u;
+		const double Om = 1.0 - u, Om2 = Om * Om, Om3 = Om2 * Om;
+
+		// Poids (uniform cubic B-spline)
+		w[0] = Om3 / 6.0;
+		w[1] = (3.0 * U3 - 6.0 * U2 + 4.0) / 6.0;
+		w[2] = (-3.0 * U3 + 3.0 * U2 + 3.0 * u + 1.0) / 6.0;
+		w[3] = U3 / 6.0;
+
+		// Dérivées
+		dw[0] = -0.5 * Om2;
+		dw[1] = 1.5 * U2 - 2.0 * u;
+		dw[2] = -1.5 * U2 + u + 0.5;
+		dw[3] = 0.5 * U2;
 	};
 
-	std::array<double, SPLINE_PATCH_SIDE> px, py, pz, dpx, dpy, dpz;
-	powers(Xc, px);
-	powers(Yc, py);
-	powers(Zc, pz);
-	dpowers(Xc, dpx);
-	dpowers(Yc, dpy);
-	dpowers(Zc, dpz);
+	std::array<double, SPLINE_PATCH_SIDE> wx{}, wy{}, wz{}, dwx{}, dwy{}, dwz{};
+	bspline3(Xc, wx, dwx);
+	bspline3(Yc, wy, dwy);
+	bspline3(Zc, wz, dwz);
 
 	std::ranges::fill(ws.f, 0.0);
 	for (auto& df : ws.df) { std::ranges::fill(df, 0.0); }
@@ -284,11 +285,11 @@ void SplineFit::delta3D(LM_Workspace& ws, const std::vector<double>& p) const
 	for (size_t iz = 0, id = 0; iz < SPLINE_PATCH_SIDE; ++iz) {
 		for (size_t iy = 0; iy < SPLINE_PATCH_SIDE; ++iy) {
 			for (size_t ix = 0; ix < SPLINE_PATCH_SIDE; ++ix, ++id) {
-				const double Base = pz[iz] * py[iy] * px[ix];
-				ws.f[id]          = Base;
-				ws.df[0][id]      = pz[iz] * py[iy] * dpx[ix]; // ∂/∂Xc
-				ws.df[1][id]      = pz[iz] * dpy[iy] * px[ix]; // ∂/∂Yc
-				ws.df[2][id]      = dpz[iz] * py[iy] * px[ix]; // ∂/∂Zc
+				const double Wyz = wz[iz] * wy[iy];
+				ws.f[id]         = Wyz * wx[ix];
+				ws.df[0][id]     = Wyz * dwx[ix];             // ∂s/∂Xc
+				ws.df[1][id]     = wz[iz] * dwy[iy] * wx[ix]; // ∂s/∂Yc
+				ws.df[2][id]     = dwz[iz] * wy[iy] * wx[ix]; // ∂s/∂Zc
 			}
 		}
 	}
