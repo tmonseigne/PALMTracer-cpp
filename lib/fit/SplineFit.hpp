@@ -137,6 +137,6 @@ protected:
 
 	double getErr(LM_Workspace& ws) const;
 
-	void computeCoeffRatio(LM_Workspace& ws) const;
+	void computeCoeffRatio(LM_Workspace& ws, const std::vector<double>& p) const;
 };
 } // namespace palm_tracer
