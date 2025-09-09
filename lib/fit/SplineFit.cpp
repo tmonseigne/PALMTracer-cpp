@@ -50,8 +50,8 @@ void SplineFit::parseParams()
 	// Décalage pour recaler la ROI sur la grille de spline (en cas de tailles différentes)
 	splineOffset_ = static_cast<size_t>(std::floor((static_cast<double>(splineDim_.x) + 1.0 - static_cast<double>(roi_)) / 2));
 
-	jumpXY_ = 0.5;
-	jumpZ_  = 0.5; // std::max(static_cast<double>(splineDim_.z) / 10.0, 0.5);
+	jumpXY_ = 0.25;
+	jumpZ_  = 0.25; // std::max(static_cast<double>(splineDim_.z) / 10.0, 0.5);
 }
 
 //-------------------------------------------------------------------------------------------------
