@@ -42,7 +42,9 @@ protected:
 	       splineOffset_{};      ///< Offset utilisé pour indexer ou accéder efficacement aux sous-blocs ou aux patchs de la spline.
 	double initZ_{},             ///< Position initiale en Z (origine physique ou de modélisation de la spline en profondeur).
 	       deltaZ_{},            ///< Pas ou résolution entre deux couches Z successives dans la spline.
-	       coeffRatio_{};        ///< Rapport d’intensité entre l’image et le modèle spline (pour corriger une mise à l’échelle ou un gain).
+	       coeffRatio_{},        ///< Rapport d’intensité entre l’image et le modèle spline (pour corriger une mise à l’échelle ou un gain).
+	       jumpXY_{},            ///< Saut maximal sur X/Y pour une iteration
+	       jumpZ_{};             ///< Saut maximal sur Z pour une iteration
 	std::vector<double> coeffs_; ///< Coefficients du modèle spline 3D, stockés de manière linéaire (ordre : [z][y][x]) pour un accès rapide.
 
 
@@ -51,8 +53,10 @@ protected:
 	struct LM_Workspace {
 		std::vector<double> alpha,            ///< Matrice de courbure (Gauss-Newton), de taille np² : α = Jᵀ W J.
 		                    alphaR,           ///< Copie de alpha avec régularisation diagonale par λ (αR = α + λ diag(α)).
-		                    alphaRi,          ///< Inverse d'alphaR  (obtenue par inversion de Gauss-Jordan).
+		                    alphaS,           ///< Copie de alpha régularisé avec mise à l'échelle (αS = S * αR * S).
+		                    alphaSi,          ///< Inverse d'alphaR  (obtenue par inversion de Gauss-Jordan).
 		                    beta,             ///< Gradient du χ² (β = Jᵀ W r), taille np.
+		                    betaS,            ///< Gradient du χ² avec mise à l'échelle (βS = S * β).
 		                    delta,            ///< Résidus non pondérés : différence entre données observées et modèle (δ = y - ŷ).
 		                    deltaW,           ///< Résidus pondérés : δW = W * δ.
 		                    deltaP,           ///< Incrément de mise à jour des paramètres (δp), calculé à chaque itération.
@@ -60,28 +64,38 @@ protected:
 		                    grad,             ///< Gradient de la PSF par rapport aux paramètres, évalué pixel par pixel.
 		                    p_try,            ///< Paramètres candidats (p + δp) après mise à jour et clampés aux bornes.
 		                    hat,              ///< Valeurs prédites par le modèle (ŷ) pour chaque pixel de la ROI.
-		                    weight;           ///< Poids associés à chaque pixel (permet d’ajuster l’influence des points).
+		                    weight,           ///< Poids associés à chaque pixel (permet d’ajuster l’influence des points).
+		                    sCol;             ///< Vecteur de scaling utile pour controler la descente
 		std::vector<Pixel> grid;              ///< Liste des pixels de la ROI, contenant coordonnées (x, y) et intensité mesurée.
 		std::array<std::vector<double>, 3> p; ///< Paramètres du modèle : borne inférieure, valeur courante et borne supérieure de chaque paramètre.
 
 		std::array<double, SPLINE_PATCH_SIZE> f{};                 ///< Valeurs des fonctions de base de la spline
 		std::array<std::array<double, SPLINE_PATCH_SIZE>, 3> df{}; ///< Dérivées de f par rapport à x (∂f/∂x), y (∂f/∂y) et z (∂f/∂z)
 
+		double coeffRatio = 1.0, ///< Coefficient pour avoir une echelle utilisable
+		       Imin       = 1.0, ///< Minimum d'intensité
+		       jumpI_     = 1.0; ///< Saut maximal sur I pour une iteration
+
 		/// <summary>Redimensionne et initialise les différents vecteurs nécessaires à l’algorithme de Levenberg-Marquardt.</summary>
 		/// <param name="n">Nombre de pixels de la ROI (taille de grid, hat, delta...).</param>
 		/// <param name="np">Nombre de paramètres du modèle.</param>
 		/// <param name="np2">Nombre de paramètres au carré (np²).</param>
+
+
 		void Resize(const size_t n, const size_t np, const size_t np2)
 		{
 			alpha.resize(np2);
 			alphaR.resize(np2);
-			alphaRi.resize(np2);
+			alphaS.resize(np2);
+			alphaSi.resize(np2);
 
 			beta.resize(np);
+			betaS.resize(np);
 			grad.resize(np);
 			deltaP.resize(np);
 			lBetaDeltaP.resize(np);
 			p_try.resize(np);
+			sCol.resize(np);
 
 			hat.resize(n);
 			weight.resize(n, 1);
@@ -122,5 +136,7 @@ protected:
 	double psf(const LM_Workspace& ws, const std::vector<double>& p, const Vec3I& pos) const;
 
 	double getErr(LM_Workspace& ws) const;
+
+	void computeCoeffRatio(LM_Workspace& ws) const;
 };
 } // namespace palm_tracer

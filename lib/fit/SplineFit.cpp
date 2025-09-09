@@ -46,10 +46,12 @@ void SplineFit::parseParams()
 
 	// Ratio d'intensité pour initialisation (normalisé sur le coeff central de la spline)
 	const double CenterCoeff = coeffs_[32 * splineSize_ + (splineDim_.z / 2) * splineSizeXY_ + (splineDim_.y / 2) * splineDim_.x + (splineDim_.x / 2)];
-	std::cout << "Center Coeff = " << CenterCoeff << "\n";
-	coeffRatio_ = std::fabs(CenterCoeff) < std::numeric_limits<double>::epsilon() ? 1.0 : 4.0 / CenterCoeff;
+	coeffRatio_              = std::fabs(CenterCoeff) < std::numeric_limits<double>::epsilon() ? 1.0 : 4.0 / CenterCoeff;
 	// Décalage pour recaler la ROI sur la grille de spline (en cas de tailles différentes)
 	splineOffset_ = static_cast<size_t>(std::floor((static_cast<double>(splineDim_.x) + 1.0 - static_cast<double>(roi_)) / 2));
+
+	jumpXY_ = 0.5;
+	jumpZ_  = 0.5; // std::max(static_cast<double>(splineDim_.z) / 10.0, 0.5);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -69,6 +71,9 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			for (size_t j = 0; j < nParams_; ++j, ++id) { std::cout << a[id] << " | "; }
 			std::cout << "\n";
 		}
+		std::array<double, 5> col{};
+		for (size_t j = 0; j < nParams_; ++j) { col[j] = std::sqrt(std::abs(a[j * nParams_ + j])); }
+		std::cout << "\t ||Alpha|| ≈ [" << col[0] << " " << col[1] << " " << col[2] << " " << col[3] << " " << col[4] << "]\n";
 		std::cout << "\n";
 	};
 
@@ -93,10 +98,13 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 
 		// Initialisation des données (Récupération des min/max, de la ROI et initialisation du P et de ses bornes)
 		preCompute(Ux, Uy, ws.grid, minI, maxI);
-		matrix::CenterOfMass(ws.grid, roi_, x, y); // Calcul du centre de masse de la région pour x et y ATTENTION !! x,y ∈ [0,roi]²
-		initP(ws.p, x, y, z, minI, maxI);          // Initialisation du/des P
+		ws.Imin = std::max(1.0, 0.01 * (maxI - minI)); // plancher intensité
+		matrix::CenterOfMass(ws.grid, roi_, x, y);     // Calcul du centre de masse de la région pour x et y ATTENTION !! x,y ∈ [0,roi]²
+		initP(ws.p, x, y, z, minI, maxI);              // Initialisation du/des P
 		// Amplitude (et offset) de départ (et max) cohérente avec le patch courant masi chelou cette etape, je ne visualise pas trop l'interet et si c'est négatif ça casse tout.
 		//for (size_t i = 1; i <= 2; ++i) { for (size_t j = 0; j <= 1; ++j) { p[i][j] *= coeffRatio_; } }
+		ws.p[0][1] = std::max(ws.p[0][1], ws.Imin);                                                            // borne basse d'I
+		ws.p[1][1] = std::max(ws.p[1][1], ws.Imin);                                                            // valeur courante ≥ I_min
 		ws.p[2][4] = static_cast<double>(splineDim_.z);                                                        // Z ∈ [0, Zmax] en index de plan (flottant)
 		for (size_t i = 0; i < nParams_; ++i) { ws.p[1][i] = std::clamp(ws.p[1][i], ws.p[0][i], ws.p[2][i]); } // Clamp en cas de problème.
 
@@ -129,13 +137,31 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 				const double D = ws.alpha[I];
 				ws.alphaR[I] += lambda * ((std::fabs(D) > 1e-12) ? D : 1.0); // évite "λ * 0"
 			}
-			matrix::InverseGaussJordan(ws.alphaR, ws.alphaRi, nParams_); // Inversion (Gauss-Jordan)
+
+			// scaling colonne (Marquardt "scaled")
+			for (size_t j = 0; j < nParams_; ++j) { ws.sCol[j] = 1.0 / std::max(std::sqrt(std::abs(ws.alphaR[j * nParams_ + j])), 1e-12); }
+
+			//αS = S * αR * S
+			for (size_t i = 0; i < nParams_; ++i) {
+				for (size_t j = 0; j < nParams_; ++j) { ws.alphaS[i * nParams_ + j] = ws.sCol[i] * ws.alphaR[i * nParams_ + j] * ws.sCol[j]; }
+			}
+
+			//βS = S * β
+			for (size_t j = 0; j < nParams_; ++j) { ws.betaS[j] = ws.sCol[j] * ws.beta[j]; }
+			matrix::InverseGaussJordan(ws.alphaS, ws.alphaSi, nParams_); // Inversion (Gauss-Jordan)
 
 			// Calcul du candidat (p + δp)
 			std::ranges::fill(ws.deltaP, 0.0);
 			for (size_t i = 0; i < nParams_; ++i) {
-				for (size_t j = 0; j < nParams_; ++j) { ws.deltaP[i] += ws.alphaRi[i * nParams_ + j] * ws.beta[j]; } // δP = αRi * β
-				ws.p_try[i] = std::clamp(ws.p[1][i] + ws.deltaP[i], ws.p[0][i], ws.p[2][i]);                         // p_try = clamp(p + δP)
+				for (size_t j = 0; j < nParams_; ++j) { ws.deltaP[i] += ws.alphaSi[i * nParams_ + j] * ws.betaS[j]; } // δP = αSi * βS
+				ws.deltaP[i] *= ws.sCol[i];
+				if (i == 2 || i == 3) { ws.deltaP[i] = std::clamp(ws.deltaP[i], -jumpXY_, jumpXY_); }
+				else if (i == 4) { ws.deltaP[i] = std::clamp(ws.deltaP[i], -jumpZ_, jumpZ_); }
+				else if (i == 1) {
+					const double Jump = 0.5 * std::max(ws.p[1][1], ws.Imin); // pas max = ±50% de I (ou du plancher)
+					ws.deltaP[i]      = std::clamp(ws.deltaP[i], -Jump, Jump);
+				}
+				ws.p_try[i] = std::clamp(ws.p[1][i] + ws.deltaP[i], ws.p[0][i], ws.p[2][i]); // p_try = clamp(p + δP)
 			}
 
 			// Les splines partent vite, donc on prend le pas réel final (après clamp du p_try).
@@ -161,8 +187,8 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 				continue;                                       // On repart au début de la boucle
 			}
 
-			// m = δPᵀ * (λ δP + β)
-			for (size_t i = 0; i < nParams_; ++i) { ws.lBetaDeltaP[i] = lambda * ws.deltaP[i] + ws.beta[i]; }
+			// m = δPᵀ * (λ diag(α) δP + β) (diag(α)^pour retourner dnas l'échelle courante)
+			for (size_t i = 0; i < nParams_; ++i) { ws.lBetaDeltaP[i] = lambda * ws.alpha[i * nParams_ + i] * ws.deltaP[i] + ws.beta[i]; }
 			m = std::inner_product(ws.deltaP.begin(), ws.deltaP.end(), ws.lBetaDeltaP.begin(), 0.0);
 
 			// Calcul des nouvelles valeurs : évalue image + lm pour p_try
@@ -271,6 +297,7 @@ void SplineFit::delta3D(LM_Workspace& ws, const std::vector<double>& p) const
 //-------------------------------------------------------------------------------------------------
 double SplineFit::lm(LM_Workspace& ws) const
 {
+	computeCoeffRatio(ws);
 	std::ranges::fill(ws.alpha, 0.0);
 	std::ranges::fill(ws.beta, 0.0);
 	double err = 0.0;
@@ -279,11 +306,16 @@ double SplineFit::lm(LM_Workspace& ws) const
 	// On se base sur les décimales donc f et df mis à jour ici ne changent pas pour toute la ROI
 	// (ça à l'air d'etre une sorte de "poids" pour chacun des 64 coeffs)
 
-	Vec3I pos{.x = 0, .y = 0, .z = static_cast<size_t>(ws.p[1][4])};
+	// Parties entières pour l’ancrage du patch
+	const int Xi = static_cast<int>(std::floor(-1.0 * (ws.p[1][2] - static_cast<double>(roiHalf_) + 0.5))) + static_cast<int>(splineOffset_),
+	          Yi = static_cast<int>(std::floor(-1.0 * (ws.p[1][3] - static_cast<double>(roiHalf_) + 0.5))) + static_cast<int>(splineOffset_),
+	          Zi = static_cast<int>(std::floor(ws.p[1][4]));
+
 	for (size_t y = 0, idx = 0; y < roi_; ++y) {
-		pos.y = static_cast<int>(y) + static_cast<int>(splineOffset_);
+		const int Py = static_cast<int>(y) + Yi;
 		for (size_t x = 0; x < roi_; ++x, ++idx) {
-			pos.x          = static_cast<int>(x) + static_cast<int>(splineOffset_);
+			const int Px   = static_cast<int>(x) + Xi;
+			Vec3I pos      = Vec3I::IntToVec(Px, Py, Zi, splineDim_ - 1);
 			ws.hat[idx]    = psf(ws, ws.p[1], pos);          // PSF théorique au pixel (x, y) selon les paramètres p
 			ws.delta[idx]  = ws.grid[idx].v - ws.hat[idx];   // Résidu (∂) = mesure - prédiction
 			ws.deltaW[idx] = ws.weight[idx] * ws.delta[idx]; // Résidu pondéré (W * ∂)
@@ -327,15 +359,18 @@ void SplineFit::deriv(LM_Workspace& ws, Vec3I& pos) const
 
 	for (size_t i = 0; i < SPLINE_PATCH_SIZE; ++i) {
 		const size_t Id = i * splineSize_ + Pos;
-		ws.grad[1] += ws.f[i] * coeffs_[Id];     // Contribution à l’intensité.
-		ws.grad[2] += ws.df[0][i] * coeffs_[Id]; // Dérivée en x.
-		ws.grad[3] += ws.df[1][i] * coeffs_[Id]; // Dérivée en y.
-		ws.grad[4] += ws.df[2][i] * coeffs_[Id]; // Dérivée en z.
+		const double C  = coeffs_[Id] * ws.coeffRatio; // <<< normalisation pour ∂s/∂*
+		ws.grad[1] += ws.f[i] * C;                     // Contribution à l’intensité.
+		ws.grad[2] += ws.df[0][i] * C;                 // Dérivée en x.
+		ws.grad[3] += ws.df[1][i] * C;                 // Dérivée en y.
+		ws.grad[4] += ws.df[2][i] * C;                 // Dérivée en z.
 	}
-	ws.grad[0] = 1;                // Dérivée par rapport à l’offset
-	ws.grad[2] *= -1 * ws.p[1][1]; // Ajustement en x.
-	ws.grad[3] *= -1 * ws.p[1][1]; // Ajustement en y.
-	ws.grad[4] *= ws.p[1][1];      // Ajustement en z.
+
+	const double I = std::max(ws.p[1][1], ws.Imin); // vraiment utile ? je crois que les différents clamps précédents devraient gérer ça
+	ws.grad[0]     = 1;                             // Dérivée par rapport à l’offset
+	ws.grad[2] *= -1 * I;                           // Ajustement en x.
+	ws.grad[3] *= -1 * I;                           // Ajustement en y.
+	ws.grad[4] *= -1 * I;                           // Ajustement en z. (TODO vérifier correction +1 → -1 ?)
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -344,7 +379,7 @@ double SplineFit::psf(const LM_Workspace& ws, const std::vector<double>& p, cons
 	const size_t Pos = pos.Clamp(splineDim_ - 1).GetIndex(splineDim_);
 	double s         = 0.0;
 	for (size_t i = 0; i < SPLINE_PATCH_SIZE; ++i) { s += ws.f[i] * coeffs_[i * splineSize_ + Pos]; }
-	return p[0] + p[1] * s;
+	return p[0] + p[1] * s * ws.coeffRatio; // <<< normalisation avec ws.coeffRatio
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -352,15 +387,57 @@ double SplineFit::getErr(LM_Workspace& ws) const
 {
 	double res = 0.0;
 	delta3D(ws, ws.p_try); // Mise à jour des contributions d'une base de fonctions splines 3D (valeurs et dérivées).
-	Vec3I pos{.x = 0, .y = 0, .z = static_cast<size_t>(ws.p_try[4])};
+
+	// Parties entières pour l’ancrage du patch
+	const int Xi = static_cast<int>(std::floor(-1.0 * (ws.p_try[2] - static_cast<double>(roiHalf_) + 0.5))) + static_cast<int>(splineOffset_),
+	          Yi = static_cast<int>(std::floor(-1.0 * (ws.p_try[3] - static_cast<double>(roiHalf_) + 0.5))) + static_cast<int>(splineOffset_),
+	          Zi = static_cast<int>(std::floor(ws.p_try[4]));
+
 	for (size_t y = 0, idx = 0; y < roi_; ++y) {
-		pos.y = static_cast<int>(y) + static_cast<int>(splineOffset_);
+		const int Py = static_cast<int>(y) + Yi;
 		for (size_t x = 0; x < roi_; ++x, ++idx) {
-			pos.x           = static_cast<int>(x) + static_cast<int>(splineOffset_);
-			const double Dx = ws.grid[idx].v - psf(ws, ws.p_try, pos); // PSF théorique au pixel (x, y) selon les paramètres p
+			const int Px    = static_cast<int>(x) + Xi;
+			const Vec3I Pos = Vec3I::IntToVec(Px, Py, Zi, splineDim_ - 1);
+			const double Dx = ws.grid[idx].v - psf(ws, ws.p_try, Pos); // PSF théorique au pixel (x, y) selon les paramètres p
 			res += ws.weight[idx] * Dx * Dx;
 		}
 	}
 	return res;
+}
+
+//-------------------------------------------------------------------------------------------------
+void SplineFit::computeCoeffRatio(LM_Workspace& ws) const
+{
+	// --- Centre de cellule: fractions (0.5, 0.5, 0.5) ---
+	// On fabrique un jeu de paramètres "pc" qui place la fraction au centre de cellule de la ROI.
+	std::vector<double> pc = ws.p[1];
+	pc[2]                  = static_cast<double>(roiHalf_) - 0.5; // Xc = 0.5 dans la cellule
+	pc[3]                  = static_cast<double>(roiHalf_) - 0.5; // Yc = 0.5
+	pc[4]                  = std::floor(ws.p[1][4]) + 0.5;        // Zc = 0.5
+
+	// Sauvegarde f / df (on ne veut PAS polluer ws pour la suite du LM)
+	const auto FSave  = ws.f;
+	const auto DfSave = ws.df;
+
+	// Met à jour f au centre (0.5,0.5,0.5)
+	delta3D(ws, pc);
+
+	// Cellule centrale (incluant l’ancrage entier Xi, Yi du patch courant)
+	const int Xi = static_cast<int>(std::floor(-1.0 * (ws.p[1][2] - static_cast<double>(roiHalf_) + 0.5))) + static_cast<int>(splineOffset_);
+	const int Yi = static_cast<int>(std::floor(-1.0 * (ws.p[1][3] - static_cast<double>(roiHalf_) + 0.5))) + static_cast<int>(splineOffset_);
+	const int Zi = static_cast<int>(std::floor(ws.p[1][4]));
+
+	const size_t Pos = Vec3I::IntToVec(Xi, Yi, Zi, splineDim_ - 1).GetIndex(splineDim_);
+
+	// Somme pondérée au centre de cellule
+	double s0 = 0.0;
+	for (size_t i = 0; i < SPLINE_PATCH_SIZE; ++i) { s0 += ws.f[i] * coeffs_[i * splineSize_ + Pos]; }
+
+	// Restaure f / df
+	ws.f  = FSave;
+	ws.df = DfSave;
+
+	if (std::fabs(s0) < 1e-12) { ws.coeffRatio = 1.0; } // pas de normalisation si dégénéré
+	else { ws.coeffRatio = 1.0 / s0; }                  // on conserve le signe (PSF physique positive => s0 devrait être >0)
 }
 } // namespace palm_tracer

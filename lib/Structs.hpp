@@ -103,6 +103,15 @@ struct Vec3I {
 		return {.x = std::clamp<size_t>(x, 0, other.x), .y = std::clamp<size_t>(y, 0, other.y), .z = std::clamp<size_t>(z, 0, other.z)};
 	}
 
+	[[nodiscard]] static Vec3I IntToVec(const int x, const int y, const int z, const Vec3I& other)
+	{
+		return {
+			.x = static_cast<size_t>(std::clamp<int>(x, 0, static_cast<int>(other.x))),
+			.y = static_cast<size_t>(std::clamp<int>(y, 0, static_cast<int>(other.y))),
+			.z = static_cast<size_t>(std::clamp<int>(z, 0, static_cast<int>(other.z))),
+		};
+	}
+
 	// Surcharges arithmétiques avec un autre Vec3I
 	Vec3I operator+(const Vec3I& other) const { return {.x = x + other.x, .y = y + other.y, .z = z + other.z}; }
 	Vec3I operator-(const Vec3I& other) const { return {.x = x - other.x, .y = y - other.y, .z = z - other.z}; }
