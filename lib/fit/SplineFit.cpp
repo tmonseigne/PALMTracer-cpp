@@ -189,7 +189,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			//--------------------------------------------------------------------------------------------------------------------------------------------
 			std::cout << "\tPoint (" << ws.p[1][2] << ", " << ws.p[1][3] << ", " << ws.p[1][4]
 				<< ")\n\t\t Iteration " << iteration << "\t err = " << err << "\t err_try = " << Err_Try << "\t m = " << m
-				<< "\t Rho = " << Rho << "\t lambda = " << lambda << "\n";
+				<< "\t Rho = " << Rho << "\t lambda = " << lambda << "\t coeffRatio = " << ws.coeffRatio << "\n";
 			//--------------------------------------------------------------------------------------------------------------------------------------------
 
 			if (err < Err_Try) { // REJET inconditionnel si l’erreur augmente (ou stagne)
@@ -416,19 +416,12 @@ double SplineFit::getErr(LM_Workspace& ws) const
 //-------------------------------------------------------------------------------------------------
 void SplineFit::computeCoeffRatio(LM_Workspace& ws, const std::vector<double>& p) const
 {
-	// --- Centre de cellule: fractions (0.5, 0.5, 0.5) ---
-	// On fabrique un jeu de paramètres "pc" qui place la fraction au centre de cellule de la ROI.
-	std::vector<double> pc = p;
-	pc[2]                  = static_cast<double>(roiHalf_) - 0.5; // Xc = 0.5 dans la cellule
-	pc[3]                  = static_cast<double>(roiHalf_) - 0.5; // Yc = 0.5
-	pc[4]                  = std::floor(p[4]) + 0.5;              // Zc = 0.5
-
 	// Sauvegarde f / df (on ne veut PAS polluer ws pour la suite du LM)
 	const auto FSave  = ws.f;
 	const auto DfSave = ws.df;
 
 	// Met à jour f au centre (0.5,0.5,0.5)
-	delta3D(ws, pc);
+	delta3D(ws, p);
 
 	// Cellule centrale (incluant l’ancrage entier Xi, Yi du patch courant)
 	const int Xi = static_cast<int>(std::floor(-1.0 * (p[2] - static_cast<double>(roiHalf_) + 0.5))) + static_cast<int>(splineOffset_);
@@ -438,14 +431,29 @@ void SplineFit::computeCoeffRatio(LM_Workspace& ws, const std::vector<double>& p
 	const size_t Pos = Vec3I::IntToVec(Xi, Yi, Zi, splineDim_ - 1).GetIndex(splineDim_);
 
 	// Somme pondérée au centre de cellule
-	double s0 = 0.0;
-	for (size_t i = 0; i < SPLINE_PATCH_SIZE; ++i) { s0 += ws.f[i] * coeffs_[i * splineSize_ + Pos]; }
+	double s0 = 0.0, sL1 = 0.0;
+	for (size_t i = 0; i < SPLINE_PATCH_SIZE; ++i) {
+		const double C = coeffs_[i * splineSize_ + Pos],
+		             W = ws.f[i]; // ≥ 0, et Σw = 1
+		s0 += ws.f[i] * C;
+		sL1 += W * std::abs(C);
+	}
 
 	// Restaure f / df
 	ws.f  = FSave;
 	ws.df = DfSave;
 
-	if (std::fabs(s0) < 1e-12) { ws.coeffRatio = 1.0; } // pas de normalisation si dégénéré
-	else { ws.coeffRatio = 1.0 / s0; }                  // on conserve le signe (PSF physique positive => s0 devrait être >0)
+	// Garde-fou : impose un |s0| minimal relatif à sL1
+	// (évite 1/0 et les ratios de plusieurs ordres de grandeur)
+	const double MinAbs = std::max(1e-3 * sL1, 1e-12); // seuil relatif + absolu
+	if (std::abs(s0) < MinAbs) { s0 = (s0 >= 0.0 ? MinAbs : -MinAbs); }
+
+	// Ratio borné
+	double ratio      = 1.0 / s0;
+	const double RMAX = 1e3; // à ajuster si besoin
+	if (ratio > RMAX) ratio = RMAX;
+	if (ratio < -RMAX) ratio = -RMAX;
+
+	ws.coeffRatio = ratio;
 }
 } // namespace palm_tracer
