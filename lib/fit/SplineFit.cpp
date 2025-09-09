@@ -128,7 +128,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 
 		for (size_t iteration = ((m < EPSILON_1) ? N_ITER : 0); iteration < N_ITER; ++iteration) { // Main Loop
 			//--------------------------------------------------------------------------------------------------------------------------------------------
-			std::cout << "\t Iteration " << iteration << "\t lambda = " << lambda << "\n";
+			std::cout << "\n--------------------------------------------------\n\t Iteration " << iteration << "\t lambda = " << lambda << "\n";
 			//--------------------------------------------------------------------------------------------------------------------------------------------
 
 			// Calcul de l'inverse de la matrice de courbure α
@@ -194,9 +194,30 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 				<< "\t Rho = " << Rho << "\t lambda = " << lambda << "\t coeffRatio = " << ws.coeffRatio << "\n";
 			//--------------------------------------------------------------------------------------------------------------------------------------------
 
-			if (err < Err_Try) { // REJET inconditionnel si l’erreur augmente (ou stagne)
-				if (lambda >= LAMBDA_MAX) { break; }
-				lambda = std::min(lambda * (clamped ? LAMBDA_UP * std::sqrt(LAMBDA_UP) : LAMBDA_UP), LAMBDA_MAX);
+			if (err < Err_Try) {
+				bool took_ls = false;
+				for (const double Tau : {0.5, 0.25}) {
+					auto p_ls = ws.p[1];
+					for (size_t i = 0; i < nParams_; ++i) {
+						// pas le re-clamp par composante : on réduit le pas déjà clampé
+						p_ls[i]        = std::clamp(ws.p[1][i] + Tau * ws.deltaP[i], ws.p[0][i], ws.p[2][i]);
+					}
+					const auto P_try_save = ws.p_try;
+					ws.p_try              = p_ls;
+					const double Err_ls   = getErr(ws); // NB: computeCoeffRatio est figé → cohérent
+					ws.p_try              = P_try_save;
+
+					if (Err_ls < err) {
+						// on accepte ce demi-pas et on reste prudent sur λ
+						ws.p[1] = p_ls;
+						err     = lm(ws);
+						lambda  = std::max(lambda / std::sqrt(LAMBDA_DN), LAMBDA_MIN);
+						took_ls = true;
+						break;
+					}
+				}
+				// ton comportement actuel
+				if (!took_ls) { lambda = std::min(lambda * (clamped ? LAMBDA_UP * std::sqrt(LAMBDA_UP) : LAMBDA_UP), LAMBDA_MAX); }
 				continue;
 			}
 
