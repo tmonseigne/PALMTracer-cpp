@@ -108,6 +108,8 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		ws.p[2][4] = static_cast<double>(splineDim_.z);                                                        // Z ∈ [0, Zmax] en index de plan (flottant)
 		for (size_t i = 0; i < nParams_; ++i) { ws.p[1][i] = std::clamp(ws.p[1][i], ws.p[0][i], ws.p[2][i]); } // Clamp en cas de problème.
 
+		computeCoeffRatio(ws, ws.p[1]);
+
 		// Première itération de Levenberg-Marquardt
 		double err     = lm(ws);
 		double err_old = err;
@@ -304,7 +306,6 @@ void SplineFit::delta3D(LM_Workspace& ws, const std::vector<double>& p) const
 //-------------------------------------------------------------------------------------------------
 double SplineFit::lm(LM_Workspace& ws) const
 {
-	computeCoeffRatio(ws, ws.p[1]);
 	std::ranges::fill(ws.alpha, 0.0);
 	std::ranges::fill(ws.beta, 0.0);
 	double err = 0.0;
@@ -393,7 +394,6 @@ double SplineFit::psf(const LM_Workspace& ws, const std::vector<double>& p, cons
 double SplineFit::getErr(LM_Workspace& ws) const
 {
 	double res = 0.0;
-	computeCoeffRatio(ws, ws.p_try);
 	delta3D(ws, ws.p_try); // Mise à jour des contributions d'une base de fonctions splines 3D (valeurs et dérivées).
 
 	// Parties entières pour l’ancrage du patch
@@ -443,16 +443,16 @@ void SplineFit::computeCoeffRatio(LM_Workspace& ws, const std::vector<double>& p
 	ws.f  = FSave;
 	ws.df = DfSave;
 
-	// Garde-fou : impose un |s0| minimal relatif à sL1
-	// (évite 1/0 et les ratios de plusieurs ordres de grandeur)
-	const double MinAbs = std::max(1e-3 * sL1, 1e-12); // seuil relatif + absolu
-	if (std::abs(s0) < MinAbs) { s0 = (s0 >= 0.0 ? MinAbs : -MinAbs); }
+	// Garde-fou : impose un |s0| minimal relatif
+	const double MinAbs = std::max(1e-3 * sL1, 1e-12);
 
-	// Ratio borné
-	double ratio      = 1.0 / s0;
-	const double RMAX = 1e3; // à ajuster si besoin
-	if (ratio > RMAX) ratio = RMAX;
-	if (ratio < -RMAX) ratio = -RMAX;
+	// >>> toujours POSITIF
+	s0 = std::max(std::abs(s0), MinAbs);
+
+	// Ratio borné, POSITIF
+	double ratio          = 1.0 / s0;
+	constexpr double Rmax = 1e2; // 1e2 (plus doux que 1e3)
+	if (ratio > Rmax) { ratio = Rmax; }
 
 	ws.coeffRatio = ratio;
 }
