@@ -21,7 +21,7 @@ double PSF(const double offset, const double i0, const double x, const double y,
 }
 
 //-------------------------------------------------------------------------------------------------
-void Deriv(double* out, const double i0, const double x, const double y, const double sigma, const bool has_sigma)
+void Deriv(std::vector<double>& out, const double i0, const double x, const double y, const double sigma, const bool has_sigma)
 {
 	const auto X_2 = x * x, Y_2 = y * y, Sigma_2 = sigma * sigma;
 	const auto Exp = exp(-(X_2 + Y_2) / (2 * Sigma_2));
@@ -35,7 +35,7 @@ void Deriv(double* out, const double i0, const double x, const double y, const d
 }
 
 //-------------------------------------------------------------------------------------------------
-void Deriv(double* out, const double i0, const double x, const double y, const double sigmaX, const double sigmaY,
+void Deriv(std::vector<double>& out, const double i0, const double x, const double y, const double sigmaX, const double sigmaY,
            const double theta, const bool has_theta)
 {
 	// Calculs préliminaires
