@@ -315,7 +315,7 @@ TEST(SplineTests, SoftNormalization)
 	const auto BeadsStack = spline.ExtractBeads(input.data(), Beads);
 	const auto BeadsNorm  = spline.SoftNormalization(BeadsStack);
 	// Affichage pour vérification
-	//matrix::Print(BeadsNorm[0], spline.beadDim_);
+	//matrix::PrintVolume(BeadsNorm[0], spline.beadDim_);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -339,7 +339,7 @@ TEST(SplineTests, GetPSFMinimal)
 	std::iota(beads[2].begin(), beads[2].end(), 1.0);
 	beads[2][8]  = std::numeric_limits<double>::quiet_NaN();
 	beads[2][73] = std::numeric_limits<double>::quiet_NaN();
-	//matrix::Print(beads[2], Dim);
+	//matrix::PrintVolume(beads[2], Dim);
 
 	spline.SetMembers(Dim, 7, DISTANCE, DZ);
 	// changement des smallBeadSize pour avoir un equivalent
@@ -374,7 +374,7 @@ TEST(SplineTests, GetPSF)
 	spline.SetMembers(dim, ROI, DISTANCE, DZ);
 	auto beads     = spline.ExtractBeads(input.data(), Beads);
 	const auto PSF = spline.GetPSF(beads);
-	//matrix::Print(PSF, spline.beadDim_);	// Affichage pour vérification
+	//matrix::PrintVolume(PSF, spline.beadDim_);	// Affichage pour vérification
 	std::cerr << "[WARNING] Ce test utilise une matrice non linéaire, ce qui produit une interpolation différente dans MATLAB. Mais le résultat semble cohérent.\n";
 	SUCCEED();
 }

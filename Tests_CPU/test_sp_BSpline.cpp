@@ -30,11 +30,11 @@ TEST(BSpline3DTests, DiracImpulse)
 	const BSpline3D Bspline(volume, Dim, Degree, Lambda);
 
 	//std::cout << Bspline.dimPadded_ << "\n";
-	//matrix::Print(Bspline.coeffsPadded_, Bspline.dimPadded_);
+	//matrix::PrintVolume(Bspline.coeffsPadded_, Bspline.dimPadded_);
 	//std::cout << Bspline.dim_ << "\n";
-	//matrix::Print(Bspline.coeffsHDR_, Bspline.dim_);
+	//matrix::PrintVolume(Bspline.coeffsHDR_, Bspline.dim_);
 	//std::cout << Bspline.dimFinal_ << "\n";
-	//matrix::Print(Bspline.coeffsFinal_, Bspline.dimFinal_);
+	//matrix::PrintVolume(Bspline.coeffsFinal_, Bspline.dimFinal_);
 	//size_t idx = 0;
 	//for (size_t i = 0; i < Bspline.dimFinal_.GetSize(); ++i) {
 	//	for (size_t j = 0; j < 64; ++j, ++idx) { std::cout << Bspline.coeffsFinal_[idx] << ", "; }

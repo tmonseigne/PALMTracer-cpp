@@ -28,7 +28,18 @@ namespace palm_tracer::matrix {
 /// <param name="data">Vecteur de données 1D (flattened) représentant un volume 3D.</param>
 /// <param name="dim">Dimensions du volume (x, y, z).</param>
 /// <remarks>Les valeurs sont affichées plan par plan avec une mise en forme tabulaire.</remarks>
-void Print(const std::vector<double>& data, const Vec3I& dim);
+void PrintVolume(const std::vector<double>& data, const Vec3I& dim);
+
+/// <summary>Affiche le contenu d’une matrice 2D (stocké en 1D) dans la console.
+/// Format lisible avec délimitation par lignes et colonnes.</summary>
+/// <param name="data">Vecteur de données 1D (flattened) représentant une matrice 2D.</param>
+/// <param name="row">Nombre de lignes de la matrice.</param>
+/// <param name="col">Nombre de colonnes de la matrice.</param>
+void PrintMatrix(const std::vector<double>& data, size_t row, size_t col);
+
+/// <summary>Affiche le contenu d’un vecteur. </summary>
+/// <param name="data">Vecteur de données 1D.</param>
+void PrintVector(const std::vector<double>& data);
 
 //========================================================
 //==================== Basic Computes ====================

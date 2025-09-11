@@ -15,18 +15,37 @@ namespace palm_tracer::matrix {
 //=============================================
 
 //-------------------------------------------------------------------------------------------------
-void Print(const std::vector<double>& data, const Vec3I& dim)
+void PrintVolume(const std::vector<double>& data, const Vec3I& dim)
 {
-	size_t idx = 0;
+	size_t i = 0;
 	for (size_t z = 0; z < dim.z; ++z) {
 		std::cout << "Plane " << z + 1 << " :\n";
 		for (size_t y = 0; y < dim.y; ++y) {
 			std::cout << "|\t";
-			for (size_t x = 0; x < dim.x; ++x, ++idx) { std::cout << data[idx] << "\t|\t"; }
+			for (size_t x = 0; x < dim.x; ++x, ++i) { std::cout << data[i] << "\t|\t"; }
 			std::cout << "\n";
 		}
 		std::cout << "\n\n";
 	}
+}
+
+//-------------------------------------------------------------------------------------------------
+void PrintMatrix(const std::vector<double>& data, const size_t row, const size_t col)
+{
+	size_t i = 0;
+	for (size_t r = 0; r < row; ++r) {
+		std::cout << "\t|";
+		for (size_t c = 0; c < col; ++c, ++i) { std::cout << data[i] << " | "; }
+		std::cout << "\n";
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+void PrintVector(const std::vector<double>& data)
+{
+	std::cout << "\t[";
+	for (const auto D : data) { std::cout << D << " "; }
+	std::cout << "]";
 }
 
 //========================================================

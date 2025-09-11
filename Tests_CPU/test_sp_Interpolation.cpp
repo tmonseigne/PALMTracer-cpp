@@ -132,7 +132,7 @@ TEST(InterpolationTests, InterpolateShifted)
 	// Volume : avec un Pic dans un coin
 	std::vector volume(N, 0.0);
 	volume[Dim.GetPlaneSize() + Dim.x + 1] = 1.0;
-	//matrix::Print(volume, Dim);
+	//matrix::PrintVolume(volume, Dim);
 
 	Vec3I newSize{};
 	const std::vector<double> MatlabRefLinear = {
@@ -316,7 +316,7 @@ TEST(InterpolationTests, InterpolateShifted)
 		for (const auto C : CROPS) {
 			const Interpolation3D Interp(M, C);
 			const auto Hd = Interp.Zoom(volume, Dim, 1, newSize);
-			//if (static_cast<int>(M) == 2) { matrix::Print(Hd, newSize); }
+			//if (static_cast<int>(M) == 2) { matrix::PrintVolume(Hd, newSize); }
 			rms[0] = matrix::RmsDifference(Hd, MatlabRefLinear);
 			rms[1] = matrix::RmsDifference(Hd, MatlabRefCubic);
 			rms[2] = matrix::RmsDifference(Hd, MatlabRefSpline);
@@ -393,7 +393,7 @@ TEST(InterpolationTests, Upsample)
 
 	const auto Up = Interp.Upsample(volume, Size, 3, newSize);
 	std::cout << "New Size : " << newSize << "\n";
-	//matrix::Print(Up, newSize);
+	//matrix::PrintVolume(Up, newSize);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -417,10 +417,10 @@ TEST(InterpolationTests, NonLinearMatrix)
 			const auto Zoomed = Interp.Zoom(Volume, Size, 1, newSize);
 			//std::cout << "==================================================\n";
 			//std::cout << "Mode " << static_cast<int>(M) << ", Crop " << C << "\n";
-			//matrix::Print(Zoomed, newSize);
+			//matrix::PrintVolume(Zoomed, newSize);
 			//constexpr Vec3D Shift = {.x = 0.15, .y = 0.25, .z = 0.5};
 			//const auto Shifted   = Interp.Shift(Volume, Size, Shift);
-			//matrix::Print(Shifted, Size);
+			//matrix::PrintVolume(Shifted, Size);
 		}
 	}
 }
