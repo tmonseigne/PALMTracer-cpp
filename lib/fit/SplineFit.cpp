@@ -5,6 +5,7 @@
 #include <cmath>
 #include <complex>
 #include <execution>
+#include <iomanip>
 #include <limits>
 #include <ranges>
 #include <vector>
@@ -83,10 +84,24 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		for (size_t i = 0; i < nParams_; ++i) { p[1][i] = std::clamp(p[1][i], p[0][i], p[2][i]); } // Clamp en cas de problème.
 		jump = {std::max(20.0, p[1][1]), std::max(100.0, p[1][1]), 1.0, 1.0, std::max(static_cast<double>(splineDim_.z) / 3.0, 2.0)};
 
+		//--------------------------------------------------------------------------------------------------------------------------------------------
+		std::cout << std::setprecision(6) << std::fixed;
+		std::cout << "\t [min .. val .. max]\n";
+		constexpr std::array PName{"B", "I", "X", "Y", "Z"};
+		for (size_t i = 0; i < nParams_; ++i) { std::cout << "\t" << PName[i] << "= [" << p[0][i] << " .. " << p[1][i] << " .. " << p[2][i] << "]\n"; }
+		std::cout << "Jump";
+		matrix::PrintVector(jump);
+		std::cout << "\n";
+		//--------------------------------------------------------------------------------------------------------------------------------------------
+
 		bool stop        = false;
 		size_t iteration = 0;
 		while (!stop) { // Main Loop
 			iteration++;
+			//--------------------------------------------------------------------------------------------------------------------------------------------
+			std::cout << "\n--------------------------------------------------\n\t Iteration " << iteration << "\n";
+			//--------------------------------------------------------------------------------------------------------------------------------------------
+
 			//----- Conservation des anciennes valeurs de l'erreur, du point, de l'update, et du lambda -----
 			const double OldErr                 = err;
 			const std::vector<double> OldP      = p[1];
@@ -126,6 +141,18 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			// Mise à jour de la matrice Hessian
 			for (size_t i = 0; i < nParams_; ++i) { hessian[i * nParams_ + i] = hessian[i * nParams_ + i] * mu; }
 
+			//--------------------------------------------------------------------------------------------------------------------------------------------
+			std::cout << "\tJacobian :";
+			matrix::PrintVector(jacobian);
+			std::cout << "\n";
+			std::cout << "\tHessian :\n";
+			matrix::PrintMatrix(hessian, nParams_, nParams_);
+			std::cout << "\n";
+
+			std::cout << "\tPoint (" << p[1][2] << ", " << p[1][3] << ", " << p[1][4]
+				<< ")\n\terr = " << err << "\t lambda = " << lambda << "\t model = " << model << "\n";
+			//--------------------------------------------------------------------------------------------------------------------------------------------
+
 			//----- Changements de P, mu, lambda -----
 			if (matrix::Cholesky(hessian, nParams_, l, u)) { // Si la Factorisation de Cholesky a réussi
 				// Calcul du vecteur de mise à jour
@@ -146,6 +173,16 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 					updateMuLambda(mu, lambda, true);
 				}
 				else { updateMuLambda(mu, lambda, false); } // sinon réduction
+				std::cout << "\t\tAfter Update lambda = " << lambda << "\t mu = " << mu << "\n";
+				std::cout << "\t\tL :\n";
+				matrix::PrintMatrix(l, nParams_, nParams_);
+				std::cout << "\n";
+				std::cout << "\t\tU :\n";
+				matrix::PrintMatrix(l, nParams_, nParams_);
+				std::cout << "\n";
+				std::cout << "\t\tUpdate :";
+				matrix::PrintVector(update);
+				std::cout << "\n";
 			}
 			else { // restauration des valeurs et Augmentation du lambda si la factorisation a échoué
 				err    = OldErr;
