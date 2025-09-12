@@ -31,6 +31,7 @@ static double SqrtReal(const double value)
 	return std::real(std::sqrt(Z));
 }
 
+//==================== Common Functions ====================
 //-------------------------------------------------------------------------------------------------
 void SplineFit::parseParams()
 {
@@ -63,34 +64,30 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 	const auto Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
 	if (roiHalf_ <= Ux && Ux < dim_.x - roiHalf_ && roiHalf_ <= Uy && Uy < dim_.y - roiHalf_) {
 		// Création des variables
-		double lambda = LAMBDA_0, minI = 0, maxI = 0, model = 0, err = std::numeric_limits<double>::max(), mu = 1 + lambda;
-		std::vector<double> hessian(nParams2_), l(nParams2_), u(nParams2_),
-		                    dudt(nParams_), jacobian(nParams_), jump(nParams_), update(nParams_),
-		                    f(SPLINE_PATCH_SIZE);
-		std::array df{std::vector<double>(SPLINE_PATCH_SIZE), std::vector<double>(SPLINE_PATCH_SIZE), std::vector<double>(SPLINE_PATCH_SIZE)};
-		std::vector<Pixel> grid(n_);
-		std::array<std::vector<double>, 3> p;
+		double minI = 0, maxI = 0;
+		MLE_Workspace ws;
+		ws.Resize(n_, nParams_, nParams2_);
 
 		// Initialization of data & t (A vérifier)
-		preCompute(Ux, Uy, grid, minI, maxI);
+		preCompute(Ux, Uy, ws.grid, minI, maxI);
 
 		// Initialisation du/des P :
 		// - Calcul du centre de masse de la région pour x et y
-		matrix::CenterOfMass(grid, roi_, x, y);
+		matrix::CenterOfMass(ws.grid, roi_, x, y);
 
-		initP(p, x, y, z, minI, maxI);
-		p[1][1] *= intensityRatio_;                                                                // Change l'intensité pour la position actuelle.
-		p[2][4] = static_cast<double>(splineDim_.z);                                               // Change le maximum pour Z.
-		for (size_t i = 0; i < nParams_; ++i) { p[1][i] = std::clamp(p[1][i], p[0][i], p[2][i]); } // Clamp en cas de problème.
-		jump = {std::max(20.0, p[1][1]), std::max(100.0, p[1][1]), 1.0, 1.0, std::max(static_cast<double>(splineDim_.z) / 3.0, 2.0)};
+		initP(ws.p, x, y, z, minI, maxI);
+		ws.p[1][1] *= intensityRatio_;                                                                         // Change l'intensité pour la position actuelle.
+		ws.p[2][4] = static_cast<double>(splineDim_.z);                                                        // Change le maximum pour Z.
+		for (size_t i = 0; i < nParams_; ++i) { ws.p[1][i] = std::clamp(ws.p[1][i], ws.p[0][i], ws.p[2][i]); } // Clamp en cas de problème.
+		ws.jump = {std::max(20.0, ws.p[1][1]), std::max(100.0, ws.p[1][1]), 1.0, 1.0, std::max(static_cast<double>(splineDim_.z) / 3.0, 2.0)};
 
 		//--------------------------------------------------------------------------------------------------------------------------------------------
 		std::cout << std::setprecision(6) << std::fixed;
 		std::cout << "\t [min .. val .. max]\n";
 		constexpr std::array PName{"B", "I", "X", "Y", "Z"};
-		for (size_t i = 0; i < nParams_; ++i) { std::cout << "\t" << PName[i] << "= [" << p[0][i] << " .. " << p[1][i] << " .. " << p[2][i] << "]\n"; }
+		for (size_t i = 0; i < nParams_; ++i) { std::cout << "\t" << PName[i] << "= [" << ws.p[0][i] << " .. " << ws.p[1][i] << " .. " << ws.p[2][i] << "]\n"; }
 		std::cout << "Jump";
-		matrix::PrintVector(jump);
+		matrix::PrintVector(ws.jump);
 		std::cout << "\n";
 		//--------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -103,28 +100,31 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			//--------------------------------------------------------------------------------------------------------------------------------------------
 
 			//----- Conservation des anciennes valeurs de l'erreur, du point, de l'update, et du lambda -----
-			const double OldErr                 = err;
-			const std::vector<double> OldP      = p[1];
-			const std::vector<double> OldUpdate = update;
-			const double OldLambda              = lambda;
+			const double OldErr                 = ws.err;
+			const std::vector<double> OldP      = ws.p[1];
+			const std::vector<double> OldUpdate = ws.update;
+			const double OldLambda              = ws.lambda;
 			//----- Remise à zéro des vecteurs -----
-			std::ranges::fill(jacobian, 0.0);
-			std::ranges::fill(hessian, 0.0);
-			std::ranges::fill(update, 0.0);
-			std::ranges::fill(l, 0.0);
-			std::ranges::fill(u, 0.0);
+			std::ranges::fill(ws.jacobian, 0.0);
+			std::ranges::fill(ws.hessian, 0.0);
+			std::ranges::fill(ws.update, 0.0);
+			std::ranges::fill(ws.l, 0.0);
+			std::ranges::fill(ws.u, 0.0);
 
 			//----- Calculs -----
 			// Calcul du patch 3D de 4x4x4 (64) (SPLINE_PATCH_SIDE = 4, SPLINE_PATCH_SIZE = 64)
-			const double Xr = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
-			             Yr = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
+			const Vec3D PosR{
+				.x = -1 * (ws.p[1][2] - static_cast<double>(roiHalf_) + 0.5),
+				.y = -1 * (ws.p[1][3] - static_cast<double>(roiHalf_) + 0.5),
+				.z = ws.p[1][4]
+			};
 
-			const int Xi = static_cast<int>(std::floor(Xr)),
-			          Yi = static_cast<int>(std::floor(Yr)),
-			          Zi = static_cast<int>(std::floor(p[1][4]));
+			const int Xi = static_cast<int>(std::floor(PosR.x)),
+			          Yi = static_cast<int>(std::floor(PosR.y)),
+			          Zi = static_cast<int>(std::floor(PosR.z));
 
-			const double Xc = Xr - Xi, Yc = Yr - Yi, Zc = p[1][4] - Zi;
-			delta3D(Xc, Yc, Zc, f, df);
+			const Vec3D PosC{.x = PosR.x - Xi, .y = PosR.y - Yi, .z = PosR.z - Zi};
+			delta3D(PosC, ws);
 			// Calcul des dérivées et initialisation du model
 			// offset utile, car la ROI et les coeffs ont peut-être des tailles différentes donc on recentre sur X et sur Y
 			// Exemple : ROI de 7 splineX de 11 : La ROI 7x7 est centrée à partir du point 2 dans la spline
@@ -133,83 +133,86 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 				pos.x = Xi + i + splineOffset_;
 				for (size_t j = 0; j < roi_; ++j, ++idx) {
 					pos.y = Yi + j + splineOffset_;
-					derivativeSpline(pos, f, df, p[1], dudt, model);
-					updateJacobianHessian(grid[idx].v, model, err, jacobian, hessian, dudt);
+					derivativeSpline(pos, ws);
+					updateJacobianHessian(ws.grid[idx].v, ws);
 				}
 			}
 
 			// Mise à jour de la matrice Hessian
-			for (size_t i = 0; i < nParams_; ++i) { hessian[i * nParams_ + i] = hessian[i * nParams_ + i] * mu; }
+			for (size_t i = 0; i < nParams_; ++i) { ws.hessian[i * nParams_ + i] = ws.hessian[i * nParams_ + i] * ws.mu; }
 
 			//--------------------------------------------------------------------------------------------------------------------------------------------
 			std::cout << "\tJacobian :";
-			matrix::PrintVector(jacobian);
+			matrix::PrintVector(ws.jacobian);
 			std::cout << "\n";
 			std::cout << "\tHessian :\n";
-			matrix::PrintMatrix(hessian, nParams_, nParams_);
+			matrix::PrintMatrix(ws.hessian, nParams_, nParams_);
 			std::cout << "\n";
 
-			std::cout << "\tPoint (" << p[1][2] << ", " << p[1][3] << ", " << p[1][4]
-				<< ")\n\terr = " << err << "\t lambda = " << lambda << "\t model = " << model << "\n";
+			std::cout << "\tPoint (" << ws.p[1][2] << ", " << ws.p[1][3] << ", " << ws.p[1][4]
+				<< ")\n\terr = " << ws.err << "\t lambda = " << ws.lambda << "\t model = " << ws.model << "\n";
 			//--------------------------------------------------------------------------------------------------------------------------------------------
 
 			//----- Changements de P, mu, lambda -----
-			if (matrix::Cholesky(hessian, nParams_, l, u)) { // Si la Factorisation de Cholesky a réussi
+			if (matrix::Cholesky(ws.hessian, nParams_, ws.l, ws.u)) { // Si la Factorisation de Cholesky a réussi
 				// Calcul du vecteur de mise à jour
-				luEvaluate(l, u, jacobian, update);
+				luEvaluate(ws);
 				// Mise à jour de la matrice de saut, la matrice update et de P.
 				for (size_t i = 0; i < nParams_; ++i) {
-					if (std::abs(OldUpdate[i]) > EPSILON && update[i] / OldUpdate[i] < -0.5) { jump[i] *= 0.5; }
-					const double Scale = update[i] / (1.0 + std::abs(update[i]) / jump[i]); // Pas de division par une grandeur instable
-					p[1][i] -= Scale;
-					p[1][i]   = std::clamp(p[1][i], p[0][i], p[2][i]);
-					update[i] = Scale;
+					if (std::abs(OldUpdate[i]) > EPSILON && ws.update[i] / OldUpdate[i] < -0.5) { ws.jump[i] *= 0.5; }
+					const double Scale = ws.update[i] / (1.0 + std::abs(ws.update[i]) / ws.jump[i]); // Pas de division par une grandeur instable
+					ws.p[1][i] -= Scale;
+					ws.p[1][i]   = std::clamp(ws.p[1][i], ws.p[0][i], ws.p[2][i]);
+					ws.update[i] = Scale;
 				}
-				if (err > OldErr) { // si erreur plus importante, restauration des valeurs et augmentation du lambda
-					err    = OldErr;
-					p[1]   = OldP;
-					update = OldUpdate;
-					lambda = OldLambda;
-					updateMuLambda(mu, lambda, true);
+				if (ws.err > OldErr) { // si erreur plus importante, restauration des valeurs et augmentation du lambda
+					ws.err    = OldErr;
+					ws.p[1]   = OldP;
+					ws.update = OldUpdate;
+					ws.lambda = OldLambda;
+					updateMuLambda(ws, true);
 				}
-				else { updateMuLambda(mu, lambda, false); } // sinon réduction
-				std::cout << "\t\tAfter Update lambda = " << lambda << "\t mu = " << mu << "\n";
+				else { updateMuLambda(ws, false); } // sinon réduction
+				std::cout << "\t\tAfter Update lambda = " << ws.lambda << "\t mu = " << ws.mu << "\n";
 				std::cout << "\t\tL :\n";
-				matrix::PrintMatrix(l, nParams_, nParams_);
+				matrix::PrintMatrix(ws.l, nParams_, nParams_);
 				std::cout << "\n";
 				std::cout << "\t\tU :\n";
-				matrix::PrintMatrix(l, nParams_, nParams_);
+				matrix::PrintMatrix(ws.l, nParams_, nParams_);
 				std::cout << "\n";
 				std::cout << "\t\tUpdate :";
-				matrix::PrintVector(update);
+				matrix::PrintVector(ws.update);
 				std::cout << "\n";
 			}
 			else { // restauration des valeurs et Augmentation du lambda si la factorisation a échoué
-				err    = OldErr;
-				p[1]   = OldP;
-				update = OldUpdate;
-				lambda = OldLambda;
-				updateMuLambda(mu, lambda, true);
+				ws.err    = OldErr;
+				ws.p[1]   = OldP;
+				ws.update = OldUpdate;
+				ws.lambda = OldLambda;
+				updateMuLambda(ws, true);
 			}
 
 			//----- Conditions d'arrêts -----
 			if (iteration >= N_ITER) { stop = true; } // Si Nombre d'itérations maximum atteint, on arrête.
-			if (iteration > 2 && (err < EPSILON_1 || std::abs(err - OldErr) / err < EPSILON_1)) { stop = true; } // Si Convergence, on arrête.
+			if (iteration > 2 && (ws.err < EPSILON_1 || std::fabs(ws.err - OldErr) / ws.err < EPSILON_1)) { stop = true; } // Si Convergence, on arrête.
 		}
 
 		//Calcul du CRLB
 		std::vector<double> m(nParams2_, 0.0), mInv(nParams2_, 0.0), crlb(nParams_);
-		std::ranges::fill(dudt, 0.0);
+		std::ranges::fill(ws.dudt, 0.0);
 
-		const double Xr = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
-		             Yr = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
+		const Vec3D PosR{
+			.x = -1 * (ws.p[1][2] - static_cast<double>(roiHalf_) + 0.5),
+			.y = -1 * (ws.p[1][3] - static_cast<double>(roiHalf_) + 0.5),
+			.z = ws.p[1][4]
+		};
 
-		const int Xi = static_cast<int>(std::floor(Xr)),
-		          Yi = static_cast<int>(std::floor(Yr)),
-		          Zi = static_cast<int>(std::floor(p[1][4]));
+		const int Xi = static_cast<int>(std::floor(PosR.x)),
+		          Yi = static_cast<int>(std::floor(PosR.y)),
+		          Zi = static_cast<int>(std::floor(PosR.z));
 
-		const double Xc = Xr - Xi, Yc = Yr - Yi, Zc = p[1][4] - Zi;
-		delta3D(Xc, Yc, Zc, f, df);
+		const Vec3D PosC{.x = PosR.x - Xi, .y = PosR.y - Yi, .z = PosR.z - Zi};
+		delta3D(PosC, ws);
 		// Calcul des dérivées et initialisation du model
 		// offset utile, car la ROI et les coeffs ont peut-être des tailles différentes donc on recentre sur X et sur Y
 		// Exemple : ROI de 7 splineX de 11 : La ROI 7x7 est centrée à partir du point 2 dans la spline
@@ -218,11 +221,11 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			pos.x = Xi + i + splineOffset_;
 			for (size_t j = 0; j < roi_; ++j, ++idx) {
 				pos.y = Yi + j + splineOffset_;
-				derivativeSpline(pos, f, df, p[1], dudt, model);
+				derivativeSpline(pos, ws);
 				// Calcul de la matrice d'information de Fisher
 				for (size_t i2 = 0; i2 < nParams_; ++i2) {
 					for (size_t j2 = i2; j2 < nParams_; ++j2) {
-						m[i2 * nParams_ + j2] += dudt[j2] * dudt[i2] / model;
+						m[i2 * nParams_ + j2] += ws.dudt[j2] * ws.dudt[i2] / ws.model;
 						m[j2 * nParams_ + i2] = m[i2 * nParams_ + j2];
 					}
 				}
@@ -243,9 +246,9 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		// Assignation
 		offset    = crlb[0];
 		intensity = crlb[1];
-		x         = p[1][2] - static_cast<double>(roiHalf_) + infos.x_;
-		y         = p[1][3] - static_cast<double>(roiHalf_) + infos.y_;
-		z         = deltaZ_ * (p[1][4] - initZ_); //p[1][4]; //deltaZ_ * (p[1][4] - initZ_);
+		x         = ws.p[1][2] - static_cast<double>(roiHalf_) + infos.x_;
+		y         = ws.p[1][3] - static_cast<double>(roiHalf_) + infos.y_;
+		z         = deltaZ_ * (ws.p[1][4] - initZ_); //ws.p[1][4]; //deltaZ_ * (ws.p[1][4] - initZ_);
 		rssXY     = (crlb[2] + crlb[3]) / 2;
 		rssZ      = deltaZ_ * crlb[4];
 	}
@@ -254,88 +257,89 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 	fill(infos, point, offset, intensity, x, y, z, 0, 0, 0, rssXY, rssZ);
 }
 
+//==================== Maximum de vraisemblance ====================
 //-------------------------------------------------------------------------------------------------
-void SplineFit::derivativeSpline(Vec3I& pos, const std::vector<double>& f, const std::array<std::vector<double>, 3>& df,
-                                 const std::vector<double>& p, std::vector<double>& dudt, double& model) const
-{
-	pos = pos.Clamp(splineDim_ - 1);
-
-	const size_t Pos = pos.GetIndex(splineDim_);
-	std::ranges::fill(dudt, 0.0); // Initialise toutes les dérivées à zéro
-
-
-	for (size_t i = 0; i < SPLINE_PATCH_SIZE; ++i) {
-		const size_t Id = i * splineSize_ + Pos;
-		dudt[1] += f[i] * coeffs_[Id];     // Contribution à l’intensité.
-		dudt[2] += df[0][i] * coeffs_[Id]; // Dérivée en x.
-		dudt[3] += df[1][i] * coeffs_[Id]; // Dérivée en y.
-		dudt[4] += df[2][i] * coeffs_[Id]; // Dérivée en z.
-	}
-	dudt[0] = 1;                   // Dérivée par rapport à l’offset
-	dudt[2] *= -1 * p[1];          // Ajustement en x.
-	dudt[3] *= -1 * p[1];          // Ajustement en y.
-	dudt[4] *= p[1];               // Ajustement en z.
-	model = p[0] + p[1] * dudt[1]; // Évaluation du modèle spline : offset + amplitude * contribution
-}
-
-//-------------------------------------------------------------------------------------------------
-void SplineFit::updateJacobianHessian(const double data, const double model, double& err, std::vector<double>& jacobian,
-                                      std::vector<double>& hessian, const std::vector<double>& dudt) const
+void SplineFit::updateJacobianHessian(const double data, MLE_Workspace& ws) const
 {
 	// Calcul du terme d’erreur : -2 * log-vraisemblance (formule EMCCD)
-	if (data > 0) { err = err + 2 * (model - data - data * log(model / data)); }
-	else { err = err + 2 * model; }
+	if (data > 0) { ws.err = ws.err + 2 * (ws.model - data - data * log(ws.model / data)); }
+	else { ws.err = ws.err + 2 * ws.model; }
 
-	const double T1 = 1 - data / model;
-	for (size_t i = 0; i < nParams_; ++i) { jacobian[i] += T1 * dudt[i]; } // ∂L/∂θ_i
+	const double T1 = 1 - data / ws.model;
+	for (size_t i = 0; i < nParams_; ++i) { ws.jacobian[i] += T1 * ws.dudt[i]; } // ∂L/∂θ_i
 
-	const double T2 = data / (model * model);
+	const double T2 = data / (ws.model * ws.model);
 	for (size_t i = 0; i < nParams_; ++i) {
 		for (size_t j = i; j < nParams_; ++j) {
-			hessian[i * nParams_ + j] += T2 * dudt[i] * dudt[j];
-			hessian[j * nParams_ + i] = hessian[i * nParams_ + j]; // Hessienne symétrique
+			ws.hessian[i * nParams_ + j] += T2 * ws.dudt[i] * ws.dudt[j];
+			ws.hessian[j * nParams_ + i] = ws.hessian[i * nParams_ + j]; // Hessienne symétrique
 		}
 	}
 }
 
 //-------------------------------------------------------------------------------------------------
-void SplineFit::updateMuLambda(double& mu, double& lambda, const bool up)
+void SplineFit::updateMuLambda(MLE_Workspace& ws, const bool up)
 {
 	if (up) { // Augmentation du lambda : on recule dans la descente
-		mu     = std::max((1 + lambda * LAMBDA_UP) / (1 + lambda), 1.3);
-		lambda = LAMBDA_UP * lambda;
+		ws.mu = std::max((1 + ws.lambda * LAMBDA_UP) / (1 + ws.lambda), 1.3);
+		ws.lambda *= LAMBDA_UP;
 	}
 	else { // Diminution du lambda : on fait confiance au gradient
-		lambda = LAMBDA_DN * lambda;
-		mu     = 1 + lambda;
+		ws.lambda /= LAMBDA_DN;
+		ws.mu = 1 + ws.lambda;
 	}
 }
 
 //-------------------------------------------------------------------------------------------------
-void SplineFit::luEvaluate(const std::vector<double>& l, const std::vector<double>& u, const std::vector<double>& b, std::vector<double>& x) const
+void SplineFit::luEvaluate(MLE_Workspace& ws) const
 {
 	// ax = b ⇾ lux = b, on résout Ly = b puis Ux = y
 	std::vector y(nParams_, 0.0);
 
 	// Substitution avant : Ly = b
 	for (size_t i = 0; i < nParams_; ++i) {
-		y[i] = b[i];
-		for (size_t j = 0; j < i; ++j) { y[i] -= l[j * nParams_ + i] * y[j]; }
-		y[i] /= l[i * nParams_ + i];
+		y[i] = ws.jacobian[i];
+		for (size_t j = 0; j < i; ++j) { y[i] -= ws.l[j * nParams_ + i] * y[j]; }
+		y[i] /= ws.l[i * nParams_ + i];
 	}
 
 	// Substitution arrière : Ux = y
 	for (int i = static_cast<int>(nParams_ - 1); i >= 0; --i) {
-		x[i] = y[i];
-		for (size_t j = i + 1; j < nParams_; j++) { x[i] -= u[j * nParams_ + i] * x[j]; }
-		x[i] /= u[i * nParams_ + i];
+		ws.update[i] = y[i];
+		for (size_t j = i + 1; j < nParams_; j++) { ws.update[i] -= ws.u[j * nParams_ + i] * ws.update[j]; }
+		ws.update[i] /= ws.u[i * nParams_ + i];
 	}
 }
 
-void SplineFit::delta3D(const double x, const double y, const double z, std::vector<double>& f, std::array<std::vector<double>, 3>& df)
+//==================== Run Computes ====================
+//-------------------------------------------------------------------------------------------------
+void SplineFit::derivativeSpline(Vec3I& pos, MLE_Workspace& ws) const
 {
-	std::ranges::fill(f, 0.0);
-	for (size_t i = 0; i < 3; ++i) { std::ranges::fill(df[i], 0.0); }
+	pos = pos.Clamp(splineDim_ - 1);
+
+	const size_t Pos = pos.GetIndex(splineDim_);
+	std::ranges::fill(ws.dudt, 0.0); // Initialise toutes les dérivées à zéro
+
+
+	for (size_t i = 0; i < SPLINE_PATCH_SIZE; ++i) {
+		const size_t Id = i * splineSize_ + Pos;
+		ws.dudt[1] += ws.f[i] * coeffs_[Id];     // Contribution à l’intensité.
+		ws.dudt[2] += ws.df[0][i] * coeffs_[Id]; // Dérivée en x.
+		ws.dudt[3] += ws.df[1][i] * coeffs_[Id]; // Dérivée en y.
+		ws.dudt[4] += ws.df[2][i] * coeffs_[Id]; // Dérivée en z.
+	}
+	ws.dudt[0] = 1;                                  // Dérivée par rapport à l’offset
+	ws.dudt[2] *= -1 * ws.p[1][1];                   // Ajustement en x.
+	ws.dudt[3] *= -1 * ws.p[1][1];                   // Ajustement en y.
+	ws.dudt[4] *= ws.p[1][1];                        // Ajustement en z.
+	ws.model = ws.p[1][0] + ws.p[1][1] * ws.dudt[1]; // Évaluation du modèle spline : offset + amplitude * contribution
+}
+
+//-------------------------------------------------------------------------------------------------
+void SplineFit::delta3D(const Vec3D& pos, MLE_Workspace& ws)
+{
+	std::ranges::fill(ws.f, 0.0);
+	for (size_t i = 0; i < 3; ++i) { std::ranges::fill(ws.df[i], 0.0); }
 	double cz = 1.0;
 	for (size_t i = 0; i < SPLINE_PATCH_SIDE; ++i) {
 		double cy = 1.0;
@@ -344,15 +348,15 @@ void SplineFit::delta3D(const double x, const double y, const double z, std::vec
 			for (size_t k = 0; k < SPLINE_PATCH_SIDE; ++k) {
 				const size_t Id   = i * SPLINE_PATCH_PLANE + j * SPLINE_PATCH_SIDE + k;
 				const double Coef = cz * cy * cx;
-				f[Id]             = Coef;
-				if (k + 1 < SPLINE_PATCH_SIDE) { df[0][Id + 1] = static_cast<double>(k + 1) * Coef; }
-				if (j + 1 < SPLINE_PATCH_SIDE) { df[1][Id + SPLINE_PATCH_SIDE] = static_cast<double>(j + 1) * Coef; }
-				if (i + 1 < SPLINE_PATCH_SIDE) { df[2][Id + SPLINE_PATCH_PLANE] = static_cast<double>(i + 1) * Coef; }
-				cx *= x;
+				ws.f[Id]          = Coef;
+				if (k + 1 < SPLINE_PATCH_SIDE) { ws.df[0][Id + 1] = static_cast<double>(k + 1) * Coef; }
+				if (j + 1 < SPLINE_PATCH_SIDE) { ws.df[1][Id + SPLINE_PATCH_SIDE] = static_cast<double>(j + 1) * Coef; }
+				if (i + 1 < SPLINE_PATCH_SIDE) { ws.df[2][Id + SPLINE_PATCH_PLANE] = static_cast<double>(i + 1) * Coef; }
+				cx *= pos.x;
 			}
-			cy *= y;
+			cy *= pos.y;
 		}
-		cz *= z;
+		cz *= pos.z;
 	}
 }
 } // namespace palm_tracer
