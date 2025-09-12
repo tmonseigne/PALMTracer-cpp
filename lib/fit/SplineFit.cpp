@@ -77,7 +77,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		// - Calcul du centre de masse de la région pour x et y
 		matrix::CenterOfMass(ws.grid, roi_, x, y);
 
-		initP(ws.p, x, y, z, minI, maxI); // ATTENTION LES BORNES DANS INIT P DEVRONT PEUT-ÊTRE CHANGER
+		initP(ws.p, x, y, z, minI, maxI); // ATTENTION LES BORNES DANS INIT P DEVRONT CHANGER
 		ws.p[2][4] = static_cast<double>(splineDim_.z); // Change le maximum pour Z.
 		for (size_t i = 0; i < nParams_; ++i) { ws.p[1][i] = std::clamp(ws.p[1][i], ws.p[0][i], ws.p[2][i]); } // Clamp en cas de problème.
 		ws.jump = {std::max(20.0, ws.p[1][1]), std::max(100.0, ws.p[1][1]), 1.0, 1.0, std::max(static_cast<double>(splineDim_.z) / 3.0, 2.0)};
@@ -170,6 +170,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 					ws.p[1][i]   = std::clamp(ws.p[1][i], ws.p[0][i], ws.p[2][i]);
 					ws.update[i] = Scale;
 				}
+				// TODO ERREUR EST FOIREUX POUR LE MOMENT, PEUT ETRE PORBLEME DANS LES RESETS, CONDITIONS DARRETS, MISE A JOUR DU JUMP ET LAMBDA....
 				if (ws.err > OldErr) { // si erreur plus importante, restauration des valeurs et augmentation du lambda
 					ws.err    = OldErr;
 					ws.p[1]   = OldP;
@@ -247,8 +248,8 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		for (size_t i = 0; i < nParams_; ++i) { crlb[i] = SqrtReal(mInv[i * nParams_ + i]); }
 
 		// Assignation
-		offset = crlb[0]; // Gné ? pas ws.p[1][0] / coeffRatio_ ?
-		intensity = crlb[1]; // Gné ? pas ws.p[1][1] / coeffRatio_ ?
+		offset = ws.p[1][0] / coeffRatio_; // Gné ? pas ws.p[1][0] / coeffRatio_ ?
+		intensity = ws.p[1][1] / coeffRatio_; // Gné ? pas ws.p[1][1] / coeffRatio_ ?
 		x = ws.p[1][2] - static_cast<double>(roiHalf_) + infos.x_; // Avec cette méthode, on a une position dans la ROI relative à la position initiale ou Ux ?
 		y = ws.p[1][3] - static_cast<double>(roiHalf_) + infos.y_; // Avec cette méthode, on a une position dans la ROI relative à la position initiale ou Uy ?
 		//ws.p[1][4] - initZ_ correspond à une position à l'échelle du plan avec pour 0 le plan central et des valeurs flottantes z ∈ [-initZ ; initZ]
@@ -320,7 +321,7 @@ void SplineFit::luEvaluate(MLE_Workspace& ws) const
 //-------------------------------------------------------------------------------------------------
 void SplineFit::derivativeSpline(Vec3I& pos, MLE_Workspace& ws) const
 {
-	std::cout << "\t\t derivativeSpline Pos " << pos << "\n";
+	//std::cout << "\t\t derivativeSpline Pos " << pos << "\n";
 	pos = pos.Clamp(splineDim_ - 1);
 
 	const size_t Pos = pos.GetIndex(splineDim_);

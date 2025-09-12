@@ -59,7 +59,7 @@ protected:
 		std::array<std::vector<double>, 3> df{};            ///< Dérivées de f par rapport à x (∂f/∂x), y (∂f/∂y) et z (∂f/∂z).
 		double lambda = LAMBDA_0,                           ///<
 		       model  = 0,                                  ///< Valeur du modèle au point considéré.
-		       err    = std::numeric_limits<double>::max(), ///<
+		       err    = std::numeric_limits<double>::max(), ///< TODO FAUX INIT A 0 NORMALEMENT MAIS SINON IL NE CHANGE PAS Z
 		       mu     = 1 + lambda;                         ///<
 
 
