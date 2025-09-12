@@ -204,7 +204,6 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 
 		//Calcul du CRLB
 		std::vector<double> m(nParams2_, 0.0), mInv(nParams2_, 0.0), crlb(nParams_);
-		std::ranges::fill(ws.dudt, 0.0);
 
 		const Vec3D PosR{
 			.x = -1 * (ws.p[1][2] - static_cast<double>(roiHalf_) + 0.5),
