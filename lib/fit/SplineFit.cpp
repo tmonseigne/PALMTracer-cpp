@@ -92,10 +92,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		std::cout << "\n";
 		//--------------------------------------------------------------------------------------------------------------------------------------------
 
-		bool stop        = false;
-		size_t iteration = 0;
-		while (!stop) { // Main Loop
-			iteration++;
+		for (size_t iteration = 0; iteration < N_ITER; ++iteration) { // Main Loop
 			//--------------------------------------------------------------------------------------------------------------------------------------------
 			std::cout << "\n--------------------------------------------------\n\t Iteration " << iteration << "\n";
 			//--------------------------------------------------------------------------------------------------------------------------------------------
@@ -199,8 +196,10 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			}
 
 			//----- Conditions d'arrêts -----
-			if (iteration >= N_ITER) { stop = true; } // Si Nombre d'itérations maximum atteint, on arrête.
-			if (iteration > 2 && (ws.err < EPSILON_1 || std::fabs(ws.err - OldErr) / ws.err < EPSILON_1)) { stop = true; } // Si Convergence, on arrête.
+			if (iteration >= 2) {                                               // Si on est déjà à 2 iterations
+				if (ws.err < EPSILON_1) { break; }                              // Si l'erreur est trop faible
+				if (std::fabs(ws.err - OldErr) / ws.err < EPSILON_1) { break; } // Si la différence d'erreur est trop faible ?
+			}
 		}
 
 		//Calcul du CRLB
