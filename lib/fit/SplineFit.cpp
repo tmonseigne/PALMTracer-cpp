@@ -44,9 +44,8 @@ void SplineFit::parseParams()
 	deltaZ_       = fitParams_[idx++];
 	coeffs_.resize(splineSize_ * SPLINE_PATCH_SIZE);
 	for (double& coeff : coeffs_) { coeff = fitParams_[idx++]; }
-	const double CenterCoeff = coeffs_[32 * splineSize_ + splineDim_.z / 2 * splineSizeXY_ + splineDim_.y / 2 * splineDim_.x + splineDim_.x / 2];
-	intensityRatio_          = std::abs(CenterCoeff) < std::numeric_limits<double>::epsilon() ? 1.0 : 4.0 / CenterCoeff;
-	splineOffset_            = static_cast<size_t>(std::floor((static_cast<double>(splineDim_.x) + 1.0 - static_cast<double>(roi_)) / 2));
+	splineOffset_ = static_cast<size_t>(std::floor((static_cast<double>(splineDim_.x) + 1.0 - static_cast<double>(roi_)) / 2));
+	coeffRatio_   = computeCoeffRatio();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -65,20 +64,21 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 	const auto Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
 	if (roiHalf_ <= Ux && Ux < dim_.x - roiHalf_ && roiHalf_ <= Uy && Uy < dim_.y - roiHalf_) {
 		// Création des variables
-		double minI = 0, maxI = 0;
 		MLE_Workspace ws;
 		ws.Resize(n_, nParams_, nParams2_);
 
 		// Initialization of data & t (A vérifier)
+		double minI = 0, maxI = 0;
 		preCompute(Ux, Uy, ws.grid, minI, maxI);
-
+		for (auto& p : ws.grid) { p.v *= coeffRatio_; } // Change l'intensité de la grille pour comparaison avec le modèle calibré.
+		minI *= coeffRatio_;
+		maxI *= coeffRatio_;
 		// Initialisation du/des P :
 		// - Calcul du centre de masse de la région pour x et y
 		matrix::CenterOfMass(ws.grid, roi_, x, y);
 
-		initP(ws.p, x, y, z, minI, maxI);
-		ws.p[1][1] *= intensityRatio_;                                                                         // Change l'intensité pour la position actuelle.
-		ws.p[2][4] = static_cast<double>(splineDim_.z);                                                        // Change le maximum pour Z.
+		initP(ws.p, x, y, z, minI, maxI); // ATTENTION LES BORNES DANS INIT P DEVRONT PEUT-ÊTRE CHANGER
+		ws.p[2][4] = static_cast<double>(splineDim_.z); // Change le maximum pour Z.
 		for (size_t i = 0; i < nParams_; ++i) { ws.p[1][i] = std::clamp(ws.p[1][i], ws.p[0][i], ws.p[2][i]); } // Clamp en cas de problème.
 		ws.jump = {std::max(20.0, ws.p[1][1]), std::max(100.0, ws.p[1][1]), 1.0, 1.0, std::max(static_cast<double>(splineDim_.z) / 3.0, 2.0)};
 
@@ -365,5 +365,28 @@ void SplineFit::delta3D(const Vec3D& pos, MLE_Workspace& ws)
 		}
 		cz *= pos.z;
 	}
+}
+
+double SplineFit::computeCoeffRatio() const
+{
+	const size_t Pos = splineSize_ / 2;
+	MLE_Workspace ws;
+	ws.Resize(n_, nParams_, nParams2_);
+	constexpr Vec3D Half{.x = 0.5, .y = 0.5, .z = 0.5};
+	delta3D(Half, ws);
+	// Somme pondérée au centre de cellule
+	double s0 = 0.0, sL1 = 0.0;
+	for (size_t i = 0; i < SPLINE_PATCH_SIZE; ++i) {
+		const double C = coeffs_[i * splineSize_ + Pos],
+		             W = ws.f[i]; // ≥ 0, et Σw = 1
+		s0 += ws.f[i] * C;
+		sL1 += W * std::abs(C);
+	}
+
+	// Garde-fou : impose un |s0| minimal relatif
+	const double MinAbs = std::max(1e-3 * sL1, 1e-12);
+
+	return 1.0 / std::max(std::fabs(s0), MinAbs);
+	// on peut rajouter une borne à la limite à voir en execution
 }
 } // namespace palm_tracer

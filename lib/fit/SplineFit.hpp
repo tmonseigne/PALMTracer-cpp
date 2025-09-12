@@ -39,7 +39,7 @@ protected:
 	       splineOffset_{};      ///< Offset utilisé pour indexer ou accéder efficacement aux sous-blocs ou aux patchs de la spline.
 	double initZ_{},             ///< Position initiale en Z (origine physique ou de modélisation de la spline en profondeur).
 	       deltaZ_{},            ///< Pas ou résolution entre deux couches Z successives dans la spline.
-	       intensityRatio_{};    ///< Rapport d’intensité entre l’image et le modèle spline (pour corriger une mise à l’échelle ou un gain).
+	       coeffRatio_{};    ///< Rapport d’intensité entre l’image et le modèle spline (pour corriger une mise à l’échelle ou un gain).
 	std::vector<double> coeffs_; ///< Coefficients du modèle spline 3D, stockés de manière linéaire (ordre : [z][y][x]) pour un accès rapide.
 
 	/// <summary>Ensemble des objets nécessaires au déroulement de l’algorithme du Maximum de vraisemblance (Maximum likelihood estimation).
@@ -125,5 +125,8 @@ protected:
 	/// <param name="pos">Coordonnées (x, y, z) (locale, typiquement entre 0 et 1).</param>
 	/// <param name="ws">Ensemble des objets nécessaires au déroulement de l’algorithme du Maximum de vraisemblance.</param>
 	static void delta3D(const Vec3D& pos, MLE_Workspace& ws);
+
+	/// <summary>Calcul un coefficient multiplicateur sur la base du centre du voxel central du volume.</summary>
+	double computeCoeffRatio() const;
 };
 } // namespace palm_tracer
