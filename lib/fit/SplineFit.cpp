@@ -59,6 +59,7 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 	       z         = initZ_,
 	       rssXY     = -1,
 	       rssZ      = -1;
+	std::cout << "***** Initial Point : " << offset << ", " << intensity << ", " << x << ", " << y << ", " << z << " *****\n";
 
 	// Vérification si la zone d'intérêt est entièrement dans l'image (évite les bords)
 	const auto Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
@@ -142,12 +143,16 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			for (size_t i = 0; i < nParams_; ++i) { ws.hessian[i * nParams_ + i] = ws.hessian[i * nParams_ + i] * ws.mu; }
 
 			//--------------------------------------------------------------------------------------------------------------------------------------------
+			std::cout << "\tdudt :";
+			matrix::PrintVector(ws.dudt);
+			std::cout << "\n";
 			std::cout << "\tJacobian :";
 			matrix::PrintVector(ws.jacobian);
 			std::cout << "\n";
 			std::cout << "\tHessian :\n";
 			matrix::PrintMatrix(ws.hessian, nParams_, nParams_);
 			std::cout << "\n";
+
 
 			std::cout << "\tPoint (" << ws.p[1][2] << ", " << ws.p[1][3] << ", " << ws.p[1][4]
 				<< ")\n\terr = " << ws.err << "\t lambda = " << ws.lambda << "\t model = " << ws.model << "\n";
@@ -232,7 +237,6 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 			}
 		}
 
-
 		// Si la convergence est parfaite (ou le point pile sur une grille), des 0 seront présents, à remplacer pour calculer la matrice inverse.
 		for (size_t i = 0; i < nParams_; ++i) {
 			if (std::abs(m[i * nParams_ + i]) < std::numeric_limits<double>::epsilon()) { m[i * nParams_ + i] = EPSILON_2; }
@@ -244,16 +248,18 @@ void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZA
 		for (size_t i = 0; i < nParams_; ++i) { crlb[i] = SqrtReal(mInv[i * nParams_ + i]); }
 
 		// Assignation
-		offset    = crlb[0];
-		intensity = crlb[1];
-		x         = ws.p[1][2] - static_cast<double>(roiHalf_) + infos.x_;
-		y         = ws.p[1][3] - static_cast<double>(roiHalf_) + infos.y_;
-		z         = deltaZ_ * (ws.p[1][4] - initZ_); //ws.p[1][4]; //deltaZ_ * (ws.p[1][4] - initZ_);
-		rssXY     = (crlb[2] + crlb[3]) / 2;
-		rssZ      = deltaZ_ * crlb[4];
+		offset = crlb[0]; // Gné ? pas ws.p[1][0] / coeffRatio_ ?
+		intensity = crlb[1]; // Gné ? pas ws.p[1][1] / coeffRatio_ ?
+		x = ws.p[1][2] - static_cast<double>(roiHalf_) + infos.x_; // Avec cette méthode, on a une position dans la ROI relative à la position initiale ou Ux ?
+		y = ws.p[1][3] - static_cast<double>(roiHalf_) + infos.y_; // Avec cette méthode, on a une position dans la ROI relative à la position initiale ou Uy ?
+		//ws.p[1][4] - initZ_ correspond à une position à l'échelle du plan avec pour 0 le plan central et des valeurs flottantes z ∈ [-initZ ; initZ]
+		z     = (ws.p[1][4] - initZ_); // deltaZ_ * (ws.p[1][4] - initZ_); pour l'avoir en Nanomètre.
+		rssXY = (crlb[2] + crlb[3]) / 2;
+		rssZ  = deltaZ_ * crlb[4];
 	}
 	else { z = 0; }
 
+	std::cout << "***** Final Point : " << offset << ", " << intensity << ", " << x << ", " << y << ", " << z << " *****\n";
 	fill(infos, point, offset, intensity, x, y, z, 0, 0, 0, rssXY, rssZ);
 }
 
@@ -315,6 +321,7 @@ void SplineFit::luEvaluate(MLE_Workspace& ws) const
 //-------------------------------------------------------------------------------------------------
 void SplineFit::derivativeSpline(Vec3I& pos, MLE_Workspace& ws) const
 {
+	std::cout << "\t\t derivativeSpline Pos " << pos << "\n";
 	pos = pos.Clamp(splineDim_ - 1);
 
 	const size_t Pos = pos.GetIndex(splineDim_);
@@ -338,6 +345,7 @@ void SplineFit::derivativeSpline(Vec3I& pos, MLE_Workspace& ws) const
 //-------------------------------------------------------------------------------------------------
 void SplineFit::delta3D(const Vec3D& pos, MLE_Workspace& ws)
 {
+	std::cout << "\t\t Delta 3D Pos " << pos << "\n";
 	std::ranges::fill(ws.f, 0.0);
 	for (size_t i = 0; i < 3; ++i) { std::ranges::fill(ws.df[i], 0.0); }
 	double cz = 1.0;
