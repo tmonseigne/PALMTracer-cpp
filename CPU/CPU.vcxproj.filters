@@ -47,6 +47,12 @@
     <ClCompile Include="..\lib\signal_processing\BSpline3D.cpp">
       <Filter>Signal Processing</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\tracking\Tracks.cpp">
+      <Filter>Tracking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tracking\Point.cpp">
+      <Filter>Tracking</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\fit\GaussianFit.hpp">
@@ -105,6 +111,12 @@
     </ClInclude>
     <ClInclude Include="..\lib\signal_processing\BSpline3D.hpp">
       <Filter>Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tracking\Tracks.hpp">
+      <Filter>Tracking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tracking\Point.hpp">
+      <Filter>Tracking</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
