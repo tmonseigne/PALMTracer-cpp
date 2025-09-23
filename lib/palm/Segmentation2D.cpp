@@ -111,7 +111,6 @@ void Segmentation2D::FilterData()
 	for (size_t i = 0; i < OldSize; ++i) {
 		if (!isFiltered(infos_[i], i)) {
 			oldToNew[i]      = newIdx + 1;
-			infos_[i].index_ = static_cast<int>(newIdx);
 			filtered.emplace_back(infos_[i]);
 			++newIdx;
 		}
@@ -168,7 +167,6 @@ void Segmentation2D::ComputeStatistics()
 void Segmentation2D::alloc(const size_t nbStruct)
 {
 	infos_.resize(nbStruct);
-	for (size_t i = 0; i < nbStruct; ++i) { infos_[i].index_ = i; }
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -270,7 +268,6 @@ void Segmentation2D::filterStructureWS()
 		const auto& Fusion = wsFusions[oldIdx];
 		if (Fusion.newIndex > 0) {
 			updatedInfos[Fusion.newIndex - 1]        = infos_[oldIdx];
-			updatedInfos[Fusion.newIndex - 1].index_ = Fusion.newIndex - 1;
 		}
 	}
 	infos_ = std::move(updatedInfos);

@@ -28,7 +28,6 @@ struct WSFusion {
 /// <summary>Classe contenant des informations descriptives sur une région segmentée 2D.</summary>
 class SegmentationInfo {
 public:
-	size_t index_;     ///< Index identifiant la région.
 	double x_,         ///< Position x.
 	       y_,         ///< Position y.
 	       z_,         ///< Position z.

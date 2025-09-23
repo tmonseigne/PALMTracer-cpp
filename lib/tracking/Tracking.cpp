@@ -1,13 +1,3 @@
-/*******************************************************************************************************************
-									Tracking Class
-							Array containing all the TimeNodes for all instants
-*******************************************************************************************************************/
-
-/********************************************************************************************************************
-Class Tracking contains several Tracking objets for each time (nbTimes).
-********************************************************************************************************************/
-
-
 #include "Tracking.hpp"
 #include <algorithm>
 #include <chrono>
@@ -56,16 +46,6 @@ size_t Tracking::Processing()
 	return printConnectionsASCII_trc();
 }
 
-/********************************************************************************************************************
-printConnectionsASCII_trc() print the result of the connections in a pointer as Daniel Choquet has defined:
-Colonne 1         numero de la trace
-Colonne 2         numero de l'image, ou temps (commencant à 1 SVP)
-Colonne 3         X
-Colonne 4         Y
-(Colonne 5        Z)
-Colonne 5 ou 6         nombre de pixels de l'objet
-Colonne 6 ou 7         intensité intégrée
-********************************************************************************************************************/
 size_t Tracking::printConnectionsASCII_trc()
 {
 	size_t idx = 0;
@@ -80,7 +60,6 @@ size_t Tracking::printConnectionsASCII_trc()
 					tracks_[idx++] = node->y_;                             // Y
 					tracks_[idx++] = node->z_;                             // Z
 					tracks_[idx++] = node->intensity_;                     // Intensity
-					tracks_[idx++] = node->color_;                         // Color
 					tracks_[idx++] = node->surf_;                          // Surface
 
 					// The number of trajectory
@@ -106,7 +85,7 @@ void Tracking::readPointsList()
 		// Computing the number of nodes by frame
 		size_t nNodes = 0;
 		for (size_t i = index; ; i += N_IN_PARAMS) {
-			if (static_cast<int>(points_[i + 6]) != -1 && static_cast<int>(points_[i + 6]) != 0) { nNodes++; } // surface
+			if (static_cast<int>(points_[i + 5]) != -1 && static_cast<int>(points_[i + 5]) != 0) { nNodes++; } // surface
 			else { break; }
 		}
 
@@ -121,9 +100,8 @@ void Tracking::readPointsList()
 			str.y_         = points_[Idx + 2];
 			str.z_         = points_[Idx + 3];
 			str.intensity_ = points_[Idx + 4];
-			str.color_     = points_[Idx + 5];
-			str.surf_      = points_[Idx + 6];
-			str.mean_      = points_[Idx + 4] / points_[Idx + 6];
+			str.surf_      = points_[Idx + 5];
+			str.mean_      = points_[Idx + 4] / points_[Idx + 5];
 
 			params_->maxX_ = std::max(params_->maxX_, str.x_);
 			params_->maxY_ = std::max(params_->maxY_, str.y_);

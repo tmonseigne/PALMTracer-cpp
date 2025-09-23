@@ -74,15 +74,14 @@ void Fitting::fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZAT
 	point[10] = theta;            // Theta
 	point[11] = rss;              // MSE X, Y
 	point[12] = rssZ;             // MSE Z
-	point[13] = 0;                // Pair Distance
-	point[14] = intensity;        // Intensity 0
-	point[15] = offset;           // Intensity offset
-	point[16] = infos.intensity_; // Intensity
-	point[17] = infos.surf_;      // Surface
+	point[13] = intensity;        // Intensity 0
+	point[14] = offset;           // Intensity offset
+	point[15] = infos.intensity_; // Intensity
+	point[16] = infos.surf_;      // Surface
 
 	// Circularity
-	if (sigmaX > EPSILON && sigmaY > EPSILON) { point[18] = std::min(sigmaX, sigmaY) / std::max(sigmaX, sigmaY); }
-	else { point[18] = 1; }
+	if (sigmaX > EPSILON && sigmaY > EPSILON) { point[17] = std::min(sigmaX, sigmaY) / std::max(sigmaX, sigmaY); }
+	else { point[17] = 1; }
 }
 
 //-------------------------------------------------------------------------------------------------

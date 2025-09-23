@@ -22,10 +22,9 @@ constexpr size_t VOLUME_MIN          = 4;            ///< Volume minimal requis 
 constexpr size_t THRESHOLD_ITERATION = 5;            ///< Nombre d'iteration maximum pour l'auto-threshold.
 
 // Paramètres de la localisation :
-// Id, Plane, Index, Channel, X, Y, Z, Integrated Intensity,
-// Sigma X, Sigma Y, Theta, MSE Gaussian, MSE Z, Pair Distance,
-// Intensity 0, Intensity Offset, Intensity, Surface, Circularity
-constexpr size_t N_LOCALIZATIONS = 19; ///< Nombre de paramètres à renvoyer lors de la localization.
+// Id, Plane, Index, Channel, X, Y, Z, Integrated Intensity, Sigma X, Sigma Y, Theta,
+// MSE XY, MSE Z, Intensity 0, Intensity Offset, Intensity, Surface, Circularity
+constexpr size_t N_LOCALIZATIONS = 18; ///< Nombre de paramètres à renvoyer lors de la localization.
 
 constexpr double EPSILON = 1e-7;
 
@@ -33,12 +32,12 @@ constexpr double EPSILON = 1e-7;
 //==================== TRACKING ====================
 //==================================================
 // Paramètres du Tracking :
-// Track, Plane, Id, X, Y, Z, Integrated Intensity, Surface, Color
-constexpr size_t N_TRACKING = 9; ///< Nombre de paramètres à renvoyer lors du tracking.
+// Track, Plane, Id, X, Y, Z, Integrated Intensity, Surface
+constexpr size_t N_TRACKING = 8; ///< Nombre de paramètres à renvoyer lors du tracking.
 
 // Anciennement "Sigma X", "Sigma Y", "Theta", "Y", "X", "Intensity 0", "Intensity Offset", "MSE Gaussian", "Intensity", "Surface", "Z", "Pair Distance", "Id"
-// Maintenant Id, X, Y, Z, Integrated Intensity, Pair Distance (color), surface
-constexpr size_t N_IN_PARAMS = 7; ///< Nombre de paramètres reçu lors du tracking.
+// Maintenant Id, X, Y, Z, Integrated Intensity, Surface
+constexpr size_t N_IN_PARAMS = 6; ///< Nombre de paramètres reçu lors du tracking.
 
 //=================================================
 //==================== SPLINES ====================
