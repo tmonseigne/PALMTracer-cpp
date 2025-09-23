@@ -62,7 +62,7 @@ protected:
 	       roiHalf_{};        ///< Demi taille de la région d'intérêt autour du point.
 	const double* fitParams_; ///< Paramètres de l'ajustement
 
-	static constexpr size_t N_ITER = 50; ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
+	static constexpr size_t N_ITER = 75; ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
 
 	/// <summary>Initialise les différents membres de la classe.</summary>
 	void initialize();
