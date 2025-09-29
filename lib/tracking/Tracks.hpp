@@ -56,5 +56,8 @@ protected:
 	std::vector<track_t> t_;            ///< Liste des Trajectoires.
 
 	void connect(size_t track1, size_t track2);
+
+	static double getMaxDistance(size_t mode, double duration, double maxSpeed);
 };
+
 } // namespace palm_tracer

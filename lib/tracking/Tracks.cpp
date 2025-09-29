@@ -57,15 +57,61 @@ size_t Tracks::FillOutput(double* output) const
 //-------------------------------------------------------------------------------------------------
 void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, const double maxSpeed)
 {
-	std::cout << "Blinking Reconnection Begin\n";
-	std::cout << *this << "\n";
-
-	std::cout << "Blinking Reconnection Finish\n";
-	std::cout << *this << "\n";
+	if (t_.empty()) { return; }
+	// Parcours de toutes les trajectoires
+	size_t i = 0;
+	while (i < t_.size()) {
+		if (t_[i].empty()) {
+			t_.erase(t_.begin() + static_cast<std::ptrdiff_t>(i)); // ne pas incrémenter i : après l’effacement, l’élément suivant glisse à la position i
+			continue;
+		}                                                     // Au cas où, mais théoriquement impossible.
+		const Point& Lp = t_[i].back();                       // Dernier point de la trajectoire i.
+		size_t cI       = std::numeric_limits<size_t>::max(), // Indice courrant.
+		       cT       = std::numeric_limits<size_t>::max(); // Différence temporelle courrante.
+		double cD       = std::numeric_limits<double>::max(); // Différence spatiale courrante.
+		// Parcours de toutes les trajectoires suivantes (pas la peine de tester les trajectoires antérieures, elles sont triées par plan du premier point)
+		for (size_t j = i + 1; j < t_.size(); ++j) {
+			const Point& Fp = t_[j].front();          // Premier point de la trajectoire j.
+			if (Fp.plane_ <= Lp.plane_) { continue; } // Vérification de continuité temporelle.
+			const size_t Dp = Fp.plane_ - Lp.plane_;  // Calcul du temps (nombre de plans entre les trajectoires).
+			// (à vérifier, mais un break est possible, car les trajectoires sont triées par plan de démarrage)
+			if (Dp > maxDuration || Dp > cT) { continue; }                                  // Vérification de validité temporelle.
+			const double Dist    = (Fp.pos_ - Lp.pos_).Norm(),                              // Calcul de la distance.
+			             MaxDist = getMaxDistance(mode, static_cast<double>(Dp), maxSpeed); // Calcul de la distance maximale.
+			if (Dist >= cD || Dist > MaxDist) { continue; }                                 // Vérification de validité Spatiale.
+			cI = j;                                                                         // Mise à jour de l'élément sélectionné.
+			cT = Dp;                                                                        // Mise à jour de la durée (nombre de plan).
+			cD = Dist;                                                                      // Mise à jour de la distance.
+		}
+		if (cI < t_.size()) { connect(i, cI); } // Connexion des trajectoires
+		else { ++i; }                           // On passe à la trajectoire suivbante
+	}
+	// Autre possibilité, noter toutes les trajectoires à connecter et recopier à la toute fin dans un nouveau tableau
 }
 
 //-------------------------------------------------------------------------------------------------
-void Tracks::connect(const size_t track1, const size_t track2) { std::cout << "Connect track " << track1 << " and " << track2 << "\n"; }
+double Tracks::getMaxDistance(const size_t mode, const double duration, const double maxSpeed)
+{
+	switch (mode) {
+		case 0: return maxSpeed;
+		default: case 1: return maxSpeed * std::sqrt(duration);
+		case 3: return maxSpeed * duration;
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+void Tracks::connect(const size_t track1, const size_t track2)
+{
+	std::cout << "Connect track " << track1 << " and " << track2 << "\n";
+	if (track1 >= t_.size() || track2 >= t_.size() || track1 == track2) { return; }
+	auto& a = t_[track1];
+	auto& b = t_[track2];
+	// Concat par move (aucune copie de Point)
+	a.reserve(a.size() + b.size()); // reservation de l'espace
+	a.insert(a.end(), std::make_move_iterator(b.begin()), std::make_move_iterator(b.end()));
+	b.clear();                                                  // b est désormais vide
+	t_.erase(t_.begin() + static_cast<std::ptrdiff_t>(track2)); // Retire l'entrée track2 du conteneur (rétrécit t_ et décale les indices > track2)
+}
 
 //-------------------------------------------------------------------------------------------------
 std::ostream& operator<<(std::ostream& os, const Tracks& tracks)
