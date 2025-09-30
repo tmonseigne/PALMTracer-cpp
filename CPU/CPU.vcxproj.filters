@@ -50,9 +50,6 @@
     <ClCompile Include="..\lib\tracking\Tracks.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tracking\Point.cpp">
-      <Filter>Tracking</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\fit\GaussianFit.hpp">

@@ -58,59 +58,79 @@ size_t Tracks::FillOutput(double* output) const
 void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, const double maxSpeed)
 {
 	if (t_.empty()) { return; }
-	// Parcours de toutes les trajectoires
-	size_t i = 0;
-	while (i < t_.size()) {
-		if (t_[i].empty()) {
-			t_.erase(t_.begin() + static_cast<std::ptrdiff_t>(i)); // ne pas incrémenter i : après l’effacement, l’élément suivant glisse à la position i
-			continue;
-		}                                                     // Au cas où, mais théoriquement impossible.
-		const Point& Lp = t_[i].back();                       // Dernier point de la trajectoire i.
-		size_t cI       = std::numeric_limits<size_t>::max(), // Indice courrant.
-		       cT       = std::numeric_limits<size_t>::max(); // Différence temporelle courrante.
-		double cD       = std::numeric_limits<double>::max(); // Différence spatiale courrante.
-		// Parcours de toutes les trajectoires suivantes (pas la peine de tester les trajectoires antérieures, elles sont triées par plan du premier point)
-		for (size_t j = i + 1; j < t_.size(); ++j) {
-			const Point& Fp = t_[j].front();          // Premier point de la trajectoire j.
-			if (Fp.plane_ <= Lp.plane_) { continue; } // Vérification de continuité temporelle.
-			const size_t Dp = Fp.plane_ - Lp.plane_;  // Calcul du temps (nombre de plans entre les trajectoires).
-			// (à vérifier, mais un break est possible, car les trajectoires sont triées par plan de démarrage)
-			if (Dp > maxDuration || Dp > cT) { continue; }                                  // Vérification de validité temporelle.
-			const double Dist    = (Fp.pos_ - Lp.pos_).Norm(),                              // Calcul de la distance.
-			             MaxDist = getMaxDistance(mode, static_cast<double>(Dp), maxSpeed); // Calcul de la distance maximale.
-			if (Dist >= cD || Dist > MaxDist) { continue; }                                 // Vérification de validité Spatiale.
-			cI = j;                                                                         // Mise à jour de l'élément sélectionné.
-			cT = Dp;                                                                        // Mise à jour de la durée (nombre de plan).
-			cD = Dist;                                                                      // Mise à jour de la distance.
+	const size_t N = t_.size();
+	std::vector taken(N, false);             // True si l’index appartient déjà à une chaîne (hors tête)
+	std::vector<std::vector<size_t>> chains; // Liste des chaînes d’indices (ex: { [2,4,5], [3], [6,7], ... })
+	chains.reserve(N);                       // Taille maximale possible
+
+	// --- Construction des chaînes d’indices de connexion ---
+	for (size_t head = 0; head < N; ++head) { // Trajectoire à tester
+		if (t_[head].empty()) { continue; }   // Au cas où, mais théoriquement impossible.
+		if (taken[head]) { continue; }        // Trajectoire déjà absorbée par une chaîne précédente
+		std::vector<size_t> chain;            // Nouvelle Trajectoire
+		chain.push_back(head);                // Ajout de la trajectoire initiale
+
+		// On tente d’allonger la chaîne de façon gloutonne
+		size_t current = head;
+		while (true) {
+			if (t_[current].empty()) { break; }                   // Au cas où, mais théoriquement impossible.
+			const Point& Lp = t_[current].back();                 // Dernier point de la trajectoire i.
+			size_t bJ       = std::numeric_limits<size_t>::max(), // Indice (j) du meilleur point.
+			       bT       = std::numeric_limits<size_t>::max(); // Différence temporelle avec le meilleur point.
+			double bD       = std::numeric_limits<double>::max(); // Différence spatiale avec le meilleur point.
+
+			// Cherche le meilleur j non encore pris (hors tête) et non vide
+			for (size_t j = head + 1; j < N; ++j) {
+				if (j == current || taken[j] || t_[j].empty()) { continue; }
+				const Point& Fp = t_[j].front();          // Premier point de la trajectoire j.
+				if (Fp.plane_ <= Lp.plane_) { continue; } // Vérification de continuité temporelle.
+				const size_t Dp = Fp.plane_ - Lp.plane_;  // Calcul du temps (nombre de plans entre les trajectoires).
+				// (à vérifier, mais un break est possible, car les trajectoires sont triées par plan de démarrage)
+				if (Dp > maxDuration || Dp > bT) { continue; }                               // Vérification de validité temporelle.
+				const double D    = (Fp.pos_ - Lp.pos_).Norm(),                              // Calcul de la distance.
+				             MaxD = getMaxDistance(mode, static_cast<double>(Dp), maxSpeed); // Calcul de la distance maximale.
+				if (D >= bD || D > MaxD) { continue; }                                       // Vérification de validité Spatiale.
+				bJ = j;                                                                      // Mise à jour de l'élément sélectionné.
+				bT = Dp;                                                                     // Mise à jour de la durée (nombre de plan).
+				bD = D;                                                                      // Mise à jour de la distance.
+			}
+			if (bJ == std::numeric_limits<size_t>::max()) { break; } // Aucune trajectoire de trouvé, on sort du while
+			chain.push_back(bJ);                                     // Ajout de la trajectoire à la list
+			taken[bJ] = true;                                        // Ajout d'un token "trajectoire prise"
+			current   = bJ;                                          // Mise à jour de la trajectoire courrante (qui est la dernière de la liste)
 		}
-		if (cI < t_.size()) { connect(i, cI); } // Connexion des trajectoires
-		else { ++i; }                           // On passe à la trajectoire suivbante
+		chains.emplace_back(std::move(chain)); // Ajout de la chaine de trajectoire au tableau final.
 	}
-	// Autre possibilité, noter toutes les trajectoires à connecter et recopier à la toute fin dans un nouveau tableau
+
+	// --- Recomposition finale dans un nouveau conteneur, par move-concat ---
+	std::vector<track_t> new_tracks;   // Création d'une liste de trajectoire temporaire
+	new_tracks.reserve(chains.size()); // On a notre nombre de trajectoires finales
+	for (const auto& Ch : chains) {
+		// Concatène tous les points des indices de la chaîne dans un seul track
+		track_t acc;
+		// (option : size hint) somme des tailles pour limiter les reallocs
+		size_t totalPts = 0;
+		for (const size_t Idx : Ch) { totalPts += t_[Idx].size(); }
+		acc.reserve(totalPts);
+
+		for (const size_t Idx : Ch) {
+			auto& tr = t_[Idx];
+			acc.insert(acc.end(), std::make_move_iterator(tr.begin()), std::make_move_iterator(tr.end()));
+			tr.clear(); // libère les références, pas la capacité (sans importance ici)
+		}
+		new_tracks.emplace_back(std::move(acc));
+	}
+	t_.swap(new_tracks); // t_ devient le résultat reconstruit (complexité : O(1))
 }
 
 //-------------------------------------------------------------------------------------------------
 double Tracks::getMaxDistance(const size_t mode, const double duration, const double maxSpeed)
 {
 	switch (mode) {
-		case 0: return maxSpeed;
-		default: case 1: return maxSpeed * std::sqrt(duration);
-		case 3: return maxSpeed * duration;
+		case 0: return maxSpeed;                                // Immobile
+		default: case 1: return maxSpeed * std::sqrt(duration); // Diffusive
+		case 2: return maxSpeed * duration;                     // Linear
 	}
-}
-
-//-------------------------------------------------------------------------------------------------
-void Tracks::connect(const size_t track1, const size_t track2)
-{
-	std::cout << "Connect track " << track1 << " and " << track2 << "\n";
-	if (track1 >= t_.size() || track2 >= t_.size() || track1 == track2) { return; }
-	auto& a = t_[track1];
-	auto& b = t_[track2];
-	// Concat par move (aucune copie de Point)
-	a.reserve(a.size() + b.size()); // reservation de l'espace
-	a.insert(a.end(), std::make_move_iterator(b.begin()), std::make_move_iterator(b.end()));
-	b.clear();                                                  // b est désormais vide
-	t_.erase(t_.begin() + static_cast<std::ptrdiff_t>(track2)); // Retire l'entrée track2 du conteneur (rétrécit t_ et décale les indices > track2)
 }
 
 //-------------------------------------------------------------------------------------------------

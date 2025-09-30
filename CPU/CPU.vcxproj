@@ -79,7 +79,6 @@
     <ClCompile Include="..\lib\signal_processing\Matrix.cpp" />
     <ClCompile Include="..\lib\signal_processing\PSF.cpp" />
     <ClCompile Include="..\lib\signal_processing\Spline.cpp" />
-    <ClCompile Include="..\lib\tracking\Point.cpp" />
     <ClCompile Include="..\lib\tracking\Tracks.cpp" />
     <ClCompile Include="..\lib\tracking\Node.cpp" />
     <ClCompile Include="..\lib\tracking\TimeNodes.cpp" />
