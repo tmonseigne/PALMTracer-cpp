@@ -11,6 +11,7 @@
 
 #pragma once
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 
 namespace palm_tracer {
@@ -176,6 +177,8 @@ struct Vec3D {
 			default: throw std::out_of_range("Vec3D index must be 0, 1 or 2.");
 		}
 	}
+
+	[[nodiscard]] double Norm() const { return std::sqrt(x * x + y * y + z * z); }
 };
 
 

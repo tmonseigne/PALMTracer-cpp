@@ -49,10 +49,13 @@ add_library(CPU SHARED
     lib/tracking/Node.hpp
     lib/tracking/Node.cpp
     lib/tracking/Parameters.hpp
+    lib/tracking/Point.hpp
     lib/tracking/TimeNodes.hpp
     lib/tracking/TimeNodes.cpp
     lib/tracking/Tracking.hpp
     lib/tracking/Tracking.cpp
+    lib/tracking/Tracks.hpp
+    lib/tracking/Tracks.cpp
 )
 
 # === Gestion manuelle OpenMP cross-plateforme ===
@@ -94,6 +97,8 @@ add_executable(test_cpu
     Tests_CPU/test_sp_Interpolation.cpp
     Tests_CPU/test_sp_Matrix.cpp
     Tests_CPU/test_sp_Spline.cpp
+    Tests_CPU/test_tr_Point.cpp
+    Tests_CPU/test_tr_Tracks.cpp
     Tests_CPU/TiffManagement.hpp
     ${CPU_SRC}
 )
