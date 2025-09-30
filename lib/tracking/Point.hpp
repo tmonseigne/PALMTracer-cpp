@@ -39,5 +39,15 @@ public:
 	/// <param name="other">Autre point avec lequel calculer la distance.</param>
 	/// <returns>Distance euclidienne (même unité que les coordonnées de <c>pos_</c>).</returns>
 	[[nodiscard]] double GetDistance(const Point& other) const { return (pos_ - other.pos_).Norm(); }
+
+	/// <summary>Surcharge de l’opérateur de flux de sortie pour afficher un point de trajectoire.</summary>
+	/// <param name="os">Flux de sortie.</param>
+	/// <param name="p">Objet <c>point</c> à afficher.</param>
+	/// <returns>Référence vers le flux de sortie, pour chaînage.</returns>
+	friend std::ostream& operator<<(std::ostream& os, const Point& p)
+	{
+		os << "[" << p.id_ << ", " << p.plane_ << ", " << p.pos_ << ", " << p.intensity_ << ", " << p.surface_ << "]";
+		return os;
+	}
 };
 } // namespace palm_tracer

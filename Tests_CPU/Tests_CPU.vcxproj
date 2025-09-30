@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -85,8 +85,10 @@
     <ClInclude Include="..\lib\Structs.hpp" />
     <ClInclude Include="..\lib\tracking\Node.hpp" />
     <ClInclude Include="..\lib\tracking\Parameters.hpp" />
+    <ClInclude Include="..\lib\tracking\Point.hpp" />
     <ClInclude Include="..\lib\tracking\TimeNodes.hpp" />
     <ClInclude Include="..\lib\tracking\Tracking.hpp" />
+    <ClInclude Include="..\lib\tracking\Tracks.hpp" />
     <ClInclude Include="TiffManagement.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -105,12 +107,15 @@
     <ClCompile Include="..\lib\tracking\Node.cpp" />
     <ClCompile Include="..\lib\tracking\TimeNodes.cpp" />
     <ClCompile Include="..\lib\tracking\Tracking.cpp" />
+    <ClCompile Include="..\lib\tracking\Tracks.cpp" />
     <ClCompile Include="test_sp_Alignment.cpp" />
     <ClCompile Include="test_sp_BSpline.cpp" />
     <ClCompile Include="test_sp_FFT.cpp" />
     <ClCompile Include="test_sp_Interpolation.cpp" />
     <ClCompile Include="test_sp_Matrix.cpp" />
     <ClCompile Include="test_sp_Spline.cpp" />
+    <ClCompile Include="test_tr_Point.cpp" />
+    <ClCompile Include="test_tr_Tracks.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CPU\CPU.vcxproj">

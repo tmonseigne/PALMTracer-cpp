@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="..\lib\palm\ATrous.cpp">
@@ -52,6 +52,11 @@
     <ClCompile Include="..\lib\signal_processing\BSpline3D.cpp">
       <Filter>lib</Filter>
     </ClCompile>
+    <ClCompile Include="test_tr_Tracks.cpp" />
+    <ClCompile Include="..\lib\tracking\Tracks.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="test_tr_Point.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TiffManagement.hpp" />
@@ -113,6 +118,12 @@
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\signal_processing\BSpline3D.hpp">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tracking\Point.hpp">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tracking\Tracks.hpp">
       <Filter>lib</Filter>
     </ClInclude>
   </ItemGroup>

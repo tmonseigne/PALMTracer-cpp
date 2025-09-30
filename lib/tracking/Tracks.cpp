@@ -138,13 +138,9 @@ std::ostream& operator<<(std::ostream& os, const Tracks& tracks)
 {
 	os << "[\n";
 	for (size_t i = 0; i < tracks.t_.size(); ++i) {
-		os << "  Track " << i + 1 << ": [";
-		const auto& T = tracks.t_[i];
-		for (size_t j = 0; j < T.size(); ++j) {
-			os << "(" << T[j].id_ << ", " << T[j].plane_ << ", " << T[j].pos_ << ")";
-			if (j < T.size() - 1) { os << ", "; }
-		}
-		os << "]\n";
+		os << "  Track " << i + 1 << ": | ";
+		for (const auto& P : tracks.t_[i]) { os << P << " | "; }
+		os << "\n";
 	}
 	os << "]";
 	return os;
