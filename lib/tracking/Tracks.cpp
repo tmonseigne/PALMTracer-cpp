@@ -1,6 +1,7 @@
 #include "Tracks.hpp"
-
 #include "Constants.hpp"
+
+#include <cmath>
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
