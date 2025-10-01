@@ -61,6 +61,23 @@ public:
 	/// </remarks>
 	void BlinkingReconnection(size_t mode, size_t maxDuration, double maxSpeed);
 
+	/// <summary>Calcule le **Mean Squared Displacement (MSD)**, en considérant tous les décalages temporels possibles.
+	/// - Soit une trajectoire de longueur N : positions successives P₁, P₂, …, Pₙ.
+	/// - Pour chaque décalage (ou *lag*) i = 1 … N-1,
+	///   on calcule la moyenne des distances quadratiques : MSD(i) = mean_j (‖ P_{j+i} - P_j ‖²)
+	///   avec j parcourant toutes les paires séparées de i pas.
+	/// - La dernière colonne (lag = N-1) est donc basée sur un seul terme (‖Pₙ - P₁‖²).
+	///
+	/// Colonnes :  | Δ1 | Δ2 | .... | ΔN |
+	/// </summary>
+	/// <returns>Tableau 2D avec un nombre de lignes égal au nombre de trajectoires et chaque ligne de taille (N-1) (avec N la longueur de la trajectoire).</returns>
+	/// <remarks> L'unité reste le pixel (donc pixel² pour le MSD).
+	/// Dans le cas 2D (Z constant), il suffit de multiplier le résultat par PixelSize² (ex: 160nm pour avoir le résultat en nm²).
+	/// Dans le cas 3D (Z mouvant), le calcul doit être modifié pour prendre en compte cette mise à l'échelle non isotrope.</remarks>
+	/// TODO : ATTENTION : Le scintillement n'est pas pris en compte, on considère le lag l'intervalle entre 2 points. Quel que soit le nombre de plans d'écart.
+	///		   Le mieux serait d'interpoler les "plans manquants" avant les calculs statistiques...
+	std::vector<std::vector<double>> ComputeMSD() const;
+
 	/// <summary>Surcharge de l’opérateur de flux de sortie pour afficher les trajectoires.</summary>
 	/// <param name="os">Flux de sortie.</param>
 	/// <param name="tracks">Objet <c>Tracks</c> à afficher.</param>

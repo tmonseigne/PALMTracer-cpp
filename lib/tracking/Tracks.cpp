@@ -2,8 +2,10 @@
 #include "Constants.hpp"
 
 #include <cmath>
+#include <omp.h>
 
 namespace palm_tracer {
+//==================== DLL Input/output ====================
 //-------------------------------------------------------------------------------------------------
 void Tracks::LoadTracking(const double* input, const size_t nRow)
 {
@@ -16,7 +18,7 @@ void Tracks::LoadTracking(const double* input, const size_t nRow)
 
 	// Parcours des lignes
 	track_t track;           // Trajectoire en cours (réutilisée entre groupes)
-	track.reserve(16);       // Heuristique: évite quelques reallocs sur petites tracks
+	track.reserve(64);       // Heuristique: évite quelques reallocs sur petites tracks
 	size_t currentTrack = 1; // input[0]
 	for (size_t i = 0, r = 0; i < nRow; ++i, r += N_TRACKING) {
 		const auto TrackId = static_cast<size_t>(input[r]);
@@ -55,6 +57,7 @@ size_t Tracks::FillOutput(double* output) const
 	return idx;
 }
 
+//==================== Computes ====================
 //-------------------------------------------------------------------------------------------------
 void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, const double maxSpeed)
 {
@@ -91,10 +94,12 @@ void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, c
 				const double D    = (Fp.pos_ - Lp.pos_).Norm(),                              // Calcul de la distance.
 				             MaxD = getMaxDistance(mode, static_cast<double>(Dp), maxSpeed); // Calcul de la distance maximale.
 				if (D >= bD || D > MaxD) { continue; }                                       // Vérification de validité Spatiale.
-				bJ = j;                                                                      // Mise à jour de l'élément sélectionné.
-				bT = Dp;                                                                     // Mise à jour de la durée (nombre de plan).
-				bD = D;                                                                      // Mise à jour de la distance.
+
+				bJ = j;  // Mise à jour de l'élément sélectionné.
+				bT = Dp; // Mise à jour de la durée (nombre de plan).
+				bD = D;  // Mise à jour de la distance.
 			}
+
 			if (bJ == std::numeric_limits<size_t>::max()) { break; } // Aucune trajectoire de trouvé, on sort du while
 			chain.push_back(bJ);                                     // Ajout de la trajectoire à la list
 			taken[bJ] = true;                                        // Ajout d'un token "trajectoire prise"
@@ -109,6 +114,7 @@ void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, c
 	for (const auto& Ch : chains) {
 		// Concatène tous les points des indices de la chaîne dans un seul track
 		track_t acc;
+
 		// (option : size hint) somme des tailles pour limiter les reallocs
 		size_t totalPts = 0;
 		for (const size_t Idx : Ch) { totalPts += t_[Idx].size(); }
@@ -122,6 +128,35 @@ void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, c
 		new_tracks.emplace_back(std::move(acc));
 	}
 	t_.swap(new_tracks); // t_ devient le résultat reconstruit (complexité : O(1))
+}
+
+//-------------------------------------------------------------------------------------------------
+std::vector<std::vector<double>> Tracks::ComputeMSD() const
+{
+	const auto N = t_.size(); // Nombre de trajectoires
+	std::vector<std::vector<double>> res(N);
+
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(N); ++i) {
+		const auto Np = t_[i].size(); // longueur de la trajectoire i
+		if (Np < 2) { continue; }     // rien à calculer
+		res[i].resize(Np - 1, 0.0);   // allocation
+
+		// Version optimisable avec std::views::iota et std::transform_reduce, mais réduit la lisibilité des néophytes
+		// Pour chaque lag = 1 … Np-1
+		for (size_t lag = 1; lag < Np; ++lag) {
+			auto& msd           = res[i][lag - 1];
+			const size_t Npairs = Np - lag;
+
+			// MSD(lag) = mean_j ||P_{j+lag} - P_j||^2, j = 0..n_pairs-1
+			for (size_t j = 0; j < Npairs; ++j) {
+				const auto D = t_[i][j].GetDistance(t_[i][j + lag]);
+				msd += D * D;
+			}
+			msd /= static_cast<double>(Npairs);
+		}
+	}
+	return res;
 }
 
 //-------------------------------------------------------------------------------------------------

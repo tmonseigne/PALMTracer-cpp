@@ -59,7 +59,7 @@ TEST(TracksTests, BlinkingReconnection)
 		}
 	};
 
-	const size_t Size        = InitialTracks.size();
+	const size_t Size            = InitialTracks.size();
 	constexpr size_t MaxDuration = 4;
 	constexpr double MaxSpeed    = 2;
 	Tracks tracks;
@@ -72,6 +72,33 @@ TEST(TracksTests, BlinkingReconnection)
 		std::cout << " Reconnected Tracks (" << mode << ", " << MaxDuration << ", " << MaxSpeed << ") : \n" << tracks << "\n";
 		tracks.FillOutput(output.data());
 		for (size_t i = 0; i < Size; ++i) { EXPECT_DOUBLE_EQ(output[i], Ref[mode][i]); }
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+TEST(TracksTests, MSD)
+{
+	const std::vector<double> InitialTracks = {
+		1, 1, 1, 1, 1, 1, 1, 1,
+		1, 99, 2, 2, 1, 1, 2, 2,
+
+		2, 1, 3, 1, 1, 1, 3, 3,
+		2, 2, 4, 2, 2, 1, 4, 4,
+		2, 3, 5, 3, 0, 3, 7, 7,
+		2, 4, 6, 7, 4, 5, 8, 8,
+
+		3, 1, 7, 1, 1, 1, 11, 11,
+		3, 2, 8, 3, 1, 1, 12, 12,
+		3, 6, 9, 8, 1, 1, 13, 13,
+		3, 7, 10, 2, 1, 1, 14, 14,
+	};
+	Tracks tracks;
+	tracks.LoadTracking(InitialTracks.data(), 10);
+	const auto Res = tracks.ComputeMSD();
+	for (const auto& R : Res) {
+		std::cout << " | ";
+		for (const auto& C : R) { std::cout << C << " | "; }
+		std::cout << "\n";
 	}
 }
 } // namespace palm_tracer
