@@ -36,8 +36,9 @@ public:
 	/// <param name="input">Pointeur vers un tableau contigu de doubles.
 	/// Chaque ligne correspond à un point et doit contenir <see cref="N_TRACKING"/> colonnes (Track, Plan, Id, X, Y, Z, Intensité, Surface).</param>
 	/// <param name="nRow">Nombre de lignes (points) dans le tableau.</param>
+	/// <param name="pixelSize">Taille d'un pixel en unitées réelles (nanomètre).</param>
 	/// <remarks>Cette fonction initialise le vecteur interne de trajectoires <c>t_</c>.</remarks>
-	void LoadTracking(const double* input, size_t nRow);
+	void LoadTracking(const double* input, size_t nRow, double pixelSize);
 
 	/// <summary>Exporte les trajectoires actuelles vers un tableau 2D brut.</summary>
 	/// <param name="output">Pointeur vers un tableau de sortie contigu de doubles.
@@ -87,6 +88,7 @@ public:
 protected:
 	using track_t = std::vector<Point>; ///< Type représentant une trajectoire individuelle (suite de points).
 	std::vector<track_t> t_;            ///< Ensemble des trajectoires manipulées.
+	double pixelSize_ = 160;            ///< Taille d'un pixel en unitées réelles (nanomètre).
 
 
 	/// <summary> Calcule la distance maximale autorisée pour une reconnexion en fonction du mode choisi, de la durée du scintillement et de la vitesse maximale spécifiée.</summary>

@@ -7,10 +7,11 @@
 namespace palm_tracer {
 //==================== DLL Input/output ====================
 //-------------------------------------------------------------------------------------------------
-void Tracks::LoadTracking(const double* input, const size_t nRow)
+void Tracks::LoadTracking(const double* input, const size_t nRow, const double pixelSize)
 {
 	// Remise à zéro.
 	t_.clear();
+	pixelSize_ = pixelSize;
 
 	//Récupération du nombre de trajectoires pour préallouer le tableau
 	const auto NTracks = static_cast<size_t>(input[(nRow - 1) * N_TRACKING]);
@@ -28,12 +29,16 @@ void Tracks::LoadTracking(const double* input, const size_t nRow)
 			track.clear();                                          // Redondant après move, mais sûr si branché autrement
 			currentTrack = TrackId;
 		}
+
 		// Ajout du point (emplace_back = construction in-place)
-		track.emplace_back(Point(static_cast<size_t>(input[r + 2]),                         // Id
-		                         static_cast<size_t>(input[r + 1]),                         // Plan
-		                         {.x = input[r + 3], .y = input[r + 4], .z = input[r + 5]}, // Position
-		                         input[r + 6],                                              // Intensité
-		                         input[r + 7]));                                            // Surface
+		const Vec3D PosPx = {.x = input[r + 3], .y = input[r + 4], .z = input[r + 5]};
+		const Vec3D Pos   = {.x = PosPx.x * pixelSize_, .y = PosPx.y * pixelSize_, .z = PosPx.z};
+		track.emplace_back(Point(static_cast<size_t>(input[r + 2]), // Id
+		                         static_cast<size_t>(input[r + 1]), // Plan
+		                         PosPx,                             // Position en pixel
+		                         Pos,                               // Position
+		                         input[r + 6],                      // Intensité
+		                         input[r + 7]));                    // Surface
 	}
 	if (!track.empty()) { t_.push_back(std::move(track)); } // Ne pas oublier d'ajouter la dernière trajectoire
 }
@@ -47,9 +52,9 @@ size_t Tracks::FillOutput(double* output) const
 			output[idx++] = static_cast<double>(i + 1);    // Track
 			output[idx++] = static_cast<double>(P.plane_); // Plane
 			output[idx++] = static_cast<double>(P.id_);    // Id
-			output[idx++] = P.pos_.x;                      // X
-			output[idx++] = P.pos_.y;                      // Y
-			output[idx++] = P.pos_.z;                      // Z
+			output[idx++] = P.posPx_.x;                    // X
+			output[idx++] = P.posPx_.y;                    // Y
+			output[idx++] = P.posPx_.z;                    // Z
 			output[idx++] = P.intensity_;                  // Intensity
 			output[idx++] = P.surface_;                    // Surface
 		}
@@ -91,7 +96,7 @@ void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, c
 				const size_t Dp = Fp.plane_ - Lp.plane_;  // Calcul du temps (nombre de plans entre les trajectoires).
 				// (à vérifier, mais un break est possible, car les trajectoires sont triées par plan de démarrage)
 				if (Dp > maxDuration || Dp > bT) { continue; }                               // Vérification de validité temporelle.
-				const double D    = (Fp.pos_ - Lp.pos_).Norm(),                              // Calcul de la distance.
+				const double D    = Fp.GetDistance(Lp),                                      // Calcul de la distance.
 				             MaxD = getMaxDistance(mode, static_cast<double>(Dp), maxSpeed); // Calcul de la distance maximale.
 				if (D >= bD || D > MaxD) { continue; }                                       // Vérification de validité Spatiale.
 

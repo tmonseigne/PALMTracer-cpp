@@ -67,11 +67,11 @@ uint32_t CALL_CONV Tracking(const double* pointsList, double* trc, const double 
 
 //-------------------------------------------------------------------------------------------------
 extern "C" EXPORT_API
-uint32_t CALL_CONV BlinkingReconnection(const double* input, double* output, const uint32_t nRow,
+uint32_t CALL_CONV BlinkingReconnection(const double* input, double* output, const uint32_t nRow, const double pixelSize,
                                         const uint32_t mode, const uint32_t maxDuration, const double maxSpeed)
 {
 	palm_tracer::Tracks tracks;
-	tracks.LoadTracking(input, nRow);
+	tracks.LoadTracking(input, nRow, pixelSize);
 	tracks.BlinkingReconnection(mode, maxDuration, maxSpeed);
 	return static_cast<uint32_t>(tracks.FillOutput(output));
 }

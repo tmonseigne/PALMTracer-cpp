@@ -63,7 +63,7 @@ TEST(TracksTests, BlinkingReconnection)
 	constexpr size_t MaxDuration = 4;
 	constexpr double MaxSpeed    = 2;
 	Tracks tracks;
-	tracks.LoadTracking(InitialTracks.data(), 18);
+	tracks.LoadTracking(InitialTracks.data(), 18, 1);
 	std::cout << " Initial Tracks : \n" << tracks << "\n";
 
 	std::vector<double> output(Size, 0);
@@ -93,7 +93,7 @@ TEST(TracksTests, MSD)
 		3, 7, 10, 2, 1, 1, 14, 14,
 	};
 	Tracks tracks;
-	tracks.LoadTracking(InitialTracks.data(), 10);
+	tracks.LoadTracking(InitialTracks.data(), 10, 1);
 	const auto Res = tracks.ComputeMSD();
 	for (const auto& R : Res) {
 		std::cout << " | ";
