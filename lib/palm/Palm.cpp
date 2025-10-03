@@ -1,6 +1,3 @@
-// PALM.cpp : définit le point d'entrée pour l'application DLL.
-//
-
 #include "Palm.hpp"
 
 #include <omp.h>
@@ -102,7 +99,7 @@ double Palm::AutoThreshold()
 		for (const double V : tmp) { variance += (V - mu) * (V - mu); }
 		variance /= static_cast<double>(tmp.size());
 		variance = std::sqrt(variance);
-		if (std::fabs(thresholdVal_ - variance) <= std::numeric_limits<double>::epsilon()) { break; } // Aucun changement
+		if (std::abs(thresholdVal_ - variance) <= std::numeric_limits<double>::epsilon()) { break; } // Aucun changement
 		thresholdVal_ = variance;
 	}
 
@@ -162,8 +159,8 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 
 	// Tri par Y puis X (en cas peu probable de Y identique)
 	std::ranges::sort(points, [](const auto& a, const auto& b) {
-		if (std::fabs(a[5] - b[5]) > EPSILON) { return a[5] < b[5]; } // Tri sur Y (p[5])
-		return a[4] < b[4];                                           // Puis sur X (p[4])
+		if (std::abs(a[5] - b[5]) > EPSILON) { return a[5] < b[5]; } // Tri sur Y (p[5])
+		return a[4] < b[4];                                          // Puis sur X (p[4])
 	});
 }
 } // namespace palm_tracer

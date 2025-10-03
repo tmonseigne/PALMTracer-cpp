@@ -46,10 +46,10 @@ void Spline::Calibrate(const uint16_t* stack, const std::vector<Vec2I>& beads, c
 		max = std::max(sum, max);
 	}
 
-	const double Ratio = std::fabs(max) < std::numeric_limits<double>::epsilon() ? 1.0 : 1.0 / max; // un max de 0 est fortement improbable, mais au cas où.
-	matrix::Scale(psf, Ratio);                                                                      // Normalisation de la psf
-	for (auto& p : psf) { if (std::isnan(p) || !std::isfinite(p) || p < 0) { p = 0; } }             // Remplacement des Nan, infinis et négatifs par des 0.
-	bs_ = BSpline3D(psf, beadDim_, 3, {.x = 0, .y = 0, .z = 100.0 / static_cast<double>(dz_)});     // Calcul des coefficients de la cspline lissé
+	const double Ratio = std::abs(max) < std::numeric_limits<double>::epsilon() ? 1.0 : 1.0 / max; // un max de 0 est fortement improbable, mais au cas où.
+	matrix::Scale(psf, Ratio);                                                                     // Normalisation de la psf
+	for (auto& p : psf) { if (std::isnan(p) || !std::isfinite(p) || p < 0) { p = 0; } }            // Remplacement des Nan, infinis et négatifs par des 0.
+	bs_ = BSpline3D(psf, beadDim_, 3, {.x = 0, .y = 0, .z = 100.0 / static_cast<double>(dz_)});    // Calcul des coefficients de la cspline lissé
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -226,7 +226,7 @@ std::vector<Vec3D> Spline::Align(const std::vector<double>& ref, std::vector<std
 {
 	std::vector<Vec3D> shifts(beads.size());
 	// Stocker la sous-image de la Référence
-	const auto SubRef     = matrix::ExtractSubVolume(ref, beadDim_, smallXIndices_, smallXIndices_, smallZ ? smallZIndices_ : zIndices_);
+	const auto SubRef    = matrix::ExtractSubVolume(ref, beadDim_, smallXIndices_, smallXIndices_, smallZ ? smallZIndices_ : zIndices_);
 	const Vec3I SmallDim = {.x = smallBeadDim_.x, .y = smallBeadDim_.y, .z = smallZ ? smallBeadDim_.z : beadDim_.z};
 
 	#pragma omp parallel for
@@ -234,7 +234,7 @@ std::vector<Vec3D> Spline::Align(const std::vector<double>& ref, std::vector<std
 		const Interpolation3D Interp(interpolation_mode::cubic_weight, true);
 		// Stocker la sous-image
 		const auto SubB = matrix::ExtractSubVolume(beads[i], beadDim_, smallXIndices_, smallXIndices_, smallZ ? smallZIndices_ : zIndices_);
-		shifts[i]       = Interp.GetShift(SubRef, SubB, SmallDim);    // Lancer getShift entre la sous ref et la sous image
+		shifts[i]       = Interp.GetShift(SubRef, SubB, SmallDim);     // Lancer getShift entre la sous ref et la sous image
 		beads[i]        = Interp.Shift(beads[i], beadDim_, shifts[i]); // Lancer Shift sur l'image de base et Remplacer la bille par ce shift
 	}
 	return shifts;
@@ -299,7 +299,7 @@ void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std
                         double& norm, const bool smallZ) const
 {
 	const size_t Nbeads         = beads.size();
-	const Vec3I SmallDim       = {.x = smallBeadDim_.x, .y = smallBeadDim_.y, .z = smallZ ? smallBeadDim_.z : beadDim_.z};
+	const Vec3I SmallDim        = {.x = smallBeadDim_.x, .y = smallBeadDim_.y, .z = smallZ ? smallBeadDim_.z : beadDim_.z};
 	const size_t SmallStackSize = SmallDim.GetSize();
 
 	// Pour un sous volume : const auto Sub = getSubVolume(volume, smallZ);

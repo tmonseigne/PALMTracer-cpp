@@ -110,7 +110,7 @@ void Segmentation2D::FilterData()
 
 	for (size_t i = 0; i < OldSize; ++i) {
 		if (!isFiltered(infos_[i], i)) {
-			oldToNew[i]      = newIdx + 1;
+			oldToNew[i] = newIdx + 1;
 			filtered.emplace_back(infos_[i]);
 			++newIdx;
 		}
@@ -164,10 +164,7 @@ void Segmentation2D::ComputeStatistics()
 
 
 //-------------------------------------------------------------------------------------------------
-void Segmentation2D::alloc(const size_t nbStruct)
-{
-	infos_.resize(nbStruct);
-}
+void Segmentation2D::alloc(const size_t nbStruct) { infos_.resize(nbStruct); }
 
 //-------------------------------------------------------------------------------------------------
 void Segmentation2D::filterStructureWS()
@@ -235,7 +232,7 @@ void Segmentation2D::filterStructureWS()
 
 			if (!s.locked && !Neighbor.locked) {
 				const double Delta = s.maxPotential - s.minPotential;
-				if (std::fabs(Delta) <= DBL_EPSILON) { continue; }
+				if (std::abs(Delta) <= DBL_EPSILON) { continue; }
 
 				const double Ratio = (s.maxPotential - s.maxPotentialWithNeighbor) / Delta;
 				if (Ratio < ratio_) {
@@ -266,9 +263,7 @@ void Segmentation2D::filterStructureWS()
 
 	for (size_t oldIdx = 0; oldIdx < wsFusions.size(); ++oldIdx) {
 		const auto& Fusion = wsFusions[oldIdx];
-		if (Fusion.newIndex > 0) {
-			updatedInfos[Fusion.newIndex - 1]        = infos_[oldIdx];
-		}
+		if (Fusion.newIndex > 0) { updatedInfos[Fusion.newIndex - 1] = infos_[oldIdx]; }
 	}
 	infos_ = std::move(updatedInfos);
 

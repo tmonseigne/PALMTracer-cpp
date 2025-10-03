@@ -61,7 +61,7 @@ void GaussianFit::Run(const uint16_t* image, size_t width, size_t height, double
 		double x2_old = x2;
 
 		// Trouver la valeur absolue maximale
-		double m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::fabs(b); }));
+		double m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::abs(b); }));
 
 		bool stop = false;
 		if (m < EPSILON_1) { stop = true; }
@@ -106,12 +106,12 @@ void GaussianFit::Run(const uint16_t* image, size_t width, size_t height, double
 			}
 
 			m = 0;
-			for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::fabs(deltaP[i] / p_[i])); }
+			for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::abs(deltaP[i] / p_[i])); }
 
 			if (m < EPSILON_2 && iteration > 2) { stop = true; }
 			if (x2 / static_cast<double>(n_) < EPSILON_3 && iteration > 2) { stop = true; }
 
-			m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::fabs(b); }));
+			m = std::ranges::max(std::views::transform(beta, [](const double b) { return std::abs(b); }));
 
 			if (m < EPSILON_1 && iteration > 2) { stop = true; }
 			if (iteration >= N_ITER) { stop = true; }

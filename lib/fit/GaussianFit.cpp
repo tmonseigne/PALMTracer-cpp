@@ -48,7 +48,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 		double err_old = err;
 
 		// Trouver la valeur absolue maximale
-		double m = std::ranges::max(std::views::transform(ws.beta, [](const double b) { return std::fabs(b); }));
+		double m = std::ranges::max(std::views::transform(ws.beta, [](const double b) { return std::abs(b); }));
 
 		for (size_t iteration = ((m < EPSILON_1) ? N_ITER : 0); iteration < N_ITER; ++iteration) { // Main Loop
 			// Calcul de l'inverse de la matrice de courbure α
@@ -81,7 +81,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX); // Augmentation de λ.
 				// Critère d’arrêt “petit pas”, m = max (δP / p) (variation relative maximum parmi tous les paramètres)
 				m = 0.0;
-				for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::fabs(ws.deltaP[i]) / std::max(std::fabs(ws.p[1][i]), 1e-12)); }
+				for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::abs(ws.deltaP[i]) / std::max(std::abs(ws.p[1][i]), 1e-12)); }
 				if (m < EPSILON_2 && iteration >= 2) { break; } // On est trop faible est déjà 2 iterations, on arrête
 				continue;                                       // On repart au début de la boucle
 			}
@@ -108,11 +108,11 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 
 			// Critères d'arrêts
 			m = 0.0;
-			for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::fabs(ws.deltaP[i]) / std::max(std::fabs(ws.p[1][i]), 1e-12)); }
+			for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::abs(ws.deltaP[i]) / std::max(std::abs(ws.p[1][i]), 1e-12)); }
 			if (iteration >= 2) {                                         // Si on est déjà à 2 iterations
 				if (m < EPSILON_2) { break; }                             // Si le pas est trop faible
 				if (err / static_cast<double>(n_) < EPSILON_3) { break; } // Si l'erreur est trop faible
-				if (std::ranges::max(std::views::transform(ws.beta, [](const double b) { return std::fabs(b); })) < EPSILON_1) { break; }
+				if (std::ranges::max(std::views::transform(ws.beta, [](const double b) { return std::abs(b); })) < EPSILON_1) { break; }
 			}
 		}
 

@@ -30,7 +30,7 @@ TEST(AlignmentTests, BlankCallWithReference)
 	constexpr size_t ImSize     = Height * Width;
 	constexpr size_t Size       = ImSize * Planes;
 	constexpr size_t Upsampling = 1;
-	constexpr Vec3I Dim       = {.x = Width, .y = Height, .z = Planes};
+	constexpr Vec3I Dim         = {.x = Width, .y = Height, .z = Planes};
 	const auto HighSNR          = new uint16_t[ImSize],
 	           LowSNR           = new uint16_t[ImSize],
 	           Input            = new uint16_t[Size],
@@ -60,7 +60,7 @@ TEST(AlignmentTests, BlankCallWithFactor)
 	constexpr size_t ImSize     = Height * Width;
 	constexpr size_t Size       = ImSize * Planes;
 	constexpr size_t Upsampling = 1;
-	constexpr Vec3I Dim       = {.x = Width, .y = Height, .z = Planes};
+	constexpr Vec3I Dim         = {.x = Width, .y = Height, .z = Planes};
 	const auto Input            = new uint16_t[Size],
 	           Output           = new uint16_t[Size];
 

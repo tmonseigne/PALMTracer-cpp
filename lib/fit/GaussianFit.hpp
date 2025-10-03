@@ -124,7 +124,5 @@ protected:
 	/// <param name="x">Coordonnée x d'évaluation.</param>
 	/// <param name="y">Coordonnée y d'évaluation.</param>
 	void deriv(std::vector<double>& grad, const std::vector<double>& p, double x, double y) const;
-
-
 };
 } // namespace palm_tracer

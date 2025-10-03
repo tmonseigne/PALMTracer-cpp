@@ -96,7 +96,7 @@ TEST(InterpolationTests, ShiftInsideBounds)
 	std::vector<double> volume(60);
 	std::iota(volume.begin(), volume.end(), 1);
 
-	constexpr Vec3D Shift  = {.x = 0.15, .y = 0.25, .z = 0.5};
+	constexpr Vec3D Shift = {.x = 0.15, .y = 0.25, .z = 0.5};
 	const auto Shifted    = Interp.Shift(volume, Size, Shift);
 	const std::vector Ref = {
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
@@ -119,7 +119,7 @@ TEST(InterpolationTests, ShiftOutOfBounds)
 	std::iota(volume.begin(), volume.end(), 1);
 
 	constexpr Vec3D Shift = {.x = 3.0, .y = 4.0, .z = 5.0}; // shift trop grand, tout doit être à 0.
-	const auto Shifted   = Interp.Shift(volume, Size, Shift);
+	const auto Shifted    = Interp.Shift(volume, Size, Shift);
 
 	for (const double V : Shifted) { EXPECT_DOUBLE_EQ(V, 0.0); }
 }
@@ -346,7 +346,7 @@ TEST(InterpolationTests, SubpixelMaxInterp3D)
 	volume[(1 * Size.y + 1) * Size.x + 1] = 1.0;
 	volume[(2 * Size.y + 2) * Size.x + 2] = 8.0; // maximum, mais non aligné avec grille
 
-	constexpr Vec3D Start   = {.x = 1.5, .y = 1.5, .z = 1.5};
+	constexpr Vec3D Start  = {.x = 1.5, .y = 1.5, .z = 1.5};
 	constexpr double Delta = 0.05, Window = 1.0;
 
 	const auto Shift = Interpolation3D::SubpixelMax(volume, Size, Start, Delta, Window);
@@ -365,7 +365,7 @@ TEST(InterpolationTests, GetShift3D)
 	std::vector<double> volume(60);
 	std::iota(volume.begin(), volume.end(), 1);
 	constexpr Vec3D Shift = {.x = 0.15, .y = 0.25, .z = 0.5};
-	const auto Shifted   = interp.Shift(volume, Size, Shift);
+	const auto Shifted    = interp.Shift(volume, Size, Shift);
 	//const std::vector Shifted = {
 	//	0.0, 0.0, 0.0,  0.0, 0.0,  0.0,   0.0, 0.0,  0.0,  0.0, 0.0,  0.0,
 	//	0.0, 0.0, 0.0,  0.0, 10.1, 11.1,  0.0, 13.1, 14.1, 0.0, 16.1, 17.1,
@@ -400,7 +400,7 @@ TEST(InterpolationTests, Upsample)
 // A petite dimension, l'interpolation lineaire fonctionne comme sous Matlab sans probleme même avec des 0.
 TEST(InterpolationTests, NonLinearMatrix)
 {
-	constexpr Vec3I Size           = {.x = 3, .y = 3, .z = 2};
+	constexpr Vec3I Size             = {.x = 3, .y = 3, .z = 2};
 	const std::vector<double> Volume = {
 		0, 2, 1,
 		3, 5, 4,

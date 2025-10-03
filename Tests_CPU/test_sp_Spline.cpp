@@ -128,7 +128,7 @@ TEST(SplineTests, Align)
 		for (size_t b = 0; b < Nref; ++b) { sum += beadsStack[b][i]; }
 		mu[i] = sum / static_cast<double>(Nref);
 	}
-	const auto Shifts           = spline.Align(mu, beadsStack, false);
+	const auto Shifts            = spline.Align(mu, beadsStack, false);
 	const std::vector<Vec3D> Ref = {
 		{.x = -0.0375, .y = 0.025, .z = 0},
 		{.x = -0.0125, .y = 0.1, .z = 0},

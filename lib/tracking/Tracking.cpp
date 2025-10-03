@@ -35,7 +35,7 @@ size_t Tracking::Processing()
 				for (size_t t = 0; t < nbTimes_ - 1; ++t) { likeness += timeNodes_[t].TryRandomChange(error); }
 			}
 
-			if (std::fabs(likeness) < 1e-8) { ++cpt; }
+			if (std::abs(likeness) < 1e-8) { ++cpt; }
 			else { cpt = 0; }
 		}
 	}
