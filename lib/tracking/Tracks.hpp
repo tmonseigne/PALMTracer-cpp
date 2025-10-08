@@ -28,6 +28,8 @@ enum class blinking_mode : uint8_t {
 /// La classe permet de charger des trajectoires, de les reconnecter en cas de scintillement, et de les exporter dans un format tabulaire générique.
 /// </summary>
 class Tracks {
+	using track_t = std::vector<Point>; ///< Type représentant une trajectoire individuelle (suite de points).
+
 public:
 	Tracks()  = default; ///< Constructeur par défaut de la classe <c>Tracks</c>.
 	~Tracks() = default; ///< Destructeur par défaut de la classe <c>Tracks</c>.
@@ -62,6 +64,27 @@ public:
 	/// </remarks>
 	void BlinkingReconnection(size_t mode, size_t maxDuration, double maxSpeed);
 
+	/// <summary>>Calcule le **Mean Squared Displacement (MSD)**, en considérant tous les décalages temporels (écart de plan) possibles sur une trajectoire.
+	/// - Soit une trajectoire de longueur N : positions successives P₁, P₂, …, Pₙ.
+	/// - Pour chaque décalage (ou *lag*) i = 1 … (plan(Pₙ) - plan(P₁)),
+	///	  on calcule la moyenne des distances quadratiques : MSD(i) = mean_j (‖ P_{j+i} - P_j ‖²)
+	///   avec j parcourant toutes les paires séparées de i pas.
+	/// - La dernière colonne (lag = N-1) est donc basée sur un seul terme (‖Pₙ - P₁‖²).
+	///
+	/// En cas de Blinking, il est possible qu'un lag ne possède aucun ensemble de point le représentant, le MSD sera à -1.
+	/// </summary>
+	/// <param name="track">Trajectoire à analyser.</param>
+	/// <param name="start">Premier point de la trajectoire à prendre (utile lorsqu'un sous ensemble de points est sélectionné pour le fit).</param>
+	/// <param name="end">Dernier point de la trajectoire à prendre (utile lorsqu'un sous ensemble de points est sélectionné pour le fit).</param>
+	/// <returns>Un vecteur de longueur \f$L_i=\mathrm{plane}_{\max}-\mathrm{plane}_{\min}\f$ (ou vide si la trajectoire contient moins de 2 points)</returns>
+	/// <remarks>
+	/// - Hypothèse : La trajectoire est triée par plan strictement croissant (aucun doublon de plan).
+	/// - Unités : \c Point::GetDistance() fixe l’unité (nm). Appliquer un facteur d’échelle en amont si nécessaire.
+	/// - Les bacs (lags) sans paires observées sont mis à <c>-1.0</c>.
+	/// - Complexité : \f$\mathcal{O}\!\left(M^2\right)\f$ pour \f$M\f$ le nombre de points par trajectoire.
+	/// </remarks>
+	[[nodiscard]] static std::vector<double> ComputeMSD(const track_t& track, size_t start = 0, size_t end = 0);
+
 	/// <summary>Calcule le **Mean Squared Displacement (MSD)**, en considérant tous les décalages temporels possibles.
 	/// - Soit une trajectoire de longueur N : positions successives P₁, P₂, …, Pₙ.
 	/// - Pour chaque décalage (ou *lag*) i = 1 … N-1,
@@ -69,15 +92,12 @@ public:
 	///   avec j parcourant toutes les paires séparées de i pas.
 	/// - La dernière colonne (lag = N-1) est donc basée sur un seul terme (‖Pₙ - P₁‖²).
 	///
-	/// Colonnes :  | Δ1 | Δ2 | .... | ΔN |
 	/// </summary>
-	/// <returns>Tableau 2D avec un nombre de lignes égal au nombre de trajectoires et chaque ligne de taille (N-1) (avec N la longueur de la trajectoire).</returns>
-	/// <remarks> L'unité reste le pixel (donc pixel² pour le MSD).
-	/// Dans le cas 2D (Z constant), il suffit de multiplier le résultat par PixelSize² (ex: 160nm pour avoir le résultat en nm²).
-	/// Dans le cas 3D (Z mouvant), le calcul doit être modifié pour prendre en compte cette mise à l'échelle non isotrope.</remarks>
-	/// TODO : ATTENTION : Le scintillement n'est pas pris en compte, on considère le lag l'intervalle entre 2 points. Quel que soit le nombre de plans d'écart.
-	///		   Le mieux serait d'interpoler les "plans manquants" avant les calculs statistiques...
-	std::vector<std::vector<double>> ComputeMSD() const;
+	/// <returns>Tableau 2D avec un nombre de lignes égal au nombre de trajectoires et chaque ligne de taille (N-1)
+	/// (avec N la différence de plan maximale de la trajectoire, potentiellement supérieur au nombre de points de la trajectoire en cas de blinking).</returns>
+	/// <remarks>En cas de blinking, les trajectoires plus longues contiennent des trous. Le résultat est moins précis (bruité), mais c'est convenu.</remarks>
+	[[nodiscard]] std::vector<std::vector<double>> ComputeAllMSD() const;
+
 
 	/// <summary>Surcharge de l’opérateur de flux de sortie pour afficher les trajectoires.</summary>
 	/// <param name="os">Flux de sortie.</param>
@@ -86,9 +106,8 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, const Tracks& tracks);
 
 protected:
-	using track_t = std::vector<Point>; ///< Type représentant une trajectoire individuelle (suite de points).
-	std::vector<track_t> t_;            ///< Ensemble des trajectoires manipulées.
-	double pixelSize_ = 160;            ///< Taille d'un pixel en unitées réelles (nanomètre).
+	std::vector<track_t> t_; ///< Ensemble des trajectoires manipulées.
+	double pixelSize_ = 160; ///< Taille d'un pixel en unitées réelles (nanomètre).
 
 
 	/// <summary> Calcule la distance maximale autorisée pour une reconnexion en fonction du mode choisi, de la durée du scintillement et de la vitesse maximale spécifiée.</summary>

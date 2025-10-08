@@ -80,7 +80,7 @@ TEST(TracksTests, MSD)
 {
 	const std::vector<double> InitialTracks = {
 		1, 1, 1, 1, 1, 1, 1, 1,
-		1, 99, 2, 2, 1, 1, 2, 2,
+		1, 5, 2, 2, 1, 1, 2, 2,
 
 		2, 1, 3, 1, 1, 1, 3, 3,
 		2, 2, 4, 2, 2, 1, 4, 4,
@@ -92,9 +92,17 @@ TEST(TracksTests, MSD)
 		3, 6, 9, 8, 1, 1, 13, 13,
 		3, 7, 10, 2, 1, 1, 14, 14,
 	};
+	const std::vector<std::vector<double>> Ref = {
+		{-1, -1, -1, 1},
+		{15.666666666666666, 27, 61},
+		{20, -1, -1, 25, 25, 1},
+	};
 	Tracks tracks;
 	tracks.LoadTracking(InitialTracks.data(), 10, 1);
-	const auto Res = tracks.ComputeMSD();
+	const auto Res = tracks.ComputeAllMSD();
+	for (size_t i = 0; i < Ref.size(); ++i) { for (size_t j = 0; j < Ref.size(); ++j) { EXPECT_DOUBLE_EQ(Res[i][j], Ref[i][j]); } }
+
+	// Print
 	for (const auto& R : Res) {
 		std::cout << " | ";
 		for (const auto& C : R) { std::cout << C << " | "; }

@@ -136,31 +136,42 @@ void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, c
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<std::vector<double>> Tracks::ComputeMSD() const
+std::vector<double> Tracks::ComputeMSD(const track_t& track, const size_t start, size_t end)
+{
+	if (end == 0 || end > track.size()) { end = track.size(); }   // Borne de End (pour le comportement par défaut
+	if (end < 2 + start) { return std::vector<double>(); }        // Si l'on a moins de 2 éléments à analyser
+	const size_t L = track[end - 1].plane_ - track[start].plane_; // Lag maximum possible
+	// if (L <= 0) { return std::vector<double>(); } // Impossible les trajectoires n'ont pas de points sur le même plan et ils sont triés.
+
+	std::vector sum(L, 0.0), res(L, -1.0);
+	std::vector<size_t> cnt(L, 0);
+
+	// Accumulation (toutes paires, regroupées par Lag)
+	for (size_t i = start; i < end - 1; ++i) {
+		const Point& Pi = track[i];
+		for (size_t j = i + 1; j < end; ++j) {
+			const Point& Pj  = track[j];
+			const size_t Lag = (Pj.plane_ - Pi.plane_) - 1;
+			if (Lag >= L) { continue; } // Impossible normalement, mais au cas où.
+			const double D = Pj.GetDistance(Pi);
+			sum[Lag] += D * D;
+			cnt[Lag]++;
+		}
+	}
+
+	// Sortie de taille exacte, Lag vides = -1
+	for (size_t i = 0; i < L; ++i) { if (cnt[i] != 0) { res[i] = sum[i] / static_cast<double>(cnt[i]); } }
+	return res;
+}
+
+//-------------------------------------------------------------------------------------------------
+std::vector<std::vector<double>> Tracks::ComputeAllMSD() const
 {
 	const auto N = t_.size(); // Nombre de trajectoires
 	std::vector<std::vector<double>> res(N);
 
 	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(N); ++i) {
-		const auto Np = t_[i].size(); // longueur de la trajectoire i
-		if (Np < 2) { continue; }     // rien à calculer
-		res[i].resize(Np - 1, 0.0);   // allocation
-
-		// Version optimisable avec std::views::iota et std::transform_reduce, mais réduit la lisibilité des néophytes
-		// Pour chaque lag = 1 … Np-1
-		for (size_t lag = 1; lag < Np; ++lag) {
-			auto& msd           = res[i][lag - 1];
-			const size_t Npairs = Np - lag;
-
-			// MSD(lag) = mean_j ||P_{j+lag} - P_j||^2, j = 0..n_pairs-1
-			for (size_t j = 0; j < Npairs; ++j) {
-				const auto D = t_[i][j].GetDistance(t_[i][j + lag]);
-				msd += D * D;
-			}
-			msd /= static_cast<double>(Npairs);
-		}
-	}
+	for (int i = 0; i < static_cast<int>(N); ++i) { res[static_cast<size_t>(i)] = (t_[i].size() < 2) ? std::vector<double>() : ComputeMSD(t_[i]); }
 	return res;
 }
 
