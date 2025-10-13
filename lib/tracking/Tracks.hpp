@@ -98,6 +98,49 @@ public:
 	/// <remarks>En cas de blinking, les trajectoires plus longues contiennent des trous. Le résultat est moins précis (bruité), mais c'est convenu.</remarks>
 	[[nodiscard]] std::vector<std::vector<double>> ComputeAllMSD() const;
 
+	/// <summary>Estime la <b>diffusion instantanée</b> (Instant D) le long de la trajectoire, via des <b>fenêtres glissantes</b> de longueur <c>FitLength</c>.
+	///
+	///	Pour chaque fenêtre, on calcule le vecteur MSD local pour les décalages
+	/// i = 1 … FitLength (dans la fenêtre), puis on ajuste une droite : MSD(τ) ≈ 2·d·D_inst·τ + C
+	/// où d = dimension (2 ou 3), τ = i·Δt. La pente donne D_inst = slope / (2·d).
+	/// </summary>
+	/// <param name="track">Trajectoire à analyser.</param>
+	/// <param name="fitLength">Taille de la fenêtre glissante (sur le MSD) pour le calcul de la pente.</param>
+	/// <param name="is3D">if set to <c>true</c> [is3 d].</param>
+	/// <returns></returns>
+	[[nodiscard]] static std::vector<double> ComputeInstantDiffusion(const track_t& track, size_t fitLength, bool is3D);
+
+
+	/// <summary>Estime la <b>diffusion instantanée</b> (Instant D) le long des trajectoires, via des <b>fenêtres glissantes</b> de longueur <c>FitLength</c>.
+	///
+	/// Pour chaque fenêtre, on calcule le vecteur MSD local pour les décalages
+	/// i = 1 … FitLength (dans la fenêtre), puis on ajuste une droite : MSD(τ) ≈ 2·d·D_inst·τ + C
+	/// où d = dimension (2 ou 3), τ = i·Δt. La pente donne D_inst = slope / (2·d).</summary>
+	/// <param name="fitLength">Taille de la fenêtre glissante pour le calcul de la pente.</param>
+	/// <param name="is3D"> Si <c>true</c>, utilise d = 3 (MSD en 3D avec x,y,z) ; sinon d = 2 (x,y).</param>
+	/// <returns>Tableau 2D avec un nombre de lignes égal au nombre de trajectoires et chaque ligne de taille (max(0, 1 + floor((N_t - (fit_length+1)) / stride))) (N la longueur de la trajectoire).</returns>
+	/// <remarks> Pour chaque fenêtre, on prend les FitLength premiers points du MSD local (lags 1..FitLength).
+	/// On les régréssionne vs τ = (1..FitLength)·Δt, puis on renvoie D_inst = slope / (2·d), avec d = 2 (2D) ou 3 (3D).</remarks>
+	[[nodiscard]] std::vector<std::vector<double>> ComputeAllInstantDiffusion(size_t fitLength, bool is3D) const;
+
+	/// <summary>Calcul les statistiques des trajectoires.
+	/// Colonnes : Track | D(um2/s) | MSD(0)(um2) | MSE	A(um2/s) | B(um2) | MSE
+	/// Options sur PALM TRACER fit mode, matrix, instant D, log scale, 3D, Fit Length, Step Nb
+	///
+	/// </summary>
+	/// <param name="fitMode">The fit mode.</param>
+	/// <returns></returns>
+	size_t GetStats(double* diffusion, double* diffusionInstant, double* msd, size_t fitMode);
+
+	/// <summary>Calcul les statistiques des trajectoires.
+	/// Colonnes : Track | D(um2/s) | MSD(0)(um2) | MSE	A(um2/s) | B(um2) | MSE
+	/// Options sur PALM TRACER fit mode, matrix, instant D, log scale, 3D, Fit Length, Step Nb
+	///
+	/// </summary>
+	/// <param name="output">The output.</param>
+	/// <param name="fitMode">The fit mode.</param>
+	/// <returns></returns>
+	size_t GetDiffusion(double* output, size_t fitMode);
 
 	/// <summary>Surcharge de l’opérateur de flux de sortie pour afficher les trajectoires.</summary>
 	/// <param name="os">Flux de sortie.</param>
@@ -108,6 +151,7 @@ public:
 protected:
 	std::vector<track_t> t_; ///< Ensemble des trajectoires manipulées.
 	double pixelSize_ = 160; ///< Taille d'un pixel en unitées réelles (nanomètre).
+	static constexpr double INSTANT_DIFFUSION_MIN = 1e-6;
 
 
 	/// <summary> Calcule la distance maximale autorisée pour une reconnexion en fonction du mode choisi, de la durée du scintillement et de la vitesse maximale spécifiée.</summary>

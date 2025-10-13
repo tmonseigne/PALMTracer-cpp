@@ -50,6 +50,9 @@
     <ClCompile Include="..\lib\tracking\Tracks.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\tracking\TracksFit.cpp">
+      <Filter>Tracking</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\fit\GaussianFit.hpp">
@@ -113,6 +116,9 @@
       <Filter>Tracking</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\Point.hpp">
+      <Filter>Tracking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tracking\TracksFit.hpp">
       <Filter>Tracking</Filter>
     </ClInclude>
   </ItemGroup>

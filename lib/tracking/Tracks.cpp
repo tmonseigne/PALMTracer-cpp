@@ -4,6 +4,8 @@
 #include <cmath>
 #include <omp.h>
 
+#include "TracksFit.hpp"
+
 namespace palm_tracer {
 //==================== DLL Input/output ====================
 //-------------------------------------------------------------------------------------------------
@@ -172,6 +174,47 @@ std::vector<std::vector<double>> Tracks::ComputeAllMSD() const
 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(N); ++i) { res[static_cast<size_t>(i)] = (t_[i].size() < 2) ? std::vector<double>() : ComputeMSD(t_[i]); }
+	return res;
+}
+
+//-------------------------------------------------------------------------------------------------
+std::vector<double> Tracks::ComputeInstantDiffusion(const track_t& track, const size_t fitLength, const bool is3D)
+{
+	if (fitLength < 1 || fitLength > track.size()) { return std::vector<double>{}; }
+	const size_t NPoint     = fitLength + 1;              // Il faut prendre un point de plus pour avoir un vecteur de fitlength à la fin du clacul du MSD
+	const double SlopeRatio = is3D ? 6.0 : 4.0;           // 2*d avec Δt=1
+	const auto N            = track.size() - (fitLength); // Nombre de points moins la taille de la fenêtre (-1) si Nt = 3, Fit = 2, Np = 3 ⇒ N = 1
+	std::vector res(N, -1.0);
+	const std::vector<double> FitParams = {static_cast<double>(fitLength)};
+	//#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(N); ++i) {
+		TracksFit fit(fit_mode::linear, FitParams);
+		auto msd = ComputeMSD(track, i, i + NPoint); // Il faut prendre un point de plus pour avoir un vecteur de fitlength à la fin
+		if (msd.size() > fitLength) { msd.resize(fitLength); } // En cas de blinking, on supprime les lag plus long que fitLength
+		if (msd.size() < fitLength) { res[i] = -1; }           // En cas de fenêtre plus courte, mais impossible géré en amont
+		else {
+			const double Err = fit.Fit(msd);
+
+			//if (Err < 0) { res[i] = -1; } // Une erreur négative indique un problème durant le fitting
+			//J'ai l'impression qu'en cas de blink, il modifie fitlength en interne et il vire totalement la fenêtre dnas ce cas-là. À vérifier donc ça donnerait plutôt
+			if ((Err < 0) || fit.HasBlink()) { res[i] = -1; } // Une erreur négative indique un problème durant le fitting, un blinking invalide la fenêtre
+			else {
+				const double S = fit.GetP0() / SlopeRatio; // Pente
+				res[i]         = S < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : S;
+			}
+		}
+	}
+	return res;
+}
+
+//-------------------------------------------------------------------------------------------------
+std::vector<std::vector<double>> Tracks::ComputeAllInstantDiffusion(const size_t fitLength, const bool is3D) const
+{
+	const auto N = t_.size(); // Nombre de trajectoires
+	std::vector<std::vector<double>> res(N);
+
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(N); ++i) { res[static_cast<size_t>(i)] = ComputeInstantDiffusion(t_[i], fitLength, is3D); }
 	return res;
 }
 
