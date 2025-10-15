@@ -48,6 +48,22 @@ void PrintVector(const std::vector<double>& data)
 	std::cout << "]";
 }
 
+//-------------------------------------------------------------------------------------------------
+size_t SendIrregularArray(const std::vector<std::vector<double>>& data, double* output)
+{
+	if (output == nullptr) { throw std::invalid_argument{"Irregular2dArrayToOutputChecked: `output` nul."}; }
+	constexpr double EndSentinel = -1.0; // Sentinelle de fin (< 0)
+	size_t idx                   = 0, nRow = 1;
+	for (const auto& Row : data) {
+		output[idx++] = static_cast<double>(Row.size() + 1); // Écrit L (longueur) comme double (la lecture côté Python fera int(...)).
+		output[idx++] = static_cast<double>(nRow); // Écrit le numéro de la ligne (ainsi une ligne vide ne provoquera pas de comportements non voulus).
+		for (const double V : Row) { output[idx++] = V; } // Écrit les L valeurs
+		++nRow;
+	}
+	output[idx++] = EndSentinel; // Sentinelle de fin
+	return idx;
+}
+
 //========================================================
 //==================== Basic Computes ====================
 //========================================================

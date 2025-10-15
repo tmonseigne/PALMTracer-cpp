@@ -122,9 +122,8 @@ TEST(TracksTests, InstantDiffusion)
 	const std::vector<std::vector<double>> Ref = {{1.5, 1.5}};
 	Tracks tracks;
 	tracks.LoadTracking(InitialTracks.data(), 4, 1);
-	//const auto Res = tracks.ComputeAllMSD();
 	const auto Res = tracks.ComputeAllInstantDiffusion(2, true);
-	for (size_t i = 0; i < Ref.size(); ++i) { for (size_t j = 0; j < Ref.size(); ++j) { EXPECT_DOUBLE_EQ(Res[i][j], Ref[i][j]); } }
+	for (size_t i = 0; i < Ref.size(); ++i) { for (size_t j = 0; j < Ref[i].size(); ++j) { EXPECT_DOUBLE_EQ(Res[i][j], Ref[i][j]); } }
 
 	// Print
 	for (const auto& R : Res) {

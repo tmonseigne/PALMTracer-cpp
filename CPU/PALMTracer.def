@@ -6,3 +6,4 @@ EXPORTS
 	Localization
 	Tracking
 	BlinkingReconnection
+	TracksCompute
