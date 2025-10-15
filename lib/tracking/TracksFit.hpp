@@ -26,8 +26,8 @@ namespace palm_tracer {
 /// </remarks>
 enum class fit_mode : uint8_t {
 	linear,     ///< \f$p = [a, b]\f$ pour optimiser la fonction \f$ f(x) = a \times x + b\f$
-	power,      ///< \f$p = [p, a, b]\f$ pour optimiser la fonction \f$ f(x) = a \times x^{p} + b\f$
-	exponential ///< \f$p = [x_0, \tau, a, b]\f$ pour optimiser la fonction \f$ f(x) = (b - a) \times \exp\Big(-\tfrac{x - x_0}{\tau}\Big) + a \f$
+	power,      ///< \f$p = [\alpha, a, b]\f$ pour optimiser la fonction \f$ f(x) = a \times x^{α} + b\f$
+	exponential ///< \f$p = [x_0, a, \tau, b]\f$ pour optimiser la fonction \f$ f(x) = (b - a) \times \exp\Big(-\tfrac{x - x_0}{\tau}\Big) + a \f$
 };
 
 /// <summary>
@@ -79,7 +79,7 @@ public:
 	/// - <c>fit_mode::power</c> : l'exposant
 	/// - <c>fit_mode::exponential</c> : le décalage horizontal.
 	/// </returns>
-	[[nodiscard]] double GetP0() const { return p_[0]; }
+	[[nodiscard]] std::vector<double> GetP() const { return p_; }
 
 	/// <summary>Exécute l'ajustement non linéaire (Levenberg–Marquardt) pour le mode courant sur le vecteur en entrée.</summary>
 	/// <param name="input">Série d’entrée (ex. MSD), de longueur ≥ <c>fitLength_</c>.</param>
@@ -113,9 +113,9 @@ protected:
 	/// <returns>
 	/// \f[
 	/// \begin{cases}
-	/// 2 & \text{pour } \c fit\_mode::linear \quad (p=[a,b])\\[2pt]
-	/// 3 & \text{pour } \c fit\_mode::power \quad (p=[p,a,b])\\[2pt]
-	/// 4 & \text{pour } \c fit\_mode::exponential \quad (p=[x_0,a,\tau,b])
+	/// 2 & \text{pour } \c fit\_mode::linear \quad (p=[a, b])\\[2pt]
+	/// 3 & \text{pour } \c fit\_mode::power \quad (p=[\alpha, a, b])\\[2pt]
+	/// 4 & \text{pour } \c fit\_mode::exponential \quad (p=[x_0, a, \tau, b])
 	/// \end{cases}
 	/// \f]
 	/// </returns>
@@ -157,7 +157,7 @@ protected:
 	/// <param name="input">Série d’observations de longueur attendue <c>fitLength_</c>.\n Utilisée pour estimer les valeurs initiales.</param>
 	/// <remarks>
 	/// - <b>Linear</b> : \f$p=[a, b]\f$\n
-	/// - <b>Power</b> : \f$p=[p, a, b]\f$\n
+	/// - <b>Power</b> : \f$p=[\alpha, a, b]\f$\n
 	/// - <b>Exponential</b> : \f$p = [x_0, \tau, a, b]\f$
 	/// - Aucune vérification forte n’est faite sur les zéros/divisions : on réplique l’esprit du VB mais ça sent pas bon.
 	/// </remarks>
@@ -165,9 +165,9 @@ protected:
 
 	/// <summary>Évalue la fonction de base du modèle courant et remplit <c>f_</c> pour chaque abscisse <c>x_[i]</c>.</summary>
 	/// <param name="p">Paramètres du modèle :
-	///   - <c>fit_mode::linear</c> : \f$coeffs = [a, b]\f$ et \f$f(x)=a\,x+b\f$
-	///   - <c>fit_mode::power</c> : \f$coeffs = [p, A, c]\f$ et \f$f(x)=A\,x^{p}+c\f$
-	///   - <c>fit_mode::exponential</c> : \f$coeffs = [x_0, c_1, \tau, c_3]\f$ et \f$f(x)=(c_3-c_1)\,\exp\!\Big(-\frac{x-x_0}{\tau}\Big)+c_1\f$
+	///   - <c>fit_mode::linear</c> : \f$coeffs = [a, b]\f$ et \f$f(x)=a \times x + b\f$
+	///   - <c>fit_mode::power</c> : \f$coeffs = [\alpha, a, b]\f$ et \f$f(x)=a \times x^{\alpha} + b\f$
+	///   - <c>fit_mode::exponential</c> : \f$coeffs = [x_0, a, \tau, b]\f$ et \f$f(x) = (b - a) \times \exp\!\Big(-\frac{x - x_0}{\tau}\Big) + a\f$
 	/// </param>
 	/// <remarks>
 	/// - La taille de sortie est \f$f_.size() == x_.size()\f$.
@@ -181,17 +181,17 @@ protected:
 	/// pour chaque point <c>x_[i]</c> et chaque paramètre <c>p_[j]</c>, selon le <c>fit_mode</c> courant.</summary>
 	/// <remarks>
 	/// - Dimensions : <c>df_.size() == x_.size()</c> et <c>df_[i].size() == pSize_</c>.
-	/// - <b>Linear</b> : \f$f(x)=a\,x+b,\quad p=[a,b]\f$.\n
+	/// - <b>Linear</b> : \f$f(x)=a\times x + b,\quad p=[a, b]\f$.\n
 	///   \f[\partial f/\partial a = x,\quad \partial f/\partial b = 1\f]\n
-	/// - <b>Power</b> : \f$f(x)=A\,x^{p}+c,\quad p=[p,A,c]\f$\n
-	///   \f[\partial f/\partial p = A\,\ln(x)\,x^{p},\quad \partial f/\partial A = x^{p},\quad \partial f/\partial c = 1\f]\n
+	/// - <b>Power</b> : \f$f(x)=a \times x^{\alpha}+b,\quad p=[\alpha, a, b]\f$\n
+	///   \f[\partial f/\partial p = a \times \ln(x) \times x^{\alpha},\quad \partial f/\partial a = x^{\alpha},\quad \partial f/\partial b = 1\f]\n
 	///   Pour <c>x≤0</c> et <c>p</c> non entier, <c>std::pow</c> peut produire <c>NaN</c>.\n
-	/// - <b>Exponential</b> : \f[f(x)=(c_3-c_1)\exp(-\tfrac{x-c_0}{c_2})+c_1,\quad p=[c_0,c_1,c_2,c_3]\f]\n
+	/// - <b>Exponential</b> : \f[f(x)=(b - a)\exp(-\tfrac{x-x_0}{\tau}) + a,\quad p=[x_0, a, \tau, b]\f]\n
 	///   \f[\begin{aligned}
-	///   \partial f/\partial c_0 &= (c_3-c_1)\,\frac{1}{c_2}\,E,\\
-	///   \partial f/\partial c_1 &= 1 - E,\\
-	///   \partial f/\partial c_2 &= (c_3-c_1)\,\frac{x-c_0}{c_2^2}\,E,\\
-	///   \partial f/\partial c_3 &= E,\quad E=\exp\!\big(-\tfrac{x-c_0}{c_2}\big)
+	///   \partial f/\partial x_0 &= (b-a) \times \frac{1}{\tau} \times E, \\
+	///   \partial f/\partial a &= 1 - E, \\
+	///   \partial f/\partial \tau &= (b-a) \times \frac{x-x_0}{\tau^2} \times E, \\
+	///   \partial f/\partial b &= E,\quad E=\exp\!\big(-\tfrac{x-x_0}{\tau}\big)
 	///   \end{aligned}\f]\n
 	/// - Aucun <c>try/except</c> : en cas de <c>c2==0</c>, le modèle est singulier.
 	/// </remarks>
@@ -201,12 +201,12 @@ protected:
 	/// <param name="lambda">Paramètre de Levenberg–Marquardt (\f$\lambda \ge 0\f$). La diagonale est multipliée par \f$(1+\lambda)\f$.</param>
 	/// <remarks>On forme la matrice de taille <c>pSize_ × (pSize_ + 1)</c> :
 	/// \f[
-	/// \alpha_{jk} \mathrel{+}= \sum_i \frac{\partial f_i}{\partial p_j}\,\frac{\partial f_i}{\partial p_k}
+	/// \alpha_{jk} \mathrel{+}= \sum_i \frac{\partial f_i}{\partial p_j} \times \frac{\partial f_i}{\partial p_k}
 	/// \quad\text{et}\quad
-	/// \alpha_{j,\;pSize_} \mathrel{+}= \sum_i (y_i - f_i)\,\frac{\partial f_i}{\partial p_j}.
+	/// \alpha_{j,\;pSize_} \mathrel{+}= \sum_i (y_i - f_i) \times \frac{\partial f_i}{\partial p_j}.
 	/// \f]
 	/// La partie inférieure est symétrisée : \f$\alpha_{jk} \leftarrow \alpha_{kj}\f$ pour \f$k&lt;j\f$.\n
-	/// Enfin, LM : \f$\alpha_{jj}\leftarrow (1+\lambda)\,\alpha_{jj}\f$.\n
+	/// Enfin, LM : \f$\alpha_{jj}\leftarrow (1+\lambda) \times \alpha_{jj}\f$.\n
 	/// <b>Bornes de boucle :</b> par défaut on itère sur <c>fitLength_</c> (VB emploie <c>Y.Length</c>).
 	/// Si l’on souhaite n’utiliser que les points « valides » compactés, remplacer par <c>nY_</c>.\n
 	/// TODO: valider la convention finale.

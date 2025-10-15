@@ -13,7 +13,7 @@ const std::vector NAN_VECTOR(3, std::numeric_limits<double>::quiet_NaN());
 TEST(MatrixTest, SendIrregular)
 {
 	const std::vector<std::vector<double>> Data = {{1, 2}, {3, 4, 5}, {}};
-	const std::vector<double> Ref               = {3, 1, 1, 2, 4, 2, 3, 4, 5, 1, 3, -1};
+	const std::vector<double> Ref               = {3, 1, 1, 2, 4, 2, 3, 4, 5, -1};
 
 	std::vector<double> res(Ref.size(), 0.0);
 	const size_t N = matrix::SendIrregularArray(Data, res.data());

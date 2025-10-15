@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "Point.hpp"
+#include "TracksFit.hpp"
 
 namespace palm_tracer {
 /// <summary>Modes de croissance de la distance maximale de recherche lors de la reconnexion de trajectoires séparées par scintillement.</summary>
@@ -106,13 +107,12 @@ public:
 	/// </summary>
 	/// <param name="track">Trajectoire à analyser.</param>
 	/// <param name="fitLength">Taille de la fenêtre glissante (sur le MSD) pour le calcul de la pente.</param>
-	/// <param name="is3D">if set to <c>true</c> [is3 d].</param>
+	/// <param name="is3D"> Si <c>true</c>, utilise d = 3 (MSD en 3D avec x,y,z) ; sinon d = 2 (x,y).</param>
 	/// <returns></returns>
 	[[nodiscard]] static std::vector<double> ComputeInstantDiffusion(const track_t& track, size_t fitLength, bool is3D);
 
 
-	/// <summary>Estime la <b>diffusion instantanée</b> (Instant D) le long des trajectoires, via des <b>fenêtres glissantes</b> de longueur <c>FitLength</c>.
-	///
+	/// <summary>Estime la <b>diffusion instantanée</b> (Instant D) le long des trajectoires, via des <b>fenêtres glissantes</b> de longueur <c>FitLength</c>.\n
 	/// Pour chaque fenêtre, on calcule le vecteur MSD local pour les décalages
 	/// i = 1 … FitLength (dans la fenêtre), puis on ajuste une droite : MSD(τ) ≈ 2·d·D_inst·τ + C
 	/// où d = dimension (2 ou 3), τ = i·Δt. La pente donne D_inst = slope / (2·d).</summary>
@@ -123,24 +123,22 @@ public:
 	/// On les régréssionne vs τ = (1..FitLength)·Δt, puis on renvoie D_inst = slope / (2·d), avec d = 2 (2D) ou 3 (3D).</remarks>
 	[[nodiscard]] std::vector<std::vector<double>> ComputeAllInstantDiffusion(size_t fitLength, bool is3D) const;
 
-	/// <summary>Calcul les statistiques des trajectoires.
-	/// Colonnes : Track | D(um2/s) | MSD(0)(um2) | MSE	A(um2/s) | B(um2) | MSE
-	/// Options sur PALM TRACER fit mode, matrix, instant D, log scale, 3D, Fit Length, Step Nb
-	///
-	/// </summary>
-	/// <param name="fitMode">The fit mode.</param>
-	/// <returns></returns>
-	size_t GetStats(double* diffusion, double* diffusionInstant, double* msd, size_t fitMode);
 
-	/// <summary>Calcul les statistiques des trajectoires.
-	/// Colonnes : Track | D(um2/s) | MSD(0)(um2) | MSE	A(um2/s) | B(um2) | MSE
-	/// Options sur PALM TRACER fit mode, matrix, instant D, log scale, 3D, Fit Length, Step Nb
-	///
-	/// </summary>
-	/// <param name="output">The output.</param>
-	/// <param name="fitMode">The fit mode.</param>
-	/// <returns></returns>
-	size_t GetDiffusion(double* output, size_t fitMode);
+	/// <summary>Calcule des métriques de diffusion à partir d'une trajectoire et réalise un ou plusieurs fittings du MSD.</summary>
+	/// <param name="track">Trajectoire à analyser.</param>
+	/// <param name="is3D"> Si <c>true</c>, utilise d = 3 (MSD en 3D avec x,y,z) ; sinon d = 2 (x,y).</param>
+	/// <param name="mode">Le mode d'ajustement (voir <see cref="fit_mode"/>).</param>
+	/// <param name="params">Paramètres de configuration de l'ajustement.</param>
+	/// <returns>Tabelau contenant le résultat des métriques (taille et contenu dépendant du mode d'ajustement).</returns>
+	[[nodiscard]] static std::vector<double> ComputeFitMetrics(const track_t& track, bool is3D, fit_mode mode, const std::vector<double>& params);
+
+
+	/// <summary>Calcule des métriques de diffusion pour les trajectoires et réalise un ou plusieurs fittings du MSD.</summary>
+	/// <param name="is3D"> Si <c>true</c>, utilise d = 3 (MSD en 3D avec x,y,z) ; sinon d = 2 (x,y).</param>
+	/// <param name="mode">Le mode d'ajustement (voir <see cref="fit_mode"/>).</param>
+	/// <param name="params">Paramètres de configuration de l'ajustement.</param>
+	/// <returns>Tabelau contenant le résultat des métriques (taille et contenu dépendant du mode d'ajustement).</returns>
+	[[nodiscard]] std::vector<std::vector<double>> ComputeAllFitMetrics(bool is3D, fit_mode mode, const std::vector<double>& params) const;
 
 	/// <summary>Surcharge de l’opérateur de flux de sortie pour afficher les trajectoires.</summary>
 	/// <param name="os">Flux de sortie.</param>
@@ -149,9 +147,9 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, const Tracks& tracks);
 
 protected:
-	std::vector<track_t> t_; ///< Ensemble des trajectoires manipulées.
-	double pixelSize_ = 160; ///< Taille d'un pixel en unitées réelles (nanomètre).
-	static constexpr double INSTANT_DIFFUSION_MIN = 1e-6;
+	std::vector<track_t> t_;                              ///< Ensemble des trajectoires manipulées.
+	double pixelSize_                             = 160;  ///< Taille d'un pixel en unitées réelles (nanomètre).
+	static constexpr double INSTANT_DIFFUSION_MIN = 1e-6; ///< Diffusion instantannée minimale.
 
 
 	/// <summary> Calcule la distance maximale autorisée pour une reconnexion en fonction du mode choisi, de la durée du scintillement et de la vitesse maximale spécifiée.</summary>
@@ -160,5 +158,18 @@ protected:
 	/// <param name="maxSpeed">Vitesse maximale supposée (pixels/plan).</param>
 	/// <returns> La distance maximale de recherche (en pixels) pour ce couple (mode, Δt). </returns>
 	static double getMaxDistance(size_t mode, double duration, double maxSpeed);
+
+	/// <summary>Retourne le nombre d'éléments dnas le tableau final attendu pour le <see cref="fit_mode"/> courant.</summary>
+	/// <returns>
+	/// \f[
+	/// \begin{cases}
+	/// 6 & \text{pour } \mathtt{fit\_mode::linear} \quad ([Da, Db, Derr, a, b, err])\\[2pt]
+	/// 7 & \text{pour } \mathtt{fit\_mode::power} \quad ([Da, Db, Derr, α, a, err, \mu(\text{dist})])\\[2pt]
+	/// 8 & \text{pour } \mathtt{fit\_mode::exponential} \quad ([Da, Db, Derr, a, \tau, b, err, \sqrt{\frac{3}{4}\times(b+a)}])
+	/// \end{cases}
+	/// \f]
+	/// </returns>
+	/// <remarks>En cas de  <c>mode_</c> non reconnu, retourne <c>0</c> (à éviter en pratique).</remarks>
+	static size_t getFitResSize(fit_mode mode);
 };
 } // namespace palm_tracer

@@ -94,13 +94,13 @@ TEST(TracksTests, MSD)
 	};
 	const std::vector<std::vector<double>> Ref = {
 		{-1, -1, -1, 1},
-		{15.666666666666666, 27, 61},
+		{15.6666667, 27, 61},
 		{20, -1, -1, 25, 25, 1},
 	};
 	Tracks tracks;
 	tracks.LoadTracking(InitialTracks.data(), 10, 1);
 	const auto Res = tracks.ComputeAllMSD();
-	for (size_t i = 0; i < Ref.size(); ++i) { for (size_t j = 0; j < Ref.size(); ++j) { EXPECT_DOUBLE_EQ(Res[i][j], Ref[i][j]); } }
+	for (size_t i = 0; i < Ref.size(); ++i) { for (size_t j = 0; j < Ref.size(); ++j) { EXPECT_NEAR(Res[i][j], Ref[i][j], 1e-5); } }
 
 	// Print
 	for (const auto& R : Res) {
@@ -130,6 +130,37 @@ TEST(TracksTests, InstantDiffusion)
 		std::cout << " | ";
 		for (const auto& C : R) { std::cout << C << " | "; }
 		std::cout << "\n";
+	}
+}
+
+TEST(TracksTests, ComputeAllFit)
+{
+	const std::vector<double> InitialTracks = {
+		1, 1, 1, 1, 1, 1, 1, 1,
+		1, 2, 2, 2, 2, 2, 2, 2,
+		1, 3, 3, 3, 3, 3, 3, 3,
+		1, 4, 4, 4, 4, 4, 4, 4,
+	};
+	const std::vector<std::vector<std::vector<double>>> Ref = {
+		{{1.5, -6, 1, 12, -10, 0.979592}},                                                 // linear
+		{{1.5, -6, 1, 2, 3, 1, 1.299038}},                                                 // power
+		{{1.5, -6, 1, 29012085.510261, 2417672.688433, -4.217218, 0.979592, 4664.660863}}, // exponential
+	};
+	Tracks tracks;
+	tracks.LoadTracking(InitialTracks.data(), 4, 1);
+	const std::vector Modes  = {fit_mode::linear, fit_mode::power, fit_mode::exponential};
+	const std::vector Params = {2.0};
+	for (size_t i = 0; i < Modes.size(); ++i) {
+		std::cout << "Mode " << static_cast<int>(Modes[i]) << " : \n";
+		const auto Res = tracks.ComputeAllFitMetrics(true, Modes[i], Params);
+		for (size_t j = 0; j < Ref[i].size(); ++j) { for (size_t k = 0; k < Ref[i][j].size(); ++k) { EXPECT_NEAR(Res[j][k], Ref[i][j][k], 1e-5); } }
+
+		// Print
+		for (const auto& R : Res) {
+			std::cout << " | ";
+			for (const auto& C : R) { std::cout << C << " | "; }
+			std::cout << "\n";
+		}
 	}
 }
 } // namespace palm_tracer

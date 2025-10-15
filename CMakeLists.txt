@@ -56,6 +56,8 @@ add_library(CPU SHARED
     lib/tracking/Tracking.cpp
     lib/tracking/Tracks.hpp
     lib/tracking/Tracks.cpp
+    lib/tracking/TracksFit.hpp
+    lib/tracking/TracksFit.cpp
 )
 
 # === Gestion manuelle OpenMP cross-plateforme ===

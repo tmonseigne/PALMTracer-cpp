@@ -25,22 +25,22 @@ void TracksFit::SetMode(const fit_mode mode, const std::vector<double>& fitParam
 	// Récupération du Fit length et allocation des tableaux dépendant de la taille de la fenêtre
 	SetFitLength(static_cast<size_t>(fitParams[0]));
 
-	// Allocation des tableaux dépendant du nombre de paramètres
-	p_.resize(pSize_);
-	alpha_.resize(pSize_, std::vector<double>(pSize_ + 1)); // Attention Alpha possede N lignes et N + 1 colonnes
-	alphaR_.resize(pSize_, std::vector<double>(pSize_));    // Attention Alpha possede N lignes et N + 1 colonnes
-	beta_.resize(pSize_);
-	pTry_.resize(pSize_);
+	// Allocation des tableaux dépendant du nombre de paramètres (utilisation de Assign qui remet à 0 les éléments au lieu du resize qui ne met à 0 que les nouveaux.
+	p_.assign(pSize_, 0.0);
+	alpha_.assign(pSize_, std::vector(pSize_ + 1, 0.0)); // Attention Alpha possede N lignes et N + 1 colonnes
+	alphaR_.assign(pSize_, std::vector(pSize_, 0.0));    // Attention Alpha possede N lignes et N + 1 colonnes
+	beta_.assign(pSize_, 0.0);
+	pTry_.assign(pSize_, 0.0);
 }
 
 //-------------------------------------------------------------------------------------------------
 void TracksFit::SetFitLength(const size_t fitLength)
 {
 	fitLength_ = fitLength;
-	x_.resize(fitLength_);
-	y_.resize(fitLength_);
-	f_.resize(fitLength_);
-	df_.resize(fitLength_, std::vector<double>(pSize_));
+	x_.assign(fitLength_, 0.0);
+	y_.assign(fitLength_, 0.0);
+	f_.assign(fitLength_, 0.0);
+	df_.assign(fitLength_, std::vector(pSize_, 0.0));
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -115,14 +115,14 @@ bool TracksFit::checkInputValidity(const std::vector<double>& input) const
 {
 	//Vérification de la taille du Fit.
 	if (fitLength_ < 2) {
-		std::cerr << "[TracksFit] Fit length too short (" << fitLength_ << ") need at least a value of 2" << std::endl;
+		//std::cerr << "[TracksFit] Fit length too short (" << fitLength_ << ") need at least a value of 2" << std::endl;
 		return false;
 	}
 
 	//Vérification entre la taille de l'entrée et le fitlength.
 	const size_t N = input.size();
 	if (N < fitLength_) {
-		std::cerr << "[TracksFit] Not enough sample in input (" << N << ") for a Fit length of " << fitLength_ << std::endl;
+		//std::cerr << "[TracksFit] Not enough sample in input (" << N << ") for a Fit length of " << fitLength_ << std::endl;
 		return false;
 	}
 
@@ -131,8 +131,8 @@ bool TracksFit::checkInputValidity(const std::vector<double>& input) const
 		case fit_mode::linear: { break; }
 		case fit_mode::power: {
 			// Si les deux premières valeurs sont négatives ou égales à 0.
-			if (!(input[0] > 0 && input[1] > 0)) {
-				std::cerr << "[TracksFit] The two first input must be strictly positive (" << input[0] << " and " << input[1] << ")." << std::endl;
+			if (input[0] <= 0 || input[1] <= 0) {
+				//std::cerr << "[TracksFit] The two first input must be strictly positive (" << input[0] << " and " << input[1] << ")." << std::endl;
 				return false;
 			}
 			break;
@@ -171,7 +171,7 @@ void TracksFit::initP(const std::vector<double>& input)
 			p_[1] = input[0] - p_[0];
 			break;
 		}
-		case fit_mode::power: { // p = [p, a, b]
+		case fit_mode::power: { // p = [α, a, b]
 			p_[2] = 0.0;
 			p_[1] = input[0];
 			p_[0] = std::log(input[1] / input[0]) / std::numbers::ln2;
@@ -180,8 +180,8 @@ void TracksFit::initP(const std::vector<double>& input)
 		case fit_mode::exponential: { // p = [X0, a, Tau, b]
 			// TODO : Attention ici. J'ai un sérieux doute. Je devrais prendre Y selon moi qui possède les inputs moins les -1 et des 0 à la fin car non-redimensionné.
 			// Sinon prendre le vrai dernier élément de input
-			p_[1]             = input[nY_ - 1]; //p_[1] = y_[nY_ - 1]; ou p_[1] = input.back(); // a (plateau)
 			p_[0]             = 0.0;            // x0
+			p_[1]             = input[nY_ - 1]; //p_[1] = y_[nY_ - 1]; ou p_[1] = input.back(); // a (plateau)
 			p_[3]             = 0.0;            // b (valeur à x0)
 			const double Half = p_[1] / 2.0;    // Estimation de la moitié.
 			if (input[0] < p_[1]) {
@@ -205,7 +205,7 @@ void TracksFit::base(const std::vector<double>& p)
 			for (size_t i = 0; i < fitLength_; ++i) { f_[i] = A * x_[i] + B; }
 			break;
 		}
-		case fit_mode::power: { // p = [p, a, b],  f(x) = a * x^p + b
+		case fit_mode::power: { // p = [α, a, b],  f(x) = a * x^α + b
 			const double P = p[0], A = p[1], B = p[2];
 			for (size_t i = 0; i < fitLength_; ++i) { f_[i] = A * std::pow(x_[i], P) + B; }
 			break;
@@ -229,14 +229,14 @@ void TracksFit::deriv()
 			}
 			break;
 		}
-		case fit_mode::power: { // p = [p, a, b]
-			const double P = p_[0], A = p_[1];
+		case fit_mode::power: { // p = [α, a, b]
+			const double Alpha = p_[0], A = p_[1];
 			for (size_t i = 0; i < fitLength_; ++i) {
-				const double PowX = std::pow(x_[i], P); // x^p
-				// ∂/∂p : a * ln(x) * x^p ; cas x≈0 → 0
-				df_[i][0] = std::abs(x_[i]) <= std::numeric_limits<double>::epsilon() ? 0 : A * std::log(x_[i]) * PowX;
-				df_[i][1] = PowX; // ∂/∂a
-				df_[i][2] = 1;    // ∂/∂b
+				const double XAlpha = std::pow(x_[i], Alpha); // x^α
+				// ∂/∂p : a * ln(x) * x^α ; cas x≈0 → 0
+				df_[i][0] = std::abs(x_[i]) <= std::numeric_limits<double>::epsilon() ? 0 : A * std::log(x_[i]) * XAlpha;
+				df_[i][1] = XAlpha; // ∂/∂a
+				df_[i][2] = 1;      // ∂/∂b
 			}
 			break;
 		}
@@ -291,7 +291,7 @@ bool TracksFit::computeBeta()
 		for (size_t j = i + 1; j < pSize_; ++j) {
 			const double M = alpha_[j][i] / Aii;
 			alphaR_[j][i]  = M;
-			alpha_[j][i]   = 0; // on force le zéro sous-diagonal
+			alpha_[j][i]   = 0; // On force le zéro sous-diagonal.
 			// Mise à jour des colonnes i + 1... pSize_ (inclut RHS à pSize_)
 			for (size_t k = i + 1; k <= pSize_; ++k) { alpha_[j][k] -= M * alpha_[i][k]; }
 		}

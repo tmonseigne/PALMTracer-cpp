@@ -186,10 +186,11 @@ std::vector<double> Tracks::ComputeInstantDiffusion(const track_t& track, const 
 	const auto N            = track.size() - (fitLength); // Nombre de points moins la taille de la fenêtre (-1) si Nt = 3, Fit = 2, Np = 3 ⇒ N = 1
 	std::vector res(N, -1.0);
 	const std::vector<double> FitParams = {static_cast<double>(fitLength)};
-	//#pragma omp parallel for
+
+	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(N); ++i) {
 		TracksFit fit(fit_mode::linear, FitParams);
-		auto msd = ComputeMSD(track, i, i + NPoint); // Il faut prendre un point de plus pour avoir un vecteur de fitlength à la fin
+		auto msd = ComputeMSD(track, i, i + NPoint);           // Il faut prendre un point de plus pour avoir un vecteur de fitlength à la fin
 		if (msd.size() > fitLength) { msd.resize(fitLength); } // En cas de blinking, on supprime les lag plus long que fitLength
 		if (msd.size() < fitLength) { res[i] = -1; }           // En cas de fenêtre plus courte, mais impossible géré en amont
 		else {
@@ -199,7 +200,7 @@ std::vector<double> Tracks::ComputeInstantDiffusion(const track_t& track, const 
 			//J'ai l'impression qu'en cas de blink, il modifie fitlength en interne et il vire totalement la fenêtre dnas ce cas-là. À vérifier donc ça donnerait plutôt
 			if ((Err < 0) || fit.HasBlink()) { res[i] = -1; } // Une erreur négative indique un problème durant le fitting, un blinking invalide la fenêtre
 			else {
-				const double S = fit.GetP0() / SlopeRatio; // Pente
+				const double S = fit.GetP()[0] / SlopeRatio; // Pente
 				res[i]         = S < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : S;
 			}
 		}
@@ -219,6 +220,81 @@ std::vector<std::vector<double>> Tracks::ComputeAllInstantDiffusion(const size_t
 }
 
 //-------------------------------------------------------------------------------------------------
+std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const bool is3D, const fit_mode mode, const std::vector<double>& params)
+{
+	std::vector res(getFitResSize(mode), -1.0);
+	const auto MSD          = ComputeMSD(track); // Calcul du MSD
+	const double SlopeRatio = is3D ? 6.0 : 4.0;  // 2*d avec Δt=1 ajouter le temps d'exposition à la formule (X) * exposureTime
+
+	// Fit lineaire des N premiers (avec fitlength params[0])
+	TracksFit fit(fit_mode::linear, params);
+	double err               = fit.Fit(MSD);
+	std::vector<double> pFit = fit.GetP();
+	// Une erreur négative indique un problème durant le fitting, un blinking invalide la fenêtre de base
+	if ((err < 0) || fit.HasBlink()) { return std::vector<double>{}; }
+
+	const double S = pFit[0] / SlopeRatio; // Pente
+	res[0]         = S < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : S;
+	res[1]         = pFit[1];
+	res[2]         = err;
+
+	// Fit sur l'ensemble des MSD
+	auto newParams = params;
+	newParams[0]   = static_cast<double>(MSD.size());
+	fit.SetMode(mode, newParams);
+	err  = fit.Fit(MSD);
+	pFit = fit.GetP();
+	if (err < 0) { return std::vector<double>{}; } // Si echec, on arrête.
+	//(ici le blinking est autorisé, on fait toute la trajectoire, il y en aura forcément en cas de reconnexion)
+
+	// Remplissage suivant le mode
+	switch (mode) {
+		case fit_mode::linear: {
+			res[3] = pFit[0]; // Divisé par temps d'exposition
+			// TODO mais bizarrement osef de Slope Ratio ici... Peut-être une autre erreur.
+			//const double S = pFit[0] / SlopeRatio; // Pente
+			//res[3] = S < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : S;
+			res[4] = pFit[1];
+			res[5] = err;
+
+			break;
+		}
+		case fit_mode::power: {
+			res[3] = pFit[0]; // Coefficient de puissance
+			res[4] = pFit[1]; // Coefficient multiplicateur
+			res[5] = err;
+			res[6] = track.back().GetDistance(track.front()) / static_cast<double>(track.size()); // Divisé également par exposure time
+			// TODO Possiblement pas ça si on doit diviser par le nombre de points ou le nombre de plan en cas de blinking ?
+			// De plus en commentaire sur VB, on parle de vitesse moyenne, ce qui est PRESQUE vrai.
+			// Vrai pour un déplacement linéaire, suivant la puissance, il peut y avoir acceleration/descelleration, au fil du temps.
+			// Et on considère une belle trajectoire pas avec des "détours" durant le déplacement. Petit détail, mais à vérifier le comportement voulu.
+			break;
+		}
+		case fit_mode::exponential: {
+			if (pFit[1] + pFit[3] <= 0) { return std::vector<double>{}; } // Contrainte de positivité.
+			res[3] = pFit[1];                                             // Plateau
+			res[4] = pFit[2];                                             // Tau // Divisé par temps d'exposition
+			res[5] = pFit[3];                                             // b
+			res[6] = err;
+			res[7] = std::sqrt(0.75 * (pFit[1] + pFit[3]));
+			break;
+		}
+	}
+	return res;
+}
+
+//-------------------------------------------------------------------------------------------------
+std::vector<std::vector<double>> Tracks::ComputeAllFitMetrics(const bool is3D, const fit_mode mode, const std::vector<double>& params) const
+{
+	const auto N = t_.size(); // Nombre de trajectoires
+	std::vector<std::vector<double>> res(N);
+
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(N); ++i) { res[static_cast<size_t>(i)] = ComputeFitMetrics(t_[i], is3D, mode, params); }
+	return res;
+}
+
+//-------------------------------------------------------------------------------------------------
 double Tracks::getMaxDistance(const size_t mode, const double duration, const double maxSpeed)
 {
 	switch (mode) {
@@ -226,6 +302,17 @@ double Tracks::getMaxDistance(const size_t mode, const double duration, const do
 		default: case 1: return maxSpeed * std::sqrt(duration); // Diffusive
 		case 2: return maxSpeed * duration;                     // Linear
 	}
+}
+
+//-------------------------------------------------------------------------------------------------
+size_t Tracks::getFitResSize(const fit_mode mode)
+{
+	switch (mode) {
+		case fit_mode::linear: return 6;      // [Da, Db, Derr, a, b, err]
+		case fit_mode::power: return 7;       // [Da, Db, Derr, α, a, err, \mu(\text{dist})]
+		case fit_mode::exponential: return 8; // [Da, Db, Derr, a, \tau, b, err, \sqrt{\frac{3}{4}\times(b+a)}]
+	}
+	return 0;
 }
 
 //-------------------------------------------------------------------------------------------------
