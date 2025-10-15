@@ -37,6 +37,11 @@ void PrintVolume(const std::vector<double>& data, const Vec3I& dim);
 /// <param name="col">Nombre de colonnes de la matrice.</param>
 void PrintMatrix(const std::vector<double>& data, size_t row, size_t col);
 
+/// <summary>Affiche le contenu d’une matrice 2D dans la console.
+/// Format lisible avec délimitation par lignes et colonnes.</summary>
+/// <param name="data">Matrice 2D.</param>
+void PrintMatrix(const std::vector<std::vector<double>>& data);
+
 /// <summary>Affiche le contenu d’un vecteur. </summary>
 /// <param name="data">Vecteur de données 1D.</param>
 void PrintVector(const std::vector<double>& data);

@@ -41,6 +41,17 @@ void PrintMatrix(const std::vector<double>& data, const size_t row, const size_t
 }
 
 //-------------------------------------------------------------------------------------------------
+void PrintMatrix(const std::vector<std::vector<double>>& data)
+{
+	size_t i = 0;
+	for (const auto& R : data) {
+		std::cout << "\t|";
+		for (const auto& C : R) { std::cout << C << " | "; }
+		std::cout << "\n";
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
 void PrintVector(const std::vector<double>& data)
 {
 	std::cout << "\t[";
