@@ -1,4 +1,3 @@
-// TODO(S) A VOIR !!!!
 #include "TracksFit.hpp"
 
 #include <algorithm>
@@ -50,7 +49,8 @@ double TracksFit::Fit(const std::vector<double>& input)
 
 	// Initialisation
 	fillXY(input);
-	initP(input);
+	if (fitLength_ < 2) { return -1; } // Sécurité supplémentaire en cas de scintillement massif.
+	initP();
 	double mu     = 0,
 	       lambda = 0.001, lambdaOld = lambda, lambdaFactor = LAMBDA_FACTOR_HIGH,
 	       errOld = computeR2(p_);
@@ -120,8 +120,7 @@ bool TracksFit::checkInputValidity(const std::vector<double>& input) const
 	}
 
 	//Vérification entre la taille de l'entrée et le fitlength.
-	const size_t N = input.size();
-	if (N < fitLength_) {
+	if (input.size() < fitLength_) {
 		//std::cerr << "[TracksFit] Not enough sample in input (" << N << ") for a Fit length of " << fitLength_ << std::endl;
 		return false;
 	}
@@ -146,48 +145,49 @@ bool TracksFit::checkInputValidity(const std::vector<double>& input) const
 void TracksFit::fillXY(const std::vector<double>& input)
 {
 	if (input.size() < fitLength_) { return; } // Déjà vérifier en amont
-	size_t toRemove = 0;
-	std::ranges::fill(y_, 0.0); // On initialise à 0, certaines cases peuvent ne pas être remplies.
+	hasBlink_ = false;                         // (Re)Initialisation de la détection de scintillement.
+	std::ranges::fill(y_, 0.0);                // On initialise à 0, certaines cases peuvent ne pas être remplies.
+	size_t idx = 0;
 	for (size_t i = 0; i < fitLength_; ++i) {
-		x_[i] = static_cast<double>(i + 1);
-		if (input[i] >= 0) { y_[i - toRemove] = input[i]; }
-		else { toRemove++; } // Le msd n'a pas été calculé (blinking fort - aucun élément à un lag donné - sur cette fenêtre).
+		if (input[i] < 0) { continue; } // Le msd n'a pas été calculé (blinking fort - aucun élément à un lag donné - sur cette fenêtre).
+		x_[idx] = static_cast<double>(i + 1);
+		y_[idx] = input[i];
+		idx++;
 	}
-	nY_ = fitLength_ - toRemove;
-	// TODO: on ne redimensionne pas les tableaux, mais on prend en compte les éléments "sauté" pour l'initialisation des paramètres lors du fit.
-	// Ce doit être une coquille, mais dans le code VB, on parcourt Y pour calculer le R2 et la matrice Alpha.
-	// Mais comme il y a potentiellement des éléments, à la fin, initialisé à 0 et que le tableau conserve une taille de fitlength.
-	// Le comportement est-il voulu ? faut-il parcourir plutôt jusqu'à la fin des Y "correct".
-	// On utilise dans base et deriv X et sa taille donc `fitLength`, mais c'est juste un compteur de fitLength pour le moment.
-	// (la partie histogramme modifie snas doute le comportement à vérifier.)
+	// Redimensionnement des tableaux x_, y_, f_ et df_ pour ne garder que les éléments valides.
+	if (idx != fitLength_) {
+		hasBlink_  = true;
+		fitLength_ = idx;
+		x_.resize(fitLength_);
+		y_.resize(fitLength_);
+		f_.resize(fitLength_);
+		df_.resize(fitLength_);
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
-void TracksFit::initP(const std::vector<double>& input)
+void TracksFit::initP()
 {
 	switch (mode_) {
 		case fit_mode::linear: { // p = [a, b]
-			p_[0] = input[1] - input[0];
-			p_[1] = input[0] - p_[0];
+			p_[0] = y_[1] - y_[0];
+			p_[1] = y_[0] - p_[0];
 			break;
 		}
 		case fit_mode::power: { // p = [α, a, b]
 			p_[2] = 0.0;
-			p_[1] = input[0];
-			p_[0] = std::log(input[1] / input[0]) / std::numbers::ln2;
+			p_[1] = y_[0];
+			p_[0] = std::log(y_[1] / y_[0]) / std::numbers::ln2;
 			break;
 		}
-		case fit_mode::exponential: { // p = [X0, a, Tau, b]
-			// TODO : Attention ici. J'ai un sérieux doute. Je devrais prendre Y selon moi qui possède les inputs moins les -1 et des 0 à la fin car non-redimensionné.
-			// Sinon prendre le vrai dernier élément de input
-			p_[0]             = 0.0;            // x0
-			p_[1]             = input[nY_ - 1]; //p_[1] = y_[nY_ - 1]; ou p_[1] = input.back(); // a (plateau)
-			p_[3]             = 0.0;            // b (valeur à x0)
-			const double Half = p_[1] / 2.0;    // Estimation de la moitié.
-			if (input[0] < p_[1]) {
-				//p_[2] = -1.0 / (std::log(1 - input[0] / p_[1])); // inutile, on le réalloue direct après
+		case fit_mode::exponential: {        // p = [X0, a, Tau, b]
+			p_[0]             = 0.0;         // x0
+			p_[1]             = y_.back();   // a (plateau)
+			p_[3]             = 0.0;         // b (valeur à x0)
+			const double Half = p_[1] / 2.0; // Estimation de la moitié.
+			if (y_[0] < p_[1]) {
 				size_t i = 0;
-				for (; i < fitLength_; ++i) { if (input[i] >= Half) { break; } }
+				for (; i < fitLength_; ++i) { if (y_[i] >= Half) { break; } }
 				p_[2] = static_cast<double>(i) / std::numbers::ln2;
 			}
 			else { p_[2] = 1.0; }
@@ -243,7 +243,7 @@ void TracksFit::deriv()
 		case fit_mode::exponential: { // p = [X0, a, Tau, b]
 			const double X0 = p_[0], C = p_[1], Tau = p_[2], Factor = p_[3] - C, D0 = Factor / Tau, D2 = Factor / (Tau * Tau);
 			for (size_t i = 0; i < fitLength_; ++i) {
-				const double Exp = std::exp(-(x_[i] - X0) / Tau); // E = exp(-(x - X0)/Tau)  (si Tau==0, expr. singulière : pas de garde)
+				const double Exp = std::exp(-(x_[i] - X0) / Tau); // E = exp(-(x - X0)/Tau)  (si Tau==0, expression singulière : pas de garde)
 				df_[i][0]        = D0 * Exp;                      // ∂/∂X0
 				df_[i][1]        = 1 - Exp;                       // ∂/∂a
 				df_[i][2]        = D2 * (x_[i] - X0) * Exp;       // ∂/∂Tau
@@ -263,8 +263,8 @@ void TracksFit::computeAlpha(const double lambda)
 	deriv();
 
 	// Calcul de l'alpha (Accumulation partie supérieure et RHS)
-	for (size_t i = 0; i < fitLength_; ++i) { // TODO: longueurs : fitLength_ vs nY_ les 0 de fin de Y_ sont assumé si fitLength_
-		const double Ri = y_[i] - f_[i];      // Résidu réel VS Modèle sur p_
+	for (size_t i = 0; i < fitLength_; ++i) {
+		const double Ri = y_[i] - f_[i]; // Résidu réel VS Modèle sur p_
 		for (size_t j = 0; j < pSize_; ++j) {
 			alpha_[j][pSize_] += Ri * df_[i][j];                                           // RHS (J^T r)
 			for (size_t k = j; k < pSize_; ++k) { alpha_[j][k] += df_[i][j] * df_[i][k]; } // partie supérieure (J^T J)
@@ -339,15 +339,14 @@ void TracksFit::pivot(const size_t index)
 double TracksFit::computeR2(const std::vector<double>& p)
 {
 	base(p); // Calcules la prédiction f_ à partir des paramètres
-	const size_t N = y_.size();
-	if (N == 0) { return std::numeric_limits<double>::quiet_NaN(); }
+	if (fitLength_ == 0) { return std::numeric_limits<double>::quiet_NaN(); }
 
 	// Moyenne de Y.
-	const double Mu = std::accumulate(y_.begin(), y_.end(), 0.0) / static_cast<double>(N);
+	const double Mu = std::accumulate(y_.begin(), y_.end(), 0.0) / static_cast<double>(fitLength_);
 
 	// Sommes des carrés : résiduels (s1) et totale (s2)
 	double s1 = 0.0, s2 = 0.0;
-	for (size_t i = 0; i < N; ++i) {
+	for (size_t i = 0; i < fitLength_; ++i) {
 		const double D1 = y_[i] - f_[i],
 		             D2 = y_[i] - Mu;
 		s1 += D1 * D1;

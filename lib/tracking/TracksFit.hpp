@@ -71,7 +71,7 @@ public:
 
 	/// <summary>Indique si un scintillement a été détecté.</summary>
 	/// <returns><c>true</c> si un scintillement a été détecté; sinon, <c>false</c>.</returns>
-	[[nodiscard]] bool HasBlink() const { return fitLength_ != nY_; }
+	[[nodiscard]] bool HasBlink() const { return hasBlink_; }
 
 	/// <summary>Récupère le premier paramètre d'un fit de MSD.</summary>
 	/// <returns>Le premier paramètre du Fit qui correspond à :
@@ -87,10 +87,10 @@ public:
 	double Fit(const std::vector<double>& input);
 
 protected:
-	fit_mode mode_ = fit_mode::linear;        ///< Mode de fitting utilisé
-	size_t pSize_{},                          ///< Nombre total de paramètres du modèle.
-	       fitLength_{},                      ///< Taille de la fenêtre d'analyse
-	       nY_{};                             ///< Nombre d'éléments valide dans la fenêtre initiale
+	fit_mode mode_    = fit_mode::linear;     ///< Mode de fitting utilisé
+	size_t pSize_     = 0,                    ///< Nombre total de paramètres du modèle.
+	       fitLength_ = 0;                    ///< Taille de la fenêtre d'analyse
+	bool hasBlink_    = false;                ///< Indique si un scintillement a été détecté.
 	std::vector<double> x_,                   ///< Compteur de 1 à fitLength_.
 	                    y_,                   ///< Valeurs valides dans la fenêtre initiale.
 	                    p_,                   ///< Paramètres du modèle
@@ -146,22 +146,18 @@ protected:
 	/// <remarks>
 	/// - Pour <c>i=0 .. fitLength_ - 1</c> : \f$X[i] \leftarrow i+1\f$ ; si \f$input[i] > -1\f$ alors \f$Y[write] \leftarrow input[i]\f$, sinon l’élément est sauté.\n
 	/// - Met à jour <c>nY_ = fitLength_ - (nombre de sauts)/c>.\n
-	/// - <b>Important</b> : cette implémentation ne redimensionne pas les buffers ( <c>x_</c>, <c>y_</c>, <c>f_</c>, <c>df_</c>).\n
-	///   Les éléments au-delà de <c>nY_</c> peuvent rester à 0 ; certaines routines VB parcourent <c>Y.Length</c> (équivalent <c>fitLength_</c> ici).\n
-	///   // TODO : clarifier la convention finale « <c>fitLength_</c> vs <c>nY_</c> » pour les boucles d’évaluation (base/deriv/R²/alpha).\n
 	/// - Complexité : \f$\mathcal{O}\!\left(fitLength\right)\f$.
 	/// </remarks>
 	void fillXY(const std::vector<double>& input);
 
 	/// <summary>Initialise le vecteur de paramètres <c>>p_</c> en fonction du <c>fit_mode</c> courant (heuristiques d’amorçage).</summary>
-	/// <param name="input">Série d’observations de longueur attendue <c>fitLength_</c>.\n Utilisée pour estimer les valeurs initiales.</param>
 	/// <remarks>
 	/// - <b>Linear</b> : \f$p=[a, b]\f$\n
 	/// - <b>Power</b> : \f$p=[\alpha, a, b]\f$\n
 	/// - <b>Exponential</b> : \f$p = [x_0, \tau, a, b]\f$
 	/// - Aucune vérification forte n’est faite sur les zéros/divisions : on réplique l’esprit du VB mais ça sent pas bon.
 	/// </remarks>
-	void initP(const std::vector<double>& input);
+	void initP();
 
 	/// <summary>Évalue la fonction de base du modèle courant et remplit <c>f_</c> pour chaque abscisse <c>x_[i]</c>.</summary>
 	/// <param name="p">Paramètres du modèle :
@@ -207,9 +203,6 @@ protected:
 	/// \f]
 	/// La partie inférieure est symétrisée : \f$\alpha_{jk} \leftarrow \alpha_{kj}\f$ pour \f$k&lt;j\f$.\n
 	/// Enfin, LM : \f$\alpha_{jj}\leftarrow (1+\lambda) \times \alpha_{jj}\f$.\n
-	/// <b>Bornes de boucle :</b> par défaut on itère sur <c>fitLength_</c> (VB emploie <c>Y.Length</c>).
-	/// Si l’on souhaite n’utiliser que les points « valides » compactés, remplacer par <c>nY_</c>.\n
-	/// TODO: valider la convention finale.
 	/// </remarks>
 	void computeAlpha(double lambda);
 
