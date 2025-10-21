@@ -120,7 +120,7 @@ TEST(TracksTests, InstantDiffusion)
 		1, 3, 3, 3, 3, 3, 3, 3,
 		1, 4, 4, 4, 4, 4, 4, 4,
 	};
-	const std::vector<std::vector<double>> Ref = {{1.5, 1.5}};
+	const std::vector<std::vector<double>> Ref = {{30, 30}};
 	Tracks tracks;
 	tracks.LoadTracking(InitialTracks.data(), 4, 1);
 	constexpr ComputesParams Cp = {.mode = fit_mode::linear, .fitLength = 2, .is3D = true, .pixelSize = 0.160, .exposureTime = 0.05};
@@ -144,9 +144,9 @@ TEST(TracksTests, ComputeAllFit)
 		1, 4, 4, 4, 4, 4, 4, 4,
 	};
 	const std::vector<std::vector<std::vector<double>>> Ref = {
-		{{1.5, -6, 1, 2, -10, 0.979592}},                                                  // linear
-		{{1.5, -6, 1, 2, 3, 1, std::numbers::sqrt3}},                                      // power
-		{{1.5, -6, 1, 29012085.510261, 2417672.688433, -4.217218, 0.979592, 4664.660863}}, // exponential
+		{{30, -6, 1, 40, -10, 0.979592}},                                                  // linear
+		{{30, -6, 1, 2, 3, 1, 34.641016}},                                                 // power
+		{{30, -6, 1, 29012085.510261, 48353453.768656, -4.217218, 0.979592, 4664.660863}}, // exponential
 	};
 	Tracks tracks;
 	tracks.LoadTracking(InitialTracks.data(), 4, 1);

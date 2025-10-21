@@ -180,8 +180,8 @@ std::vector<std::vector<double>> Tracks::ComputeAllMSD() const
 std::vector<double> Tracks::ComputeInstantDiffusion(const track_t& track, const ComputesParams& p)
 {
 	if (p.fitLength < 1 || p.fitLength > track.size()) { return std::vector<double>{}; }
-	const size_t NPoint     = p.fitLength + 1;              // Il faut prendre un point de plus pour avoir un vecteur de fitlength à la fin du clacul du MSD
-	const double SlopeRatio = p.is3D ? 6.0 : 4.0;           // 2*d avec Δt=1
+	const size_t NPoint     = p.fitLength + 1; // Il faut prendre un point de plus pour avoir un vecteur de fitlength à la fin du clacul du MSD
+	const double SlopeRatio = (p.is3D ? 6.0 : 4.0) * p.exposureTime; // 2*d*Δt
 	const auto N            = track.size() - (p.fitLength); // Nombre de points moins la taille de la fenêtre (-1) si Nt = 3, Fit = 2, Np = 3 ⇒ N = 1
 	std::vector res(N, -1.0);
 	auto fitP = p;
@@ -190,13 +190,14 @@ std::vector<double> Tracks::ComputeInstantDiffusion(const track_t& track, const 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(N); ++i) {
 		TracksFit fit(fitP);
-		auto msd = ComputeMSD(track, i, i + NPoint);           // Il faut prendre un point de plus pour avoir un vecteur de fitlength à la fin
+		auto msd = ComputeMSD(track, i, i + NPoint);               // Il faut prendre un point de plus pour avoir un vecteur de fitlength à la fin
 		if (msd.size() > p.fitLength) { msd.resize(p.fitLength); } // En cas de blinking, on supprime les lag plus long que fitLength
-		if (msd.size() < p.fitLength) { res[i] = -1; }           // En cas de fenêtre plus courte, mais impossible géré en amont
+		if (msd.size() < p.fitLength) { res[i] = -1; }             // En cas de fenêtre plus courte, mais impossible géré en amont
 		else {
 			const double Err = fit.Fit(msd);
 
-			if ((Err < 0) || fit.HasBlink()) { res[i] = -1; } // Une erreur négative indique un problème durant le fitting, un blinking "fort" invalide la fenêtre
+			if ((Err < 0) || fit.HasBlink()) { res[i] = -1; }
+			// Une erreur négative indique un problème durant le fitting, un blinking "fort" invalide la fenêtre
 			else {
 				const double S = fit.GetP()[0] / SlopeRatio; // Pente
 				res[i]         = S < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : S;
@@ -221,8 +222,8 @@ std::vector<std::vector<double>> Tracks::ComputeAllInstantDiffusion(const Comput
 std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const ComputesParams& p)
 {
 	std::vector res(getFitResSize(p.mode), -1.0);
-	const auto MSD          = ComputeMSD(track); // Calcul du MSD
-	const double SlopeRatio = p.is3D ? 6.0 : 4.0;  // 2*d avec Δt=1 ajouter le temps d'exposition à la formule (X) * exposureTime
+	const auto MSD          = ComputeMSD(track);                     // Calcul du MSD
+	const double SlopeRatio = (p.is3D ? 6.0 : 4.0) * p.exposureTime; // 2*d*Δt
 
 	// Fit lineaire des N premiers (avec fitlength p[0])
 	auto fitP = p;
@@ -240,7 +241,7 @@ std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const Comput
 
 	// Fit sur l'ensemble des MSD
 	auto newParams = p;
-	fitP.mode = p.mode;
+	fitP.mode      = p.mode;
 	fitP.fitLength = MSD.size();
 
 	fit.SetMode(fitP);
@@ -265,13 +266,14 @@ std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const Comput
 			res[5] = err;
 
 			const auto &Tb = track.back(), Tf = track.front();
-			res[6]         = Tb.GetDistance(Tf) / static_cast<double>(Tb.plane_ - Tf.plane_); // Divisé également par exposure time
+			const auto D   = Tb.GetDistance(Tf) / static_cast<double>(Tb.plane_ - Tf.plane_); // Distance moyenne par frame
+			res[6]         = D / p.exposureTime;                                              // Vitesse moyenne
 			break;
 		}
 		case fit_mode::exponential: {
 			if (pFit[1] + pFit[3] <= 0) { return std::vector<double>{}; } // Contrainte de positivité.
 			res[3] = pFit[1];                                             // Plateau
-			res[4] = pFit[2];                                             // Tau // Divisé par temps d'exposition
+			res[4] = pFit[2] / p.exposureTime;                            // Tau // Divisé par temps d'exposition
 			res[5] = pFit[3];                                             // b
 			res[6] = err;
 			res[7] = std::sqrt(0.75 * (pFit[1] + pFit[3]));
