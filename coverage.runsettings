@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="Code Coverage">
+        <Configuration>
+          <CodeCoverage>
+            <!-- Inclure uniquement tes modules (dll/exe) générés par ta solution -->
+            <ModulePaths>
+              <Include>
+                <!-- tes binaires de solution -->
+                <ModulePath>.*\\PALMTracer_CPU\.dll</ModulePath>
+                <ModulePath>.*\\Tests_CPU\.exe</ModulePath>
+              </Include>
+              <Exclude>
+                <!-- runtime & libs système -->
+                <ModulePath>.*\\vcruntime.*</ModulePath>
+                <ModulePath>.*\\msvcp.*</ModulePath>
+                <ModulePath>.*\\windows\\system32\\.*</ModulePath>
+                <!-- gtest & autres externes -->
+                <ModulePath>.*\\gtest.*</ModulePath>
+                <ModulePath>.*\\gmock.*</ModulePath>
+              </Exclude>
+            </ModulePaths>
+
+            <!-- Ciblage par fichiers source : n’inclure QUE ..\lib\* -->
+            <Sources>
+              <Include>
+                <!-- adapte si besoin ; regex, penser à doubler les backslashes -->
+                <Source>.*\\PALMTracer-cpp\\lib\\.*</Source>
+              </Include>
+              <Exclude>
+                <!-- exclure les tests -->
+                <Source>.*\\PALMTracer-cpp\\Tests_CPU\\.*</Source>
+                <!-- exclure tiers (si tu as external/) -->
+                <Source>.*\\PALMTracer-cpp\\external\\.*</Source>
+              </Exclude>
+            </Sources>
+
+            <!-- Optionnel : ignorer fonctions/types “bruit” -->
+            <Functions>
+              <Exclude>
+                <Function>^std::.*</Function>
+                <Function>^__.*</Function>
+                <Function>^testing::.*</Function>
+              </Exclude>
+            </Functions>
+          </CodeCoverage>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

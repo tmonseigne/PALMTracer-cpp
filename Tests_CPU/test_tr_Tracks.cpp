@@ -1,7 +1,8 @@
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include <algorithm>
 #include <array>
+#include <numbers>
 #include <numeric>
 
 #include "Structs.hpp"
@@ -59,11 +60,11 @@ TEST(TracksTests, BlinkingReconnection)
 		}
 	};
 
-	const size_t Size        = InitialTracks.size();
+	const size_t Size            = InitialTracks.size();
 	constexpr size_t MaxDuration = 4;
 	constexpr double MaxSpeed    = 2;
 	Tracks tracks;
-	tracks.LoadTracking(InitialTracks.data(), 18);
+	tracks.LoadTracking(InitialTracks.data(), 18, 1);
 	std::cout << " Initial Tracks : \n" << tracks << "\n";
 
 	std::vector<double> output(Size, 0);
@@ -72,6 +73,96 @@ TEST(TracksTests, BlinkingReconnection)
 		std::cout << " Reconnected Tracks (" << mode << ", " << MaxDuration << ", " << MaxSpeed << ") : \n" << tracks << "\n";
 		tracks.FillOutput(output.data());
 		for (size_t i = 0; i < Size; ++i) { EXPECT_DOUBLE_EQ(output[i], Ref[mode][i]); }
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+TEST(TracksTests, MSD)
+{
+	const std::vector<double> InitialTracks = {
+		1, 1, 1, 1, 1, 1, 1, 1,
+		1, 5, 2, 2, 1, 1, 2, 2,
+
+		2, 1, 3, 1, 1, 1, 3, 3,
+		2, 2, 4, 2, 2, 1, 4, 4,
+		2, 3, 5, 3, 0, 3, 7, 7,
+		2, 4, 6, 7, 4, 5, 8, 8,
+
+		3, 1, 7, 1, 1, 1, 11, 11,
+		3, 2, 8, 3, 1, 1, 12, 12,
+		3, 6, 9, 8, 1, 1, 13, 13,
+		3, 7, 10, 2, 1, 1, 14, 14,
+	};
+	const std::vector<std::vector<double>> Ref = {
+		{-1, -1, -1, 1},
+		{15.6666667, 27, 61},
+		{20, -1, -1, 25, 25, 1},
+	};
+	Tracks tracks;
+	tracks.LoadTracking(InitialTracks.data(), 10, 1);
+	const auto Res = tracks.ComputeAllMSD();
+	for (size_t i = 0; i < Ref.size(); ++i) { for (size_t j = 0; j < Ref.size(); ++j) { EXPECT_NEAR(Res[i][j], Ref[i][j], 1e-5); } }
+
+	// Print
+	for (const auto& R : Res) {
+		std::cout << " | ";
+		for (const auto& C : R) { std::cout << C << " | "; }
+		std::cout << "\n";
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+TEST(TracksTests, InstantDiffusion)
+{
+	const std::vector<double> InitialTracks = {
+		1, 1, 1, 1, 1, 1, 1, 1,
+		1, 2, 2, 2, 2, 2, 2, 2,
+		1, 3, 3, 3, 3, 3, 3, 3,
+		1, 4, 4, 4, 4, 4, 4, 4,
+	};
+	const std::vector<std::vector<double>> Ref = {{30, 30}};
+	Tracks tracks;
+	tracks.LoadTracking(InitialTracks.data(), 4, 1);
+	constexpr ComputesParams Cp = {.mode = fit_mode::linear, .fitLength = 2, .is3D = true, .pixelSize = 0.160, .exposureTime = 0.05};
+	const auto Res              = tracks.ComputeAllInstantDiffusion(Cp);
+	for (size_t i = 0; i < Ref.size(); ++i) { for (size_t j = 0; j < Ref[i].size(); ++j) { EXPECT_DOUBLE_EQ(Res[i][j], Ref[i][j]); } }
+
+	// Print
+	for (const auto& R : Res) {
+		std::cout << " | ";
+		for (const auto& C : R) { std::cout << C << " | "; }
+		std::cout << "\n";
+	}
+}
+
+TEST(TracksTests, ComputeAllFit)
+{
+	const std::vector<double> InitialTracks = {
+		1, 1, 1, 1, 1, 1, 1, 1,
+		1, 2, 2, 2, 2, 2, 2, 2,
+		1, 3, 3, 3, 3, 3, 3, 3,
+		1, 4, 4, 4, 4, 4, 4, 4,
+	};
+	const std::vector<std::vector<std::vector<double>>> Ref = {
+		{{30, -6, 1, 40, -10, 0.979592}},                                                  // linear
+		{{30, -6, 1, 2, 3, 1, 34.641016}},                                                 // power
+		{{30, -6, 1, 29012085.510261, 48353453.768656, -4.217218, 0.979592, 4664.660863}}, // exponential
+	};
+	Tracks tracks;
+	tracks.LoadTracking(InitialTracks.data(), 4, 1);
+	const std::vector Modes = {fit_mode::linear, fit_mode::power, fit_mode::exponential};
+	for (size_t i = 0; i < Modes.size(); ++i) {
+		const ComputesParams Cp = {.mode = Modes[i], .fitLength = 2, .is3D = true, .pixelSize = 0.160, .exposureTime = 0.05};
+		std::cout << "params : " << Cp << " : \n";
+		const auto Res = tracks.ComputeAllFitMetrics(Cp);
+		for (size_t j = 0; j < Ref[i].size(); ++j) { for (size_t k = 0; k < Ref[i][j].size(); ++k) { EXPECT_NEAR(Res[j][k], Ref[i][j][k], 1e-5); } }
+
+		// Print
+		for (const auto& R : Res) {
+			std::cout << " | ";
+			for (const auto& C : R) { std::cout << C << " | "; }
+			std::cout << "\n";
+		}
 	}
 }
 } // namespace palm_tracer

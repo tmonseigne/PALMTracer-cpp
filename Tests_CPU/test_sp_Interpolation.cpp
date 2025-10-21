@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include <numeric>
 
@@ -360,12 +360,12 @@ TEST(InterpolationTests, SubpixelMaxInterp3D)
 //-------------------------------------------------------------------------------------------------
 TEST(InterpolationTests, GetShift3D)
 {
-	Interpolation3D interp(MODE, CROP);
+	const Interpolation3D Interp(MODE, CROP);
 	constexpr Vec3I Size = {.x = 3, .y = 4, .z = 5};
 	std::vector<double> volume(60);
 	std::iota(volume.begin(), volume.end(), 1);
 	constexpr Vec3D Shift = {.x = 0.15, .y = 0.25, .z = 0.5};
-	const auto Shifted    = interp.Shift(volume, Size, Shift);
+	const auto Shifted    = Interp.Shift(volume, Size, Shift);
 	//const std::vector Shifted = {
 	//	0.0, 0.0, 0.0,  0.0, 0.0,  0.0,   0.0, 0.0,  0.0,  0.0, 0.0,  0.0,
 	//	0.0, 0.0, 0.0,  0.0, 10.1, 11.1,  0.0, 13.1, 14.1, 0.0, 16.1, 17.1,
@@ -375,7 +375,7 @@ TEST(InterpolationTests, GetShift3D)
 	//};
 	constexpr Vec3D Ref = {.x = 0.025, .y = 0.025, .z = 0}; // interpolated shifted matrix result is different
 
-	const auto Res = interp.GetShift(volume, Shifted, Size);
+	const auto Res = Interp.GetShift(volume, Shifted, Size);
 	EXPECT_DOUBLE_EQ(Res.x, Ref.x);
 	EXPECT_DOUBLE_EQ(Res.y, Ref.y);
 	EXPECT_DOUBLE_EQ(Res.z, Ref.z);

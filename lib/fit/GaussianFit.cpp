@@ -60,10 +60,10 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 			std::ranges::fill(ws.deltaP, 0.0);
 			for (size_t i = 0; i < nParams_; ++i) {
 				for (size_t j = 0; j < nParams_; ++j) { ws.deltaP[i] += ws.alphaRi[i * nParams_ + j] * ws.beta[j]; } // δP = αRi × β
-				ws.p_try[i] = std::clamp(ws.p[1][i] + ws.deltaP[i], ws.p[0][i], ws.p[2][i]);                         // p_try = clamp(p + δP)
+				ws.pTry[i] = std::clamp(ws.p[1][i] + ws.deltaP[i], ws.p[0][i], ws.p[2][i]);                          // pTry = clamp(p + δP)
 			}
-			// En cas de clamp de p_try, deltaP doit etre recalculé.
-			for (size_t i = 0; i < nParams_; ++i) { ws.deltaP[i] = ws.p_try[i] - ws.p[1][i]; }
+			// En cas de clamp de pTry, deltaP doit etre recalculé.
+			for (size_t i = 0; i < nParams_; ++i) { ws.deltaP[i] = ws.pTry[i] - ws.p[1][i]; }
 
 			// Critère d’arrêt “petit pas”, si le pas réel est ~0 pour tous les paramètres. Inutile d’évaluer, on augmente λ.
 			bool tinyStep = true;
@@ -96,7 +96,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 
 			if (Rho > EPSILON_4) {                                  // On accepte : on remplace l’état courant par _try
 				err_old = err;                                      // Mise à jour de l'erreur de reference
-				ws.p[1] = ws.p_try;                                 // Mise à jour des paramètres du modèle
+				ws.p[1] = ws.pTry;                                  // Mise à jour des paramètres du modèle
 				err     = lm(ws);                                   // Mise à jour de la ROI du modèle, la matrice alpha, le vecteur beta et de l'erreur.
 				lambda  = std::max(lambda / LAMBDA_DN, LAMBDA_MIN); // Diminution de λ.
 			}
@@ -208,7 +208,7 @@ double GaussianFit::getError(const LM_Workspace& ws) const
 {
 	double res = 0.0;
 	for (size_t i = 0; i < n_; ++i) {
-		const double Dx = ws.grid[i].v - psf(ws.p_try, static_cast<double>(ws.grid[i].x), static_cast<double>(ws.grid[i].y));
+		const double Dx = ws.grid[i].v - psf(ws.pTry, static_cast<double>(ws.grid[i].x), static_cast<double>(ws.grid[i].y));
 		res += ws.weight[i] * Dx * Dx;
 	}
 	return res;

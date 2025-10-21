@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include <numeric>
 #include "signal_processing/Matrix.hpp"
@@ -7,6 +7,24 @@
 namespace palm_tracer {
 constexpr double EPSILON = 1e-10;
 const std::vector NAN_VECTOR(3, std::numeric_limits<double>::quiet_NaN());
+
+
+//-------------------------------------------------------------------------------------------------
+TEST(MatrixTest, SendIrregular)
+{
+	const std::vector<std::vector<double>> Data = {{1, 2}, {3, 4, 5}, {}};
+	const std::vector<double> Ref               = {3, 1, 1, 2, 4, 2, 3, 4, 5, -1};
+
+	std::vector res(Ref.size(), 0.0);
+	const size_t N = matrix::SendIrregularArray(Data, res.data());
+
+	ASSERT_EQ(N, Ref.size()) << "Nombre d'éléments écrits inattendu";
+	for (size_t i = 0; i < Ref.size(); ++i) { EXPECT_DOUBLE_EQ(res[i], Ref[i]); }
+
+	std::cout << " Res : [";
+	for (size_t i = 0; i < N; ++i) { std::cout << res[i] << ", "; }
+	std::cout << "]\n";
+}
 
 //-------------------------------------------------------------------------------------------------
 TEST(MatrixTest, HasNaN)

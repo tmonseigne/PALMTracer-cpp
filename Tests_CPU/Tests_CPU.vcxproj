@@ -16,12 +16,15 @@
     <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <UseDebugLibraries>true</UseDebugLibraries>
     <UseDynamicDebugging>true</UseDynamicDebugging>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings" />
@@ -37,6 +40,9 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalIncludeDirectories>../lib;C:\Git\vcpkg\installed\x64-windows\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -83,12 +89,14 @@
     <ClInclude Include="..\lib\signal_processing\PSF.hpp" />
     <ClInclude Include="..\lib\signal_processing\Spline.hpp" />
     <ClInclude Include="..\lib\Structs.hpp" />
+    <ClInclude Include="..\lib\tracking\ComputesParams.hpp" />
     <ClInclude Include="..\lib\tracking\Node.hpp" />
     <ClInclude Include="..\lib\tracking\Parameters.hpp" />
     <ClInclude Include="..\lib\tracking\Point.hpp" />
     <ClInclude Include="..\lib\tracking\TimeNodes.hpp" />
     <ClInclude Include="..\lib\tracking\Tracking.hpp" />
     <ClInclude Include="..\lib\tracking\Tracks.hpp" />
+    <ClInclude Include="..\lib\tracking\TracksFit.hpp" />
     <ClInclude Include="TiffManagement.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -108,6 +116,7 @@
     <ClCompile Include="..\lib\tracking\TimeNodes.cpp" />
     <ClCompile Include="..\lib\tracking\Tracking.cpp" />
     <ClCompile Include="..\lib\tracking\Tracks.cpp" />
+    <ClCompile Include="..\lib\tracking\TracksFit.cpp" />
     <ClCompile Include="test_sp_Alignment.cpp" />
     <ClCompile Include="test_sp_BSpline.cpp" />
     <ClCompile Include="test_sp_FFT.cpp" />

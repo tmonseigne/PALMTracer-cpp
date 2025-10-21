@@ -41,7 +41,7 @@ protected:
 	/// Chaque membre correspond à une variable intermédiaire utilisée dans les calculs d’ajustement non-linéaire.</summary>
 	struct LM_Workspace {
 		std::vector<double> alpha,            ///< Matrice de courbure (Gauss-Newton), de taille np² : α = Jᵀ × W × J.
-		                    alphaR,           ///< Copie de alpha avec régularisation diagonale par λ (αR = α + λ diag(α)).
+		                    alphaR,           ///< Copie d'alpha avec régularisation diagonale par λ (αR = α + λ diag(α)).
 		                    alphaRi,          ///< Inverse d'alphaR  (obtenue par inversion de Gauss-Jordan).
 		                    beta,             ///< Gradient du χ² (β = Jᵀ × W × r), taille np.
 		                    delta,            ///< Résidus non pondérés : différence entre données observées et modèle (δ = y - ŷ).
@@ -49,7 +49,7 @@ protected:
 		                    deltaP,           ///< Incrément de mise à jour des paramètres (δp), calculé à chaque itération.
 		                    lBetaDeltaP,      ///< Terme auxiliaire : λ × δp + β, utilisé pour calculer le gain prédictif.
 		                    grad,             ///< Gradient de la PSF par rapport aux paramètres, évalué pixel par pixel.
-		                    p_try,            ///< Paramètres candidats (p + δp) après mise à jour et clampés aux bornes.
+		                    pTry,             ///< Paramètres candidats (p + δp) après mise à jour et clampés aux bornes.
 		                    hat,              ///< Valeurs prédites par le modèle (ŷ) pour chaque pixel de la ROI.
 		                    weight;           ///< Poids associés à chaque pixel (permet d’ajuster l’influence des points).
 		std::vector<Pixel> grid;              ///< Liste des pixels de la ROI, contenant coordonnées (x, y) et intensité mesurée.
@@ -69,7 +69,7 @@ protected:
 			grad.resize(np);
 			deltaP.resize(np);
 			lBetaDeltaP.resize(np);
-			p_try.resize(np);
+			pTry.resize(np);
 
 			hat.resize(n);
 			weight.resize(n, 1);

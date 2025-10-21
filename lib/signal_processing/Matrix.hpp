@@ -37,9 +37,22 @@ void PrintVolume(const std::vector<double>& data, const Vec3I& dim);
 /// <param name="col">Nombre de colonnes de la matrice.</param>
 void PrintMatrix(const std::vector<double>& data, size_t row, size_t col);
 
+/// <summary>Affiche le contenu d’une matrice 2D dans la console.
+/// Format lisible avec délimitation par lignes et colonnes.</summary>
+/// <param name="data">Matrice 2D.</param>
+void PrintMatrix(const std::vector<std::vector<double>>& data);
+
 /// <summary>Affiche le contenu d’un vecteur. </summary>
 /// <param name="data">Vecteur de données 1D.</param>
 void PrintVector(const std::vector<double>& data);
+
+/// <summary>Sérialise <c>data</c> dans l'<c>output</c> avec le numéro de ligne, au format <c>[L, RowIndex, valeurs..., ..., -1]</c>.\n
+/// L = 1 + row.size(). La fin du flux est marquée par -1.0 (L < 0 côté parsing).
+/// </summary>
+/// <param name="data">Tableau 2D irrégulier.</param>
+/// <param name="output">Pointeur vers le buffer de sortie.</param>
+/// <returns>Le nombre d'éléments écrits dans l'output (en comptant la valeur sentinelle de -1).</returns>
+size_t SendIrregularArray(const std::vector<std::vector<double>>& data, double* output);
 
 //========================================================
 //==================== Basic Computes ====================

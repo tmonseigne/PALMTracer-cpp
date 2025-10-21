@@ -4,6 +4,7 @@
 #include "ExportAPI.hpp"
 #include "palm/Palm.hpp"
 #include "signal_processing/Alignment.hpp"
+#include "signal_processing/Matrix.hpp"
 #include "tracking/Parameters.hpp"
 #include "tracking/Tracking.hpp"
 #include "tracking/Tracks.hpp"
@@ -67,11 +68,53 @@ uint32_t CALL_CONV Tracking(const double* pointsList, double* trc, const double 
 
 //-------------------------------------------------------------------------------------------------
 extern "C" EXPORT_API
-uint32_t CALL_CONV BlinkingReconnection(const double* input, double* output, const uint32_t nRow,
+uint32_t CALL_CONV BlinkingReconnection(const double* input, double* output, const uint32_t nRow, const double pixelSize,
                                         const uint32_t mode, const uint32_t maxDuration, const double maxSpeed)
 {
 	palm_tracer::Tracks tracks;
-	tracks.LoadTracking(input, nRow);
+	tracks.LoadTracking(input, nRow, pixelSize);
 	tracks.BlinkingReconnection(mode, maxDuration, maxSpeed);
 	return static_cast<uint32_t>(tracks.FillOutput(output));
+}
+
+//-------------------------------------------------------------------------------------------------
+extern "C" EXPORT_API
+bool CALL_CONV TracksCompute(const double* input, double* outputMSD, double* outputInd, double* outputFit, const uint32_t nRow,
+                             const bool isMSD, const bool isInd, const bool is3D,
+                             const double pixelSize, const double exposureTime, const uint32_t fitMode, const double* fitParams)
+{
+	palm_tracer::ComputesParams p = {
+		.mode = palm_tracer::fit_mode::linear,
+		.fitLength = static_cast<size_t>(fitParams[0]),
+		.is3D = is3D,
+		.pixelSize = pixelSize,
+		.exposureTime = exposureTime
+	};
+	palm_tracer::Tracks tracks;
+	tracks.LoadTracking(input, nRow, pixelSize);
+
+	if (isMSD) {
+		const auto MSD = tracks.ComputeAllMSD();
+		palm_tracer::matrix::SendIrregularArray(MSD, outputMSD);
+	}
+	if (isInd) {
+		const auto Ind = tracks.ComputeAllInstantDiffusion(p);
+		palm_tracer::matrix::SendIrregularArray(Ind, outputInd);
+	}
+	if (fitMode != 0) {
+		switch (fitMode) {
+			case 2: {
+				p.mode = palm_tracer::fit_mode::power;
+				break;
+			}
+			case 3: {
+				p.mode = palm_tracer::fit_mode::exponential;
+				break;
+			}
+			default: break;
+		}
+		const auto Fit = tracks.ComputeAllFitMetrics(p);
+		palm_tracer::matrix::SendIrregularArray(Fit, outputFit);
+	}
+	return true;
 }

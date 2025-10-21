@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include <algorithm>
 #include <filesystem>
@@ -273,7 +273,7 @@ TEST(SplineTests, SoftNormalizationMinimal)
 	constexpr size_t Nvol = 3;
 
 	// Génère des "billes" artificielles
-	std::vector<std::vector<double>> beads(Nvol, std::vector<double>(N, 0.0));
+	std::vector beads(Nvol, std::vector(N, 0.0));
 
 	// Bille 0 : gradient croissant
 	std::iota(beads[0].begin(), beads[0].end(), 1.0);

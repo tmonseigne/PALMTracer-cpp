@@ -46,6 +46,7 @@ add_library(CPU SHARED
     lib/palm/Palm.cpp
     lib/palm/Segmentation2D.hpp
     lib/palm/Segmentation2D.cpp
+    lib/tracking/ComputesParams.hpp
     lib/tracking/Node.hpp
     lib/tracking/Node.cpp
     lib/tracking/Parameters.hpp
@@ -56,6 +57,8 @@ add_library(CPU SHARED
     lib/tracking/Tracking.cpp
     lib/tracking/Tracks.hpp
     lib/tracking/Tracks.cpp
+    lib/tracking/TracksFit.hpp
+    lib/tracking/TracksFit.cpp
 )
 
 # === Gestion manuelle OpenMP cross-plateforme ===

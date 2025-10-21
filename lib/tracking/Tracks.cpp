@@ -2,10 +2,14 @@
 #include "Constants.hpp"
 
 #include <cmath>
+#include <omp.h>
+
+#include "TracksFit.hpp"
 
 namespace palm_tracer {
+//==================== DLL Input/output ====================
 //-------------------------------------------------------------------------------------------------
-void Tracks::LoadTracking(const double* input, const size_t nRow)
+void Tracks::LoadTracking(const double* input, const size_t nRow, const double pixelSize)
 {
 	// Remise à zéro.
 	t_.clear();
@@ -16,7 +20,7 @@ void Tracks::LoadTracking(const double* input, const size_t nRow)
 
 	// Parcours des lignes
 	track_t track;           // Trajectoire en cours (réutilisée entre groupes)
-	track.reserve(16);       // Heuristique: évite quelques reallocs sur petites tracks
+	track.reserve(64);       // Heuristique: évite quelques reallocs sur petites tracks
 	size_t currentTrack = 1; // input[0]
 	for (size_t i = 0, r = 0; i < nRow; ++i, r += N_TRACKING) {
 		const auto TrackId = static_cast<size_t>(input[r]);
@@ -26,12 +30,16 @@ void Tracks::LoadTracking(const double* input, const size_t nRow)
 			track.clear();                                          // Redondant après move, mais sûr si branché autrement
 			currentTrack = TrackId;
 		}
+
 		// Ajout du point (emplace_back = construction in-place)
-		track.emplace_back(Point(static_cast<size_t>(input[r + 2]),                         // Id
-		                         static_cast<size_t>(input[r + 1]),                         // Plan
-		                         {.x = input[r + 3], .y = input[r + 4], .z = input[r + 5]}, // Position
-		                         input[r + 6],                                              // Intensité
-		                         input[r + 7]));                                            // Surface
+		const Vec3D PosPx = {.x = input[r + 3], .y = input[r + 4], .z = input[r + 5]};
+		const Vec3D Pos   = {.x = PosPx.x * pixelSize, .y = PosPx.y * pixelSize, .z = PosPx.z};
+		track.emplace_back(Point(static_cast<size_t>(input[r + 2]), // Id
+		                         static_cast<size_t>(input[r + 1]), // Plan
+		                         PosPx,                             // Position en pixel
+		                         Pos,                               // Position
+		                         input[r + 6],                      // Intensité
+		                         input[r + 7]));                    // Surface
 	}
 	if (!track.empty()) { t_.push_back(std::move(track)); } // Ne pas oublier d'ajouter la dernière trajectoire
 }
@@ -45,9 +53,9 @@ size_t Tracks::FillOutput(double* output) const
 			output[idx++] = static_cast<double>(i + 1);    // Track
 			output[idx++] = static_cast<double>(P.plane_); // Plane
 			output[idx++] = static_cast<double>(P.id_);    // Id
-			output[idx++] = P.pos_.x;                      // X
-			output[idx++] = P.pos_.y;                      // Y
-			output[idx++] = P.pos_.z;                      // Z
+			output[idx++] = P.posPx_.x;                    // X
+			output[idx++] = P.posPx_.y;                    // Y
+			output[idx++] = P.posPx_.z;                    // Z
 			output[idx++] = P.intensity_;                  // Intensity
 			output[idx++] = P.surface_;                    // Surface
 		}
@@ -55,6 +63,7 @@ size_t Tracks::FillOutput(double* output) const
 	return idx;
 }
 
+//==================== Computes ====================
 //-------------------------------------------------------------------------------------------------
 void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, const double maxSpeed)
 {
@@ -88,13 +97,15 @@ void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, c
 				const size_t Dp = Fp.plane_ - Lp.plane_;  // Calcul du temps (nombre de plans entre les trajectoires).
 				// (à vérifier, mais un break est possible, car les trajectoires sont triées par plan de démarrage)
 				if (Dp > maxDuration || Dp > bT) { continue; }                               // Vérification de validité temporelle.
-				const double D    = (Fp.pos_ - Lp.pos_).Norm(),                              // Calcul de la distance.
+				const double D    = Fp.GetDistance(Lp),                                      // Calcul de la distance.
 				             MaxD = getMaxDistance(mode, static_cast<double>(Dp), maxSpeed); // Calcul de la distance maximale.
 				if (D >= bD || D > MaxD) { continue; }                                       // Vérification de validité Spatiale.
-				bJ = j;                                                                      // Mise à jour de l'élément sélectionné.
-				bT = Dp;                                                                     // Mise à jour de la durée (nombre de plan).
-				bD = D;                                                                      // Mise à jour de la distance.
+
+				bJ = j;  // Mise à jour de l'élément sélectionné.
+				bT = Dp; // Mise à jour de la durée (nombre de plan).
+				bD = D;  // Mise à jour de la distance.
 			}
+
 			if (bJ == std::numeric_limits<size_t>::max()) { break; } // Aucune trajectoire de trouvé, on sort du while
 			chain.push_back(bJ);                                     // Ajout de la trajectoire à la list
 			taken[bJ] = true;                                        // Ajout d'un token "trajectoire prise"
@@ -109,6 +120,7 @@ void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, c
 	for (const auto& Ch : chains) {
 		// Concatène tous les points des indices de la chaîne dans un seul track
 		track_t acc;
+
 		// (option : size hint) somme des tailles pour limiter les reallocs
 		size_t totalPts = 0;
 		for (const size_t Idx : Ch) { totalPts += t_[Idx].size(); }
@@ -125,6 +137,163 @@ void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, c
 }
 
 //-------------------------------------------------------------------------------------------------
+std::vector<double> Tracks::ComputeMSD(const track_t& track, const size_t start, size_t end)
+{
+	if (end == 0 || end > track.size()) { end = track.size(); }   // Borne de End (pour le comportement par défaut
+	if (end < 2 + start) { return std::vector<double>(); }        // Si l'on a moins de 2 éléments à analyser
+	const size_t L = track[end - 1].plane_ - track[start].plane_; // Lag maximum possible
+	// if (L <= 0) { return std::vector<double>(); } // Impossible les trajectoires n'ont pas de points sur le même plan et ils sont triés.
+
+	std::vector sum(L, 0.0), res(L, -1.0);
+	std::vector<size_t> cnt(L, 0);
+
+	// Accumulation (toutes paires, regroupées par Lag)
+	for (size_t i = start; i < end - 1; ++i) {
+		const Point& Pi = track[i];
+		for (size_t j = i + 1; j < end; ++j) {
+			const Point& Pj  = track[j];
+			const size_t Lag = (Pj.plane_ - Pi.plane_) - 1;
+			if (Lag >= L) { continue; } // Impossible normalement, mais au cas où.
+			const double D = Pj.GetDistance(Pi);
+			sum[Lag] += D * D;
+			cnt[Lag]++;
+		}
+	}
+
+	// Sortie de taille exacte, Lag vides = -1
+	for (size_t i = 0; i < L; ++i) { if (cnt[i] != 0) { res[i] = sum[i] / static_cast<double>(cnt[i]); } }
+	return res;
+}
+
+//-------------------------------------------------------------------------------------------------
+std::vector<std::vector<double>> Tracks::ComputeAllMSD() const
+{
+	const auto N = t_.size(); // Nombre de trajectoires
+	std::vector<std::vector<double>> res(N);
+
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(N); ++i) { res[static_cast<size_t>(i)] = (t_[i].size() < 2) ? std::vector<double>() : ComputeMSD(t_[i]); }
+	return res;
+}
+
+//-------------------------------------------------------------------------------------------------
+std::vector<double> Tracks::ComputeInstantDiffusion(const track_t& track, const ComputesParams& p)
+{
+	if (p.fitLength < 1 || p.fitLength > track.size()) { return std::vector<double>{}; }
+	const size_t NPoint     = p.fitLength + 1; // Il faut prendre un point de plus pour avoir un vecteur de fitlength à la fin du clacul du MSD
+	const double SlopeRatio = (p.is3D ? 6.0 : 4.0) * p.exposureTime; // 2*d*Δt
+	const auto N            = track.size() - (p.fitLength); // Nombre de points moins la taille de la fenêtre (-1) si Nt = 3, Fit = 2, Np = 3 ⇒ N = 1
+	std::vector res(N, -1.0);
+	auto fitP = p;
+	fitP.mode = fit_mode::linear;
+
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(N); ++i) {
+		TracksFit fit(fitP);
+		auto msd = ComputeMSD(track, i, i + NPoint);               // Il faut prendre un point de plus pour avoir un vecteur de fitlength à la fin
+		if (msd.size() > p.fitLength) { msd.resize(p.fitLength); } // En cas de blinking, on supprime les lag plus long que fitLength
+		if (msd.size() < p.fitLength) { res[i] = -1; }             // En cas de fenêtre plus courte, mais impossible géré en amont
+		else {
+			const double Err = fit.Fit(msd);
+
+			if ((Err < 0) || fit.HasBlink()) { res[i] = -1; }
+			// Une erreur négative indique un problème durant le fitting, un blinking "fort" invalide la fenêtre
+			else {
+				const double S = fit.GetP()[0] / SlopeRatio; // Pente
+				res[i]         = S < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : S;
+			}
+		}
+	}
+	return res;
+}
+
+//-------------------------------------------------------------------------------------------------
+std::vector<std::vector<double>> Tracks::ComputeAllInstantDiffusion(const ComputesParams& p) const
+{
+	const auto N = t_.size(); // Nombre de trajectoires
+	std::vector<std::vector<double>> res(N);
+
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(N); ++i) { res[static_cast<size_t>(i)] = ComputeInstantDiffusion(t_[i], p); }
+	return res;
+}
+
+//-------------------------------------------------------------------------------------------------
+std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const ComputesParams& p)
+{
+	std::vector res(getFitResSize(p.mode), -1.0);
+	const auto MSD          = ComputeMSD(track);                     // Calcul du MSD
+	const double SlopeRatio = (p.is3D ? 6.0 : 4.0) * p.exposureTime; // 2*d*Δt
+
+	// Fit lineaire des N premiers (avec fitlength p[0])
+	auto fitP = p;
+	fitP.mode = fit_mode::linear;
+	TracksFit fit(fitP);
+	double err               = fit.Fit(MSD);
+	std::vector<double> pFit = fit.GetP();
+	// Une erreur négative indique un problème durant le fitting, un blinking invalide la fenêtre de base
+	if ((err < 0) || fit.HasBlink()) { return std::vector<double>{}; }
+
+	double s = pFit[0] / SlopeRatio; // Pente
+	res[0]   = s < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : s;
+	res[1]   = pFit[1];
+	res[2]   = err;
+
+	// Fit sur l'ensemble des MSD
+	fitP.mode      = p.mode;
+	fitP.fitLength = MSD.size();
+
+	fit.SetMode(fitP);
+	err  = fit.Fit(MSD);
+	pFit = fit.GetP();
+	if (err < 0) { return std::vector<double>{}; } // Si echec, on arrête.
+	//(ici le blinking est autorisé, on fait toute la trajectoire, il y en aura forcément en cas de reconnexion)
+
+	// Remplissage suivant le mode
+	switch (p.mode) {
+		case fit_mode::linear: {
+			s      = pFit[0] / SlopeRatio; // Pente
+			res[3] = s < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : s;
+			res[4] = pFit[1];
+			res[5] = err;
+
+			break;
+		}
+		case fit_mode::power: {
+			res[3] = pFit[0]; // Coefficient de puissance
+			res[4] = pFit[1]; // Coefficient multiplicateur
+			res[5] = err;
+
+			const auto &Tb = track.back(), Tf = track.front();
+			const auto D   = Tb.GetDistance(Tf) / static_cast<double>(Tb.plane_ - Tf.plane_); // Distance moyenne par frame
+			res[6]         = D / p.exposureTime;                                              // Vitesse moyenne
+			break;
+		}
+		case fit_mode::exponential: {
+			if (pFit[1] + pFit[3] <= 0) { return std::vector<double>{}; } // Contrainte de positivité.
+			res[3] = pFit[1];                                             // Plateau
+			res[4] = pFit[2] / p.exposureTime;                            // Tau // Divisé par temps d'exposition
+			res[5] = pFit[3];                                             // b
+			res[6] = err;
+			res[7] = std::sqrt(0.75 * (pFit[1] + pFit[3]));
+			break;
+		}
+	}
+	return res;
+}
+
+//-------------------------------------------------------------------------------------------------
+std::vector<std::vector<double>> Tracks::ComputeAllFitMetrics(const ComputesParams& p) const
+{
+	const auto N = t_.size(); // Nombre de trajectoires
+	std::vector<std::vector<double>> res(N);
+
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(N); ++i) { res[static_cast<size_t>(i)] = ComputeFitMetrics(t_[i], p); }
+	return res;
+}
+
+//-------------------------------------------------------------------------------------------------
 double Tracks::getMaxDistance(const size_t mode, const double duration, const double maxSpeed)
 {
 	switch (mode) {
@@ -132,6 +301,17 @@ double Tracks::getMaxDistance(const size_t mode, const double duration, const do
 		default: case 1: return maxSpeed * std::sqrt(duration); // Diffusive
 		case 2: return maxSpeed * duration;                     // Linear
 	}
+}
+
+//-------------------------------------------------------------------------------------------------
+size_t Tracks::getFitResSize(const fit_mode mode)
+{
+	switch (mode) {
+		case fit_mode::linear: return 6;      // [Da, Db, Derr, a, b, err]
+		case fit_mode::power: return 7;       // [Da, Db, Derr, α, a, err, \mu(\text{dist})]
+		case fit_mode::exponential: return 8; // [Da, Db, Derr, a, \tau, b, err, \sqrt{\frac{3}{4}\times(b+a)}]
+	}
+	return 0;
 }
 
 //-------------------------------------------------------------------------------------------------

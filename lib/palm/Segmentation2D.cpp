@@ -11,14 +11,13 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-namespace {
 struct Filter {
 	bool enabled;
 	double value;
 };
 
 // Création d'un tableau constexpr avec tous à false + 0.0 sauf
-constexpr std::array<Filter, N_LOCALIZATIONS> MakeDefaultFilter()
+static constexpr std::array<Filter, N_LOCALIZATIONS> MakeDefaultFilter()
 {
 	std::array<Filter, N_LOCALIZATIONS> params{};
 	for (auto& p : params) { p = {.enabled = false, .value = 0.0}; }
@@ -35,8 +34,7 @@ constexpr std::array<Filter, N_LOCALIZATIONS> SEGMENTATION_FILTER = MakeDefaultF
 /// <param name="value">Valeur.</param>
 /// <param name="lessThan">Comparatif (True si plus petit que, False sinon).</param>
 /// <returns></returns>
-bool CheckFilter(const Filter& f, const double value, const bool lessThan) { return f.enabled && (lessThan ? value <= f.value : value >= f.value); }
-} // namespace
+static bool CheckFilter(const Filter& f, const double value, const bool lessThan) { return f.enabled && (lessThan ? value <= f.value : value >= f.value); }
 
 //-------------------------------------------------------------------------------------------------
 Segmentation2D::Segmentation2D(const ATrous& decomposition, const double threshold, const double ratio)
