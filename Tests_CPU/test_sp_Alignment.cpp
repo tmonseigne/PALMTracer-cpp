@@ -1,4 +1,5 @@
-#include "gtest/gtest.h"
+#include <gtest/gtest-param-test.h>
+#include <gtest/gtest.h>
 
 #include <algorithm>
 #include <filesystem>
@@ -31,24 +32,8 @@ TEST(AlignmentTests, BlankCallWithReference)
 	constexpr size_t Size       = ImSize * Planes;
 	constexpr size_t Upsampling = 1;
 	constexpr Vec3I Dim         = {.x = Width, .y = Height, .z = Planes};
-	const auto HighSNR          = new uint16_t[ImSize],
-	           LowSNR           = new uint16_t[ImSize],
-	           Input            = new uint16_t[Size],
-	           Output           = new uint16_t[Size];
-
-	// Création et Remplissage des vecteurs
-	std::fill_n(HighSNR, ImSize, 0);
-	std::fill_n(LowSNR, ImSize, 0);
-	std::fill_n(Input, Size, 0);
-	std::fill_n(Output, Size, 0);
-
-	EXPECT_THROW(align.Align(HighSNR, LowSNR, Input, Output, Dim, Upsampling), std::runtime_error);
-
-
-	delete[] HighSNR;
-	delete[] LowSNR;
-	delete[] Input;
-	delete[] Output;
+	std::vector<uint16_t> highSNR(ImSize, 0), lowSNR(ImSize, 0), input(Size, 0), output(Size, 0);
+	EXPECT_THROW(align.Align(highSNR.data(), lowSNR.data(), input.data(), output.data(), Dim, Upsampling), std::runtime_error);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -61,24 +46,16 @@ TEST(AlignmentTests, BlankCallWithFactor)
 	constexpr size_t Size       = ImSize * Planes;
 	constexpr size_t Upsampling = 1;
 	constexpr Vec3I Dim         = {.x = Width, .y = Height, .z = Planes};
-	const auto Input            = new uint16_t[Size],
-	           Output           = new uint16_t[Size];
+	std::vector<uint16_t> input(Size, 0), output(Size, 0);
 
 	constexpr std::array<std::array<double, 10>, 2> Factors = {};
 
-	// Création et Remplissage des vecteurs
-	std::fill_n(Input, Size, 0);
-	std::fill_n(Output, Size, 0);
-
-	align.Align(Input, Output, Dim, Factors, Upsampling);
-
-	delete[] Input;
-	delete[] Output;
+	align.Align(input.data(), output.data(), Dim, Factors, Upsampling);
 }
 
 TEST_P(AlignmentTests, AlignmentCore)
 {
-	if (!std::filesystem::exists(OUTPUT_PATH)) { std::filesystem::create_directories(OUTPUT_PATH); }
+	if (!exists(OUTPUT_PATH)) { create_directories(OUTPUT_PATH); }
 	const auto& [outputPath, factors, upsampling] = GetParam();
 
 	std::vector<uint16_t> input;
@@ -102,11 +79,15 @@ TEST_P(AlignmentTests, AlignmentCore)
 	SUCCEED();
 }
 
-INSTANTIATE_TEST_CASE_P(
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
+
+INSTANTIATE_TEST_SUITE_P(
 	TestSuites, AlignmentTests,
 	::testing::Values(
-		AlignTestParams{ (OUTPUT_PATH / "Align_1_Blank.tiff").string().c_str(), {}, 1 },
-		AlignTestParams{ (OUTPUT_PATH / "Align_2_Copy.tiff").string().c_str(),
+		AlignTestParams{ (OUTPUT_PATH / "Align_1_Blank.tiff").string(), {}, 1 },
+		AlignTestParams{ (OUTPUT_PATH / "Align_2_Copy.tiff").string(),
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
@@ -114,7 +95,7 @@ INSTANTIATE_TEST_CASE_P(
 		return factors;
 		}(), 1
 		},
-		AlignTestParams{ (OUTPUT_PATH / "Align_3_translate_0.25.tiff").string().c_str(),
+		AlignTestParams{ (OUTPUT_PATH / "Align_3_translate_0.25.tiff").string(),
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
@@ -124,7 +105,7 @@ INSTANTIATE_TEST_CASE_P(
 		return factors;
 		}(), 1
 		},
-		AlignTestParams{ (OUTPUT_PATH / "Align_3_translate_0.50.tiff").string().c_str(),
+		AlignTestParams{ (OUTPUT_PATH / "Align_3_translate_0.50.tiff").string(),
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
@@ -134,7 +115,7 @@ INSTANTIATE_TEST_CASE_P(
 		return factors;
 		}(), 1
 		},
-		AlignTestParams{ (OUTPUT_PATH / "Align_3_translate_0.75.tiff").string().c_str(),
+		AlignTestParams{ (OUTPUT_PATH / "Align_3_translate_0.75.tiff").string(),
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
@@ -144,7 +125,7 @@ INSTANTIATE_TEST_CASE_P(
 		return factors;
 		}(), 1
 		},
-		AlignTestParams{ (OUTPUT_PATH / "Align_3_translate_1.00.tiff").string().c_str(),
+		AlignTestParams{ (OUTPUT_PATH / "Align_3_translate_1.00.tiff").string(),
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;
@@ -154,7 +135,7 @@ INSTANTIATE_TEST_CASE_P(
 		return factors;
 		}(), 1
 		},
-		AlignTestParams{ (OUTPUT_PATH / "Align_4_zoom.tiff").string().c_str(),
+		AlignTestParams{ (OUTPUT_PATH / "Align_4_zoom.tiff").string(),
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 2.0;
@@ -162,7 +143,7 @@ INSTANTIATE_TEST_CASE_P(
 		return factors;
 		}(), 1
 		},
-		AlignTestParams{ (OUTPUT_PATH / "Align_5_transpose.tiff").string().c_str(),
+		AlignTestParams{ (OUTPUT_PATH / "Align_5_transpose.tiff").string(),
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][8] = 1.0;
@@ -170,7 +151,7 @@ INSTANTIATE_TEST_CASE_P(
 		return factors;
 		}(), 1
 		},
-		AlignTestParams{ (OUTPUT_PATH / "Align_6_translate_0.50_up_sampling_2.tiff").string().c_str(),
+		AlignTestParams{ (OUTPUT_PATH / "Align_6_translate_0.50_up_sampling_2.tiff").string(),
 		[] {
 		std::array<std::array<double, 10>, 2> factors = {};
 		factors[0][7] = 1.0;

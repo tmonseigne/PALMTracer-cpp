@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include <numeric>
 #include "signal_processing/Matrix.hpp"

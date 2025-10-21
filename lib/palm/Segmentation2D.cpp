@@ -11,7 +11,6 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-namespace {
 struct Filter {
 	bool enabled;
 	double value;
@@ -36,7 +35,6 @@ constexpr std::array<Filter, N_LOCALIZATIONS> SEGMENTATION_FILTER = MakeDefaultF
 /// <param name="lessThan">Comparatif (True si plus petit que, False sinon).</param>
 /// <returns></returns>
 bool CheckFilter(const Filter& f, const double value, const bool lessThan) { return f.enabled && (lessThan ? value <= f.value : value >= f.value); }
-} // namespace
 
 //-------------------------------------------------------------------------------------------------
 Segmentation2D::Segmentation2D(const ATrous& decomposition, const double threshold, const double ratio)
