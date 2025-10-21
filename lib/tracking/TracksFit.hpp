@@ -87,7 +87,9 @@ protected:
 	                        LAMBDA_FACTOR_HIGH = 10,         ///< factor multiplicatif de lambda maximal
 	                        EPSILON_ERR        = 2 * 1e-6,   ///< Seuil de convergence.
 	                        EPSILON_MU         = 10,         ///< Seuil pour mu.
-	                        EPSILON_RHO        = 0.001;      ///< Seuil pour Rho.
+	                        EPSILON_RHO        = 0.001,      ///< Seuil pour Rho.
+	                        EPSILON_STEP       = 1e-6,       ///< Seuil pour un pas trop faible.
+	                        EPSILON_ERR_STOP   = 1e-6;       ///< Seuil pour une nouvelle erreur trop faible.
 	static constexpr size_t N_ITER             = 500;        ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
 	static constexpr size_t N_K                = N_ITER / 4; ///< Nombre maximal d'itérations ayant entrainé une mise à jour du modèle.
 

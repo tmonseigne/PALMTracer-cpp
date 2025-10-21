@@ -80,7 +80,7 @@ double TracksFit::Fit(const std::vector<double>& input)
 
 		if (mu > EPSILON_MU) { lambda *= lambdaFactor; } // Mauvaise iteration, on durcit lambda et on retente
 		else {
-			if (std::abs(Rho) < EPSILON_RHO) { ++k; } // stagnation détectée
+			if (std::abs(Rho) < EPSILON_RHO) { ++k; } // Changement détectée
 			lambda /= lambdaFactor;
 			p_     = pTry_;  // accepte le nouveau point
 			errOld = ErrTry; // met à jour le coût
@@ -92,8 +92,13 @@ double TracksFit::Fit(const std::vector<double>& input)
 			lambdaOld    = lambda;
 		}
 
-		// TODO Ajouts de critères d'arrêts supplémentaires ? Gaussian Fit est bien plus sévère (plus complexe aussi) et là, on a 500 interations par défaut
-		// if (...) { break; }
+		// Critères d'arrêts
+		double m = 0.0;
+		for (size_t i = 0; i < pSize_; ++i) { m = std::max(m, std::abs(beta_[i]) / std::max(std::abs(p_[i]), 1e-12)); }
+		if (iteration >= 2) {                                                           // Si on est déjà à 2 iterations
+			if (m < EPSILON_STEP) { break; }                                            // Si le pas est trop faible
+			if (errOld / static_cast<double>(fitLength_) < EPSILON_ERR_STOP) { break; } // Si l'erreur est trop faible
+		}
 	}
 	return computeR2(p_); // R² final
 }
