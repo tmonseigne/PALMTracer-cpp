@@ -52,7 +52,7 @@ public:
 	void SetFitLength(const ComputesParams& p);
 
 	/// <summary>Indique si un scintillement a été détecté.</summary>
-	/// <returns><c>true</c> si un scintillement a été détecté; sinon, <c>false</c>.</returns>
+	/// <returns><c>True</c> si un scintillement a été détecté; sinon, <c>false</c>.</returns>
 	[[nodiscard]] bool HasBlink() const { return hasBlink_; }
 
 	/// <summary>Récupère le premier paramètre d'un fit de MSD.</summary>
@@ -64,7 +64,7 @@ public:
 	[[nodiscard]] std::vector<double> GetP() const { return p_; }
 
 	/// <summary>Exécute l'ajustement non linéaire (Levenberg–Marquardt) pour le mode courant sur le vecteur en entrée.</summary>
-	/// <param name="input">Série d’entrée (ex. MSD), de longueur ≥ <c>fitLength_</c>.</param>
+	/// <param name="input">Série d’entrées (ex. MSD), de longueur ≥ <c>fitLength_</c>.</param>
 	/// <returns>R² au point final <c>p_</c> (via <c>computeR2(p_)</c>). Renvoie <c>-1</c> si l’entrée est invalide.</returns>
 	double Fit(const std::vector<double>& input);
 
@@ -121,10 +121,9 @@ protected:
 	[[nodiscard]] bool checkInputValidity(const std::vector<double>& input) const;
 
 	/// <summary>
-	/// Remplit <c>X</c> et <c>Y</c> à partir de <c>input</c> (ex. MSD) en conservant les valeurs strictement supérieures à -1.\n
+	/// Remplit <c>X</c> et <c>Y</c> à partir de l'<c>input</c> (ex. MSD) en conservant les valeurs strictement supérieures à -1.\n
 	/// Et en « tassant » <c>Y</c> (et implicitement <c>X</c>) pour supprimer les trous (blinking).</summary>
-	/// <param name="input">Série d’entrée de longueur supérieure ou égale à <c>fitLength_</c>. Les valeurs suéprieure à -1 sont considérées valides.
-	/// </param>
+	/// <param name="input">Série d’entrées de longueur supérieure ou égale à <c>fitLength_</c>. Les valeurs supérieures à -1 sont considérées valides.</param>
 	/// <remarks>
 	/// - Pour <c>i=0 .. fitLength_ - 1</c> : \f$X[i] \leftarrow i+1\f$ ; si \f$input[i] > -1\f$ alors \f$Y[write] \leftarrow input[i]\f$, sinon l’élément est sauté.\n
 	/// - Met à jour <c>nY_ = fitLength_ - (nombre de sauts)/c>.\n
@@ -137,7 +136,7 @@ protected:
 	/// - <b>Linear</b> : \f$p=[a, b]\f$\n
 	/// - <b>Power</b> : \f$p=[\alpha, a, b]\f$\n
 	/// - <b>Exponential</b> : \f$p = [x_0, \tau, a, b]\f$
-	/// - Aucune vérification forte n’est faite sur les zéros/divisions : on réplique l’esprit du VB mais ça sent pas bon.
+	/// - Aucune vérification forte n’est faite sur les divisions par zéros : on réplique l’esprit du VB mais ça ne sent pas bon.
 	/// </remarks>
 	void initP();
 

@@ -23,7 +23,7 @@ void TracksFit::SetMode(const ComputesParams& p)
 	// Récupération du Fit length et allocation des tableaux dépendant de la taille de la fenêtre
 	SetFitLength(p);
 
-	// Allocation des tableaux dépendant du nombre de paramètres (utilisation de Assign qui remet à 0 les éléments au lieu du resize qui ne met à 0 que les nouveaux.
+	// Allocation des tableaux dépendant du nombre de paramètres, l'utilisation de Assign qui remet à 0 les éléments au lieu du resize qui ne met à 0 que les nouveaux.
 	p_.assign(pSize_, 0.0);
 	alpha_.assign(pSize_, std::vector(pSize_ + 1, 0.0)); // Attention Alpha possede N lignes et N + 1 colonnes
 	alphaR_.assign(pSize_, std::vector(pSize_, 0.0));    // Attention Alpha possede N lignes et N + 1 colonnes

@@ -68,8 +68,8 @@ public:
 	/// En cas de Blinking, il est possible qu'un lag ne possède aucun ensemble de point le représentant, le MSD sera à -1.
 	/// </summary>
 	/// <param name="track">Trajectoire à analyser.</param>
-	/// <param name="start">Premier point de la trajectoire à prendre (utile lorsqu'un sous ensemble de points est sélectionné pour le fit).</param>
-	/// <param name="end">Dernier point de la trajectoire à prendre (utile lorsqu'un sous ensemble de points est sélectionné pour le fit).</param>
+	/// <param name="start">Premier point de la trajectoire à prendre (utile lorsqu'un sous ensemble de points est sélectionné pour l'ajustement).</param>
+	/// <param name="end">Dernier point de la trajectoire à prendre (utile lorsqu'un sous ensemble de points est sélectionné pour l'ajustement).</param>
 	/// <returns>Un vecteur de longueur \f$L_i=\mathrm{plane}_{\max}-\mathrm{plane}_{\min}\f$ (ou vide si la trajectoire contient moins de 2 points)</returns>
 	/// <remarks>
 	/// - Hypothèse : La trajectoire est triée par plan strictement croissant (aucun doublon de plan).

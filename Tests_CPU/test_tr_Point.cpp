@@ -21,7 +21,7 @@ TEST(PointTests, Base)
 	EXPECT_DOUBLE_EQ(P1.intensity_, 0.0);
 	EXPECT_DOUBLE_EQ(P1.surface_, 0.0);
 
-	const Point P2 = Point(1, 2, {.x = 3, .y = 4, .z = 5}, {.x = 3, .y = 4, .z = 5}, 6, 7);
+	const auto P2 = Point(1, 2, {.x = 3, .y = 4, .z = 5}, {.x = 3, .y = 4, .z = 5}, 6, 7);
 	std::cout << "P2 : " << P2 << "\n";
 	EXPECT_EQ(P2.id_, 1);
 	EXPECT_EQ(P2.plane_, 2);

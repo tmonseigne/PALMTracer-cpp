@@ -121,38 +121,38 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 	//----- Fitting -----
 	switch (fit_) {
 		case 1: {
-			GaussianFit fit(fit_mode::gaussian_2d_fixed, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			fit.Fit(Segmentation, points);
+			const GaussianFit Gfit(fit_mode::gaussian_2d_fixed, image, Dim, nPointsMaxPerPlane_, fitParams_);
+			Gfit.Fit(Segmentation, points);
 			break;
 		}
 
 		case 2: { // Gaussian fit of 2D
-			GaussianFit fit(fit_mode::gaussian_2d_sigma, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			fit.Fit(Segmentation, points);
+			const GaussianFit Gfit(fit_mode::gaussian_2d_sigma, image, Dim, nPointsMaxPerPlane_, fitParams_);
+			Gfit.Fit(Segmentation, points);
 			break;
 		}
 
 		case 3: { // Gaussian fit of 3D Theta is constant
-			GaussianFit fit(fit_mode::gaussian_3d_fixed, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			fit.Fit(Segmentation, points);
+			const GaussianFit Gfit(fit_mode::gaussian_3d_fixed, image, Dim, nPointsMaxPerPlane_, fitParams_);
+			Gfit.Fit(Segmentation, points);
 			break;
 		}
 
 		case 4: { // Gaussian fit of 3D
-			GaussianFit fit(fit_mode::gaussian_3d_theta, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			fit.Fit(Segmentation, points);
+			const GaussianFit Gfit(fit_mode::gaussian_3d_theta, image, Dim, nPointsMaxPerPlane_, fitParams_);
+			Gfit.Fit(Segmentation, points);
 			break;
 		}
 
 		case 5: { // Spline fit for Z on EMCCD sensor (maybe same call for sCMOS)
-			SplineFit fit(fit_mode::spline_3d_emccd, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			fit.Fit(Segmentation, points);
+			const SplineFit Sfit(fit_mode::spline_3d_emccd, image, Dim, nPointsMaxPerPlane_, fitParams_);
+			Sfit.Fit(Segmentation, points);
 			break;
 		}
 
 		default: {
-			Fitting fit(fit_mode::none, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			fit.Fit(Segmentation, points);
+			const Fitting Sfit(fit_mode::none, image, Dim, nPointsMaxPerPlane_, fitParams_);
+			Sfit.Fit(Segmentation, points);
 			break;
 		}
 	}

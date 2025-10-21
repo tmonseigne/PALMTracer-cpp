@@ -15,10 +15,10 @@ TEST(MatrixTest, SendIrregular)
 	const std::vector<std::vector<double>> Data = {{1, 2}, {3, 4, 5}, {}};
 	const std::vector<double> Ref               = {3, 1, 1, 2, 4, 2, 3, 4, 5, -1};
 
-	std::vector<double> res(Ref.size(), 0.0);
+	std::vector res(Ref.size(), 0.0);
 	const size_t N = matrix::SendIrregularArray(Data, res.data());
 
-	ASSERT_EQ(N, Ref.size()) << "Nombre d'elements ecrits inattendu";
+	ASSERT_EQ(N, Ref.size()) << "Nombre d'éléments écrits inattendu";
 	for (size_t i = 0; i < Ref.size(); ++i) { EXPECT_DOUBLE_EQ(res[i], Ref[i]); }
 
 	std::cout << " Res : [";

@@ -240,7 +240,6 @@ std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const Comput
 	res[2]   = err;
 
 	// Fit sur l'ensemble des MSD
-	auto newParams = p;
 	fitP.mode      = p.mode;
 	fitP.fitLength = MSD.size();
 

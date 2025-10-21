@@ -32,8 +32,7 @@ void PrintVolume(const std::vector<double>& data, const Vec3I& dim)
 //-------------------------------------------------------------------------------------------------
 void PrintMatrix(const std::vector<double>& data, const size_t row, const size_t col)
 {
-	size_t i = 0;
-	for (size_t r = 0; r < row; ++r) {
+	for (size_t r = 0, i = 0; r < row; ++r) {
 		std::cout << "\t|";
 		for (size_t c = 0; c < col; ++c, ++i) { std::cout << data[i] << " | "; }
 		std::cout << "\n";
@@ -43,7 +42,6 @@ void PrintMatrix(const std::vector<double>& data, const size_t row, const size_t
 //-------------------------------------------------------------------------------------------------
 void PrintMatrix(const std::vector<std::vector<double>>& data)
 {
-	size_t i = 0;
 	for (const auto& R : data) {
 		std::cout << "\t|";
 		for (const auto& C : R) { std::cout << C << " | "; }

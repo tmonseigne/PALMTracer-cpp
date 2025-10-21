@@ -46,7 +46,7 @@ void PrintMatrix(const std::vector<std::vector<double>>& data);
 /// <param name="data">Vecteur de données 1D.</param>
 void PrintVector(const std::vector<double>& data);
 
-/// <summary>Sérialise <c>data</c> dans <c>output</c> avec le numéro de ligne, au format <c>[L, RowIndex, valeurs..., ..., -1]</c>.\n
+/// <summary>Sérialise <c>data</c> dans l'<c>output</c> avec le numéro de ligne, au format <c>[L, RowIndex, valeurs..., ..., -1]</c>.\n
 /// L = 1 + row.size(). La fin du flux est marquée par -1.0 (L < 0 côté parsing).
 /// </summary>
 /// <param name="data">Tableau 2D irrégulier.</param>

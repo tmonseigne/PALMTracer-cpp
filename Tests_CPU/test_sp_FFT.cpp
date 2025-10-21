@@ -28,9 +28,9 @@ TEST(FFTTest, ForwardInverseIdentity)
 TEST(FFTTest, CrossPowerSpectrumBasic)
 {
 	// Données FFT simulées.
-	const std::vector<std::complex<double>> Ref      = {{1.0, 0.0}, {2.0, 1.0}, {3.0, -1.0}};
-	const std::vector<std::complex<double>> Target   = {{0.5, 0.5}, {2.0, -1.0}, {1.0, 0.0}};
-	const std::vector<std::complex<double>> Expected = {Ref[0] * std::conj(Target[0]), Ref[1] * std::conj(Target[1]), Ref[2] * std::conj(Target[2])};
+	const std::vector<std::complex<double>> Ref    = {{1.0, 0.0}, {2.0, 1.0}, {3.0, -1.0}};
+	const std::vector<std::complex<double>> Target = {{0.5, 0.5}, {2.0, -1.0}, {1.0, 0.0}};
+	const std::vector Expected                     = {Ref[0] * std::conj(Target[0]), Ref[1] * std::conj(Target[1]), Ref[2] * std::conj(Target[2])};
 	std::vector<std::complex<double>> out;
 
 	CrossPowerSpectrum(Ref, Target, out);
