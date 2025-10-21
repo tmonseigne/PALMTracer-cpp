@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <numbers>
 #include <numeric>
 
 #include "Structs.hpp"
@@ -122,7 +123,8 @@ TEST(TracksTests, InstantDiffusion)
 	const std::vector<std::vector<double>> Ref = {{1.5, 1.5}};
 	Tracks tracks;
 	tracks.LoadTracking(InitialTracks.data(), 4, 1);
-	const auto Res = tracks.ComputeAllInstantDiffusion(2, true);
+	constexpr ComputesParams Cp = {.mode = fit_mode::linear, .fitLength = 2, .is3D = true, .pixelSize = 0.160, .exposureTime = 0.05};
+	const auto Res              = tracks.ComputeAllInstantDiffusion(Cp);
 	for (size_t i = 0; i < Ref.size(); ++i) { for (size_t j = 0; j < Ref[i].size(); ++j) { EXPECT_DOUBLE_EQ(Res[i][j], Ref[i][j]); } }
 
 	// Print
@@ -142,17 +144,17 @@ TEST(TracksTests, ComputeAllFit)
 		1, 4, 4, 4, 4, 4, 4, 4,
 	};
 	const std::vector<std::vector<std::vector<double>>> Ref = {
-		{{1.5, -6, 1, 12, -10, 0.979592}},                                                 // linear
-		{{1.5, -6, 1, 2, 3, 1, 1.299038}},                                                 // power
+		{{1.5, -6, 1, 2, -10, 0.979592}},                                                  // linear
+		{{1.5, -6, 1, 2, 3, 1, std::numbers::sqrt3}},                                      // power
 		{{1.5, -6, 1, 29012085.510261, 2417672.688433, -4.217218, 0.979592, 4664.660863}}, // exponential
 	};
 	Tracks tracks;
 	tracks.LoadTracking(InitialTracks.data(), 4, 1);
-	const std::vector Modes  = {fit_mode::linear, fit_mode::power, fit_mode::exponential};
-	const std::vector Params = {2.0};
+	const std::vector Modes = {fit_mode::linear, fit_mode::power, fit_mode::exponential};
 	for (size_t i = 0; i < Modes.size(); ++i) {
-		std::cout << "Mode " << static_cast<int>(Modes[i]) << " : \n";
-		const auto Res = tracks.ComputeAllFitMetrics(true, Modes[i], Params);
+		const ComputesParams Cp = {.mode = Modes[i], .fitLength = 2, .is3D = true, .pixelSize = 0.160, .exposureTime = 0.05};
+		std::cout << "params : " << Cp << " : \n";
+		const auto Res = tracks.ComputeAllFitMetrics(Cp);
 		for (size_t j = 0; j < Ref[i].size(); ++j) { for (size_t k = 0; k < Ref[i][j].size(); ++k) { EXPECT_NEAR(Res[j][k], Ref[i][j][k], 1e-5); } }
 
 		// Print

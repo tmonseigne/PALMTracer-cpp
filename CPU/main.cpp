@@ -83,32 +83,37 @@ bool CALL_CONV TracksCompute(const double* input, double* outputMSD, double* out
                              const bool isMSD, const bool isInd, const bool is3D,
                              const double pixelSize, const double exposureTime, const uint32_t fitMode, const double* fitParams)
 {
+	palm_tracer::ComputesParams p = {
+		.mode = palm_tracer::fit_mode::linear,
+		.fitLength = static_cast<size_t>(fitParams[0]),
+		.is3D = is3D,
+		.pixelSize = pixelSize,
+		.exposureTime = exposureTime
+	};
 	palm_tracer::Tracks tracks;
 	tracks.LoadTracking(input, nRow, pixelSize);
+
 	if (isMSD) {
 		const auto MSD = tracks.ComputeAllMSD();
 		palm_tracer::matrix::SendIrregularArray(MSD, outputMSD);
 	}
 	if (isInd) {
-		const auto Ind = tracks.ComputeAllInstantDiffusion(static_cast<size_t>(fitParams[0]), is3D);
+		const auto Ind = tracks.ComputeAllInstantDiffusion(p);
 		palm_tracer::matrix::SendIrregularArray(Ind, outputInd);
 	}
 	if (fitMode != 0) {
-		auto mode = palm_tracer::fit_mode::linear;
-		std::vector<double> params;
-		params.push_back(fitParams[0]);
 		switch (fitMode) {
 			case 2: {
-				mode = palm_tracer::fit_mode::power;
+				p.mode = palm_tracer::fit_mode::power;
 				break;
 			}
 			case 3: {
-				mode = palm_tracer::fit_mode::exponential;
+				p.mode = palm_tracer::fit_mode::exponential;
 				break;
 			}
 			default: break;
 		}
-		const auto Fit = tracks.ComputeAllFitMetrics(is3D, mode, params);
+		const auto Fit = tracks.ComputeAllFitMetrics(p);
 		palm_tracer::matrix::SendIrregularArray(Fit, outputFit);
 	}
 	return true;

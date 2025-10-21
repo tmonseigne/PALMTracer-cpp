@@ -13,7 +13,6 @@ void Tracks::LoadTracking(const double* input, const size_t nRow, const double p
 {
 	// Remise à zéro.
 	t_.clear();
-	pixelSize_ = pixelSize;
 
 	//Récupération du nombre de trajectoires pour préallouer le tableau
 	const auto NTracks = static_cast<size_t>(input[(nRow - 1) * N_TRACKING]);
@@ -34,7 +33,7 @@ void Tracks::LoadTracking(const double* input, const size_t nRow, const double p
 
 		// Ajout du point (emplace_back = construction in-place)
 		const Vec3D PosPx = {.x = input[r + 3], .y = input[r + 4], .z = input[r + 5]};
-		const Vec3D Pos   = {.x = PosPx.x * pixelSize_, .y = PosPx.y * pixelSize_, .z = PosPx.z};
+		const Vec3D Pos   = {.x = PosPx.x * pixelSize, .y = PosPx.y * pixelSize, .z = PosPx.z};
 		track.emplace_back(Point(static_cast<size_t>(input[r + 2]), // Id
 		                         static_cast<size_t>(input[r + 1]), // Plan
 		                         PosPx,                             // Position en pixel
@@ -178,27 +177,26 @@ std::vector<std::vector<double>> Tracks::ComputeAllMSD() const
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<double> Tracks::ComputeInstantDiffusion(const track_t& track, const size_t fitLength, const bool is3D)
+std::vector<double> Tracks::ComputeInstantDiffusion(const track_t& track, const ComputesParams& p)
 {
-	if (fitLength < 1 || fitLength > track.size()) { return std::vector<double>{}; }
-	const size_t NPoint     = fitLength + 1;              // Il faut prendre un point de plus pour avoir un vecteur de fitlength à la fin du clacul du MSD
-	const double SlopeRatio = is3D ? 6.0 : 4.0;           // 2*d avec Δt=1
-	const auto N            = track.size() - (fitLength); // Nombre de points moins la taille de la fenêtre (-1) si Nt = 3, Fit = 2, Np = 3 ⇒ N = 1
+	if (p.fitLength < 1 || p.fitLength > track.size()) { return std::vector<double>{}; }
+	const size_t NPoint     = p.fitLength + 1;              // Il faut prendre un point de plus pour avoir un vecteur de fitlength à la fin du clacul du MSD
+	const double SlopeRatio = p.is3D ? 6.0 : 4.0;           // 2*d avec Δt=1
+	const auto N            = track.size() - (p.fitLength); // Nombre de points moins la taille de la fenêtre (-1) si Nt = 3, Fit = 2, Np = 3 ⇒ N = 1
 	std::vector res(N, -1.0);
-	const std::vector<double> FitParams = {static_cast<double>(fitLength)};
+	auto fitP = p;
+	fitP.mode = fit_mode::linear;
 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(N); ++i) {
-		TracksFit fit(fit_mode::linear, FitParams);
+		TracksFit fit(fitP);
 		auto msd = ComputeMSD(track, i, i + NPoint);           // Il faut prendre un point de plus pour avoir un vecteur de fitlength à la fin
-		if (msd.size() > fitLength) { msd.resize(fitLength); } // En cas de blinking, on supprime les lag plus long que fitLength
-		if (msd.size() < fitLength) { res[i] = -1; }           // En cas de fenêtre plus courte, mais impossible géré en amont
+		if (msd.size() > p.fitLength) { msd.resize(p.fitLength); } // En cas de blinking, on supprime les lag plus long que fitLength
+		if (msd.size() < p.fitLength) { res[i] = -1; }           // En cas de fenêtre plus courte, mais impossible géré en amont
 		else {
 			const double Err = fit.Fit(msd);
 
-			//if (Err < 0) { res[i] = -1; } // Une erreur négative indique un problème durant le fitting
-			//J'ai l'impression qu'en cas de blink, il modifie fitlength en interne et il vire totalement la fenêtre dnas ce cas-là. À vérifier donc ça donnerait plutôt
-			if ((Err < 0) || fit.HasBlink()) { res[i] = -1; } // Une erreur négative indique un problème durant le fitting, un blinking invalide la fenêtre
+			if ((Err < 0) || fit.HasBlink()) { res[i] = -1; } // Une erreur négative indique un problème durant le fitting, un blinking "fort" invalide la fenêtre
 			else {
 				const double S = fit.GetP()[0] / SlopeRatio; // Pente
 				res[i]         = S < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : S;
@@ -209,51 +207,53 @@ std::vector<double> Tracks::ComputeInstantDiffusion(const track_t& track, const 
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<std::vector<double>> Tracks::ComputeAllInstantDiffusion(const size_t fitLength, const bool is3D) const
+std::vector<std::vector<double>> Tracks::ComputeAllInstantDiffusion(const ComputesParams& p) const
 {
 	const auto N = t_.size(); // Nombre de trajectoires
 	std::vector<std::vector<double>> res(N);
 
 	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(N); ++i) { res[static_cast<size_t>(i)] = ComputeInstantDiffusion(t_[i], fitLength, is3D); }
+	for (int i = 0; i < static_cast<int>(N); ++i) { res[static_cast<size_t>(i)] = ComputeInstantDiffusion(t_[i], p); }
 	return res;
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const bool is3D, const fit_mode mode, const std::vector<double>& params)
+std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const ComputesParams& p)
 {
-	std::vector res(getFitResSize(mode), -1.0);
+	std::vector res(getFitResSize(p.mode), -1.0);
 	const auto MSD          = ComputeMSD(track); // Calcul du MSD
-	const double SlopeRatio = is3D ? 6.0 : 4.0;  // 2*d avec Δt=1 ajouter le temps d'exposition à la formule (X) * exposureTime
+	const double SlopeRatio = p.is3D ? 6.0 : 4.0;  // 2*d avec Δt=1 ajouter le temps d'exposition à la formule (X) * exposureTime
 
-	// Fit lineaire des N premiers (avec fitlength params[0])
-	TracksFit fit(fit_mode::linear, params);
+	// Fit lineaire des N premiers (avec fitlength p[0])
+	auto fitP = p;
+	fitP.mode = fit_mode::linear;
+	TracksFit fit(fitP);
 	double err               = fit.Fit(MSD);
 	std::vector<double> pFit = fit.GetP();
 	// Une erreur négative indique un problème durant le fitting, un blinking invalide la fenêtre de base
 	if ((err < 0) || fit.HasBlink()) { return std::vector<double>{}; }
 
-	const double S = pFit[0] / SlopeRatio; // Pente
-	res[0]         = S < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : S;
-	res[1]         = pFit[1];
-	res[2]         = err;
+	double s = pFit[0] / SlopeRatio; // Pente
+	res[0]   = s < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : s;
+	res[1]   = pFit[1];
+	res[2]   = err;
 
 	// Fit sur l'ensemble des MSD
-	auto newParams = params;
-	newParams[0]   = static_cast<double>(MSD.size());
-	fit.SetMode(mode, newParams);
+	auto newParams = p;
+	fitP.mode = p.mode;
+	fitP.fitLength = MSD.size();
+
+	fit.SetMode(fitP);
 	err  = fit.Fit(MSD);
 	pFit = fit.GetP();
 	if (err < 0) { return std::vector<double>{}; } // Si echec, on arrête.
 	//(ici le blinking est autorisé, on fait toute la trajectoire, il y en aura forcément en cas de reconnexion)
 
 	// Remplissage suivant le mode
-	switch (mode) {
+	switch (p.mode) {
 		case fit_mode::linear: {
-			res[3] = pFit[0]; // Divisé par temps d'exposition
-			// TODO mais bizarrement osef de Slope Ratio ici... Peut-être une autre erreur.
-			//const double S = pFit[0] / SlopeRatio; // Pente
-			//res[3] = S < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : S;
+			s      = pFit[0] / SlopeRatio; // Pente
+			res[3] = s < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : s;
 			res[4] = pFit[1];
 			res[5] = err;
 
@@ -263,11 +263,9 @@ std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const bool i
 			res[3] = pFit[0]; // Coefficient de puissance
 			res[4] = pFit[1]; // Coefficient multiplicateur
 			res[5] = err;
-			res[6] = track.back().GetDistance(track.front()) / static_cast<double>(track.size()); // Divisé également par exposure time
-			// TODO Possiblement pas ça si on doit diviser par le nombre de points ou le nombre de plan en cas de blinking ?
-			// De plus en commentaire sur VB, on parle de vitesse moyenne, ce qui est PRESQUE vrai.
-			// Vrai pour un déplacement linéaire, suivant la puissance, il peut y avoir acceleration/descelleration, au fil du temps.
-			// Et on considère une belle trajectoire pas avec des "détours" durant le déplacement. Petit détail, mais à vérifier le comportement voulu.
+
+			const auto &Tb = track.back(), Tf = track.front();
+			res[6]         = Tb.GetDistance(Tf) / static_cast<double>(Tb.plane_ - Tf.plane_); // Divisé également par exposure time
 			break;
 		}
 		case fit_mode::exponential: {
@@ -284,13 +282,13 @@ std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const bool i
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<std::vector<double>> Tracks::ComputeAllFitMetrics(const bool is3D, const fit_mode mode, const std::vector<double>& params) const
+std::vector<std::vector<double>> Tracks::ComputeAllFitMetrics(const ComputesParams& p) const
 {
 	const auto N = t_.size(); // Nombre de trajectoires
 	std::vector<std::vector<double>> res(N);
 
 	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(N); ++i) { res[static_cast<size_t>(i)] = ComputeFitMetrics(t_[i], is3D, mode, params); }
+	for (int i = 0; i < static_cast<int>(N); ++i) { res[static_cast<size_t>(i)] = ComputeFitMetrics(t_[i], p); }
 	return res;
 }
 

@@ -121,6 +121,9 @@
     <ClInclude Include="..\lib\tracking\TracksFit.hpp">
       <Filter>Tracking</Filter>
     </ClInclude>
+    <ClInclude Include="..\lib\tracking\ComputesParams.hpp">
+      <Filter>Tracking</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="PALMTracer.def" />

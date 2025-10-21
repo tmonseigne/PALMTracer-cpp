@@ -132,6 +132,9 @@
     <ClInclude Include="..\lib\tracking\TracksFit.hpp">
       <Filter>lib</Filter>
     </ClInclude>
+    <ClInclude Include="..\lib\tracking\ComputesParams.hpp">
+      <Filter>lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

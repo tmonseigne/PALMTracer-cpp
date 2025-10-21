@@ -156,6 +156,7 @@
     <ClInclude Include="..\lib\signal_processing\PSF.hpp" />
     <ClInclude Include="..\lib\signal_processing\Spline.hpp" />
     <ClInclude Include="..\lib\Structs.hpp" />
+    <ClInclude Include="..\lib\tracking\ComputesParams.hpp" />
     <ClInclude Include="..\lib\tracking\Point.hpp" />
     <ClInclude Include="..\lib\tracking\Tracks.hpp" />
     <ClInclude Include="..\lib\tracking\Node.hpp" />

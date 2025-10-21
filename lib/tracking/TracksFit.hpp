@@ -13,23 +13,9 @@
 #include <cstdint>
 #include <vector>
 
-namespace palm_tracer {
-/// <summary>Mode du modèle d'ajustement pour les calculs statistiques des trajectoires.
-/// L'ajustement cherche le vecteur de paramètres <c>p</c> qui minimise :
-/// \f[ \Phi(p) = \sum_{i=0}^{N-1} \big(y_i - f(x_i; p)\big)^2 \f]
-/// (moindres carrés non pondérés). La qualité peut être évaluée via <c>computeR2()</c>.
-/// </summary>
-/// <remarks>Plus de cas avec le domaine spectral et les histogrammes seront implémantés plus tard :
-/// Spectral : Bi-dimensional Polynomial, Translation, Affine, Affine (Translation), Polywarp.
-/// Histogramm : Gaussian, Bi-Gaussian (donc Histo_Gaussian, Histo_BiGaussian).
-///	Autres méthodes appelées directement : Third Order Polynomial, 3D Astygmatism, NeNa, Gaussian.
-/// </remarks>
-enum class fit_mode : uint8_t {
-	linear,     ///< \f$p = [a, b]\f$ pour optimiser la fonction \f$ f(x) = a \times x + b\f$
-	power,      ///< \f$p = [\alpha, a, b]\f$ pour optimiser la fonction \f$ f(x) = a \times x^{α} + b\f$
-	exponential ///< \f$p = [x_0, a, \tau, b]\f$ pour optimiser la fonction \f$ f(x) = (b - a) \times \exp\Big(-\tfrac{x - x_0}{\tau}\Big) + a \f$
-};
+#include "ComputesParams.hpp"
 
+namespace palm_tracer {
 /// <summary>
 /// Moteur d’ajustement non linéaire (Levenberg–Marquardt) pour séries 1D (ex. MSD), supportant trois modèles : linéaire, puissance et exponentiel.
 /// Le but est de trouver le vecteur de paramètres <c>p</c> qui minimise la somme des carrés des résidus
@@ -41,33 +27,29 @@ enum class fit_mode : uint8_t {
 class TracksFit {
 public:
 	/// <summary>Constructeur par défaut de la classe <see cref="TracksFit"/>.</summary>
-	/// <param name="mode">Le mode d'ajustement (voir <see cref="fit_mode"/>).</param>
-	/// <param name="fitParams">Paramètres de configuration de l'ajustement.
-	/// Actuellement, <c>fitParams[0]</c> est interprété comme la longueur de fenêtre <c>fitLength_</c> (nombre d’échantillons utilisés).</param>
-	explicit TracksFit(fit_mode mode, const std::vector<double>& fitParams);
+	/// <param name="p">Paramètres de configuration des calculs.</param>
+	explicit TracksFit(const ComputesParams& p);
 
 	/// <summary>Configure le mode d’ajustement et initialise les structures internes en conséquence.\n
 	/// Appelle <c>SetFitLength(...)</c> pour allouer les tableaux dépendant de la fenêtre, puis redimensionne les structures liées au nombre de paramètres (<c>pSize_</c>).</summary>
-	/// <param name="mode">Le mode d'ajustement (voir <see cref="fit_mode"/>).</param>
-	/// <param name="fitParams">Paramètres de configuration de l'ajustement.
-	/// Actuellement, <c>fitParams[0]</c> est interprété comme la longueur de fenêtre <c>fitLength_</c> (nombre d’échantillons utilisés).</param>
+	/// <param name="p">Paramètres de configuration des calculs.</param>
 	/// <remarks>
 	/// - Met à jour <c>mode_</c> puis <c>pSize_</c> via <c>getPSize()</c>.\n
 	/// - Appelle <c>SetFitLength(...)</c> : <c>x_</c>, <c>y_</c>, <c>f_</c>, <c>df_</c> sont redimensionnés.\n
 	/// - Alloue/resize <c>p_</c>, <c>alpha_</c> (taille \f[pSize_ \times (pSize_+1)\f]), <c>alphaR_</c> (\f[pSize_ \times pSize_\f]), <c>beta_</c>, <c>pTry_</c>.\n
 	/// - Ne valide pas le contenu de <c>fitParams</c> (au-delà de l’index 0) : à compléter si d’autres options sont ajoutées.
 	/// </remarks>
-	void SetMode(fit_mode mode, const std::vector<double>& fitParams);
+	void SetMode(const ComputesParams& p);
 
 	/// <summary>Définit la longueur de fenêtre <c>fitLength_</c> et alloue les buffers de données associés.</summary>
-	/// <param name="fitLength">Longueur de fenêtre (nombre d’échantillons) utilisée par l'ajustement.</param>
+	/// <param name="p">Paramètres de configuration des calculs.</param>
 	/// <remarks>
 	/// - Redimensionne  <c>x_</c>, <c>y_</c>, <c>f_</c>, à <c>fitLength_</c>.\n
 	/// - Redimensionne <c>df_</c> à \f[ \text{fitLength\_} \times pSize_ \f].\n
 	/// - Ne modifie pas <c>pSize_</c> (dépend du <see cref="fit_mode"/>). Appeler <c>SetMode(...)</c> pour changer <c>pSize_</c>.\n
 	/// - Complexité : \f$\mathcal{O}\!\left(fitLength \times pSize\right)\f$.
 	/// </remarks>
-	void SetFitLength(size_t fitLength);
+	void SetFitLength(const ComputesParams& p);
 
 	/// <summary>Indique si un scintillement a été détecté.</summary>
 	/// <returns><c>true</c> si un scintillement a été détecté; sinon, <c>false</c>.</returns>

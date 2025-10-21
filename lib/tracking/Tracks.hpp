@@ -13,17 +13,10 @@
 #include <cstdint>
 #include <vector>
 
+#include "ComputesParams.hpp"
 #include "Point.hpp"
-#include "TracksFit.hpp"
 
 namespace palm_tracer {
-/// <summary>Modes de croissance de la distance maximale de recherche lors de la reconnexion de trajectoires séparées par scintillement.</summary>
-enum class blinking_mode : uint8_t {
-	immobile,  ///< Distance maximale constante avec le temps (recherche dans un rayon fixe).
-	diffusive, ///< Distance maximale croissante en racine carrée du temps écoulé.
-	linear     ///< Distance maximale croissante linéairement avec le temps écoulé.
-};
-
 /// <summary>Classe manipulant un ensemble de trajectoires.
 /// Chaque trajectoire est représentée comme une suite de points (<see cref="Point"/>).
 /// La classe permet de charger des trajectoires, de les reconnecter en cas de scintillement, et de les exporter dans un format tabulaire générique.
@@ -106,39 +99,33 @@ public:
 	/// où d = dimension (2 ou 3), τ = i·Δt. La pente donne D_inst = slope / (2·d).
 	/// </summary>
 	/// <param name="track">Trajectoire à analyser.</param>
-	/// <param name="fitLength">Taille de la fenêtre glissante (sur le MSD) pour le calcul de la pente.</param>
-	/// <param name="is3D"> Si <c>true</c>, utilise d = 3 (MSD en 3D avec x,y,z) ; sinon d = 2 (x,y).</param>
+	/// <param name="p">Paramètres de configuration des calculs.</param>
 	/// <returns></returns>
-	[[nodiscard]] static std::vector<double> ComputeInstantDiffusion(const track_t& track, size_t fitLength, bool is3D);
+	[[nodiscard]] static std::vector<double> ComputeInstantDiffusion(const track_t& track, const ComputesParams& p);
 
 
 	/// <summary>Estime la <b>diffusion instantanée</b> (Instant D) le long des trajectoires, via des <b>fenêtres glissantes</b> de longueur <c>FitLength</c>.\n
 	/// Pour chaque fenêtre, on calcule le vecteur MSD local pour les décalages
 	/// i = 1 … FitLength (dans la fenêtre), puis on ajuste une droite : MSD(τ) ≈ 2·d·D_inst·τ + C
 	/// où d = dimension (2 ou 3), τ = i·Δt. La pente donne D_inst = slope / (2·d).</summary>
-	/// <param name="fitLength">Taille de la fenêtre glissante pour le calcul de la pente.</param>
-	/// <param name="is3D"> Si <c>true</c>, utilise d = 3 (MSD en 3D avec x,y,z) ; sinon d = 2 (x,y).</param>
+	/// <param name="p">Paramètres de configuration des calculs.</param>
 	/// <returns>Tableau 2D avec un nombre de lignes égal au nombre de trajectoires et chaque ligne de taille (max(0, 1 + floor((N_t - (fit_length+1)) / stride))) (N la longueur de la trajectoire).</returns>
 	/// <remarks> Pour chaque fenêtre, on prend les FitLength premiers points du MSD local (lags 1..FitLength).
 	/// On les régréssionne vs τ = (1..FitLength)·Δt, puis on renvoie D_inst = slope / (2·d), avec d = 2 (2D) ou 3 (3D).</remarks>
-	[[nodiscard]] std::vector<std::vector<double>> ComputeAllInstantDiffusion(size_t fitLength, bool is3D) const;
+	[[nodiscard]] std::vector<std::vector<double>> ComputeAllInstantDiffusion(const ComputesParams& p) const;
 
 
 	/// <summary>Calcule des métriques de diffusion à partir d'une trajectoire et réalise un ou plusieurs fittings du MSD.</summary>
 	/// <param name="track">Trajectoire à analyser.</param>
-	/// <param name="is3D"> Si <c>true</c>, utilise d = 3 (MSD en 3D avec x,y,z) ; sinon d = 2 (x,y).</param>
-	/// <param name="mode">Le mode d'ajustement (voir <see cref="fit_mode"/>).</param>
-	/// <param name="params">Paramètres de configuration de l'ajustement.</param>
+	/// <param name="p">Paramètres de configuration des calculs.</param>
 	/// <returns>Tabelau contenant le résultat des métriques (taille et contenu dépendant du mode d'ajustement).</returns>
-	[[nodiscard]] static std::vector<double> ComputeFitMetrics(const track_t& track, bool is3D, fit_mode mode, const std::vector<double>& params);
+	[[nodiscard]] static std::vector<double> ComputeFitMetrics(const track_t& track, const ComputesParams& p);
 
 
 	/// <summary>Calcule des métriques de diffusion pour les trajectoires et réalise un ou plusieurs fittings du MSD.</summary>
-	/// <param name="is3D"> Si <c>true</c>, utilise d = 3 (MSD en 3D avec x,y,z) ; sinon d = 2 (x,y).</param>
-	/// <param name="mode">Le mode d'ajustement (voir <see cref="fit_mode"/>).</param>
-	/// <param name="params">Paramètres de configuration de l'ajustement.</param>
+	/// <param name="p">Paramètres de configuration des calculs.</param>
 	/// <returns>Tabelau contenant le résultat des métriques (taille et contenu dépendant du mode d'ajustement).</returns>
-	[[nodiscard]] std::vector<std::vector<double>> ComputeAllFitMetrics(bool is3D, fit_mode mode, const std::vector<double>& params) const;
+	[[nodiscard]] std::vector<std::vector<double>> ComputeAllFitMetrics(const ComputesParams& p) const;
 
 	/// <summary>Surcharge de l’opérateur de flux de sortie pour afficher les trajectoires.</summary>
 	/// <param name="os">Flux de sortie.</param>
@@ -148,7 +135,6 @@ public:
 
 protected:
 	std::vector<track_t> t_;                              ///< Ensemble des trajectoires manipulées.
-	double pixelSize_                             = 160;  ///< Taille d'un pixel en unitées réelles (nanomètre).
 	static constexpr double INSTANT_DIFFUSION_MIN = 1e-6; ///< Diffusion instantannée minimale.
 
 

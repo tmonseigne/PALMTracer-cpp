@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <complex>
 #include <iostream>
 #include <numbers>
 #include <numeric>
@@ -12,17 +11,17 @@
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
-TracksFit::TracksFit(const fit_mode mode, const std::vector<double>& fitParams) { SetMode(mode, fitParams); }
+TracksFit::TracksFit(const ComputesParams& p) { SetMode(p); }
 
 //-------------------------------------------------------------------------------------------------
-void TracksFit::SetMode(const fit_mode mode, const std::vector<double>& fitParams)
+void TracksFit::SetMode(const ComputesParams& p)
 {
-	mode_  = mode;
+	mode_  = p.mode;
 	pSize_ = getPSize();
 
 	// Parsing des paramètres de Fit (pour le moment non implémenté à par fitLength)...
 	// Récupération du Fit length et allocation des tableaux dépendant de la taille de la fenêtre
-	SetFitLength(static_cast<size_t>(fitParams[0]));
+	SetFitLength(p);
 
 	// Allocation des tableaux dépendant du nombre de paramètres (utilisation de Assign qui remet à 0 les éléments au lieu du resize qui ne met à 0 que les nouveaux.
 	p_.assign(pSize_, 0.0);
@@ -33,9 +32,9 @@ void TracksFit::SetMode(const fit_mode mode, const std::vector<double>& fitParam
 }
 
 //-------------------------------------------------------------------------------------------------
-void TracksFit::SetFitLength(const size_t fitLength)
+void TracksFit::SetFitLength(const ComputesParams& p)
 {
-	fitLength_ = fitLength;
+	fitLength_ = p.fitLength;
 	x_.assign(fitLength_, 0.0);
 	y_.assign(fitLength_, 0.0);
 	f_.assign(fitLength_, 0.0);

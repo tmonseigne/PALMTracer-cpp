@@ -46,6 +46,7 @@ add_library(CPU SHARED
     lib/palm/Palm.cpp
     lib/palm/Segmentation2D.hpp
     lib/palm/Segmentation2D.cpp
+    lib/tracking/ComputesParams.hpp
     lib/tracking/Node.hpp
     lib/tracking/Node.cpp
     lib/tracking/Parameters.hpp
