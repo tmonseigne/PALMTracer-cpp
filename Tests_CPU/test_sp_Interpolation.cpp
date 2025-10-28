@@ -324,7 +324,7 @@ TEST(InterpolationTests, InterpolateShifted)
 		}
 	}
 
-	std::cerr << "[WARNING] Ce test utilise une matrice non linéaire, ce qui produit une interpolation différente dans MATLAB. Mais le résultat semble cohérent.\n";
+	std::cerr << "[WARNING] Ce test utilise une matrice non linéaire, ce qui produit une interpolation différente dans MATLAB. Mais résultat cohérent.\n";
 	SUCCEED();
 	//const Interpolation3D Interp(MODE, CROP);
 	//const auto Hd = Interp.Zoom(Shifted, Size, 1, newSize);

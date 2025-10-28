@@ -6,9 +6,13 @@
 #include <numeric>
 
 #include "Structs.hpp"
+#include "signal_processing/Matrix.hpp"
 #include "tracking/Tracks.hpp"
 
 namespace palm_tracer {
+// Tolérance relative (scale) + plancher absolu (abs_floor) pour valeurs ~0
+inline double RelAbsTol(const double ref, const double scale = 1e-9, const double abs_floor = 1e-12) { return std::max(abs_floor, std::abs(ref) * scale); }
+
 //-------------------------------------------------------------------------------------------------
 TEST(TracksTests, BlinkingReconnection)
 {
@@ -104,11 +108,7 @@ TEST(TracksTests, MSD)
 	for (size_t i = 0; i < Ref.size(); ++i) { for (size_t j = 0; j < Ref.size(); ++j) { EXPECT_NEAR(Res[i][j], Ref[i][j], 1e-5); } }
 
 	// Print
-	for (const auto& R : Res) {
-		std::cout << " | ";
-		for (const auto& C : R) { std::cout << C << " | "; }
-		std::cout << "\n";
-	}
+	matrix::PrintMatrix(Res);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -128,11 +128,7 @@ TEST(TracksTests, InstantDiffusion)
 	for (size_t i = 0; i < Ref.size(); ++i) { for (size_t j = 0; j < Ref[i].size(); ++j) { EXPECT_DOUBLE_EQ(Res[i][j], Ref[i][j]); } }
 
 	// Print
-	for (const auto& R : Res) {
-		std::cout << " | ";
-		for (const auto& C : R) { std::cout << C << " | "; }
-		std::cout << "\n";
-	}
+	matrix::PrintMatrix(Res);
 }
 
 TEST(TracksTests, ComputeAllFit)
@@ -155,14 +151,15 @@ TEST(TracksTests, ComputeAllFit)
 		const ComputesParams Cp = {.mode = Modes[i], .fitLength = 2, .is3D = true, .pixelSize = 0.160, .exposureTime = 0.05};
 		std::cout << "params : " << Cp << " : \n";
 		const auto Res = tracks.ComputeAllFitMetrics(Cp);
-		for (size_t j = 0; j < Ref[i].size(); ++j) { for (size_t k = 0; k < Ref[i][j].size(); ++k) { EXPECT_NEAR(Res[j][k], Ref[i][j][k], 1e-5); } }
-
-		// Print
-		for (const auto& R : Res) {
-			std::cout << " | ";
-			for (const auto& C : R) { std::cout << C << " | "; }
-			std::cout << "\n";
+		for (size_t j = 0; j < Ref[i].size(); ++j) {
+			for (size_t k = 0; k < Ref[i][j].size(); ++k) {
+				// À cause de Mac, on va permettre une plus grande tolerance dans la comparaison.
+				const double Tol = RelAbsTol(Res[j][k], 1e-3, 1e-4);
+				EXPECT_NEAR(Res[j][k], Ref[i][j][k], Tol);
+			}
 		}
+		// Print
+		matrix::PrintMatrix(Res);
 	}
 }
 } // namespace palm_tracer

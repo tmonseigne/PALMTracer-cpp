@@ -439,3 +439,6 @@ FodyWeavers.xsd
 
 *Docs/html
 Output/
+
+# CMake
+out/
