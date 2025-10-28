@@ -11,6 +11,7 @@ repos:
       - id: check-xml                   # Tente de charger tous les fichiers XML pour vérifier la syntaxe.
       - id: check-yaml                  # Tente de charger tous les fichiers YAML pour vérifier la syntaxe.
       - id: end-of-file-fixer           # Assure que les fichiers se terminent par une nouvelle ligne et uniquement par une nouvelle ligne.
+        exclude: '.*\.vcxproj(\.filters)?$'  # Ignore *.vcxproj et *.vcxproj.filters
       - id: name-tests-test             # Vérifie que les fichiers de test sont nommés correctement.
         args: [ --pytest-test-first ]   # Assure que les tests correspondent au style test_.*\.py
       - id: trailing-whitespace         # Supprime les espaces de fin de ligne.

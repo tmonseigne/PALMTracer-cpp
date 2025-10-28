@@ -2,11 +2,9 @@ name: Build Multi-Platform DLLs
 
 on:
   push:
-    branches:
-      - master
+    branches: [master]
   pull_request:
-    branches:
-      - master
+    branches: [master]
   workflow_dispatch:
 
 
@@ -14,6 +12,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  checks: write
 
 concurrency:
   group: "pages"
@@ -22,7 +21,7 @@ concurrency:
 
 jobs:
   Build:
-    name: Build on ${{ matrix.os }}
+    name: Build & Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -34,12 +33,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ---------- Dépendances ----------
       - name: Setup MSBuild (Windows)
         if: matrix.os == 'windows-latest'
         uses: microsoft/setup-msbuild@v2
-
-      # - name: Setup CUDA (optional) # trop long et version à vérifier
-      #   run: choco install cuda -y
 
       - name: Install vcpkg
         uses: lukka/run-vcpkg@v11
@@ -68,6 +65,7 @@ jobs:
           -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
           -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="$CXXFLAGS" -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS"
 
+       # ---------- Build ----------
       - name: Build CPU
         run: cmake --build build --target CPU --config Release
 
@@ -86,13 +84,21 @@ jobs:
           name: compiled-libs-${{ matrix.os }}
           path: Output/*
 
-      - name: Build test_cpu (Windows only)
-        if: matrix.os == 'windows-latest'
+      # ---------- Tests ----------
+      - name: Build test_cpu
         run: cmake --build build --target test_cpu --config Release
 
-      - name: Run Google Tests (Windows only)
-        if: matrix.os == 'windows-latest'
-        run: .\build\Release\test_cpu.exe || true
+      - name: Run tests (ctest)
+        working-directory: build
+        run: ctest -C Release -V --output-junit=ctest-report.xml
+
+      # Pas vraiment utile c'est ultra basique, il dit juste tout va bien, pas d'affichage un peu sympa.
+      # - name: Upload JUnit report
+      #   uses: mikepenz/action-junit-report@v5
+      #   if: ${{ always() }}
+      #   with:
+      #     report_paths: build/ctest-report.xml
+      #     check_name: CTest / GoogleTest (${{ matrix.os }})
 
   Documentation:
     name: Generate & Deploy Doxygen Docs

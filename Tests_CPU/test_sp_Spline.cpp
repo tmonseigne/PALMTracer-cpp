@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <numeric>
+#include <omp.h>
 
 #include "Structs.hpp"
 #include "TiffManagement.hpp"
@@ -150,7 +151,7 @@ TEST(SplineTests, Align)
 	//	 0.2,    -0.2,    0
 	//	 0.725,   0.45,   0
 	//	-0.125,   0.25,   0
-	std::cerr << "[WARNING] Ce test utilise une matrice non linéaire, ce qui produit une interpolation différente dans MATLAB. Mais le résultat semble cohérent.\n";
+	std::cerr << "[WARNING] Ce test utilise une matrice non linéaire, ce qui produit une interpolation différente dans MATLAB. Mais résultat cohérent.\n";
 	SUCCEED();
 }
 
@@ -321,6 +322,12 @@ TEST(SplineTests, SoftNormalization)
 //-------------------------------------------------------------------------------------------------
 TEST(SplineTests, GetPSFMinimal)
 {
+	// La parallelisation sur le CI Linux et FFTW3 plante parfois, on force un thread unique (cas pour les très petites matrices).
+	#ifdef _OPENMP
+	const int prev_threads = omp_get_max_threads();
+	omp_set_num_threads(1);
+	#endif
+
 	Spline spline;
 	constexpr Vec3I Dim{.x = 7, .y = 7, .z = 5}; // Très petit volume
 	const size_t N        = Dim.GetSize();
@@ -352,8 +359,12 @@ TEST(SplineTests, GetPSFMinimal)
 	spline.smallBeadSize_   = spline.smallBeadDim_.GetSize();
 
 	const auto PSF = spline.GetPSF(beads);
-	std::cerr << "[WARNING] Ce test utilise une matrice non linéaire, ce qui produit une interpolation différente dans MATLAB. Mais le résultat semble cohérent.\n";
+	std::cerr << "[WARNING] Ce test utilise une matrice non linéaire, ce qui produit une interpolation différente dans MATLAB. Mais résultat cohérent.\n";
 	SUCCEED();
+
+	#ifdef _OPENMP
+	omp_set_num_threads(prev_threads); // restaurer
+	#endif
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -375,7 +386,7 @@ TEST(SplineTests, GetPSF)
 	auto beads     = spline.ExtractBeads(input.data(), Beads);
 	const auto PSF = spline.GetPSF(beads);
 	//matrix::PrintVolume(PSF, spline.beadDim_);	// Affichage pour vérification
-	std::cerr << "[WARNING] Ce test utilise une matrice non linéaire, ce qui produit une interpolation différente dans MATLAB. Mais le résultat semble cohérent.\n";
+	std::cerr << "[WARNING] Ce test utilise une matrice non linéaire, ce qui produit une interpolation différente dans MATLAB. Mais résultat cohérent.\n";
 	SUCCEED();
 }
 
@@ -433,7 +444,7 @@ TEST(SplineTests, Calibrate)
 		//spline.Calibrate(input.data(), beads, dim, ROI, 50, 10, 1);
 
 		*/
-	std::cerr << "[WARNING] Ce test utilise une matrice non linéaire, ce qui produit une interpolation différente dans MATLAB. Mais le résultat semble cohérent.\n";
+	std::cerr << "[WARNING] Ce test utilise une matrice non linéaire, ce qui produit une interpolation différente dans MATLAB. Mais résultat cohérent.\n";
 	SUCCEED();
 }
 } // namespace palm_tracer

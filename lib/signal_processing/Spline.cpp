@@ -229,8 +229,9 @@ std::vector<Vec3D> Spline::Align(const std::vector<double>& ref, std::vector<std
 	const auto SubRef    = matrix::ExtractSubVolume(ref, beadDim_, smallXIndices_, smallXIndices_, smallZ ? smallZIndices_ : zIndices_);
 	const Vec3I SmallDim = {.x = smallBeadDim_.x, .y = smallBeadDim_.y, .z = smallZ ? smallBeadDim_.z : beadDim_.z};
 
-	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(beads.size()); ++i) { // Pour chaque bille
+	//#pragma omp parallel for ATTENTION: FFTW planning/execution non thread-safe -> boucle sérielle (temporaire)
+	//for (int i = 0; i < static_cast<int>(beads.size()); ++i) { // Pour chaque bille
+	for (size_t i = 0; i < beads.size(); ++i) { // Pour chaque bille
 		const Interpolation3D Interp(interpolation_mode::cubic_weight, true);
 		// Stocker la sous-image
 		const auto SubB = matrix::ExtractSubVolume(beads[i], beadDim_, smallXIndices_, smallXIndices_, smallZ ? smallZIndices_ : zIndices_);
@@ -270,8 +271,10 @@ std::vector<std::vector<double>> Spline::SoftNormalization(const std::vector<std
 			meanVolume[i] = validCount[i] > 0 ? meanVolume[i] / static_cast<double>(validCount[i]) : std::numeric_limits<double>::quiet_NaN();
 		}
 
-		auto subMean     = matrix::ExtractSubVolume(meanVolume, beadDim_, xr, xr, smallZIndices_);
-		const double Q75 = matrix::Quantile(subMean, QuantileRatio); // Calcul du Quantile
+		auto subMean = matrix::ExtractSubVolume(meanVolume, beadDim_, xr, xr, smallZIndices_);
+		double q75   = matrix::Quantile(subMean, QuantileRatio);                     // Calcul du Quantile
+		if (!std::isfinite(q75)) { q75 = -std::numeric_limits<double>::infinity(); } // Si le quantile est invalide (NaN/inf) ⇾ fallback très permissif
+
 
 		// Mise à jour des billes
 		for (auto& b : out) {
@@ -282,13 +285,18 @@ std::vector<std::vector<double>> Spline::SoftNormalization(const std::vector<std
 			std::vector<double> filtered;
 			filtered.reserve(sub.size());
 			for (size_t i = 0; i < sub.size(); ++i) {
-				if (std::isfinite(sub[i]) && !std::isnan(sub[i]) && std::isfinite(subMean[i]) && !std::isnan(subMean[i]) && subMean[i] > Q75) {
+				if (std::isfinite(sub[i]) && !std::isnan(sub[i]) && std::isfinite(subMean[i]) && !std::isnan(subMean[i]) && subMean[i] > q75) {
 					filtered.push_back(sub[i] / subMean[i]);
 				}
 			}
 
-			const double Factor = matrix::Median(filtered);
-			if (Factor > 0) { matrix::Scale(b, 1.0 / Factor); }
+			// Si aucune valeur retenue -> ne pas normaliser cette bille (Factor=1)
+			double factor = 1.0;
+			if (!filtered.empty()) {
+				factor = matrix::Median(filtered);
+				if (!(factor > 0.0) || !std::isfinite(factor)) { factor = 1.0; }
+			}
+			if (factor != 1.0) { matrix::Scale(b, 1.0 / factor); }
 		}
 	}
 	return out;
@@ -317,6 +325,8 @@ void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std
 		for (size_t j = 0; j < SmallStackSize; ++j) { ref[j] += weights[i] * subBeads[i][j]; }
 		totalWeight += weights[i];
 	}
+
+	if (!(totalWeight > 0.0) || !std::isfinite(totalWeight)) { totalWeight = 1.0; } // Fallback : éviter le /0
 	matrix::Scale(ref, 1.0 / totalWeight);
 
 	// Corrélation croisée normalisée
@@ -338,6 +348,7 @@ void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std
 
 	// Normalisation d’amplitude
 	norm = matrix::Max(ref);
+	if (!(norm > 0.0) || !std::isfinite(norm)) { norm = 1.0; } // éviter division par 0, sur volumes triviaux
 
 	Vec3I cropDim = SmallDim;
 	matrix::Crop(ref, cropDim, true, true, false);
