@@ -7,27 +7,44 @@ et ce projet adhère à [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
-<!-- run command git log v1.2.1..HEAD --pretty=format:"- %s"-->
+<!-- run command git log v1.3.0..HEAD --pretty=format:"- %s"-->
+
+## [1.3.0] - 2025-10-29
+
+### Ajouté
+
+- Ajout de plusieurs helper d'affichage de matrices pour le debug.
+- Ajout d'une classe dédiée aux calculs sur trajectoire.
+- Ajout d'une fonction de reconnexion de trajectoires suite au scintillements. ([#27](https://github.com/tmonseigne/PALMTracer-cpp/pull/27))
+- Ajout des calculs de différentes métriques sur les trajectoires. ([#29](https://github.com/tmonseigne/PALMTracer-cpp/pull/29))
+- Ajout de nombreux tests
+- Execution des tests sur Windows, Mac et Unix
+
+### Modifié
+
+- Unification des noms des structures (vecteur de dimension et de coordonnées) et de leur utilisation.
+- Amélioration du calcul du Gaussian Fit. ([#24](https://github.com/tmonseigne/PALMTracer-cpp/pull/24))
+- Suppression d'éléments inutiles dans le code.
 
 ## [1.2.1] - 2025-07-28
 
 ### Ajouté
 
-- Ajout d'une première calibration pour l'ajustement par Splines à améliorer avec des tests poussés ([#18](https://github.com/tmonseigne/PALMTracer-cpp/pull/18))
-  - Ajout de nombreuses fonctions de traitement d'images : Interpolation, FFT, opérations sur matrices
+- Ajout d'une première calibration pour l'ajustement par Splines à améliorer avec des tests poussés. ([#18](https://github.com/tmonseigne/PALMTracer-cpp/pull/18))
+- Ajout de nombreuses fonctions de traitement d'images : Interpolation, FFT, opérations sur matrices
 - Ajout du calcul automatique du seuil en interne.
 - Ajout de tests unitaires simples.
 
 ### Modifié
 
-- Première correction pour l'ajustement par Splines, descente de gradient à améliorer ([#21](https://github.com/tmonseigne/PALMTracer-cpp/pull/21))
+- Première correction pour l'ajustement par Splines, descente de gradient à améliorer. ([#21](https://github.com/tmonseigne/PALMTracer-cpp/pull/21))
 - Corrections mineures sur les Clang code Issues
 
 ## [1.2.0] - 2025-06-18
 
 ### Ajouté
 
-- Ajout d'un premier ajustement par Splines à améliorer avec des tests poussés ([#15](https://github.com/tmonseigne/PALMTracer-cpp/pull/15))
+- Ajout d'un premier ajustement par Splines à améliorer avec des tests poussés. ([#15](https://github.com/tmonseigne/PALMTracer-cpp/pull/15))
 
 ### Modifié
 
