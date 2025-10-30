@@ -16,7 +16,7 @@ void Tracks::LoadTracking(const double* input, const size_t nRow, const double p
 
 	//Récupération du nombre de trajectoires pour préallouer le tableau
 	const auto NTracks = static_cast<size_t>(input[(nRow - 1) * N_TRACKING]);
-	t_.reserve(NTracks);
+	t_.reserve(nRow);
 
 	// Parcours des lignes
 	track_t track;           // Trajectoire en cours (réutilisée entre groupes)
@@ -139,7 +139,7 @@ void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, c
 //-------------------------------------------------------------------------------------------------
 std::vector<double> Tracks::ComputeMSD(const track_t& track, const size_t start, size_t end)
 {
-	if (end == 0 || end > track.size()) { end = track.size(); }   // Borne de End (pour le comportement par défaut
+	if (end == 0 || end > track.size()) { end = track.size(); }   // Borne de End (pour le comportement par défaut)
 	if (end < 2 + start) { return std::vector<double>(); }        // Si l'on a moins de 2 éléments à analyser
 	const size_t L = track[end - 1].plane_ - track[start].plane_; // Lag maximum possible
 	// if (L <= 0) { return std::vector<double>(); } // Impossible les trajectoires n'ont pas de points sur le même plan et ils sont triés.
@@ -222,6 +222,11 @@ std::vector<std::vector<double>> Tracks::ComputeAllInstantDiffusion(const Comput
 std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const ComputesParams& p)
 {
 	std::vector res(getFitResSize(p.mode), -1.0);
+	const double L = static_cast<double>(track.back().plane_ - track.front().plane_);
+	res[0]         = L + 1; // Delta de longueur de la track (en nombre de plans)
+	res[1]         = 0.0;
+	for (const auto& P : track) { res[1] += P.intensity_; } // Calcul de l'intensitée totale
+
 	const auto MSD          = ComputeMSD(track);                     // Calcul du MSD
 	const double SlopeRatio = (p.is3D ? 6.0 : 4.0) * p.exposureTime; // 2*d*Δt
 
@@ -235,9 +240,9 @@ std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const Comput
 	if ((err < 0) || fit.HasBlink()) { return std::vector<double>{}; }
 
 	double s = pFit[0] / SlopeRatio; // Pente
-	res[0]   = s < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : s;
-	res[1]   = pFit[1];
-	res[2]   = err;
+	res[2]   = s < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : s;
+	res[3]   = pFit[1];
+	res[4]   = err;
 
 	// Fit sur l'ensemble des MSD
 	fitP.mode      = p.mode;
@@ -253,29 +258,29 @@ std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const Comput
 	switch (p.mode) {
 		case fit_mode::linear: {
 			s      = pFit[0] / SlopeRatio; // Pente
-			res[3] = s < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : s;
-			res[4] = pFit[1];
-			res[5] = err;
+			res[5] = s < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : s;
+			res[6] = pFit[1];
+			res[7] = err;
 
 			break;
 		}
 		case fit_mode::power: {
-			res[3] = pFit[0]; // Coefficient de puissance
-			res[4] = pFit[1]; // Coefficient multiplicateur
-			res[5] = err;
+			res[5] = pFit[0]; // Coefficient de puissance
+			res[6] = pFit[1]; // Coefficient multiplicateur
+			res[7] = err;
 
 			const auto &Tb = track.back(), Tf = track.front();
 			const auto D   = Tb.GetDistance(Tf) / static_cast<double>(Tb.plane_ - Tf.plane_); // Distance moyenne par frame
-			res[6]         = D / p.exposureTime;                                              // Vitesse moyenne
+			res[8]         = D / p.exposureTime;                                              // Vitesse moyenne
 			break;
 		}
 		case fit_mode::exponential: {
 			if (pFit[1] + pFit[3] <= 0) { return std::vector<double>{}; } // Contrainte de positivité.
-			res[3] = pFit[1];                                             // Plateau
-			res[4] = pFit[2] / p.exposureTime;                            // Tau // Divisé par temps d'exposition
-			res[5] = pFit[3];                                             // b
-			res[6] = err;
-			res[7] = std::sqrt(0.75 * (pFit[1] + pFit[3]));
+			res[5] = pFit[1];                                             // Plateau
+			res[6] = pFit[2] / p.exposureTime;                            // Tau // Divisé par temps d'exposition
+			res[7] = pFit[3];                                             // b
+			res[8] = err;
+			res[9] = std::sqrt(0.75 * (pFit[1] + pFit[3]));
 			break;
 		}
 	}
@@ -307,9 +312,9 @@ double Tracks::getMaxDistance(const size_t mode, const double duration, const do
 size_t Tracks::getFitResSize(const fit_mode mode)
 {
 	switch (mode) {
-		case fit_mode::linear: return 6;      // [Da, Db, Derr, a, b, err]
-		case fit_mode::power: return 7;       // [Da, Db, Derr, α, a, err, \mu(\text{dist})]
-		case fit_mode::exponential: return 8; // [Da, Db, Derr, a, \tau, b, err, \sqrt{\frac{3}{4}\times(b+a)}]
+		case fit_mode::linear: return 8;       // [L, I, Da, Db, Derr, a, b, err]
+		case fit_mode::power: return 9;        // [L, I, Da, Db, Derr, α, a, err, \mu(\text{dist})]
+		case fit_mode::exponential: return 10; // [L, I, Da, Db, Derr, a, \tau, b, err, \sqrt{\frac{3}{4}\times(b+a)}]
 	}
 	return 0;
 }

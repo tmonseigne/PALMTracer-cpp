@@ -141,8 +141,8 @@ protected:
 	/// <summary> Calcule la distance maximale autorisée pour une reconnexion en fonction du mode choisi, de la durée du scintillement et de la vitesse maximale spécifiée.</summary>
 	/// <param name="mode">Mode de dispersion des points (<see cref="blinking_mode"/>).</param>
 	/// <param name="duration">Durée du scintillement (Δt, en nombre de plans).</param>
-	/// <param name="maxSpeed">Vitesse maximale supposée (pixels/plan).</param>
-	/// <returns> La distance maximale de recherche (en pixels) pour ce couple (mode, Δt). </returns>
+	/// <param name="maxSpeed">Vitesse maximale supposée (micromètre/plan).</param>
+	/// <returns> La distance maximale de recherche (en micromètre) pour ce couple (mode, Δt). </returns>
 	static double getMaxDistance(size_t mode, double duration, double maxSpeed);
 
 	/// <summary>Retourne le nombre d'éléments dnas le tableau final attendu pour le <see cref="fit_mode"/> courant.</summary>

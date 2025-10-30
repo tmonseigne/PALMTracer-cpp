@@ -140,9 +140,9 @@ TEST(TracksTests, ComputeAllFit)
 		1, 4, 4, 4, 4, 4, 4, 4,
 	};
 	const std::vector<std::vector<std::vector<double>>> Ref = {
-		{{30, -6, 1, 40, -10, 0.979592}},                                                  // linear
-		{{30, -6, 1, 2, 3, 1, 34.641016}},                                                 // power
-		{{30, -6, 1, 29012085.510261, 48353453.768656, -4.217218, 0.979592, 4664.660863}}, // exponential
+		{{4, 10, 30, -6, 1, 40, -10, 0.979592}},                                                  // linear
+		{{4, 10, 30, -6, 1, 2, 3, 1, 34.641016}},                                                 // power
+		{{4, 10, 30, -6, 1, 29012085.510261, 48353453.768656, -4.217218, 0.979592, 4664.660863}}, // exponential
 	};
 	Tracks tracks;
 	tracks.LoadTracking(InitialTracks.data(), 4, 1);
@@ -153,7 +153,7 @@ TEST(TracksTests, ComputeAllFit)
 		const auto Res = tracks.ComputeAllFitMetrics(Cp);
 		for (size_t j = 0; j < Ref[i].size(); ++j) {
 			for (size_t k = 0; k < Ref[i][j].size(); ++k) {
-				// À cause de Mac, on va permettre une plus grande tolerance dans la comparaison.
+				// À cause de Mac, on va permettre une plus grande tolerance dans la comparaison (un pourcentage de la valeur en gros).
 				const double Tol = RelAbsTol(Res[j][k], 1e-3, 1e-4);
 				EXPECT_NEAR(Res[j][k], Ref[i][j][k], Tol);
 			}
