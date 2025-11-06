@@ -3,8 +3,8 @@
 /// \file TracksFit.hpp
 /// \brief Classe d’ajustement non linéaire (Levenberg–Marquardt) pour séries 1D.
 /// \author Thibaut Monseigne (CNRS).
-/// \version 1.0.
-/// \date 16/05/2025.
+/// \version 1.3.0.
+/// \date 13/10/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
 ///
 ///-------------------------------------------------------------------------------------------------

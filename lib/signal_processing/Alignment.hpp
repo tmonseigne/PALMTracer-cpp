@@ -3,8 +3,8 @@
 /// \file Alignment.hpp
 /// \brief Classe pour l'alignement optique d'une pile d'images 3D avec déformation non linéaire.
 /// \author Thibaut Monseigne (CNRS).
-/// \version 1.0.
-/// \date 16/05/2025.
+/// \version 1.3.0.
+/// \date 02/06/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
 ///
 ///-------------------------------------------------------------------------------------------------

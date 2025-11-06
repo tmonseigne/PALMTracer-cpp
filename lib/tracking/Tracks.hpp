@@ -4,8 +4,8 @@
 /// \brief Définition de la classe \c Tracks permettant de manipuler et de reconnecter des trajectoires issues du suivi de points (tracking) en microscopie.
 /// La classe fournit des méthodes de chargement, de recomposition et d’export des trajectoires au format tableau 2D.
 /// \author Thibaut Monseigne (CNRS).
-/// \version 1.0.
-/// \date 16/05/2025.
+/// \version 1.3.0.
+/// \date 30/09/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
 ///
 ///-------------------------------------------------------------------------------------------------

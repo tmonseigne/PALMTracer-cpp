@@ -4,8 +4,8 @@
 /// \brief  Classe principale pour la détection de points lumineux dans une image 2D en niveaux de gris,
 /// basée sur une décomposition en ondelettes et un post-traitement par segmentation.
 /// \author Thibaut Monseigne (CNRS).
-/// \version 1.0.
-/// \date 16/05/2025.
+/// \version 1.3.0.
+/// \date 26/03/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
 ///
 ///-------------------------------------------------------------------------------------------------

@@ -3,8 +3,8 @@
 /// \file BSpline3D.hpp
 /// \brief Représentation et traitement d'un volume 3D par régularisation B-spline de degré quelconque.
 /// \author Thibaut Monseigne (CNRS).
-/// \version 1.0.
-/// \date 16/07/2025.
+/// \version 1.3.0.
+/// \date 17/07/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
 /// \remarks Ce code est basé sur celui de SMAP <a href="https://github.com/jries/SMAP">github.com/jries/SMAP</a>.
 ///
