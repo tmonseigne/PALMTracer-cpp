@@ -105,7 +105,6 @@ inline void FFT3D(const std::vector<double>& in, std::vector<std::complex<double
 }
 
 //-------------------------------------------------------------------------------------------------
-
 /// <summary>Calcule la transformée de Fourier 3D inverse (iFFT) d'un volume complexe.</summary>
 /// <param name="in">Volume complexe en entrée (FFT directe préalablement calculée), taille z*y*x.</param>
 /// <param name="out">Volume réel en sortie (normalisé par la taille totale), taille z*y*x.</param>

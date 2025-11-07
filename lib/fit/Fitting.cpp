@@ -10,22 +10,27 @@ namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
 void Fitting::initialize()
 {
+	// Détermination du nombre de paramètres selon le modèle choisi
 	switch (mode_) {
 		case fit_mode::none:
-		case fit_mode::gaussian_2d_fixed: nParams_ = 4; // 4 paramètres : offset, amplitude, x, y
+		case fit_mode::gaussian_2d_fixed: nParams_ = 4; // offset, amplitude, x, y
 			break;
-		case fit_mode::gaussian_2d_sigma: nParams_ = 5; // 5 : offset, amplitude, x, y, sigma
+		case fit_mode::gaussian_2d_sigma: nParams_ = 5; // offset, amplitude, x, y, sigma
 			break;
-		case fit_mode::gaussian_3d_fixed: nParams_ = 6; // 6 : offset, amplitude, x, y, sigmaX, sigmaY
+		case fit_mode::gaussian_3d_fixed: nParams_ = 6; // offset, amplitude, x, y, sigmaX, sigmaY
 			break;
-		case fit_mode::gaussian_3d_theta: nParams_ = 7; // 7 : offset, amplitude, x, y, sigmaX, sigmaY, theta
+		case fit_mode::gaussian_3d_theta: nParams_ = 7; // offset, amplitude, x, y, sigmaX, sigmaY, theta
 			break;
 		case fit_mode::spline_3d_emccd:
-		case fit_mode::spline_3d_scmos: nParams_ = 5; // 5 : offset, amplitude, x, y, z
+		case fit_mode::spline_3d_scmos: nParams_ = 5; // offset, amplitude, x, y, z
 			break;
 	}
 	nParams2_ = nParams_ * nParams_;
+
+	// Paramètres utilisateur → membres
 	parseParams();
+
+	// ROI : forcer une taille impaire
 	if (roi_ % 2 == 0) { roi_--; }
 	roiHalf_ = roi_ / 2;
 	n_       = roi_ * roi_;
@@ -47,39 +52,44 @@ void Fitting::fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZAT
                    const double x, const double y, const double z, const double sigmaX, const double sigmaY, const double theta, const double rss,
                    const double rssZ) const
 {
+	// Champs d'identité (non gérés ici)
 	point[0] = 0;  // Id
 	point[1] = 0;  // Plane
 	point[2] = 0;  // Index
 	point[3] = -1; // Channel
-	point[4] = x;  // X
-	point[5] = y;  // Y
-	point[6] = z;  // Z
-	// Integrated intensity
+
+	// Position (pixels ou unités adaptées pour z)
+	point[4] = x; // X
+	point[5] = y; // Y
+	point[6] = z; // Z
+
+	// Intensité intégrée selon le modèle
 	switch (mode_) {
 		case fit_mode::none: point[7] = infos.intensity_;
 			break;
 		case fit_mode::gaussian_2d_fixed:
 		case fit_mode::gaussian_2d_sigma:
 		case fit_mode::gaussian_3d_fixed:
-		case fit_mode::gaussian_3d_theta: point[7] = 2.0 * std::numbers::pi * intensity * sigmaX * sigmaY;
+		case fit_mode::gaussian_3d_theta:
+			// I_int ≈ 2π × amplitude × sigmaX × sigmaY (pixels)
+			point[7] = 2.0 * std::numbers::pi * intensity * sigmaX * sigmaY;
 			break;
 		case fit_mode::spline_3d_emccd:
 		case fit_mode::spline_3d_scmos: point[7] = intensity;
-
 			break;
 	}
 
 	point[8]  = sigmaX;           // Sigma X
 	point[9]  = sigmaY;           // Sigma Y
-	point[10] = theta;            // Theta
-	point[11] = rss;              // MSE X, Y
+	point[10] = theta;            // Theta (°)
+	point[11] = rss;              // MSE X et Y
 	point[12] = rssZ;             // MSE Z
-	point[13] = intensity;        // Intensity 0
-	point[14] = offset;           // Intensity offset
-	point[15] = infos.intensity_; // Intensity
-	point[16] = infos.surf_;      // Surface
+	point[13] = intensity;        // Amplitude
+	point[14] = offset;           // Offset
+	point[15] = infos.intensity_; // Intensité de la segmentation
+	point[16] = infos.surf_;      // Surface de la segmentation
 
-	// Circularity
+	// Circularité = min(sigmaX, sigmaY) / max(sigmaX, sigmaY) si définis, 1 sinon
 	if (sigmaX > EPSILON && sigmaY > EPSILON) { point[17] = std::min(sigmaX, sigmaY) / std::max(sigmaX, sigmaY); }
 	else { point[17] = 1; }
 }
@@ -104,29 +114,34 @@ void Fitting::preCompute(const size_t x, const size_t y, std::vector<Pixel>& gri
 //-------------------------------------------------------------------------------------------------
 void Fitting::initP(std::array<std::vector<double>, 3>& p, const double x, const double y, const double z, const double minI, const double maxI) const
 {
-	constexpr double MinI = 0.0, MaxI = 65535,
-	                 MinS = 0.1, MaxS = 20;
+	constexpr double MinI = 0.0, MaxI = 65535.0,
+	                 MinS = 0.1, MaxS = 20.0;
+
 	switch (mode_) {
 		case fit_mode::none:
 		case fit_mode::gaussian_2d_fixed: {
-			p[0] = {MinI, MinI, x - 1, y - 1}; // minimum théorique
-			p[1] = {minI, maxI - minI, x, y};  // Valeur initiale
-			p[2] = {MaxI, MaxI, x + 1, y + 1}; // maximum théorique
+			// [offset, amplitude, x, y]
+			p[0] = {MinI, MinI, x - 1, y - 1};
+			p[1] = {minI, maxI - minI, x, y};
+			p[2] = {MaxI, MaxI, x + 1, y + 1};
 			break;
 		}
 		case fit_mode::gaussian_2d_sigma: {
+			// [offset, amplitude, x, y, sigma]
 			p[0] = {MinI, MinI, x - 1, y - 1, MinS};
 			p[1] = {minI, maxI - minI, x, y, fitParams_[1]};
 			p[2] = {MaxI, MaxI, x + 1, y + 1, MaxS};
 			break;
 		}
 		case fit_mode::gaussian_3d_fixed: {
+			// [offset, amplitude, x, y, sigmaX, sigmaY]
 			p[0] = {MinI, MinI, x - 1, y - 1, MinS, MinS};
 			p[1] = {minI, maxI - minI, x, y, std::numbers::sqrt2_v<double> * fitParams_[1], std::numbers::sqrt2_v<double> * fitParams_[2]};
 			p[2] = {MaxI, MaxI, x + 1, y + 1, MaxS, MaxS};
 			break;
 		}
 		case fit_mode::gaussian_3d_theta: {
+			// [offset, amplitude, x, y, sigmaX, sigmaY, theta]
 			p[0] = {MinI, MinI, x - 1, y - 1, MinS, MinS, -150};
 			p[1] = {minI, maxI - minI, x, y, std::numbers::sqrt2_v<double> * fitParams_[1], std::numbers::sqrt2_v<double> * fitParams_[2], fitParams_[3]};
 			p[2] = {MaxI, MaxI, x + 1, y + 1, MaxS, MaxS, 150};
@@ -134,6 +149,7 @@ void Fitting::initP(std::array<std::vector<double>, 3>& p, const double x, const
 		}
 		case fit_mode::spline_3d_emccd:
 		case fit_mode::spline_3d_scmos: {
+			// [offset, amplitude, x, y, z]
 			const double RoiC = (fitParams_[0] - 1) / 2.0,
 			             RoiD = fitParams_[0] / 4.0;
 			const double Dmin = RoiC - RoiD,
@@ -141,7 +157,7 @@ void Fitting::initP(std::array<std::vector<double>, 3>& p, const double x, const
 
 			p[0] = {-0.01, -1, Dmin, Dmin, 0};
 			p[1] = {minI, maxI - minI, x, y, z};
-			p[2] = {0.01, 1, Dmax, Dmax, 1}; // le maximum pour Z est défini dans les paramètres par splineSizeZ_.
+			p[2] = {0.01, 1, Dmax, Dmax, 1}; // Le max pour Z est borné par la taille des PSF spline (voir paramètres).
 			break;
 		}
 	}

@@ -41,10 +41,10 @@ public:
 	                    smallZIndices_, ///< Indices Z de la zone centrale utilisée pour l'alignement.
 	                    zIndices_;      ///< Indices Z complets de la ROI.
 
-	Spline()  = default; ///< Constructeur de la classe <c>Spline</c>.
-	~Spline() = default; ///< Destructeur de la classe <c>Spline</c>.
+	Spline()  = default; ///< Constructeur de la classe <see cref="Spline"/>.
+	~Spline() = default; ///< Destructeur de la classe <see cref="Spline"/>.
 
-	/// <summary>Calibre une PSF 3D spline à partir d'un stack d'images et positions de billes.</summary>
+	/// <summary>Calibre une PSF 3D spline à partir d'une pile d'images et positions de billes.</summary>
 	/// <param name="stack">Volume brut d'acquisition (stack 3D d'uint16_t).</param>
 	/// <param name="beads">Liste des positions XY des billes.</param>
 	/// <param name="dim">Dimensions complètes de la pile (X, Y, Z).</param>

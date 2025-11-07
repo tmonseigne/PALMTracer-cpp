@@ -27,12 +27,12 @@ public:
 	size_t size_;                                       ///< Taille totale (hauteur × largeur).
 	std::array<std::vector<double>, N_PLANES> wDecomp_; ///< Résultat de la décomposition en ondelettes : tableau des plans.
 
-	/// <summary>Constructeur de la classe <c>ATrous</c>.</summary>
+	/// <summary>Constructeur de la classe <see cref="ATrous"/>.</summary>
 	/// <param name="image">Pointeur vers l'image 2D d'entrée (tableau d'uint16_t).</param>
 	/// <param name="dim">Dimensions de l'image (X, Y).</param>
 	ATrous(const uint16_t* image, const Vec2I& dim);
 
-	/// <summary>Destructeur de la classe <c>ATrous</c>.</summary>
+	/// <summary>Destructeur de la classe <see cref="ATrous"/>.</summary>
 	~ATrous() = default;
 
 private:
@@ -43,9 +43,9 @@ private:
 	/// <returns>Nombre de plans effectivement calculés, ou W_SIZE_ERR en cas d'erreur.</returns>
 	void decomposition2D(const uint16_t* image);
 
-	/// <summary>Calcule 2^val.</summary>
+	/// <summary>Calcule \f$2^{val}\f$.</summary>
 	/// <param name="val">Exposant (taille non signée)</param>
-	/// <returns>Renvoie 2^val.</returns>
+	/// <returns>Renvoie \f$2^{val}\f$.</returns>
 	/// <remarks>Cette fonction est constexpr, donc évaluée à la compilation si possible.
 	/// Le mot-clé [[nodiscard]] indique que le résultat ne doit pas être ignoré.</remarks>
 	[[nodiscard]] static constexpr size_t twoToThe(const size_t val) noexcept { return val == 0 ? 1 : static_cast<size_t>(1) << val; }

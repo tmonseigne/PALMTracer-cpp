@@ -1,4 +1,4 @@
-# Doxyfile 1.14.0
+# Doxyfile 1.15.0
 
 # This file describes the settings to be used by the documentation system
 # Doxygen (www.doxygen.org) for a project.
@@ -361,6 +361,20 @@ EXTENSION_MAPPING      =
 
 MARKDOWN_SUPPORT       = YES
 
+# If the MARKDOWN_STRICT tag is enabled then Doxygen treats text in comments as
+# Markdown formatted also in cases where Doxygen's native markup format
+# conflicts with that of Markdown. This is only relevant in cases where
+# backticks are used. Doxygen's native markup style allows a single quote to end
+# a text fragment started with a backtick and then treat it as a piece of quoted
+# text, whereas in Markdown such text fragment is treated as verbatim and only
+# ends when a second matching backtick is found. Also, Doxygen's native markup
+# format requires double quotes to be escaped when they appear in a backtick
+# section, whereas this is not needed for Markdown.
+# The default value is: YES.
+# This tag requires that the tag MARKDOWN_SUPPORT is set to YES.
+
+MARKDOWN_STRICT        = YES
+
 # When the TOC_INCLUDE_HEADINGS tag is set to a non-zero value, all headings up
 # to that level are automatically included in the table of contents, even if
 # they do not have an id attribute.
@@ -510,7 +524,7 @@ LOOKUP_CACHE_SIZE      = 0
 # which effectively disables parallel processing. Please report any issues you
 # encounter. Generating dot graphs in parallel is controlled by the
 # DOT_NUM_THREADS setting.
-# Minimum value: 0, maximum value: 32, default value: 1.
+# Minimum value: 0, maximum value: 512, default value: 1.
 
 NUM_PROC_THREADS       = 1
 
@@ -540,25 +554,25 @@ EXTRACT_ALL            = YES
 # be included in the documentation.
 # The default value is: NO.
 
-EXTRACT_PRIVATE        = NO
+EXTRACT_PRIVATE        = YES
 
 # If the EXTRACT_PRIV_VIRTUAL tag is set to YES, documented private virtual
 # methods of a class will be included in the documentation.
 # The default value is: NO.
 
-EXTRACT_PRIV_VIRTUAL   = NO
+EXTRACT_PRIV_VIRTUAL   = YES
 
 # If the EXTRACT_PACKAGE tag is set to YES, all members with package or internal
 # scope will be included in the documentation.
 # The default value is: NO.
 
-EXTRACT_PACKAGE        = NO
+EXTRACT_PACKAGE        = YES
 
 # If the EXTRACT_STATIC tag is set to YES, all static members of a file will be
 # included in the documentation.
 # The default value is: NO.
 
-EXTRACT_STATIC         = NO
+EXTRACT_STATIC         = YES
 
 # If the EXTRACT_LOCAL_CLASSES tag is set to YES, classes (and structs) defined
 # locally in source files will be included in the documentation. If set to NO,
@@ -574,7 +588,7 @@ EXTRACT_LOCAL_CLASSES  = YES
 # included.
 # The default value is: NO.
 
-EXTRACT_LOCAL_METHODS  = NO
+EXTRACT_LOCAL_METHODS  = YES
 
 # If this flag is set to YES, the members of anonymous namespaces will be
 # extracted and appear in the documentation as a namespace called
@@ -705,7 +719,7 @@ INLINE_INFO            = YES
 # name. If set to NO, the members will appear in declaration order.
 # The default value is: YES.
 
-SORT_MEMBER_DOCS       = YES
+SORT_MEMBER_DOCS       = NO
 
 # If the SORT_BRIEF_DOCS tag is set to YES then Doxygen will sort the brief
 # descriptions of file, namespace and class members alphabetically by member
@@ -725,7 +739,7 @@ SORT_BRIEF_DOCS        = NO
 # detailed member documentation.
 # The default value is: NO.
 
-SORT_MEMBERS_CTORS_1ST = NO
+SORT_MEMBERS_CTORS_1ST = YES
 
 # If the SORT_GROUP_NAMES tag is set to YES then Doxygen will sort the hierarchy
 # of group names into alphabetical order. If set to NO the group names will
@@ -742,7 +756,7 @@ SORT_GROUP_NAMES       = NO
 # list.
 # The default value is: NO.
 
-SORT_BY_SCOPE_NAME     = NO
+SORT_BY_SCOPE_NAME     = YES
 
 # If the STRICT_PROTO_MATCHING option is enabled and Doxygen fails to do proper
 # type resolution of all parameters of a function it will reject a match between
@@ -1073,7 +1087,7 @@ EXCLUDE_PATTERNS       =
 # wildcard * is used, a substring. Examples: ANamespace, AClass,
 # ANamespace::AClass, ANamespace::*Test
 
-EXCLUDE_SYMBOLS        =
+EXCLUDE_SYMBOLS        = operator<<
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
 # that contain example code fragments that are included (see the \include
@@ -1862,7 +1876,7 @@ USE_MATHJAX            = YES
 # regards to the different settings, so it is possible that also other MathJax
 # settings have to be changed when switching between the different MathJax
 # versions.
-# Possible values are: MathJax_2 and MathJax_3.
+# Possible values are: MathJax_2, MathJax_3 and MathJax_4.
 # The default value is: MathJax_2.
 # This tag requires that the tag USE_MATHJAX is set to YES.
 
@@ -1871,9 +1885,10 @@ MATHJAX_VERSION        = MathJax_3
 # When MathJax is enabled you can set the default output format to be used for
 # the MathJax output. For more details about the output format see MathJax
 # version 2 (see:
-# http://docs.mathjax.org/en/v2.7-latest/output.html) and MathJax version 3
+# https://docs.mathjax.org/en/v2.7/output.html), MathJax version 3 (see:
+# https://docs.mathjax.org/en/v3.2/output/index.html) and MathJax version 4
 # (see:
-# http://docs.mathjax.org/en/latest/web/components/output.html).
+# https://docs.mathjax.org/en/v4.0/output/index.htm).
 # Possible values are: HTML-CSS (which is slower, but has the best
 # compatibility. This is the name for Mathjax version 2, for MathJax version 3
 # this will be translated into chtml), NativeMML (i.e. MathML. Only supported
@@ -1886,36 +1901,50 @@ MATHJAX_VERSION        = MathJax_3
 MATHJAX_FORMAT         = HTML-CSS
 
 # When MathJax is enabled you need to specify the location relative to the HTML
-# output directory using the MATHJAX_RELPATH option. The destination directory
-# should contain the MathJax.js script. For instance, if the mathjax directory
-# is located at the same level as the HTML output directory, then
-# MATHJAX_RELPATH should be ../mathjax. The default value points to the MathJax
-# Content Delivery Network so you can quickly see the result without installing
-# MathJax. However, it is strongly recommended to install a local copy of
-# MathJax from https://www.mathjax.org before deployment. The default value is:
+# output directory using the MATHJAX_RELPATH option. For Mathjax version 2 the
+# destination directory should contain the MathJax.js script. For instance, if
+# the mathjax directory is located at the same level as the HTML output
+# directory, then MATHJAX_RELPATH should be ../mathjax.s For Mathjax versions 3
+# and 4 the destination directory should contain the tex-<format>.js script
+# (where <format> is either chtml or svg). The default value points to the
+# MathJax Content Delivery Network so you can quickly see the result without
+# installing MathJax. However, it is strongly recommended to install a local
+# copy of MathJax from https://www.mathjax.org before deployment. The default
+# value is:
 # - in case of MathJax version 2: https://cdn.jsdelivr.net/npm/mathjax@2
 # - in case of MathJax version 3: https://cdn.jsdelivr.net/npm/mathjax@3
+# - in case of MathJax version 4: https://cdn.jsdelivr.net/npm/mathjax@4
 # This tag requires that the tag USE_MATHJAX is set to YES.
 
 MATHJAX_RELPATH        =
 
 # The MATHJAX_EXTENSIONS tag can be used to specify one or more MathJax
 # extension names that should be enabled during MathJax rendering. For example
-# for MathJax version 2 (see
-# https://docs.mathjax.org/en/v2.7-latest/tex.html#tex-and-latex-extensions):
+# for MathJax version 2 (see https://docs.mathjax.org/en/v2.7/tex.html):
 # MATHJAX_EXTENSIONS = TeX/AMSmath TeX/AMSsymbols
 # For example for MathJax version 3 (see
-# http://docs.mathjax.org/en/latest/input/tex/extensions/index.html):
+# https://docs.mathjax.org/en/v3.2/input/tex/extensions/):
 # MATHJAX_EXTENSIONS = ams
+# For example for MathJax version 4 (see
+# https://docs.mathjax.org/en/v4.0/input/tex/extensions/):
+# MATHJAX_EXTENSIONS = units
+# Note that for Mathjax version 4 quite a few extensions are already
+# automatically loaded. To disable a package in Mathjax version 4 one can use
+# the package name prepended with a minus sign (- like MATHJAX_EXTENSIONS +=
+# -textmacros)
 # This tag requires that the tag USE_MATHJAX is set to YES.
 
 MATHJAX_EXTENSIONS     =
 
 # The MATHJAX_CODEFILE tag can be used to specify a file with JavaScript pieces
-# of code that will be used on startup of the MathJax code. See the MathJax site
-# (see:
-# http://docs.mathjax.org/en/v2.7-latest/output.html) for more details. For an
-# example see the documentation.
+# of code that will be used on startup of the MathJax code. See the Mathjax site
+# for more details:
+# - MathJax version 2 (see:
+# https://docs.mathjax.org/en/v2.7/)
+# - MathJax version 3 (see:
+# https://docs.mathjax.org/en/v3.2/)
+# - MathJax version 4 (see:
+# https://docs.mathjax.org/en/v4.0/) For an example see the documentation.
 # This tag requires that the tag USE_MATHJAX is set to YES.
 
 MATHJAX_CODEFILE       =
@@ -2576,7 +2605,7 @@ HAVE_DOT               = NO
 # processors available in the system. You can set it explicitly to a value
 # larger than 0 to get control over the balance between CPU load and processing
 # speed.
-# Minimum value: 0, maximum value: 32, default value: 0.
+# Minimum value: 0, maximum value: 512, default value: 0.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
 DOT_NUM_THREADS        = 0

@@ -84,7 +84,7 @@ bool CALL_CONV TracksCompute(const double* input, double* outputMSD, double* out
                              const double pixelSize, const double exposureTime, const uint32_t fitMode, const double* fitParams)
 {
 	palm_tracer::ComputesParams p = {
-		.mode = palm_tracer::fit_mode::linear,
+		.mode = palm_tracer::tracks_fit_mode::linear,
 		.fitLength = static_cast<size_t>(fitParams[0]),
 		.is3D = is3D,
 		.pixelSize = pixelSize,
@@ -104,11 +104,11 @@ bool CALL_CONV TracksCompute(const double* input, double* outputMSD, double* out
 	if (fitMode != 0) {
 		switch (fitMode) {
 			case 2: {
-				p.mode = palm_tracer::fit_mode::power;
+				p.mode = palm_tracer::tracks_fit_mode::power;
 				break;
 			}
 			case 3: {
-				p.mode = palm_tracer::fit_mode::exponential;
+				p.mode = palm_tracer::tracks_fit_mode::exponential;
 				break;
 			}
 			default: break;

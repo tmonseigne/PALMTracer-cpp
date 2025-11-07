@@ -24,9 +24,9 @@ namespace palm_tracer {
 /// - soit l'application directe de coefficients pré-calculés.
 class Alignment {
 public:
-	/// <summary>Constructeur de la classe <c>Alignment</c>.</summary>
+	/// <summary>Constructeur de la classe <see cref="Alignment"/>.</summary>
 	Alignment() = default;
-	/// <summary>Destructeur de la classe <c>Alignment</c>.</summary>
+	/// <summary>Destructeur de la classe <see cref="Alignment"/>.</summary>
 	~Alignment() = default;
 
 	/// <summary>Mode d'alignement avec calcul des coefficients à partir d'images de référence.</summary>
@@ -86,7 +86,7 @@ protected:
 
 	/// <summary>>Pré-calcul des contributions pour chaque pixel cible en fonction de la déformation pour une interpolation plus rapide.
 	///
-	/// Cette carte contient, pour chaque pixel de l’image cible, les coordonnées sources correspondantes ainsi que les poids associés à l’interpolation.</summary>
+	/// Cette carte contient, pour chaque pixel de l'image cible, les coordonnées sources correspondantes ainsi que les poids associés à l'interpolation.</summary>
 	/// <remarks>Utilise un splatting inverse avec suréchantillonnage.</remarks>
 	void precomputeTransformMap();
 

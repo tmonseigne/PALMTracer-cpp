@@ -73,7 +73,7 @@ void Alignment::computeCoord(const double oldX, const double oldY, double& newX,
 //-------------------------------------------------------------------------------------------------
 void Alignment::align()
 {
-	omp_set_dynamic(1); // Autorise l’adaptation automatique du nombre de threads.
+	omp_set_dynamic(1); // Autorise l'adaptation automatique du nombre de threads.
 	initOutput();
 	precomputeTransformMap();
 	applyTransform();
