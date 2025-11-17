@@ -6,7 +6,7 @@
 
 #include "TracksFit.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 //==================== DLL Input/output ====================
 //-------------------------------------------------------------------------------------------------
 void Tracks::LoadTracking(const double* input, const size_t nRow, const double pixelSize)
@@ -185,7 +185,7 @@ std::vector<double> Tracks::ComputeInstantDiffusion(const track_t& track, const 
 	const auto N            = track.size() - (p.fitLength); // Nombre de points moins la taille de la fenêtre (-1) si Nt = 3, Fit = 2, Np = 3 ⇒ N = 1
 	std::vector res(N, -1.0);
 	auto fitP = p;
-	fitP.mode = tracks_fit_mode::linear;
+	fitP.mode = fit_mode::linear;
 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(N); ++i) {
@@ -232,7 +232,7 @@ std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const Comput
 
 	// Fit linéaire des N premiers (avec fitLength p[0])
 	auto fitP = p;
-	fitP.mode = tracks_fit_mode::linear;
+	fitP.mode = fit_mode::linear;
 	TracksFit fit(fitP);
 	double err               = fit.Fit(MSD);
 	std::vector<double> pFit = fit.GetP();
@@ -256,7 +256,7 @@ std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const Comput
 
 	// Remplissage suivant le mode
 	switch (p.mode) {
-		case tracks_fit_mode::linear: {
+		case fit_mode::linear: {
 			s      = pFit[0] / SlopeRatio; // Pente
 			res[5] = s < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : s;
 			res[6] = pFit[1];
@@ -264,7 +264,7 @@ std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const Comput
 
 			break;
 		}
-		case tracks_fit_mode::power: {
+		case fit_mode::power: {
 			res[5] = pFit[0]; // Coefficient de puissance
 			res[6] = pFit[1]; // Coefficient multiplicateur
 			res[7] = err;
@@ -274,7 +274,7 @@ std::vector<double> Tracks::ComputeFitMetrics(const track_t& track, const Comput
 			res[8]         = D / p.exposureTime;                                              // Vitesse moyenne
 			break;
 		}
-		case tracks_fit_mode::exponential: {
+		case fit_mode::exponential: {
 			if (pFit[1] + pFit[3] <= 0) { return std::vector<double>{}; } // Contrainte de positivité.
 			res[5] = pFit[1];                                             // Plateau
 			res[6] = pFit[2] / p.exposureTime;                            // Tau // Divisé par temps d'exposition
@@ -309,12 +309,12 @@ double Tracks::getMaxDistance(const size_t mode, const double duration, const do
 }
 
 //-------------------------------------------------------------------------------------------------
-size_t Tracks::getFitResSize(const tracks_fit_mode mode)
+size_t Tracks::getFitResSize(const fit_mode mode)
 {
 	switch (mode) {
-		case tracks_fit_mode::linear: return 8;       // [L, I, Da, Db, Derr, a, b, err]
-		case tracks_fit_mode::power: return 9;        // [L, I, Da, Db, Derr, α, a, err, μ(dist)]
-		case tracks_fit_mode::exponential: return 10; // [L, I, Da, Db, Derr, a, τ, b, err, sqrt(3/4*(b+a))]
+		case fit_mode::linear: return 8;       // [L, I, Da, Db, Derr, a, b, err]
+		case fit_mode::power: return 9;        // [L, I, Da, Db, Derr, α, a, err, μ(dist)]
+		case fit_mode::exponential: return 10; // [L, I, Da, Db, Derr, a, τ, b, err, sqrt(3/4*(b+a))]
 	}
 	return 0;
 }
@@ -331,4 +331,4 @@ std::ostream& operator<<(std::ostream& os, const Tracks& tracks)
 	os << "]";
 	return os;
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

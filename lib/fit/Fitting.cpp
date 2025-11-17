@@ -6,7 +6,7 @@
 #include <numbers>
 #include <vector>
 
-namespace palm_tracer {
+namespace palm_tracer::fit {
 //-------------------------------------------------------------------------------------------------
 void Fitting::initialize()
 {
@@ -38,7 +38,7 @@ void Fitting::initialize()
 
 // ==================== Fit Computes ====================
 //-------------------------------------------------------------------------------------------------
-void Fitting::Fit(const Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const
+void Fitting::Fit(const localization::Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const
 {
 	const auto& P = segmentation.Infos();
 	points.resize(P.size());
@@ -48,7 +48,7 @@ void Fitting::Fit(const Segmentation2D& segmentation, std::vector<std::array<dou
 }
 
 //-------------------------------------------------------------------------------------------------
-void Fitting::fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, const double offset, const double intensity,
+void Fitting::fill(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, const double offset, const double intensity,
                    const double x, const double y, const double z, const double sigmaX, const double sigmaY, const double theta, const double rss,
                    const double rssZ) const
 {
@@ -162,4 +162,4 @@ void Fitting::initP(std::array<std::vector<double>, 3>& p, const double x, const
 		}
 	}
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::fit

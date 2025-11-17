@@ -15,7 +15,7 @@
 #include "Node.hpp"
 #include "Parameters.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 /**
  * <summary>
  *  Conteneur de nœuds  <see cref="Node"/> pour un instant temporel \f$t\f$, fournissant :
@@ -94,4 +94,4 @@ public:
 	/// <returns>Variation de coût retournée par <c><see cref="Node::MakeChange"/>(<paramref name="limit"/>)</c>. Vaut <c>0.0</c> si <c>nNodes_ == 0</c>.</returns>
 	double TryRandomChange(const double limit) { return nNodes_ == 0 ? 0.0 : nodes_[params_->RandomModulo(nNodes_)].MakeChange(limit); }
 };
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

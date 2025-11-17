@@ -16,7 +16,7 @@
 #include "ComputesParams.hpp"
 #include "Point.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 /// <summary>Classe manipulant un ensemble de trajectoires.
 /// Chaque trajectoire est représentée comme une suite de points (<see cref="Point"/>).
 /// La classe permet de charger des trajectoires, de les reconnecter en cas de scintillement, et de les exporter dans un format tabulaire générique.
@@ -105,7 +105,7 @@ public:
 
 	/// <summary>Calcule des métriques de diffusion pour les trajectoires et réalise un ou plusieurs fittings du MSD.</summary>
 	/// <param name="p">Paramètres de configuration des calculs.</param>
-	/// <returns>Tableau 2D des métriques (une ligne par trajectoire), avec un format dépendant du <see cref="tracks_fit_mode"/> choisi.</returns>
+	/// <returns>Tableau 2D des métriques (une ligne par trajectoire), avec un format dépendant du <see cref="fit_mode"/> choisi.</returns>
 	[[nodiscard]] std::vector<std::vector<double>> ComputeAllFitMetrics(const ComputesParams& p) const;
 
 	/// <summary>Surcharge de l'opérateur de flux de sortie pour afficher les trajectoires.</summary>
@@ -125,7 +125,7 @@ protected:
 	/// <returns>La distance maximale de recherche (en micromètre) pour ce couple (<paramref name="mode"/>, \f$\Delta t\f$).</returns>
 	static double getMaxDistance(size_t mode, double duration, double maxSpeed);
 
-	/// <summary>Retourne le nombre d'éléments dans le tableau final attendu pour le <see cref="tracks_fit_mode"/> courant.</summary>
+	/// <summary>Retourne le nombre d'éléments dans le tableau final attendu pour le <see cref="fit_mode"/> courant.</summary>
 	/// <returns>
 	/// \f[
 	/// \begin{cases}
@@ -136,6 +136,6 @@ protected:
 	/// \f]
 	/// </returns>
 	/// <remarks>En cas de <paramref name="mode"/> non reconnu, retourne <c>0</c> (à éviter en pratique).</remarks>
-	static size_t getFitResSize(tracks_fit_mode mode);
+	static size_t getFitResSize(fit_mode mode);
 };
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

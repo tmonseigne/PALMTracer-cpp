@@ -77,10 +77,10 @@
     <ClInclude Include="..\lib\fit\Fitting.hpp" />
     <ClInclude Include="..\lib\fit\GaussianFit.hpp" />
     <ClInclude Include="..\lib\fit\SplineFit.hpp" />
-    <ClInclude Include="..\lib\palm\ATrous.hpp" />
-    <ClInclude Include="..\lib\palm\Palm.hpp" />
-    <ClInclude Include="..\lib\palm\Segmentation2D.hpp" />
-    <ClInclude Include="..\lib\palm\SegmentationInfo.hpp" />
+    <ClInclude Include="..\lib\localization\ATrous.hpp" />
+    <ClInclude Include="..\lib\Palm.hpp" />
+    <ClInclude Include="..\lib\localization\Segmentation2D.hpp" />
+    <ClInclude Include="..\lib\localization\SegmentationInfo.hpp" />
     <ClInclude Include="..\lib\signal_processing\Alignment.hpp" />
     <ClInclude Include="..\lib\signal_processing\BSpline3D.hpp" />
     <ClInclude Include="..\lib\signal_processing\FFT.hpp" />
@@ -103,9 +103,9 @@
     <ClCompile Include="..\lib\fit\Fitting.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit.cpp" />
     <ClCompile Include="..\lib\fit\SplineFit.cpp" />
-    <ClCompile Include="..\lib\palm\ATrous.cpp" />
-    <ClCompile Include="..\lib\palm\Palm.cpp" />
-    <ClCompile Include="..\lib\palm\Segmentation2D.cpp" />
+    <ClCompile Include="..\lib\localization\ATrous.cpp" />
+    <ClCompile Include="..\lib\Palm.cpp" />
+    <ClCompile Include="..\lib\localization\Segmentation2D.cpp" />
     <ClCompile Include="..\lib\signal_processing\Alignment.cpp" />
     <ClCompile Include="..\lib\signal_processing\BSpline3D.cpp" />
     <ClCompile Include="..\lib\signal_processing\Interpolation.cpp" />

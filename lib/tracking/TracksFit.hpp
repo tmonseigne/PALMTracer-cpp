@@ -15,7 +15,7 @@
 
 #include "ComputesParams.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 /// <summary>
 /// Moteur d'ajustement non linéaire (Levenberg–Marquardt) pour séries 1D (ex. MSD), supportant trois modèles : linéaire, puissance et exponentiel.
 /// Le but est de trouver le vecteur de paramètres <c>p</c> qui minimise la somme des carrés des résidus
@@ -45,7 +45,7 @@ public:
 	/// <remarks>
 	/// - Redimensionne  <see cref="x_"/>, <see cref="y_"/>, <see cref="f_"/>, à <see cref="fitLength_"/>.\n
 	/// - Redimensionne <see cref="df_"/> à \f$ \text{fit}_{Length} \times p_{Size}\f$.\n
-	/// - Ne modifie pas <see cref="pSize_"/> (dépend du <see cref="tracks_fit_mode"/>). Appeler <c><see cref="SetMode"/>(...)</c> pour changer <see cref="pSize_"/>.\n
+	/// - Ne modifie pas <see cref="pSize_"/> (dépend du <see cref="fit_mode"/>). Appeler <c><see cref="SetMode"/>(...)</c> pour changer <see cref="pSize_"/>.\n
 	/// - Complexité : \f$\mathcal{O}\!\left(\text{fit}_{Length} \times p_{Size}\right)\f$.
 	/// </remarks>
 	void SetFitLength(const ComputesParams& p);
@@ -64,7 +64,7 @@ public:
 	double Fit(const std::vector<double>& input);
 
 protected:
-	tracks_fit_mode mode_ = tracks_fit_mode::linear; ///< Mode de fitting utilisé.
+	fit_mode mode_ = fit_mode::linear; ///< Mode de fitting utilisé.
 	size_t pSize_         = 0,                       ///< Nombre total de paramètres du modèle.
 	       fitLength_     = 0;                       ///< Taille de la fenêtre d'analyse.
 	bool hasBlink_        = false;                   ///< Indique si un scintillement a été détecté.
@@ -88,20 +88,20 @@ protected:
 	static constexpr size_t N_ITER             = 500;        ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
 	static constexpr size_t N_K                = N_ITER / 4; ///< Nombre maximal d'itérations ayant entrainé une mise à jour du modèle.
 
-	/// <summary>Retourne le nombre de paramètres <see cref="pSize_"/> attendu pour le <see cref="tracks_fit_mode"/> courant.</summary>
+	/// <summary>Retourne le nombre de paramètres <see cref="pSize_"/> attendu pour le <see cref="fit_mode"/> courant.</summary>
 	/// <returns>
 	/// \f[
 	/// \begin{cases}
-	/// 2 & \text{pour tracks_fit_mode::linear} \quad & (p=[a, b])\\
-	/// 3 & \text{pour tracks_fit_mode::power} \quad & (p=[\alpha, a, b])\\
-	/// 4 & \text{pour tracks_fit_mode::exponential} \quad & (p=[x_0, a, \tau, b])
+	/// 2 & \text{pour fit_mode::linear} \quad & (p=[a, b])\\
+	/// 3 & \text{pour fit_mode::power} \quad & (p=[\alpha, a, b])\\
+	/// 4 & \text{pour fit_mode::exponential} \quad & (p=[x_0, a, \tau, b])
 	/// \end{cases}
 	/// \f]
 	/// </returns>
 	/// <remarks>En cas de  <see cref="mode_"/> non reconnu, retourne <c>0</c> (à éviter en pratique).</remarks>
 	[[nodiscard]] size_t getPSize() const;
 
-	/// <summary>Vérifie la validité minimale de l'entrée <paramref name="input"/> vis-à-vis du <c>tracks_fit_mode</c> et de <see cref="fitLength_"/>.\n
+	/// <summary>Vérifie la validité minimale de l'entrée <paramref name="input"/> vis-à-vis du <c>fit_mode</c> et de <see cref="fitLength_"/>.\n
 	/// L'écriture d'un diagnostic sur <c>std::cerr</c> en cas d'échec est commenté, car trop bruyante sur la sortie.</summary>
 	/// <param name="input">Série d'observations (ex. MSD). Seuls les <see cref="fitLength_"/> premiers éléments sont requis.</param>
 	/// <returns><c>true</c> si l'entrée est compatible ; <c>false</c> sinon.</returns>
@@ -125,7 +125,7 @@ protected:
 	/// </remarks>
 	void fillXY(const std::vector<double>& input);
 
-	/// <summary>Initialise le vecteur de paramètres <see cref="p_"/> en fonction du <c>tracks_fit_mode</c> courant (heuristiques d'amorçage).</summary>
+	/// <summary>Initialise le vecteur de paramètres <see cref="p_"/> en fonction du <c>fit_mode</c> courant (heuristiques d'amorçage).</summary>
 	/// <remarks>
 	/// - <b>Linear</b> : \f$p=[a, b]\f$\n
 	/// - <b>Power</b> : \f$p=[\alpha, a, b]\f$\n
@@ -135,9 +135,9 @@ protected:
 
 	/// <summary>Évalue la fonction de base du modèle courant et remplit <see cref="f_"/> pour chaque abscisse \f$x_i\f$.</summary>
 	/// <param name="p">Paramètres du modèle :
-	///   - <c>tracks_fit_mode::linear</c> : \f$\mathcal{C} = [a, b]\f$ et \f$f(x)=a \times x + b\f$
-	///   - <c>tracks_fit_mode::power</c> : \f$\mathcal{C} = [\alpha, a, b]\f$ et \f$f(x)=a \times x^{\alpha} + b\f$
-	///   - <c>tracks_fit_mode::exponential</c> : \f$\mathcal{C} = [x_0, a, \tau, b]\f$ et \f$f(x) = (b - a) \times \exp\!\Big(-\frac{x - x_0}{\tau}\Big) + a\f$
+	///   - <c>fit_mode::linear</c> : \f$\mathcal{C} = [a, b]\f$ et \f$f(x)=a \times x + b\f$
+	///   - <c>fit_mode::power</c> : \f$\mathcal{C} = [\alpha, a, b]\f$ et \f$f(x)=a \times x^{\alpha} + b\f$
+	///   - <c>fit_mode::exponential</c> : \f$\mathcal{C} = [x_0, a, \tau, b]\f$ et \f$f(x) = (b - a) \times \exp\!\Big(-\frac{x - x_0}{\tau}\Big) + a\f$
 	/// </param>
 	/// <remarks>
 	/// - La taille de sortie est <c>f_.size() == x_.size()</c>.
@@ -148,7 +148,7 @@ protected:
 	void base(const std::vector<double>& p);
 
 	/// <summary>Calcule la matrice jacobienne <c>df_(n × m)</c> des dérivées partielles \f$\frac{\partial f}{\partial c_j}\f$.
-	/// pour chaque point \f$x_i\f$ et chaque paramètre \f$p_j\f$, selon le <c>tracks_fit_mode</c> courant.</summary>
+	/// pour chaque point \f$x_i\f$ et chaque paramètre \f$p_j\f$, selon le <c>fit_mode</c> courant.</summary>
 	/// <remarks>
 	/// - Dimensions : <c>df_.size() == x_.size()</c> et <c>df_[i].size() == pSize_</c>.
 	/// - <b>Linear</b> : \f$f(x)=a\times x + b,\quad p=[a, b]\f$.\n
@@ -209,4 +209,4 @@ protected:
 	/// </remarks>
 	[[nodiscard]] double computeR2(const std::vector<double>& p);
 };
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

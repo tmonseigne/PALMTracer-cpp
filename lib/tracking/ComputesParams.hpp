@@ -11,7 +11,7 @@
 #pragma once
 #include <iostream>
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 /// <summary>Modes de croissance de la distance maximale de recherche lors de la reconnexion de trajectoires séparées par scintillement.</summary>
 enum class blinking_mode : uint8_t {
 	immobile,  ///< Distance maximale constante avec le temps (recherche dans un rayon fixe).
@@ -28,7 +28,7 @@ enum class blinking_mode : uint8_t {
 /// - spectral : polynôme bidimensionnel, translation, affine (avec/sans translation), polywarp ;
 /// - histogrammes : gaussien, bi-gaussien ; et méthodes directes diverses (polynôme d'ordre 3, astigmatisme 3D, NeNa, gaussien).
 /// </remarks>
-enum class tracks_fit_mode : uint8_t {
+enum class fit_mode : uint8_t {
 	linear,     ///< Paramètres \f$ p = [a,\, b] \f$ pour \f$ f(x) = a\,x + b \f$.
 	power,      ///< Paramètres \f$ p = [\alpha,\, a,\, b] \f$ pour \f$ f(x) = a\,x^{\alpha} + b \f$.
 	exponential ///< Paramètres \f$ p = [x_0,\, a,\, \tau,\, b] \f$ pour \f$ f(x) = (b - a)\,\exp\!\big(-(x - x_0)/\tau\big) + a \f$.
@@ -36,7 +36,7 @@ enum class tracks_fit_mode : uint8_t {
 
 /// <summary>Structure contenant les paramètres de calcul pour le module de tracking.</summary>
 struct ComputesParams {
-	tracks_fit_mode mode = tracks_fit_mode::linear; ///< Mode d'ajustement utilisé pour les calculs statistiques (voir <see cref="tracks_fit_mode"/>).
+	fit_mode mode = fit_mode::linear; ///< Mode d'ajustement utilisé pour les calculs statistiques (voir <see cref="fit_mode"/>).
 	size_t fitLength     = 0;                       ///< Longueur de la fenêtre de calcul (nombre d'échantillons).
 	bool is3D            = false;                   ///< Active le calcul 3D si <c>true</c> (sinon 2D).
 	double pixelSize     = 0.160;                   ///< Taille d'un pixel en unités réelles (micromètre).
@@ -49,4 +49,4 @@ inline std::ostream& operator<<(std::ostream& os, const ComputesParams& p)
 	os << "(" << static_cast<int>(p.mode) << ", " << p.fitLength << ", " << p.is3D << ", " << p.pixelSize << ", " << p.exposureTime << ")";
 	return os;
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

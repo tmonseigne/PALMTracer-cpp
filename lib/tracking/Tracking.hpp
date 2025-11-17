@@ -16,7 +16,7 @@
 #include "TimeNodes.hpp"
 
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 /// <summary>Classe réalisant le suivi (tracking) de structures ponctuelles au fil du temps.
 /// Les points sont regroupés par instant (<c>TimeNodes</c>). Le suivi construit des liaisons <c>Node::past_</c>, <c>Node::future_</c> entre <c>Node</c>.
 /// Le résultat final est un tableau 2D contigu (Track, Plan, Id, X, Y, Z, Intensité, Surface).</summary>
@@ -154,4 +154,4 @@ protected:
 	/// </remarks>
 	void setIndexToTrackedStructures();
 };
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

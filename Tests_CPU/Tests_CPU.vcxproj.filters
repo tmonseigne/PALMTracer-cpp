@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\lib\palm\ATrous.cpp">
+    <ClCompile Include="..\lib\localization\ATrous.cpp">
       <Filter>lib</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\palm\Palm.cpp">
+    <ClCompile Include="..\lib\Palm.cpp">
       <Filter>lib</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\palm\Segmentation2D.cpp">
+    <ClCompile Include="..\lib\localization\Segmentation2D.cpp">
       <Filter>lib</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\tracking\Node.cpp">
@@ -69,16 +69,16 @@
     <ClInclude Include="..\lib\Structs.hpp">
       <Filter>lib</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\ATrous.hpp">
+    <ClInclude Include="..\lib\localization\ATrous.hpp">
       <Filter>lib</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\Palm.hpp">
+    <ClInclude Include="..\lib\Palm.hpp">
       <Filter>lib</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\Segmentation2D.hpp">
+    <ClInclude Include="..\lib\localization\Segmentation2D.hpp">
       <Filter>lib</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\SegmentationInfo.hpp">
+    <ClInclude Include="..\lib\localization\SegmentationInfo.hpp">
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\Node.hpp">

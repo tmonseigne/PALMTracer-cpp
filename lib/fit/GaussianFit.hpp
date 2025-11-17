@@ -13,7 +13,7 @@
 
 #include "Fitting.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::fit {
 /// <summary>Classe d'ajustement Gaussien dérivée de <see cref="Fitting"/>.
 /// Elle réalise un ajustement non linéaire (LM) d'un modèle de PSF Gaussienne sur une ROI carrée centrée sur le candidat, pour plusieurs <see cref="fit_mode"/>.\n
 /// Modes pris en charge :
@@ -103,7 +103,7 @@ protected:
 	/// Remplit <paramref name="point"/> avec offset, intensité, (x, y, z), \f$\sigma_x\f$, \f$\sigma_y\f$, \f$\theta\f$, R².</summary>
 	/// <param name="infos">Informations issues de la segmentation (position initiale, intensité, etc.).</param>
 	/// <param name="point">Sortie : localisation ajustée (format <see cref="N_LOCALIZATIONS"/>).</param>
-	void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const override;
+	void fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const override;
 
 	//==================== Levenberg–Marquardt ====================
 	/// <summary>Évalue la PSF sur la ROI, accumule \f$\alpha\f$ et \f$\beta\f$ (Gauss–Newton)
@@ -142,4 +142,4 @@ protected:
 	/// <param name="y">Coordonnée y d'évaluation.</param>
 	void deriv(std::vector<double>& grad, const std::vector<double>& p, double x, double y) const;
 };
-} // namespace palm_tracer
+} // namespace palm_tracer::fit

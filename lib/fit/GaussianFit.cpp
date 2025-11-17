@@ -12,7 +12,7 @@
 #include "signal_processing/Matrix.hpp"
 #include "signal_processing/PSF.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::fit {
 //==================== Common Functions ====================
 //-------------------------------------------------------------------------------------------------
 void GaussianFit::parseParams()
@@ -24,7 +24,7 @@ void GaussianFit::parseParams()
 }
 
 //-------------------------------------------------------------------------------------------------
-void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
+void GaussianFit::fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
 {
 	// Valeurs par défaut
 	double offset = 0, intensity    = 0, rss         = -1,
@@ -271,4 +271,4 @@ void GaussianFit::deriv(std::vector<double>& grad, const std::vector<double>& p,
 			break;
 	}
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::fit

@@ -15,7 +15,7 @@
 
 #include "Fitting.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::fit {
 /// <summary>Classe d'ajustement par spline.</summary>
 class SplineFit final : public Fitting {
 public:
@@ -46,7 +46,7 @@ protected:
 	/// <summary>Exécute un ajustement de modèle spline sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.</summary>
 	/// <param name="infos">Informations issues de la segmentation (position initiale, intensité, etc.).</param>
 	/// <param name="point">Sortie : localisation ajustée (format <see cref="N_LOCALIZATIONS"/>).</param>
-	void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const override;
+	void fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const override;
 
 	/// <summary>Calcule les dérivées du modèle spline 3D en un point donné (x, y, z).
 	/// Remplit le vecteur des dérivées partielles (dudt) et évalue la valeur du modèle.</summary>
@@ -95,4 +95,4 @@ protected:
 	/// <param name="df">Référence vers les vecteurs contenant les dérivées de f par rapport à x (∂f/∂x), y (∂f/∂y) et z (∂f/∂z).</param>
 	static void delta3D(double x, double y, double z, std::vector<double>& f, std::array<std::vector<double>, 3>& df);
 };
-} // namespace palm_tracer
+} // namespace palm_tracer::fit

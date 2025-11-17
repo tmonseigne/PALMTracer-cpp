@@ -5,7 +5,7 @@
 
 #include "Constants.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 //-------------------------------------------------------------------------------------------------
 size_t Tracking::Processing()
 {
@@ -235,4 +235,4 @@ void Tracking::updateConstants()
 	params_->stdMean_      = std::sqrt(params_->stdMean_);
 	for (auto& t : timeNodes_) { for (auto& n : t.nodes_) { n.UpdateConstants(); } }
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

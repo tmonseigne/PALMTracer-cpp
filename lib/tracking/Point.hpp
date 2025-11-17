@@ -11,7 +11,7 @@
 #pragma once
 #include "Structs.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 /// <summary> Représente un point élémentaire d'une trajectoire.
 /// Un point regroupe les informations spatiales (plan, coordonnées), ainsi que des caractéristiques photométriques (intensité, surface).</summary>
 class Point {
@@ -51,4 +51,4 @@ public:
 		return os;
 	}
 };
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

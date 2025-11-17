@@ -12,7 +12,7 @@
 #pragma once
 #include <random>
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 /// <summary>
 /// Conteneur de paramètres généraux utilisés par les modules de suivi et de calculs, ainsi que quelques utilitaires liés au générateur pseudo-aléatoire.
 ///
@@ -67,4 +67,4 @@ public:
 	/// <remarks>Distribution continue \f$U(0,1)\f$ obtenue par division par <c>std::mt19937::max()</c>.</remarks>
 	[[nodiscard]] double Randomfloat() { return static_cast<double>(rng_()) / static_cast<double>(std::mt19937::max()); }
 };
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <ranges>
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 //-------------------------------------------------------------------------------------------------
 TimeNodes::TimeNodes(const size_t time, const size_t nNodes, Parameters* params)
 	: time_(time), params_(params), nNodes_(nNodes)
@@ -38,4 +38,4 @@ void TimeNodes::ComputeConstantSigmas(double& intensity, size_t& nInt, double& m
 {
 	for (const auto& N : nodes_) { N.ComputeConstantSigmas(intensity, nInt, mean, nMean, distance, nDist); }
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

@@ -9,7 +9,7 @@
 #include <vector>
 
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 //-------------------------------------------------------------------------------------------------
 TracksFit::TracksFit(const ComputesParams& p) { SetMode(p); }
 
@@ -107,9 +107,9 @@ double TracksFit::Fit(const std::vector<double>& input)
 size_t TracksFit::getPSize() const
 {
 	switch (mode_) {
-		case tracks_fit_mode::linear: return 2;
-		case tracks_fit_mode::power: return 3;
-		case tracks_fit_mode::exponential: return 4;
+		case fit_mode::linear: return 2;
+		case fit_mode::power: return 3;
+		case fit_mode::exponential: return 4;
 	}
 	return 0;
 }
@@ -131,8 +131,8 @@ bool TracksFit::checkInputValidity(const std::vector<double>& input) const
 
 	// Cas particuliers
 	switch (mode_) {
-		case tracks_fit_mode::linear: { break; }
-		case tracks_fit_mode::power: {
+		case fit_mode::linear: { break; }
+		case fit_mode::power: {
 			// Si les deux premières valeurs sont négatives ou égales à 0.
 			if (input[0] <= 0 || input[1] <= 0) {
 				//std::cerr << "[TracksFit] The two first input must be strictly positive (" << input[0] << " and " << input[1] << ")." << std::endl;
@@ -140,7 +140,7 @@ bool TracksFit::checkInputValidity(const std::vector<double>& input) const
 			}
 			break;
 		}
-		case tracks_fit_mode::exponential: { break; }
+		case fit_mode::exponential: { break; }
 	}
 	return true;
 }
@@ -173,18 +173,18 @@ void TracksFit::fillXY(const std::vector<double>& input)
 void TracksFit::initP()
 {
 	switch (mode_) {
-		case tracks_fit_mode::linear: { // p = [a, b]
+		case fit_mode::linear: { // p = [a, b]
 			p_[0] = y_[1] - y_[0];
 			p_[1] = y_[0] - p_[0];
 			break;
 		}
-		case tracks_fit_mode::power: { // p = [α, a, b]
+		case fit_mode::power: { // p = [α, a, b]
 			p_[2] = 0.0;
 			p_[1] = y_[0];
 			p_[0] = std::log(y_[1] / y_[0]) / std::numbers::ln2;
 			break;
 		}
-		case tracks_fit_mode::exponential: { // p = [X0, a, Tau, b]
+		case fit_mode::exponential: { // p = [X0, a, Tau, b]
 			p_[0]             = 0.0;         // x0
 			p_[1]             = y_.back();   // a (plateau)
 			p_[3]             = 0.0;         // b (valeur à x0)
@@ -204,17 +204,17 @@ void TracksFit::initP()
 void TracksFit::base(const std::vector<double>& p)
 {
 	switch (mode_) {
-		case tracks_fit_mode::linear: { // p = [a, b],  f(x) = a * x + b
+		case fit_mode::linear: { // p = [a, b],  f(x) = a * x + b
 			const double A = p[0], B = p[1];
 			for (size_t i = 0; i < fitLength_; ++i) { f_[i] = A * x_[i] + B; }
 			break;
 		}
-		case tracks_fit_mode::power: { // p = [α, a, b],  f(x) = a * x^α + b
+		case fit_mode::power: { // p = [α, a, b],  f(x) = a * x^α + b
 			const double P = p[0], A = p[1], B = p[2];
 			for (size_t i = 0; i < fitLength_; ++i) { f_[i] = A * std::pow(x_[i], P) + B; }
 			break;
 		}
-		case tracks_fit_mode::exponential: { // p = [X0, a, Tau, b],  f(x) = (b - a) * exp(-(x - x_0)/(tau)) + a
+		case fit_mode::exponential: { // p = [X0, a, Tau, b],  f(x) = (b - a) * exp(-(x - x_0)/(tau)) + a
 			const double X0 = p[0], A = p[1], Tau = p[2], Factor = p[3] - A;
 			for (size_t i = 0; i < fitLength_; ++i) { f_[i] = Factor * std::exp(-(x_[i] - X0) / Tau) + A; }
 			break;
@@ -226,14 +226,14 @@ void TracksFit::base(const std::vector<double>& p)
 void TracksFit::deriv()
 {
 	switch (mode_) {
-		case tracks_fit_mode::linear: { // p = [a, b]
+		case fit_mode::linear: { // p = [a, b]
 			for (size_t i = 0; i < fitLength_; ++i) {
 				df_[i][0] = x_[i]; // ∂f/∂a
 				df_[i][1] = 1;     // ∂f/∂b
 			}
 			break;
 		}
-		case tracks_fit_mode::power: { // p = [α, a, b]
+		case fit_mode::power: { // p = [α, a, b]
 			const double Alpha = p_[0], A = p_[1];
 			for (size_t i = 0; i < fitLength_; ++i) {
 				const double XAlpha = std::pow(x_[i], Alpha); // x^α
@@ -244,7 +244,7 @@ void TracksFit::deriv()
 			}
 			break;
 		}
-		case tracks_fit_mode::exponential: { // p = [X0, a, Tau, b]
+		case fit_mode::exponential: { // p = [X0, a, Tau, b]
 			const double X0 = p_[0], C = p_[1], Tau = p_[2], Factor = p_[3] - C, D0 = Factor / Tau, D2 = Factor / (Tau * Tau);
 			for (size_t i = 0; i < fitLength_; ++i) {
 				const double Exp = std::exp(-(x_[i] - X0) / Tau); // E = exp(-(x - X0)/Tau)  (si Tau==0, expression singulière : pas de garde)
@@ -359,4 +359,4 @@ double TracksFit::computeR2(const std::vector<double>& p)
 	if (s2 == 0.0) { return 0.0; } // Variance nulle : éviter /0 ; comportement choisi : R² = 0.0 (documenté ci-dessus).
 	return 1 - (s1 / s2);
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

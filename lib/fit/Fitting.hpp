@@ -14,9 +14,9 @@
 
 #include "Constants.hpp"
 #include "Structs.hpp"
-#include "palm/Segmentation2D.hpp"
+#include "localization/Segmentation2D.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::fit {
 /// <summary>Mode d'ajustement.</summary>
 enum class fit_mode : uint8_t {
 	none,              ///< Aucun ajustement.
@@ -51,7 +51,7 @@ public:
 	/// Parcourt les objets retournés par <see cref="Segmentation2D::Infos"/> et applique <see cref="fit"/> à chacun.
 	/// Bouclage parallèle (<c>OpenMP</c>) jusqu'à <see cref="maxPoints_"/>.
 	/// </remarks>
-	void Fit(const Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const;
+	void Fit(const localization::Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const;
 
 protected:
 	fit_mode mode_;           ///< Mode de fitting utilisé.
@@ -79,7 +79,7 @@ protected:
 	/// <param name="infos">Informations issues de la segmentation (position initiale, intensité, etc.).</param>
 	/// <param name="point">Sortie : localisation ajustée (format <see cref="N_LOCALIZATIONS"/>).</param>
 	/// <remarks>Implémentation par défaut : recopie les valeurs brutes <see cref="SegmentationInfo"/> via <see cref="fill"/>.</remarks>
-	virtual void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
+	virtual void fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
 	{
 		fill(infos, point, 0, 0, infos.x_, infos.y_, infos.z_);
 	}
@@ -97,7 +97,7 @@ protected:
 	/// <param name="theta">Angle d'ellipse (degrés, convention image).</param>
 	/// <param name="rss">Erreur quadratique moyenne (MSE) sur X et Y.</param>
 	/// <param name="rssZ">Erreur quadratique moyenne (MSE) sur Z (si applicable).</param>
-	void fill(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, double offset, double intensity, double x, double y, double z = 0,
+	void fill(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, double offset, double intensity, double x, double y, double z = 0,
 	          double sigmaX = 0, double sigmaY = 0, double theta = 0, double rss = -1, double rssZ = -1) const;
 
 	/// <summary>Prépare les données de la ROI centrée en (<paramref name="x"/>, <paramref name="y"/>) :
@@ -120,4 +120,4 @@ protected:
 	/// <param name="maxI">Intensité maximale mesurée dans la ROI (sert à initialiser l'amplitude).</param>
 	void initP(std::array<std::vector<double>, 3>& p, double x, double y, double z, double minI, double maxI) const;
 };
-} // namespace palm_tracer
+} // namespace palm_tracer::fit

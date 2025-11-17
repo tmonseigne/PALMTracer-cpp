@@ -17,7 +17,7 @@
 
 #include "Parameters.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 /// <summary>Représente une détection ponctuelle à l'instant <see cref="time_"/> et porte les liens temporels (<see cref="past_"/>, <see cref="future_"/>) vers les noeuds voisins.
 /// La classe fournit :
 /// - des mesures locales (position, intensité, moyenne, surface, distance aux bords…),
@@ -203,4 +203,4 @@ private:
 	/// <returns>Gain \f$\Delta E\f$ si accepté, \f$0\f$ sinon.</returns>
 	double simpleLinkageDoubleSwap(double limit, Node* node, size_t count);
 };
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

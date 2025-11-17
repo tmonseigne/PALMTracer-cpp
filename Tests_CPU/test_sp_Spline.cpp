@@ -5,9 +5,9 @@
 #include <numeric>
 #include <omp.h>
 
+#include "Palm.hpp"
 #include "Structs.hpp"
 #include "TiffManagement.hpp"
-#include "palm/Palm.hpp"
 #include "signal_processing/Matrix.hpp"
 #include "signal_processing/Spline.hpp"
 

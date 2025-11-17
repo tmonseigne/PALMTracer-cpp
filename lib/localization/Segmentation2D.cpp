@@ -9,7 +9,7 @@
 #include "Constants.hpp"
 #include "Structs.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::localization {
 //-------------------------------------------------------------------------------------------------
 struct Filter {
 	bool enabled;
@@ -365,4 +365,4 @@ void Segmentation2D::watershed()
 		}
 	}
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::localization

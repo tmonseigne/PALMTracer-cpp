@@ -17,7 +17,7 @@
 #include "ATrous.hpp"
 #include "SegmentationInfo.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::localization {
 /// <summary>Classe de traitement d'images segmentées en 2D, permettant l'allocation de structures,
 /// le calcul de statistiques et le filtrage basé sur des critères morphologiques et d'intensité.</summary>
 ///
@@ -86,4 +86,4 @@ private:
 	/// Utilise une file de priorité pour propager les labels des régions à travers la carte de potentiel.</summary>
 	void watershed();
 };
-} // namespace palm_tracer
+} // namespace palm_tracer::localization

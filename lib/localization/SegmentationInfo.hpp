@@ -11,7 +11,7 @@
 
 #pragma once
 
-namespace palm_tracer {
+namespace palm_tracer::localization {
 /// <summary>Structure pour la fusion de régions (segmentation) avec potentiels et liens.</summary>
 struct WSFusion {
 	double maxPotentialWithNeighbor; ///< Potentiel maximal avec un voisin.
@@ -66,4 +66,4 @@ public:
 		intensity_ = 0;
 	}
 };
-} // namespace palm_tracer
+} // namespace palm_tracer::localization

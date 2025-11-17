@@ -9,7 +9,7 @@
 #include "signal_processing/Matrix.hpp"
 #include "tracking/Tracks.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 // Tolérance relative (scale) + plancher absolu (abs_floor) pour valeurs ~0
 inline double RelAbsTol(const double ref, const double scale = 1e-9, const double abs_floor = 1e-12) { return std::max(abs_floor, std::abs(ref) * scale); }
 
@@ -123,7 +123,7 @@ TEST(TracksTests, InstantDiffusion)
 	const std::vector<std::vector<double>> Ref = {{30, 30}};
 	Tracks tracks;
 	tracks.LoadTracking(InitialTracks.data(), 4, 1);
-	constexpr ComputesParams Cp = {.mode = tracks_fit_mode::linear, .fitLength = 2, .is3D = true, .pixelSize = 0.160, .exposureTime = 0.05};
+	constexpr ComputesParams Cp = {.mode = fit_mode::linear, .fitLength = 2, .is3D = true, .pixelSize = 0.160, .exposureTime = 0.05};
 	const auto Res              = tracks.ComputeAllInstantDiffusion(Cp);
 	for (size_t i = 0; i < Ref.size(); ++i) { for (size_t j = 0; j < Ref[i].size(); ++j) { EXPECT_DOUBLE_EQ(Res[i][j], Ref[i][j]); } }
 
@@ -146,7 +146,7 @@ TEST(TracksTests, ComputeAllFit)
 	};
 	Tracks tracks;
 	tracks.LoadTracking(InitialTracks.data(), 4, 1);
-	const std::vector Modes = {tracks_fit_mode::linear, tracks_fit_mode::power, tracks_fit_mode::exponential};
+	const std::vector Modes = {fit_mode::linear, fit_mode::power, fit_mode::exponential};
 	for (size_t i = 0; i < Modes.size(); ++i) {
 		const ComputesParams Cp = {.mode = Modes[i], .fitLength = 2, .is3D = true, .pixelSize = 0.160, .exposureTime = 0.05};
 		std::cout << "params : " << Cp << " : \n";
@@ -162,4 +162,4 @@ TEST(TracksTests, ComputeAllFit)
 		matrix::PrintMatrix(Res);
 	}
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

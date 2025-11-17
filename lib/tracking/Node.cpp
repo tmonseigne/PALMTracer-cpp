@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <random>
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 namespace {
 constexpr double WEIGHT_DISTANCE       = 0.6;
 constexpr double WEIGHT_INTENSITY      = 0.2;
@@ -363,4 +363,4 @@ double Node::simpleLinkageDoubleSwap(const double limit, Node* node, const size_
 
 	return DeltaE;
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

@@ -11,7 +11,7 @@
 
 #include "signal_processing/Matrix.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::fit {
 /// <summary>Calcule la racine carrée réelle d'un nombre, même s'il est négatif.
 ///
 /// Cette fonction retourne la partie réelle de la racine carrée complexe d'un nombre réel.
@@ -48,7 +48,7 @@ void SplineFit::parseParams()
 }
 
 //-------------------------------------------------------------------------------------------------
-void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
+void SplineFit::fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
 {
 	double offset    = 0,
 	       intensity = 0,
@@ -318,4 +318,4 @@ void SplineFit::delta3D(const double x, const double y, const double z, std::vec
 		cz *= z;
 	}
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::fit
