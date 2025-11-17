@@ -1,19 +1,9 @@
-/*******************************************************************************************************************
-									TimeNodes Class
-							Array containing all the Node s of a particular instant
-*******************************************************************************************************************/
-
-/********************************************************************************************************************
-Class TimeNodes contains the Node objets for one time.
-********************************************************************************************************************/
 #include "TimeNodes.hpp"
 #include <algorithm>
 #include <ranges>
 
-namespace palm_tracer {
-/********************************************************************************************************************
-Constructor(int _time, int _nbNodes) is run after the base constructor TimeNodes::TimeNodes
-********************************************************************************************************************/
+namespace palm_tracer::tracking {
+//-------------------------------------------------------------------------------------------------
 TimeNodes::TimeNodes(const size_t time, const size_t nNodes, Parameters* params)
 	: time_(time), params_(params), nNodes_(nNodes)
 {
@@ -21,10 +11,7 @@ TimeNodes::TimeNodes(const size_t time, const size_t nNodes, Parameters* params)
 	for (size_t i = 0; i < nNodes_; ++i) { nodes_.emplace_back(time_, params_); }
 }
 
-/********************************************************************************************************************
-linkBeforeAndAfter() for each structure at the time_ t, it builds the chained list of all the structures of the next
-time_ (t+1) close to it.
-********************************************************************************************************************/
+//-------------------------------------------------------------------------------------------------
 void TimeNodes::LinkNeighborsBeforeAndAfter(TimeNodes& futures)
 {
 	for (auto& present : nodes_) {
@@ -37,9 +24,7 @@ void TimeNodes::LinkNeighborsBeforeAndAfter(TimeNodes& futures)
 	}
 }
 
-/********************************************************************************************************************
-sortByIntensityAllNeighbors() Sort by intersity all the neighbors of each node.
-********************************************************************************************************************/
+//-------------------------------------------------------------------------------------------------
 void TimeNodes::SortByIntensityAllNeighbors()
 {
 	for (auto& n : nodes_) {
@@ -48,12 +33,9 @@ void TimeNodes::SortByIntensityAllNeighbors()
 }
 
 
-/********************************************************************************************************************
-void computeConstantSigmas(double &intensity, double &mean,
-	double &distance, long &countStd) compute the constant kMean and kIntensity
-********************************************************************************************************************/
+//-------------------------------------------------------------------------------------------------
 void TimeNodes::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance, size_t& nDist) const
 {
 	for (const auto& N : nodes_) { N.ComputeConstantSigmas(intensity, nInt, mean, nMean, distance, nDist); }
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

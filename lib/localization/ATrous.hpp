@@ -3,8 +3,8 @@
 /// \file ATrous.hpp
 /// \brief  Classe pour la décomposition en ondelettes 2D selon l'algorithme "à trous".
 /// \author Thibaut Monseigne (CNRS).
-/// \version 1.0.
-/// \date 16/05/2025.
+/// \version 1.3.0.
+/// \date 26/03/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
 ///
 ///-------------------------------------------------------------------------------------------------
@@ -17,7 +17,7 @@
 #include "Constants.hpp"
 #include "Structs.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::localization {
 /// <summary>Classe pour la décomposition en ondelettes 2D selon l'algorithme "à trous".</summary>
 /// <remarks> Cette classe réalise la transformation en ondelettes sur une image 2D, notamment avec une décomposition multi-échelle utilisant des filtrages spline B3.
 /// Elle gère la mémoire interne, les calculs de convolutions et la gestion des plans.</remarks>
@@ -27,12 +27,12 @@ public:
 	size_t size_;                                       ///< Taille totale (hauteur × largeur).
 	std::array<std::vector<double>, N_PLANES> wDecomp_; ///< Résultat de la décomposition en ondelettes : tableau des plans.
 
-	/// <summary>Constructeur de la classe <c>ATrous</c>.</summary>
+	/// <summary>Constructeur de la classe <see cref="ATrous"/>.</summary>
 	/// <param name="image">Pointeur vers l'image 2D d'entrée (tableau d'uint16_t).</param>
 	/// <param name="dim">Dimensions de l'image (X, Y).</param>
 	ATrous(const uint16_t* image, const Vec2I& dim);
 
-	/// <summary>Destructeur de la classe <c>ATrous</c>.</summary>
+	/// <summary>Destructeur de la classe <see cref="ATrous"/>.</summary>
 	~ATrous() = default;
 
 private:
@@ -43,9 +43,9 @@ private:
 	/// <returns>Nombre de plans effectivement calculés, ou W_SIZE_ERR en cas d'erreur.</returns>
 	void decomposition2D(const uint16_t* image);
 
-	/// <summary>Calcule 2^val.</summary>
+	/// <summary>Calcule \f$2^{val}\f$.</summary>
 	/// <param name="val">Exposant (taille non signée)</param>
-	/// <returns>Renvoie 2^val.</returns>
+	/// <returns>Renvoie \f$2^{val}\f$.</returns>
 	/// <remarks>Cette fonction est constexpr, donc évaluée à la compilation si possible.
 	/// Le mot-clé [[nodiscard]] indique que le résultat ne doit pas être ignoré.</remarks>
 	[[nodiscard]] static constexpr size_t twoToThe(const size_t val) noexcept { return val == 0 ? 1 : static_cast<size_t>(1) << val; }
@@ -68,4 +68,4 @@ private:
 	/// <param name="plane">Indice du plan (échelle) utilisé pour ajuster les pas de la convolution.</param>
 	void b3SplineFiltering2D(const std::vector<double>& in, std::vector<double>& out, size_t plane);
 };
-} // namespace palm_tracer
+} // namespace palm_tracer::localization

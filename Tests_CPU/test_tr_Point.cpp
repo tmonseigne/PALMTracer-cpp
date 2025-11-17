@@ -7,7 +7,7 @@
 #include "Structs.hpp"
 #include "tracking/Point.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 //-------------------------------------------------------------------------------------------------
 TEST(PointTests, Base)
 {
@@ -32,4 +32,4 @@ TEST(PointTests, Base)
 	EXPECT_DOUBLE_EQ(P2.surface_, 7);
 	EXPECT_DOUBLE_EQ(P2.GetDistance(P1), std::sqrt(50));
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

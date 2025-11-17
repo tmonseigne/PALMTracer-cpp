@@ -2,7 +2,7 @@
 #include <iostream>
 
 #include "ExportAPI.hpp"
-#include "palm/Palm.hpp"
+#include "Palm.hpp"
 #include "signal_processing/Alignment.hpp"
 #include "signal_processing/Matrix.hpp"
 #include "tracking/Parameters.hpp"
@@ -54,12 +54,12 @@ extern "C" EXPORT_API
 uint32_t CALL_CONV Tracking(const double* pointsList, double* trc, const double maxSpeed, const uint32_t minLife,
                             const double decrease, const double costBirth, const uint32_t nbTimes)
 {
-	const auto Param = new palm_tracer::Parameters();
+	const auto Param = new palm_tracer::tracking::Parameters();
 
 	Param->maxSpeed_       = maxSpeed;
 	Param->costBirthDeath_ = costBirth;
 
-	palm_tracer::Tracking tracking(pointsList, trc, minLife, decrease / 100.0, nbTimes, Param);
+	palm_tracer::tracking::Tracking tracking(pointsList, trc, minLife, decrease / 100.0, nbTimes, Param);
 	const size_t Count = tracking.Processing();
 	delete Param;
 
@@ -71,7 +71,7 @@ extern "C" EXPORT_API
 uint32_t CALL_CONV BlinkingReconnection(const double* input, double* output, const uint32_t nRow, const double pixelSize,
                                         const uint32_t mode, const uint32_t maxDuration, const double maxSpeed)
 {
-	palm_tracer::Tracks tracks;
+	palm_tracer::tracking::Tracks tracks;
 	tracks.LoadTracking(input, nRow, pixelSize);
 	tracks.BlinkingReconnection(mode, maxDuration, maxSpeed);
 	return static_cast<uint32_t>(tracks.FillOutput(output));
@@ -83,14 +83,14 @@ bool CALL_CONV TracksCompute(const double* input, double* outputMSD, double* out
                              const bool isMSD, const bool isInd, const bool is3D,
                              const double pixelSize, const double exposureTime, const uint32_t fitMode, const double* fitParams)
 {
-	palm_tracer::ComputesParams p = {
-		.mode = palm_tracer::fit_mode::linear,
+	palm_tracer::tracking::ComputesParams p = {
+		.mode = palm_tracer::tracking::fit_mode::linear,
 		.fitLength = static_cast<size_t>(fitParams[0]),
 		.is3D = is3D,
 		.pixelSize = pixelSize,
 		.exposureTime = exposureTime
 	};
-	palm_tracer::Tracks tracks;
+	palm_tracer::tracking::Tracks tracks;
 	tracks.LoadTracking(input, nRow, pixelSize);
 
 	if (isMSD) {
@@ -104,11 +104,11 @@ bool CALL_CONV TracksCompute(const double* input, double* outputMSD, double* out
 	if (fitMode != 0) {
 		switch (fitMode) {
 			case 2: {
-				p.mode = palm_tracer::fit_mode::power;
+				p.mode = palm_tracer::tracking::fit_mode::power;
 				break;
 			}
 			case 3: {
-				p.mode = palm_tracer::fit_mode::exponential;
+				p.mode = palm_tracer::tracking::fit_mode::exponential;
 				break;
 			}
 			default: break;

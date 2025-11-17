@@ -3,15 +3,15 @@
 /// \file SegmentationInfo.hpp
 /// \brief  Classe de lien pour traiter les données issues de la segmentation d'images 2D.
 /// \author Thibaut Monseigne (CNRS).
-/// \version 1.0.
-/// \date 16/05/2025.
+/// \version 1.3.0.
+/// \date 26/03/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
 ///
 ///-------------------------------------------------------------------------------------------------
 
 #pragma once
 
-namespace palm_tracer {
+namespace palm_tracer::localization {
 /// <summary>Structure pour la fusion de régions (segmentation) avec potentiels et liens.</summary>
 struct WSFusion {
 	double maxPotentialWithNeighbor; ///< Potentiel maximal avec un voisin.
@@ -66,4 +66,4 @@ public:
 		intensity_ = 0;
 	}
 };
-} // namespace palm_tracer
+} // namespace palm_tracer::localization

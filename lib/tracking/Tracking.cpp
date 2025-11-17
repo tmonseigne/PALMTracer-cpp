@@ -5,7 +5,8 @@
 
 #include "Constants.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
+//-------------------------------------------------------------------------------------------------
 size_t Tracking::Processing()
 {
 	// Initialisation
@@ -40,12 +41,13 @@ size_t Tracking::Processing()
 		}
 	}
 
-	// Result
+	// Résultat
 	setIndexToTrackedStructures();
 	setColorToTrackedStructures();
 	return printConnectionsASCII_trc();
 }
 
+//-------------------------------------------------------------------------------------------------
 size_t Tracking::printConnectionsASCII_trc()
 {
 	size_t idx = 0;
@@ -59,10 +61,10 @@ size_t Tracking::printConnectionsASCII_trc()
 					tracks_[idx++] = node->x_;                             // X
 					tracks_[idx++] = node->y_;                             // Y
 					tracks_[idx++] = node->z_;                             // Z
-					tracks_[idx++] = node->intensity_;                     // Intensity
+					tracks_[idx++] = node->intensity_;                     // Intensité
 					tracks_[idx++] = node->surf_;                          // Surface
 
-					// The number of trajectory
+					// Nombre de trajectoires
 					nTraj_ = N.trackedIndex_;
 				}
 			}
@@ -71,9 +73,7 @@ size_t Tracking::printConnectionsASCII_trc()
 	return idx;
 }
 
-/********************************************************************************************************************
-readPointsList() reads the 'pointsList' specified in params_ and allocates the corresponding TimeNodes
-********************************************************************************************************************/
+//-------------------------------------------------------------------------------------------------
 void Tracking::readPointsList()
 {
 	timeNodes_.reserve(nbTimes_);
@@ -82,7 +82,7 @@ void Tracking::readPointsList()
 	params_->maxZ_ = 0;
 
 	for (size_t t = 0, index = 0; t < nbTimes_; ++t) {
-		// Computing the number of nodes by frame
+		// Calcul du nombre de noeuds par frame
 		size_t nNodes = 0;
 		for (size_t i = index; ; i += N_IN_PARAMS) {
 			if (static_cast<int>(points_[i + 5]) != -1 && static_cast<int>(points_[i + 5]) != 0) { nNodes++; } // surface
@@ -92,9 +92,8 @@ void Tracking::readPointsList()
 		timeNodes_.emplace_back(t, nNodes, params_);
 		for (size_t i = 0; i < timeNodes_[t].nNodes_; ++i) {
 			const size_t Idx = index + i * N_IN_PARAMS;
-			// Just for the case of '2D'
-			Node& str = timeNodes_[t][i];
-			// version correcte
+			// Gestion du cas "2D"
+			Node& str      = timeNodes_[t][i];
 			str.id_        = points_[Idx + 0];
 			str.x_         = points_[Idx + 1];
 			str.y_         = points_[Idx + 2];
@@ -107,7 +106,7 @@ void Tracking::readPointsList()
 			params_->maxY_ = std::max(params_->maxY_, str.y_);
 		}
 
-		//Sorting the nodes by the intensity for one time
+		// Tri des noeuds par intensité pour un instant t
 		size_t indexMax = 0;
 		for (size_t i = 0; i < timeNodes_[t].nNodes_ - 1; ++i) {
 			double maxIntensity = -1.;
@@ -120,16 +119,14 @@ void Tracking::readPointsList()
 			std::swap(timeNodes_[t].nodes_[indexMax], timeNodes_[t].nodes_[i]);
 		}
 
-		index += (nNodes + 1) * N_IN_PARAMS; //(À vérifier)
+		index += (nNodes + 1) * N_IN_PARAMS; // (À vérifier)
 	}
 
-	//Precompute distance to border
+	// Pré-calcul de la distance aux bords
 	for (auto& t : timeNodes_) { for (auto& node : t.nodes_) { node.ComputeBorderDistance(); } }
 }
 
-/********************************************************************************************************************
-void setColorToTrackedStructures() set a color index to each tracked structures
-********************************************************************************************************************/
+//-------------------------------------------------------------------------------------------------
 void Tracking::setColorToTrackedStructures()
 {
 	int idx = 1;
@@ -141,7 +138,7 @@ void Tracking::setColorToTrackedStructures()
 					node.colorIndex_[1] = idx;
 					idx++;
 				}
-				else { //node.past_!=NULL
+				else { // node.past_ != nullptr
 					node.colorIndex_[0] = node.past_->colorIndex_[0];
 					node.colorIndex_[1] = node.past_->colorIndex_[0];
 				}
@@ -154,6 +151,7 @@ void Tracking::setColorToTrackedStructures()
 	}
 }
 
+//-------------------------------------------------------------------------------------------------
 void Tracking::setIndexToTrackedStructures()
 {
 	size_t idx = 1, nNodes;
@@ -172,12 +170,7 @@ void Tracking::setIndexToTrackedStructures()
 	}
 }
 
-/********************************************************************************************************************
-computeConstants() compute by convergence the values
-params_->stdIntensity
-params_->stdMean
-params_->stdDistance
-********************************************************************************************************************/
+//-------------------------------------------------------------------------------------------------
 void Tracking::computeConstants()
 {
 	params_->stdIntensity_ = 1000;
@@ -190,22 +183,20 @@ void Tracking::computeConstants()
 
 		for (size_t t = 0; t < nbTimes_ - 1; ++t) { timeNodes_[t].ComputeConstantSigmas(intensity, nInt, mean, nMean, distance, nDist); }
 
-		if (intensity > 1e-8 && nInt > 0) { params_->stdIntensity_ = intensity / static_cast<double>(nInt); } //*1.0275;//3.4352;
-		params_->stdIntensity_ = sqrt(params_->stdIntensity_);
+		if (intensity > 1e-8 && nInt > 0) { params_->stdIntensity_ = intensity / static_cast<double>(nInt); }
+		params_->stdIntensity_ = std::sqrt(params_->stdIntensity_);
 
-		if (mean > 1e-8 && nMean > 0) { params_->stdMean_ = mean / static_cast<double>(nMean); } //*1.0275;//3.4352;
-		params_->stdMean_ = sqrt(params_->stdMean_);
+		if (mean > 1e-8 && nMean > 0) { params_->stdMean_ = mean / static_cast<double>(nMean); }
+		params_->stdMean_ = std::sqrt(params_->stdMean_);
 
-		if (distance > 1e-8 && nDist > 0) { params_->stdDistance_ = distance / static_cast<double>(nDist); } //*1.0275;//3.4352;
-		params_->stdDistance_ = sqrt(params_->stdDistance_);
+		if (distance > 1e-8 && nDist > 0) { params_->stdDistance_ = distance / static_cast<double>(nDist); }
+		params_->stdDistance_ = std::sqrt(params_->stdDistance_);
 	}
-	params_->stdDistance_ /= 3; //attention à la division par 3, c'est juste pour augmenter l'influence de la distance.
+	params_->stdDistance_ /= 3; // Augmente l'influence de la distance (pondération empirique).
 	for (auto& t : timeNodes_) { for (auto& n : t.nodes_) { n.UpdateConstants(); } }
 }
 
-/********************************************************************************************************************
-updateConstants() ones the Tracking in compute, compute the constant
-********************************************************************************************************************/
+//-------------------------------------------------------------------------------------------------
 void Tracking::updateConstants()
 {
 	size_t cpt                 = 0;
@@ -225,13 +216,23 @@ void Tracking::updateConstants()
 			}
 		}
 	}
+
+	// Sécurise une éventuelle division par zéro si aucune liaison n'a été trouvée.
+	if (cpt == 0) {
+		params_->stdIntensity_     = 0;
+		params_->stdDistance_      = 0;
+		params_->stdMean_          = 0;
+		params_->covMeanIntensity_ = 0;
+		return;
+	}
+
 	params_->stdDistance_ /= static_cast<double>(cpt);
 	params_->stdIntensity_ /= static_cast<double>(cpt);
 	params_->stdMean_ /= static_cast<double>(cpt);
 	params_->covMeanIntensity_ /= static_cast<double>(cpt);
-	params_->stdIntensity_ = sqrt(params_->stdIntensity_);
-	params_->stdDistance_  = sqrt(params_->stdDistance_);
-	params_->stdMean_      = sqrt(params_->stdMean_);
+	params_->stdIntensity_ = std::sqrt(params_->stdIntensity_);
+	params_->stdDistance_  = std::sqrt(params_->stdDistance_);
+	params_->stdMean_      = std::sqrt(params_->stdMean_);
 	for (auto& t : timeNodes_) { for (auto& n : t.nodes_) { n.UpdateConstants(); } }
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <numeric>
 
+#include "Palm.hpp"
 #include "Structs.hpp"
 #include "TiffManagement.hpp"
-#include "palm/Palm.hpp"
 #include "signal_processing/BSpline3D.hpp"
 #include "signal_processing/Matrix.hpp"
 #include "signal_processing/Spline.hpp"

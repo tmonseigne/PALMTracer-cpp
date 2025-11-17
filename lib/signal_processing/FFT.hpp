@@ -3,7 +3,7 @@
 /// \file FFT.hpp
 /// \brief Utilitaires pour FFT 3D via FFTW3 : calcul direct et inverse, produit de Fourier croisé.
 /// \author Thibaut Monseigne (CNRS).
-/// \version 1.0.
+/// \version 1.3.0.
 /// \date 02/07/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
 ///
@@ -105,7 +105,6 @@ inline void FFT3D(const std::vector<double>& in, std::vector<std::complex<double
 }
 
 //-------------------------------------------------------------------------------------------------
-
 /// <summary>Calcule la transformée de Fourier 3D inverse (iFFT) d'un volume complexe.</summary>
 /// <param name="in">Volume complexe en entrée (FFT directe préalablement calculée), taille z*y*x.</param>
 /// <param name="out">Volume réel en sortie (normalisé par la taille totale), taille z*y*x.</param>

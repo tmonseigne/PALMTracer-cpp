@@ -5,7 +5,7 @@
 
 #include "Constants.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::localization {
 ATrous::ATrous(const uint16_t* image, const Vec2I& dim)
 	: dim_(dim), size_(dim.GetSize())
 {
@@ -91,4 +91,4 @@ void ATrous::b3SplineFiltering2D(const std::vector<double>& in, std::vector<doub
 	#pragma omp parallel for
 	for (int idx = 0; idx < static_cast<int>(size_); ++idx) { out[idx] = convolutionX(idx, idx / static_cast<int>(dim_.x), idx % static_cast<int>(dim_.x)); }
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::localization

@@ -9,7 +9,7 @@
 #include <vector>
 
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 //-------------------------------------------------------------------------------------------------
 TracksFit::TracksFit(const ComputesParams& p) { SetMode(p); }
 
@@ -184,7 +184,7 @@ void TracksFit::initP()
 			p_[0] = std::log(y_[1] / y_[0]) / std::numbers::ln2;
 			break;
 		}
-		case fit_mode::exponential: {        // p = [X0, a, Tau, b]
+		case fit_mode::exponential: { // p = [X0, a, Tau, b]
 			p_[0]             = 0.0;         // x0
 			p_[1]             = y_.back();   // a (plateau)
 			p_[3]             = 0.0;         // b (valeur à x0)
@@ -359,4 +359,4 @@ double TracksFit::computeR2(const std::vector<double>& p)
 	if (s2 == 0.0) { return 0.0; } // Variance nulle : éviter /0 ; comportement choisi : R² = 0.0 (documenté ci-dessus).
 	return 1 - (s1 / s2);
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

@@ -11,10 +11,10 @@
 #include <thread>
 #include <vector>
 
-#include "ATrous.hpp"
-#include "Segmentation2D.hpp"
 #include "fit/GaussianFit.hpp"
 #include "fit/SplineFit.hpp"
+#include "localization/ATrous.hpp"
+#include "localization/Segmentation2D.hpp"
 
 
 namespace palm_tracer {
@@ -28,7 +28,7 @@ Palm::Palm(const uint16_t* image, double* points, const size_t pointsListSize, c
 //-------------------------------------------------------------------------------------------------
 int Palm::Processing() const
 {
-	omp_set_dynamic(1); // Autorise l’adaptation automatique du nombre de threads.
+	omp_set_dynamic(1); // Autorise l'adaptation automatique du nombre de threads.
 	//omp_set_num_threads(static_cast<int>(std::thread::hardware_concurrency())); // Fixe un max
 
 	std::vector<std::vector<std::array<double, N_LOCALIZATIONS>>> allPoints(dim_.z);
@@ -58,7 +58,7 @@ int Palm::Processing() const
 //-------------------------------------------------------------------------------------------------
 double Palm::AutoThreshold()
 {
-	omp_set_dynamic(1); // Autorise l’adaptation automatique du nombre de threads.
+	omp_set_dynamic(1); // Autorise l'adaptation automatique du nombre de threads.
 	std::vector<std::array<double, N_LOCALIZATIONS>> points;
 	std::vector mask(size_, false); //  Creation du masque binaire (true = masque actif)
 	const double HalfRoi = fitParams_[0] / 2;
@@ -113,45 +113,45 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 	const Vec2I Dim       = {.x = dim_.x, .y = dim_.y};
 
 	//----- Décomposition en ondelette -----
-	const ATrous Decomposition(image, Dim); // Objet pour la décomposition ondelettes (algorithme à trous).
+	const localization::ATrous Decomposition(image, Dim); // Objet pour la décomposition ondelettes (algorithme à trous).
 
 	//----- Segmentation -----
-	const Segmentation2D Segmentation(Decomposition, thresholdVal_, watershedRatio_); // Objet de segmentation intelligente 2D.
+	const localization::Segmentation2D Segmentation(Decomposition, thresholdVal_, watershedRatio_); // Objet de segmentation intelligente 2D.
 
 	//----- Fitting -----
 	switch (fit_) {
 		case 1: {
-			const GaussianFit Gfit(fit_mode::gaussian_2d_fixed, image, Dim, nPointsMaxPerPlane_, fitParams_);
+			const fit::GaussianFit Gfit(fit::fit_mode::gaussian_2d_fixed, image, Dim, nPointsMaxPerPlane_, fitParams_);
 			Gfit.Fit(Segmentation, points);
 			break;
 		}
 
 		case 2: { // Gaussian fit of 2D
-			const GaussianFit Gfit(fit_mode::gaussian_2d_sigma, image, Dim, nPointsMaxPerPlane_, fitParams_);
+			const fit::GaussianFit Gfit(fit::fit_mode::gaussian_2d_sigma, image, Dim, nPointsMaxPerPlane_, fitParams_);
 			Gfit.Fit(Segmentation, points);
 			break;
 		}
 
 		case 3: { // Gaussian fit of 3D Theta is constant
-			const GaussianFit Gfit(fit_mode::gaussian_3d_fixed, image, Dim, nPointsMaxPerPlane_, fitParams_);
+			const fit::GaussianFit Gfit(fit::fit_mode::gaussian_3d_fixed, image, Dim, nPointsMaxPerPlane_, fitParams_);
 			Gfit.Fit(Segmentation, points);
 			break;
 		}
 
 		case 4: { // Gaussian fit of 3D
-			const GaussianFit Gfit(fit_mode::gaussian_3d_theta, image, Dim, nPointsMaxPerPlane_, fitParams_);
+			const fit::GaussianFit Gfit(fit::fit_mode::gaussian_3d_theta, image, Dim, nPointsMaxPerPlane_, fitParams_);
 			Gfit.Fit(Segmentation, points);
 			break;
 		}
 
 		case 5: { // Spline fit for Z on EMCCD sensor (maybe same call for sCMOS)
-			const SplineFit Sfit(fit_mode::spline_3d_emccd, image, Dim, nPointsMaxPerPlane_, fitParams_);
+			const fit::SplineFit Sfit(fit::fit_mode::spline_3d_emccd, image, Dim, nPointsMaxPerPlane_, fitParams_);
 			Sfit.Fit(Segmentation, points);
 			break;
 		}
 
 		default: {
-			const Fitting Sfit(fit_mode::none, image, Dim, nPointsMaxPerPlane_, fitParams_);
+			const fit::Fitting Sfit(fit::fit_mode::none, image, Dim, nPointsMaxPerPlane_, fitParams_);
 			Sfit.Fit(Segmentation, points);
 			break;
 		}

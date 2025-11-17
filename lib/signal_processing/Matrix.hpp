@@ -3,8 +3,8 @@
 /// \file Matrix.hpp
 /// \brief Fonctions utiles pour la manipulation des matrices et volumes 3D.
 /// \author Thibaut Monseigne (CNRS).
-/// \version 1.0.
-/// \date 16/05/2025.
+/// \version 1.3.0.
+/// \date 01/07/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
 ///
 ///-------------------------------------------------------------------------------------------------
@@ -23,26 +23,26 @@ namespace palm_tracer::matrix {
 //==================== I/O ====================
 //=============================================
 
-/// <summary>Affiche le contenu d’un volume 3D (stocké en 1D) dans la console, plan par plan.
+/// <summary>Affiche le contenu d'un volume 3D (stocké en 1D) dans la console, plan par plan.
 /// Format lisible avec délimitation par lignes et colonnes.</summary>
 /// <param name="data">Vecteur de données 1D (flattened) représentant un volume 3D.</param>
 /// <param name="dim">Dimensions du volume (x, y, z).</param>
 /// <remarks>Les valeurs sont affichées plan par plan avec une mise en forme tabulaire.</remarks>
 void PrintVolume(const std::vector<double>& data, const Vec3I& dim);
 
-/// <summary>Affiche le contenu d’une matrice 2D (stocké en 1D) dans la console.
+/// <summary>Affiche le contenu d'une matrice 2D (stocké en 1D) dans la console.
 /// Format lisible avec délimitation par lignes et colonnes.</summary>
 /// <param name="data">Vecteur de données 1D (flattened) représentant une matrice 2D.</param>
 /// <param name="row">Nombre de lignes de la matrice.</param>
 /// <param name="col">Nombre de colonnes de la matrice.</param>
 void PrintMatrix(const std::vector<double>& data, size_t row, size_t col);
 
-/// <summary>Affiche le contenu d’une matrice 2D dans la console.
+/// <summary>Affiche le contenu d'une matrice 2D dans la console.
 /// Format lisible avec délimitation par lignes et colonnes.</summary>
 /// <param name="data">Matrice 2D.</param>
 void PrintMatrix(const std::vector<std::vector<double>>& data);
 
-/// <summary>Affiche le contenu d’un vecteur. </summary>
+/// <summary>Affiche le contenu d'un vecteur. </summary>
 /// <param name="data">Vecteur de données 1D.</param>
 void PrintVector(const std::vector<double>& data);
 
@@ -106,14 +106,14 @@ inline double Sum(const std::vector<double>& data) { return std::accumulate(data
 /// <returns>Somme des éléments valides.</returns>
 double SumValid(const std::vector<double>& data);
 
-/// <summary>Moyenne des éléments d’un vecteur (sans vérification de validité).</summary>
+/// <summary>Moyenne des éléments d'un vecteur (sans vérification de validité).</summary>
 /// <param name="data">Vecteur d'entrée à moyenner.</param>
 /// <returns>Moyenne des éléments.</returns>
 inline double Mean(const std::vector<double>& data) { return Sum(data) / static_cast<double>(data.size()); }
 
-/// <summary>Moyenne des éléments valides  (ni NaN, ni infini) d’un vecteur.</summary>
+/// <summary>Moyenne des éléments valides  (ni NaN, ni infini) d'un vecteur.</summary>
 /// <param name="data">Vecteur d'entrée à moyenner.</param>
-/// <returns>Moyenne des éléments valides, ou NaN si aucun n’est valide.</returns>
+/// <returns>Moyenne des éléments valides, ou NaN si aucun n'est valide.</returns>
 double MeanValid(const std::vector<double>& data);
 
 /// <summary>Moyenne des éléments d'un vecteur selon un masque booléen. Les NaN sont ignorés automatiquement.</summary>
@@ -122,7 +122,7 @@ double MeanValid(const std::vector<double>& data);
 /// <returns>Moyenne des valeurs valides et masquées, ou NaN si aucune valeur valide.</returns>
 double MeanWithMask(const std::vector<double>& data, const std::vector<bool>& mask);
 
-/// <summary>Renvoie la médiane d’un vecteur, en ignorant les NaN et infinis.</summary>
+/// <summary>Renvoie la médiane d'un vecteur, en ignorant les NaN et infinis.</summary>
 /// <param name="data">Vecteur d'entrée.</param>
 /// <returns>Médiane, ou NaN si aucune valeur valide.</returns>
 double Median(const std::vector<double>& data);
@@ -190,26 +190,24 @@ std::vector<double> ExtractSubVolume(const std::vector<double>& data, const Vec3
 //======================================================
 
 /// <summary>Calcule le centre de masse (x, y) d'une image 2D carrée de taille (nxn).</summary>
-/// <param name="data">Données des pixels (valeurs d’intensité).</param>
+/// <param name="data">Données des pixels (valeurs d'intensité).</param>
 /// <param name="n">Largeur/hauteur de l'image carrée (nxn).</param>
 /// <param name="x">Coordonnées x du centre de masse.</param>
 /// <param name="y">Coordonnées y du centre de masse.</param>
 void CenterOfMass(const std::vector<Pixel>& data, size_t n, double& x, double& y);
 
-/// <summary>Réalise une décomposition de Cholesky d'une matrice symétrique définie positive.
-///
+/// <summary>Réalise une décomposition de Cholesky d'une matrice symétrique définie positive.\n
 /// Cette fonction effectue la décomposition d'une matrice réelle symétrique définie positive `A` de taille nxn selon la formule :
-/// A = L * Lᵀ = Uᵀ * U.
-///
-/// Ici, L est triangulaire inférieure, U est triangulaire supérieure, et L = Uᵀ.
+/// \f$A = L * L^\top = U^\top * U\f$\n
+/// Ici, L est triangulaire inférieure, U est triangulaire supérieure, et \f$L = U^\top\f$.
 /// </summary>
 /// <param name="a">Vecteur représentant la matrice A à décomposer (stockée en ligne principale).</param>
 /// <param name="n">Dimension de la matrice A (A est de taille n x n).</param>
 /// <param name="l">Référence vers le vecteur de sortie contenant la matrice L (triangulaire inférieure).</param>
 /// <param name="u">Référence vers le vecteur de sortie contenant la matrice U (triangulaire supérieure).</param>
 /// <returns><c>True</c> si la décomposition a réussi (matrice définie positive), <c>False</c> sinon.</returns>
-/// <remarks>En cas d’échec (diagonale négative ou nulle), les vecteurs de sortie ne sont pas fiables.
-/// L’utilisateur doit s’assurer que `l` et `u` sont préalloués de taille n x n.</remarks>
+/// <remarks>En cas d'échec (diagonale négative ou nulle), les vecteurs de sortie ne sont pas fiables.
+/// L'utilisateur doit s'assurer que `l` et `u` sont préalloués de taille n x n.</remarks>
 bool Cholesky(const std::vector<double>& a, size_t n, std::vector<double>& l, std::vector<double>& u);
 
 /// <summary>Inversion d'une matrice carrée par la méthode de Gauss-Jordan.</summary>
@@ -224,25 +222,19 @@ void InverseGaussJordan(std::vector<double>& in, std::vector<double>& out, size_
 /// <param name="n"> Taille de la matrice (nxn).</param>
 void InverseLU(std::vector<double>& in, std::vector<double>& out, size_t n);
 
-/// <summary>
-/// Génère un vecteur d’indices réfléchis de longueur <c>k0</c>, utilisé pour initialiser les filtres exponentiels symétriques.
-///
-/// Le motif généré est basé sur la réflexion de la séquence [0, 1, ..., n-1] : [0, 1, ..., n-1, n-2, ..., 1], répété autant de fois que nécessaire.
-///
-/// <para>Exemple : ReflectionIndices(5, 10) ⇒ [0,1,2,3,4,3,2,1,0,1]</para>
-///
-/// </summary>
+/// <summary>Génère un vecteur d'indices réfléchis de longueur <c>k0</c>, utilisé pour initialiser les filtres exponentiels symétriques.\n
+/// Le motif généré est basé sur la réflexion de la séquence [0, 1, ..., n-1] : [0, 1, ..., n-1, n-2, ..., 1], répété autant de fois que nécessaire.\n
+/// Exemple : ReflectionIndices(5, 10) ⇒ [0,1,2,3,4,3,2,1,0,1]</summary>
 /// <param name="n">Taille de la dimension originale à réfléchir.</param>
 /// <param name="k0">Longueur finale désirée du vecteur réfléchi.</param>
-/// <returns>Vecteur d’indices réfléchis de taille <c>k0</c>.</returns>
+/// <returns>Vecteur d'indices réfléchis de taille <c>k0</c>.</returns>
 std::vector<size_t> ReflectionIndices(size_t n, size_t k0);
 
-/// <summary>
-/// Génère un vecteur d’indices réfléchis (type miroir) pour le padding.
+/// <summary>Génère un vecteur d'indices réfléchis (type miroir) pour le padding.
 /// Par exemple pour N = 5 et pad = 1 : retourne [1,0,1,2,3,4,3,2]
 /// </summary>
 /// <param name="n">Taille de la dimension originale.</param>
-/// <param name="pad">Nombre d’éléments à ajouter de chaque côté.</param>
-/// <returns>Vecteur d’indices réfléchis de taille N + 2*pad.</returns>
+/// <param name="pad">Nombre d'éléments à ajouter de chaque côté.</param>
+/// <returns>Vecteur d'indices réfléchis de taille N + 2*pad.</returns>
 std::vector<size_t> ReflectIndex1D(size_t n, size_t pad);
 } // namespace palm_tracer::matrix

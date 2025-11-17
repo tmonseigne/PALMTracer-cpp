@@ -9,7 +9,7 @@
 #include "signal_processing/Matrix.hpp"
 #include "tracking/Tracks.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::tracking {
 // Tolérance relative (scale) + plancher absolu (abs_floor) pour valeurs ~0
 inline double RelAbsTol(const double ref, const double scale = 1e-9, const double abs_floor = 1e-12) { return std::max(abs_floor, std::abs(ref) * scale); }
 
@@ -162,4 +162,4 @@ TEST(TracksTests, ComputeAllFit)
 		matrix::PrintMatrix(Res);
 	}
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

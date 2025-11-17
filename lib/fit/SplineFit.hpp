@@ -3,10 +3,10 @@
 /// \file SplineFit.hpp
 /// \brief Classe d'ajustement par spline.
 /// \author Thibaut Monseigne (CNRS).
-/// \version 1.0.
-/// \date 16/05/2025.
+/// \version 1.3.0.
+/// \date 04/06/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
-/// \remarks Ce code est basé sur celui de SMAP <a href="https://github.com/jries/SMAP">github.com/jries/SMAP</a>.
+/// \remarks Ce code est inspiré de <c>SMAP</c> <a href="https://github.com/jries/SMAP">github.com/jries/SMAP</a> et adapté au cadre <see cref="palm_tracer"/>.
 ///
 ///-------------------------------------------------------------------------------------------------
 
@@ -15,7 +15,7 @@
 
 #include "Fitting.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::fit {
 /// <summary>Classe d'ajustement par spline.</summary>
 class SplineFit final : public Fitting {
 public:
@@ -32,19 +32,21 @@ protected:
 	                        EPSILON_2  = 1e-10; ///< avant calcul de la matrice inverse
 
 	Vec3I splineDim_{};          ///< Dimensions de la spline (X, Y, Z)
-	size_t splineSizeXY_{},      ///< Taille totale d’un plan XY. Utilisé pour accéder rapidement aux coefficients.
-	       splineSize_{},        ///< Taille totale de l’ensemble du volume spline.
+	size_t splineSizeXY_{},      ///< Taille totale d'un plan XY. Utilisé pour accéder rapidement aux coefficients.
+	       splineSize_{},        ///< Taille totale de l'ensemble du volume spline.
 	       splineOffset_{};      ///< Offset utilisé pour indexer ou accéder efficacement aux sous-blocs ou aux patchs de la spline.
 	double initZ_{},             ///< Position initiale en Z (origine physique ou de modélisation de la spline en profondeur).
 	       deltaZ_{},            ///< Pas ou résolution entre deux couches Z successives dans la spline.
-	       intensityRatio_{};    ///< Rapport d’intensité entre l’image et le modèle spline (pour corriger une mise à l’échelle ou un gain).
+	       intensityRatio_{};    ///< Rapport d'intensité entre l'image et le modèle spline (pour corriger une mise à l'échelle ou un gain).
 	std::vector<double> coeffs_; ///< Coefficients du modèle spline 3D, stockés de manière linéaire (ordre : [z][y][x]) pour un accès rapide.
 
 	/// <summary>Parse les paramètres reçus pour l'ajustement.</summary>
 	void parseParams() override;
 
 	/// <summary>Exécute un ajustement de modèle spline sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.</summary>
-	void fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const override;
+	/// <param name="infos">Informations issues de la segmentation (position initiale, intensité, etc.).</param>
+	/// <param name="point">Sortie : localisation ajustée (format <see cref="N_LOCALIZATIONS"/>).</param>
+	void fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const override;
 
 	/// <summary>Calcule les dérivées du modèle spline 3D en un point donné (x, y, z).
 	/// Remplit le vecteur des dérivées partielles (dudt) et évalue la valeur du modèle.</summary>
@@ -67,11 +69,11 @@ protected:
 	void updateJacobianHessian(double data, double model, double& err, std::vector<double>& jacobian,
 	                           std::vector<double>& hessian, const std::vector<double>& dudt) const;
 
-	/// <summary>Met à jour les paramètres d’ajustement de type Levenberg-Marquardt.
-	/// Modifie mu et lambda selon si l’itération précédente était un succès.</summary>
+	/// <summary>Met à jour les paramètres d'ajustement de type Levenberg-Marquardt.
+	/// Modifie mu et lambda selon si l'itération précédente était un succès.</summary>
 	/// <param name="mu">Facteur de régularisation.</param>
 	/// <param name="lambda">Paramètre de contrôle LM.</param>
-	/// <param name="up">True si l’itération précédente a échoué (augmentation du lambda).</param>
+	/// <param name="up">True si l'itération précédente a échoué (augmentation du lambda).</param>
 	static void updateMuLambda(double& mu, double& lambda, bool up);
 
 	/// <summary>Résout un système linéaire LU x = b avec matrices l (lower) et u (upper).
@@ -93,4 +95,4 @@ protected:
 	/// <param name="df">Référence vers les vecteurs contenant les dérivées de f par rapport à x (∂f/∂x), y (∂f/∂y) et z (∂f/∂z).</param>
 	static void delta3D(double x, double y, double z, std::vector<double>& f, std::array<std::vector<double>, 3>& df);
 };
-} // namespace palm_tracer
+} // namespace palm_tracer::fit

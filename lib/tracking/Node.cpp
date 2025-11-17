@@ -1,62 +1,32 @@
-/*******************************************************************************************************************
-									Node Class
-								  Node representing one structure
-*******************************************************************************************************************/
-
-/********************************************************************************************************************
-Class Node contains the caracteristic off the node, and the chain of the other nodes (time after and time before)
-links to the current objet.
-********************************************************************************************************************/
-
 #include "Node.hpp"
 
 #include <algorithm>
-#include <numbers>
+#include <random>
 
-
-namespace palm_tracer {
-//-------------------------------------------------------------------------------------------------
+namespace palm_tracer::tracking {
+namespace {
 constexpr double WEIGHT_DISTANCE       = 0.6;
 constexpr double WEIGHT_INTENSITY      = 0.2;
 constexpr double WEIGHT_MEAN_INTENSITY = 0.2;
+}
 
-//=================================================================
-//==================== Constructor, Destructor ====================
-//=================================================================
-/********************************************************************************************************************
-Constructuor(size_t time) of Node class.
-The current objets is at the time "time".
-********************************************************************************************************************/
-Node::Node(const size_t time, Parameters* params)
-	: x_(0), y_(0), z_(0), intensity_(0), mean_(0), surf_(0), id_(0),
-	  params_(params), time_(time), future_(nullptr), past_(nullptr), trackedIndex_(0), colorIndex_{},
-	  distanceToBorder_(0), likeness_(0), likenessDistance_(0), likenessIntensity_(0), likenessMean_(0) { }
-
-/********************************************************************************************************************
-Destructuor() of Node class.
-Delete all the linkage objets.
-********************************************************************************************************************/
+//==================== Constructeur / Destructeur ====================
+//-------------------------------------------------------------------------------------------------
 Node::~Node()
 {
 	for (auto& n : neighbors_) { n.clear(); }
 	trackedIndex_ = 0;
 }
 
+//==================== Distances / Effets géométriques ====================
+//-------------------------------------------------------------------------------------------------
 double Node::Distance(const Node& node) const
 {
 	const double Dx = x_ - node.x_, Dy = y_ - node.y_;
-	return sqrt(Dx * Dx + Dy * Dy);
+	return std::sqrt(Dx * Dx + Dy * Dy);
 }
 
-/*********************************************************************************************
-double Node::makeInitializationConnection()
-  Make the initial connections. For each strucutres, chose the one with the highest likeness
-  if it is avaliable. If it is not possible no connection.
-
-  It returns the likeness.
-
-  New version from 2005/01/12
-*********************************************************************************************/
+//-------------------------------------------------------------------------------------------------
 void Node::MakeInitializationConnection()
 {
 	Node* nMax = nullptr;
@@ -79,13 +49,7 @@ void Node::MakeInitializationConnection()
 }
 
 //==================== Computes ====================
-/********************************************************************************************************************
-bool metropolis(double deltaE, double temperature)
-Metropolis algorithm. metropolis returns a boolean variable that issues a verdict on whether
-to accept a reconfiguration that leads to a change deltaE in the objective function. If deltaE<0,
-metropolis = true, while if deltaE>0, metropolis is only true with probability exp(-deltaE/temperature), where
-temperature is a temperature determined by the annealing schedule.
-********************************************************************************************************************/
+//-------------------------------------------------------------------------------------------------
 bool Node::metropolis(const double deltaE, const double temperature) const
 {
 	if (deltaE >= 0.) { return true; }
@@ -93,32 +57,17 @@ bool Node::metropolis(const double deltaE, const double temperature) const
 	return true;
 }
 
+//-------------------------------------------------------------------------------------------------
 double Node::distance(const Node& n1, const Node& n2) const
 {
 	const double N1N2X = (n1.x_ * n1.intensity_ + n2.x_ * n2.intensity_) / (n1.intensity_ + n2.intensity_);
 	const double N1N2Y = (n1.y_ * n1.intensity_ + n2.y_ * n2.intensity_) / (n1.intensity_ + n2.intensity_);
 	const double Dx    = x_ - N1N2X, Dy = y_ - N1N2Y;
-	return sqrt(Dx * Dx + Dy * Dy);
+	return std::sqrt(Dx * Dx + Dy * Dy);
 }
 
-/*********************************************************************************************
-double SphericEffect()
-  Compute the mean of radius of the node this
-*********************************************************************************************/
-double Node::sphericEffect() const
-{
-	return sqrt(surf_ / std::numbers::pi);
-	//volume of a sphere is 4/3 * PI *r^3, surface is PI * r^2
-	//if constexpr (Parameters::N_DIM == 2) { return sqrt(surf_ / std::numbers::pi); }
-	//else { return pow(GetVolume() * 3.0 / 4.0 / std::numbers::pi, 1.0 / 3.0); }
-}
-
-//==================== likeness ====================
-/*********************************************************************************************
-double Node::likenessDistance(Node* n)
-  Compute the likeness from the distance between this and n.
-  New version from 2005/01/12
-*********************************************************************************************/
+//==================== Similarités ====================
+//-------------------------------------------------------------------------------------------------
 double Node::likenessDistance(const Node* n) const
 {
 	return n == nullptr
@@ -126,33 +75,16 @@ double Node::likenessDistance(const Node* n) const
 		       : getLikeness(Distance(*n), params_->stdDistance_);
 }
 
-/*********************************************************************************************
-double Node::likenessMean(Node* n)
-  Compute the likeness from the mean of intensity between this and n.
-  New version from 2005/01/12
-
-  We use the hypothesis that
-	sigma(mean intensity) proportional to surface^-1/6 simga_noise / Mean in 2D.
-*********************************************************************************************/
+//-------------------------------------------------------------------------------------------------
 double Node::likenessMean(const Node* n) const { return n == nullptr ? likenessMean_ : getLikeness(mean_ - n->mean_, params_->stdMean_); }
 
-/*********************************************************************************************
-double Node::likenessIntensity(Node* n)
-  Compute the likeness from the total intensity between this and n.
-  New version from 2005/01/12
-
-  We use the hypothesis that sigma(intensity) proportional to simga_noise/Mean.
-*********************************************************************************************/
+//-------------------------------------------------------------------------------------------------
 double Node::likenessIntensity(const Node* n) const
 {
 	return n == nullptr ? likenessIntensity_ : getLikeness(intensity_ - n->intensity_, params_->stdIntensity_);
 }
 
-/*********************************************************************************************
-double Node::likeness(Node* n)
-  Compute the likeness between this and n.
-  New version from 2005/01/12
-*********************************************************************************************/
+//-------------------------------------------------------------------------------------------------
 double Node::Likeness(const Node* n) const
 {
 	return n == nullptr
@@ -161,9 +93,9 @@ double Node::Likeness(const Node* n) const
 		       : WEIGHT_DISTANCE * likenessDistance(n) + WEIGHT_INTENSITY * likenessIntensity(n) + WEIGHT_MEAN_INTENSITY * likenessMean(n);
 }
 
+//-------------------------------------------------------------------------------------------------
 void Node::UpdateConstants()
 {
-	// compute n->likeness, distance to border....
 	likenessDistance_  = getLikeness(std::min(distanceToBorder_, params_->stdDistance_), params_->stdDistance_);
 	likenessMean_      = getLikeness(mean_, params_->stdMean_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder_));
 	likenessIntensity_ = getLikeness(intensity_, params_->stdIntensity_ * std::max(1., 3. * params_->stdDistance_ / distanceToBorder_));
@@ -171,23 +103,15 @@ void Node::UpdateConstants()
 	                      + WEIGHT_MEAN_INTENSITY * likenessMean()) / 2. - params_->costBirthDeath_;
 }
 
-/*********************************************************************************************
-double Node::likeness(Node* n)
-  Compute the likeness between this and n.
-  New version from 2005/01/12
-*********************************************************************************************/
+//-------------------------------------------------------------------------------------------------
 double Node::likenessBlink(const Node* n) const
 {
 	constexpr double Alpha = 0.7;
 	return Likeness(n) * Alpha + (Likeness() + n->Likeness()) * (1. - Alpha / 2.);
 }
 
-/*********************************************************************************************
-void Node::computeConstantSigmas(double &intensity,
-	double &mean, double &distance, long &countStd)
-  Find in the vicinity of each node the one with the biggest likeness to compute the constant
-  kInt and kMean and kDist
-*********************************************************************************************/
+//==================== Estimation des σ constants ====================
+//-------------------------------------------------------------------------------------------------
 void Node::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, size_t& nMean, double& distance, size_t& nDist) const
 {
 	const Node* nMax = nullptr;
@@ -206,12 +130,13 @@ void Node::ComputeConstantSigmas(double& intensity, size_t& nInt, double& mean, 
 		mean += (mean_ - nMax->mean_) * (mean_ - nMax->mean_);
 		const double Dist = Distance(*nMax);
 		distance += Dist * Dist;
-		nInt++;
-		nMean++;
-		nDist++;
+		++nInt;
+		++nMean;
+		++nDist;
 	}
 }
 
+//-------------------------------------------------------------------------------------------------
 void Node::ComputeBorderDistance()
 {
 	const double X    = x_, Y                = y_;
@@ -220,6 +145,7 @@ void Node::ComputeBorderDistance()
 }
 
 //==================== Linkage ====================
+//-------------------------------------------------------------------------------------------------
 double Node::makeChangeSimpleLinkage(const double limit)
 {
 	if (future_ == nullptr || params_->RandomModulo(2) == 0) {
@@ -291,8 +217,7 @@ double Node::makeChangeSimpleLinkage(const double limit)
 	return simpleLinkageDisconnection(limit);
 }
 
-bool Node::isSimpleLinkageAvailable(const Node* node) const { return node->past_ == nullptr || node == future_; }
-
+//-------------------------------------------------------------------------------------------------
 double Node::simpleLinkageDisconnection(const double limit) const
 {
 	//From
@@ -307,6 +232,7 @@ double Node::simpleLinkageDisconnection(const double limit) const
 	return 0.;
 }
 
+//-------------------------------------------------------------------------------------------------
 double Node::simpleLinkageReassignment(const double limit, Node* node)
 {
 	//	From
@@ -329,9 +255,9 @@ double Node::simpleLinkageReassignment(const double limit, Node* node)
 	future_->past_ = this;
 
 	return DeltaE;
-	//return(0.);
 }
 
+//-------------------------------------------------------------------------------------------------
 double Node::simpleLinkageBreakAndReconnect(const double limit, Node* node)
 {
 	// try to break the link
@@ -360,9 +286,9 @@ double Node::simpleLinkageBreakAndReconnect(const double limit, Node* node)
 	future_->past_          = this;
 
 	return DeltaE;
-	//return(0.);
 }
 
+//-------------------------------------------------------------------------------------------------
 double Node::simpleLinkageSwap(const double limit, Node* node)
 {
 	//	From
@@ -387,9 +313,9 @@ double Node::simpleLinkageSwap(const double limit, Node* node)
 	node->past_          = this;
 
 	return DeltaE;
-	//return(0.);
 }
 
+//-------------------------------------------------------------------------------------------------
 double Node::simpleLinkageDoubleSwap(const double limit, Node* node, const size_t count)
 {
 	//	From
@@ -436,6 +362,5 @@ double Node::simpleLinkageDoubleSwap(const double limit, Node* node, const size_
 	future_->past_                 = this;
 
 	return DeltaE;
-	//return(0.);
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::tracking

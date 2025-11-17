@@ -2,10 +2,9 @@
 ///
 /// \file Interpolation.hpp
 /// \brief Outils d'interpolation 3D : zoom, décalage et estimation de shift subpixel.
-///
 /// \author Thibaut Monseigne (CNRS).
-/// \version 1.0.
-/// \date 16/05/2025.
+/// \version 1.3.0.
+/// \date 02/07/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
 /// \remarks Ce code est basé sur celui de SMAP <a href="https://github.com/jries/SMAP">github.com/jries/SMAP</a>.
 ///
@@ -43,7 +42,7 @@ public:
 	/// <param name="volume">Vecteur linéarisé représentant un volume 3D en mémoire ligne-colonne-plan (X-Y-Z).</param>
 	/// <param name="dim">Dimensions du volume 3D (width=X, height=Y, depth=Z).</param>
 	/// <param name="level">Facteur de zoom entier (> 0). Un niveau 1 insère un point entre chaque valeur initiale, un niveau 2 en insère 3, etc.
-	/// Soit `2^factor - 1` points interpolés entre chaque voxel.</param>
+	/// Soit \f$2^l - 1\f$ points interpolés entre chaque voxel.</param>
 	/// <param name="newDim">Taille du volume de sortie, calculée comme :
 	/// - `(size.x - 1) * 2^level + 1`
 	/// - `(size.y - 1) * 2^level + 1`
@@ -75,11 +74,11 @@ public:
 	/// <returns>Décallage 3D subpixel estimé.</returns>
 	[[nodiscard]] Vec3D GetShift(const std::vector<double>& ref, const std::vector<double>& target, const Vec3I& dim) const;
 
-	/// <summary>Recherche la position subvoxel du maximum local d’un volume 3D par interpolation locale.</summary>
+	/// <summary>Recherche la position subvoxel du maximum local d'un volume 3D par interpolation locale.</summary>
 	/// <param name="volume">Vecteur linéarisé représentant un volume 3D en mémoire ligne-colonne-plan (X-Y-Z).</param>
 	/// <param name="dim">Dimensions du volume source (width=X, height=Y, depth=Z).</param>
 	/// <param name="pos">Position entière estimée du maximum [x, y, z].</param>
-	/// <param name="delta">Pas d’échantillonnage dans l’interpolation locale.</param>
+	/// <param name="delta">Pas d'échantillonnage dans l'interpolation locale.</param>
 	/// <param name="w">Demi-taille de la fenêtre (1 ⇒ cube 3x3x3).</param>
 	/// <returns>Vecteur (x, y, z) de décalage local subvoxel.</returns>
 	static Vec3D SubpixelMax(const std::vector<double>& volume, const Vec3I& dim, const Vec3D& pos, double delta = 0.05, double w = 1.0);
@@ -102,8 +101,8 @@ private:
 	static bool isOut(const double value, const size_t dim) { return value < 0 || value >= static_cast<double>(dim); }
 
 	/// <summary>Teste si un point 3D est hors volume.</summary>
-	/// <param name="pos">The position.</param>
-	/// <param name="dim">The dim.</param>
+	/// <param name="pos">Position du point.</param>
+	/// <param name="dim">Dimensions du volume (width=X, height=Y, depth=Z).</param>
 	/// <returns><c>True</c> Si la position est hors cadre, <c>False</c> sinon.</returns>
 	static bool isOut(const Vec3D& pos, const Vec3I& dim) { return isOut(pos.x, dim.x) || isOut(pos.y, dim.y) || isOut(pos.z, dim.z); }
 
@@ -113,7 +112,7 @@ private:
 	/// <returns>Valeur interpolée à la position x.</returns>
 	static double cubic1D(const std::array<double, 4>& v, double x);
 
-	/// <summary>Effectue une interpolation cubique 1D (formule pondérée a = -0.5).</summary>
+	/// <summary>Effectue une interpolation cubique 1D (formule pondérée \f$a = -0.5\f$).</summary>
 	/// <param name="x">Position relative entre les points (dans [0, 1]).</param>
 	/// <param name="a">Coefficient de la spline Cubique.</param>
 	/// <returns>Valeur interpolée à la position x.</returns>

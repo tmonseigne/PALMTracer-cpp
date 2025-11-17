@@ -3,8 +3,8 @@
 /// \file BSpline3D.hpp
 /// \brief Représentation et traitement d'un volume 3D par régularisation B-spline de degré quelconque.
 /// \author Thibaut Monseigne (CNRS).
-/// \version 1.0.
-/// \date 16/07/2025.
+/// \version 1.3.0.
+/// \date 17/07/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
 /// \remarks Ce code est basé sur celui de SMAP <a href="https://github.com/jries/SMAP">github.com/jries/SMAP</a>.
 ///
@@ -45,17 +45,17 @@ public:
 	                    coeffsHDR_,    ///< Volume interpolé à haute résolution (matlab-like).
 	                    coeffsFinal_;  ///< Coefficients finaux pour interpolation continue.
 
-	/// <summary>Constructeur par défaut de la classe <c>BSpline3D</c>.</summary>
+	/// <summary>Constructeur par défaut de la classe <see cref="BSpline3D"/>.</summary>
 	BSpline3D() = default;
 
-	/// <summary>Constructeur de la classe <c>BSpline3D</c>: calcule et filtre les coefficients B-spline d'un volume 3D.</summary>
+	/// <summary>Constructeur de la classe <see cref="BSpline3D"/>: calcule et filtre les coefficients B-spline d'un volume 3D.</summary>
 	/// <param name="volume">Volume 3D d'entrée (vectorisé en 1D).</param>
 	/// <param name="dim">Dimensions du volume (X, Y, Z).</param>
 	/// <param name="degree">Degré de la B-spline (0 à 7).</param>
 	/// <param name="lambda">Paramètres de régularisation pour chaque dimension.</param>
 	BSpline3D(const std::vector<double>& volume, const Vec3I& dim, size_t degree = 3, const Vec3D& lambda = {});
 
-	/// <summary>Destructeur de la classe <c>BSpline3D</c>.</summary>
+	/// <summary>Destructeur de la classe <see cref="BSpline3D"/>.</summary>
 	~BSpline3D() = default;
 
 	/// <summary> Évalue la fonction de base B-spline de degré donné sur un vecteur de positions.</summary>

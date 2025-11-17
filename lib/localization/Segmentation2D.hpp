@@ -4,8 +4,8 @@
 /// \brief  Classe de traitement d'images segmentées en 2D, permettant l'allocation de structures,
 /// le calcul de statistiques et le filtrage basé sur des critères morphologiques et d'intensité.
 /// \author Thibaut Monseigne (CNRS).
-/// \version 1.0.
-/// \date 16/05/2025.
+/// \version 1.3.0.
+/// \date 26/03/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
 ///
 ///-------------------------------------------------------------------------------------------------
@@ -17,16 +17,16 @@
 #include "ATrous.hpp"
 #include "SegmentationInfo.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::localization {
 /// <summary>Classe de traitement d'images segmentées en 2D, permettant l'allocation de structures,
 /// le calcul de statistiques et le filtrage basé sur des critères morphologiques et d'intensité.</summary>
 ///
 /// Cette classe manipule des structures 2D identifiées dans une image segmentée et stockées sous forme de labels.
 /// Elle permet notamment :
-///		- L'allocation et la désallocation d'un vecteur de structures (`SegmentationInfo`).
+///		- L'allocation et la désallocation d'un vecteur de structures (<see cref="SegmentationInfo"/>).
 ///		- Le calcul de statistiques géométriques et photométriques par structure.
 ///		- Le filtrage de structures selon des critères définis par l'utilisateur.
-///		- Le traitement de fusion locale par carte de potentiel (`filterStructureWS`).
+///		- Le traitement de fusion locale par carte de potentiel (<see cref="filterStructureWS()"/>).
 ///
 /// Elle repose sur une image segmentée (labelisée), ainsi qu'éventuellement sur des cartes de données ou de potentiels.
 class Segmentation2D {
@@ -74,11 +74,8 @@ private:
 	/// <param name="nbStruct">Nombre de structures initiales à allouer.</param>
 	void alloc(size_t nbStruct);
 
-	/// <summary>Applique un filtrage des structures par fusion locale via la carte de potentiel.
-	///
-	/// Cette fonction fusionne les structures en contact si la différence de potentiel justifie une absorption locale.
-	///
-	/// </summary>
+	/// <summary>Applique un filtrage des structures par fusion locale via la carte de potentiel.\n
+	/// Cette fonction fusionne les structures en contact si la différence de potentiel justifie une absorption locale.</summary>
 	void filterStructureWS();
 
 	/// <summary>Détecte les maxima locaux dans la carte de potentiel et initialise une carte de germes pour le watershed.
@@ -89,4 +86,4 @@ private:
 	/// Utilise une file de priorité pour propager les labels des régions à travers la carte de potentiel.</summary>
 	void watershed();
 };
-} // namespace palm_tracer
+} // namespace palm_tracer::localization

@@ -11,7 +11,7 @@
 
 #include "signal_processing/Matrix.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::fit {
 /// <summary>Calcule la racine carrée réelle d'un nombre, même s'il est négatif.
 ///
 /// Cette fonction retourne la partie réelle de la racine carrée complexe d'un nombre réel.
@@ -48,7 +48,7 @@ void SplineFit::parseParams()
 }
 
 //-------------------------------------------------------------------------------------------------
-void SplineFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
+void SplineFit::fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
 {
 	double offset    = 0,
 	       intensity = 0,
@@ -229,12 +229,12 @@ void SplineFit::derivativeSpline(Vec3I& pos, const std::vector<double>& f, const
 
 	for (size_t i = 0; i < SPLINE_PATCH_SIZE; ++i) {
 		const size_t Id = i * splineSize_ + Pos;
-		dudt[1] += f[i] * coeffs_[Id];     // Contribution à l’intensité.
+		dudt[1] += f[i] * coeffs_[Id];     // Contribution à l'intensité.
 		dudt[2] += df[0][i] * coeffs_[Id]; // Dérivée en x.
 		dudt[3] += df[1][i] * coeffs_[Id]; // Dérivée en y.
 		dudt[4] += df[2][i] * coeffs_[Id]; // Dérivée en z.
 	}
-	dudt[0] = 1;                   // Dérivée par rapport à l’offset
+	dudt[0] = 1;                   // Dérivée par rapport à l'offset
 	dudt[2] *= -1 * p[1];          // Ajustement en x.
 	dudt[3] *= -1 * p[1];          // Ajustement en y.
 	dudt[4] *= p[1];               // Ajustement en z.
@@ -245,7 +245,7 @@ void SplineFit::derivativeSpline(Vec3I& pos, const std::vector<double>& f, const
 void SplineFit::updateJacobianHessian(const double data, const double model, double& err, std::vector<double>& jacobian,
                                       std::vector<double>& hessian, const std::vector<double>& dudt) const
 {
-	// Calcul du terme d’erreur : -2 * log-vraisemblance (formule EMCCD)
+	// Calcul du terme d'erreur : -2 * log-vraisemblance (formule EMCCD)
 	if (data > 0) { err = err + 2 * (model - data - data * log(model / data)); }
 	else { err = err + 2 * model; }
 
@@ -318,4 +318,4 @@ void SplineFit::delta3D(const double x, const double y, const double z, std::vec
 		cz *= z;
 	}
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::fit

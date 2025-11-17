@@ -75,7 +75,7 @@ void Spline::SetMembers(const Vec3I& dim, const size_t roi, const size_t distanc
 	             StartX            = midBead_.x - HalfWindow,                 // Avec la division entière Start > 0
 	             EndX              = midBead_.x + HalfWindow;                 // Avec la division entière End < roi_
 
-	// Génère la plage d’indices du centre de la ROI de taille maximum 13.
+	// Génère la plage d'indices du centre de la ROI de taille maximum 13.
 	smallXIndices_.clear();             // Remise à 0 du vecteur (en cas d'appels répétés)
 	smallXIndices_.reserve(beadDim_.x); // taille max du range intégralité de la psf récupéré
 	for (size_t i = StartX; i <= EndX; ++i) { smallXIndices_.push_back(i); }
@@ -83,7 +83,7 @@ void Spline::SetMembers(const Vec3I& dim, const size_t roi, const size_t distanc
 	// Calcul de la zone d'interet centrale sur Z.
 	const size_t StartZ = std::max(0, static_cast<int>(midBead_.z - distanceHalf_)),
 	             EndZ   = std::min(static_cast<int>(midBead_.z + distanceHalf_), static_cast<int>(beadDim_.z) - 1);
-	// Génère la plage d’indices des plans autour du centre.
+	// Génère la plage d'indices des plans autour du centre.
 	smallZIndices_.clear();             // Remise à 0 du vecteur (en cas d'appels répétés)
 	smallZIndices_.reserve(beadDim_.z); // taille max du range intégralité de la psf récupéré
 	for (size_t i = StartZ; i <= EndZ; ++i) { smallZIndices_.push_back(i); }
@@ -247,7 +247,7 @@ std::vector<std::vector<double>> Spline::SoftNormalization(const std::vector<std
 	const size_t CenterSize              = std::min<size_t>(3, midBead_.x);
 	std::vector<std::vector<double>> out = beads;
 
-	// Génère la plage d’indices du centre de la ROI de taille 7.
+	// Génère la plage d'indices du centre de la ROI de taille 7.
 	std::vector<size_t> xr;
 	xr.reserve(7);
 	for (size_t i = midBead_.x - CenterSize; i <= midBead_.x + CenterSize; ++i) { xr.push_back(i); }
@@ -346,7 +346,7 @@ void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std
 		cc[i] = valid * (sumD / (sumR * sumB));
 	}
 
-	// Normalisation d’amplitude
+	// Normalisation d'amplitude
 	norm = matrix::Max(ref);
 	if (!(norm > 0.0) || !std::isfinite(norm)) { norm = 1.0; } // éviter division par 0, sur volumes triviaux
 
@@ -360,7 +360,7 @@ void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std
 		matrix::Scale(bead, 1.0 / norm);
 	}
 
-	// RMS de l’erreur (res)
+	// RMS de l'erreur (res)
 	std::vector rms(Nbeads, 0.0);
 	for (size_t i = 0; i < Nbeads; ++i) {
 		if (shift[i].x <= 3 && shift[i].y <= 3) { rms[i] = matrix::RmsDifference(ref, subBeads[i]); }

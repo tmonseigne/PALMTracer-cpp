@@ -12,7 +12,7 @@
 #include "signal_processing/Matrix.hpp"
 #include "signal_processing/PSF.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::fit {
 //==================== Common Functions ====================
 //-------------------------------------------------------------------------------------------------
 void GaussianFit::parseParams()
@@ -24,7 +24,7 @@ void GaussianFit::parseParams()
 }
 
 //-------------------------------------------------------------------------------------------------
-void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
+void GaussianFit::fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
 {
 	// Valeurs par défaut
 	double offset = 0, intensity    = 0, rss         = -1,
@@ -43,7 +43,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 		preCompute(Ux, Uy, ws.grid, minI, maxI);
 		initP(ws.p, x, y, z, minI, maxI);
 
-		// Première itération de Levenberg-Marquardt et initialisaiton de l'erreur de référence
+		// Première itération de Levenberg-Marquardt et initialisation de l'erreur de référence
 		double err     = lm(ws);
 		double err_old = err;
 
@@ -62,10 +62,10 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 				for (size_t j = 0; j < nParams_; ++j) { ws.deltaP[i] += ws.alphaRi[i * nParams_ + j] * ws.beta[j]; } // δP = αRi × β
 				ws.pTry[i] = std::clamp(ws.p[1][i] + ws.deltaP[i], ws.p[0][i], ws.p[2][i]);                          // pTry = clamp(p + δP)
 			}
-			// En cas de clamp de pTry, deltaP doit etre recalculé.
+			// En cas de clamp de pTry, deltaP doit être recalculé.
 			for (size_t i = 0; i < nParams_; ++i) { ws.deltaP[i] = ws.pTry[i] - ws.p[1][i]; }
 
-			// Critère d’arrêt “petit pas”, si le pas réel est ~0 pour tous les paramètres. Inutile d’évaluer, on augmente λ.
+			// Critère d'arrêt “petit pas”, si le pas réel est ~0 pour tous les paramètres. Inutile d'évaluer, on augmente λ.
 			bool tinyStep = true;
 			for (const double V : ws.deltaP) { tinyStep &= (std::abs(V) < 1e-15); }
 			if (tinyStep) {
@@ -74,12 +74,12 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 				continue;                                          // On repart au début de la boucle
 			}
 
-			// Gain prédit (pas d’éval d’image ici)
+			// Gain prédit (pas d'éval d'image ici)
 			const double Gain = gain(ws);
-			if (Gain <= 0.0) {                                     // clairement pas bon → on n’évalue pas, on augmente λ et on retente
+			if (Gain <= 0.0) {                                     // clairement pas bon → on n'évalue pas, on augmente λ et on retente
 				if (lambda >= LAMBDA_MAX) { break; }               // On est déjà au max, on arrête
 				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX); // Augmentation de λ.
-				// Critère d’arrêt “petit pas”, m = max (δP / p) (variation relative maximum parmi tous les paramètres)
+				// Critère d'arrêt “petit pas”, m = max (δP / p) (variation relative maximum parmi tous les paramètres)
 				m = 0.0;
 				for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::abs(ws.deltaP[i]) / std::max(std::abs(ws.p[1][i]), 1e-12)); }
 				if (m < EPSILON_2 && iteration >= 2) { break; } // On est trop faible est déjà 2 iterations, on arrête
@@ -94,14 +94,14 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 			const double Err_Try = getError(ws);
 			const double Rho     = (err - Err_Try) / (2.0 * m);
 
-			if (Rho > EPSILON_4) {                                  // On accepte : on remplace l’état courant par _try
+			if (Rho > EPSILON_4) {                                  // On accepte : on remplace l'état courant par _try
 				err_old = err;                                      // Mise à jour de l'erreur de reference
 				ws.p[1] = ws.pTry;                                  // Mise à jour des paramètres du modèle
 				err     = lm(ws);                                   // Mise à jour de la ROI du modèle, la matrice alpha, le vecteur beta et de l'erreur.
 				lambda  = std::max(lambda / LAMBDA_DN, LAMBDA_MIN); // Diminution de λ.
 			}
-			else {                                                 // On refuse : on garde l’état courant
-				err = err_old;                                     // On reprend l'errur de reference
+			else {                                                 // On refuse : on garde l'état courant
+				err = err_old;                                     // On reprend l'erreur de reference
 				if (lambda >= LAMBDA_MAX) { break; }               // On est déjà au max pour λ, on arrête
 				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX); // Augmentation de λ.
 			}
@@ -142,7 +142,7 @@ void GaussianFit::fit(const SegmentationInfo& infos, std::array<double, N_LOCALI
 				break;
 			}
 		}
-		rss = computeR2(ws); // Calcul du RSS sur XY
+		rss = computeR2(ws); // Calcul du R² sur XY
 	}
 
 	// Post-normalisation selon le mode.
@@ -271,4 +271,4 @@ void GaussianFit::deriv(std::vector<double>& grad, const std::vector<double>& p,
 			break;
 	}
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::fit

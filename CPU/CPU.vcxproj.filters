@@ -2,18 +2,16 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="..\lib\palm\ATrous.cpp">
-      <Filter>Palm</Filter>
+    <ClCompile Include="..\lib\localization\ATrous.cpp">
+      <Filter>Localization</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\palm\Segmentation2D.cpp">
-      <Filter>Palm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\palm\Palm.cpp">
-      <Filter>Palm</Filter>
+    <ClCompile Include="..\lib\localization\Segmentation2D.cpp">
+      <Filter>Localization</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\fit\GaussianFit.cpp">
       <Filter>Fit</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\Palm.cpp"/>
     <ClCompile Include="..\lib\tracking\Node.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
@@ -58,20 +56,18 @@
     <ClInclude Include="..\lib\fit\GaussianFit.hpp">
       <Filter>Fit</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\ATrous.hpp">
-      <Filter>Palm</Filter>
+    <ClInclude Include="..\lib\localization\ATrous.hpp">
+      <Filter>Localization</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\SegmentationInfo.hpp">
-      <Filter>Palm</Filter>
+    <ClInclude Include="..\lib\localization\SegmentationInfo.hpp">
+      <Filter>Localization</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\palm\Palm.hpp">
-      <Filter>Palm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\palm\Segmentation2D.hpp">
-      <Filter>Palm</Filter>
+    <ClInclude Include="..\lib\localization\Segmentation2D.hpp">
+      <Filter>Localization</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\Constants.hpp" />
     <ClInclude Include="..\lib\ExportAPI.hpp" />
+    <ClInclude Include="..\lib\Palm.hpp"/>
     <ClInclude Include="..\lib\tracking\Node.hpp">
       <Filter>Tracking</Filter>
     </ClInclude>
@@ -132,7 +128,7 @@
     <Filter Include="Fit">
       <UniqueIdentifier>{c74675e3-662a-49e2-b547-068d9686f118}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Palm">
+    <Filter Include="Localization">
       <UniqueIdentifier>{e5a11116-d4db-43a9-a04f-722064d18fe7}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tracking">
