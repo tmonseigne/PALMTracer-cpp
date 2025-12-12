@@ -109,10 +109,28 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Doxygen
-        run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
+        run: sudo apt-get update && sudo apt-get install -y doxygen graphviz cloc
 
       - name: Generate Doxygen Documentation
         run: doxygen Doxyfile
+
+
+      - name: Compute LOC badge (git-tracked files only)
+        run: |
+          git ls-files | cloc --json --list-file=- --out=cloc_raw.json --exclude-dir=input,output --exclude-ext=json,html,xml,csv
+
+          python3 - << 'PY'
+          import json, pathlib
+
+          raw = json.load(open("cloc_raw.json", encoding="utf-8"))
+          s = raw["SUM"]
+          message = f"files {int(s['nFiles'])} | comment {int(s['comment'])} | code {int(s['code'])}"
+          print("CLOC Summary:", message)
+          badge = { "schemaVersion": 1, "label": "CLOC SUM", "message": message, "color": "blue"}
+
+          out = pathlib.Path("Docs/html/cloc.json")
+          out.write_text(json.dumps(badge), encoding="utf-8")
+          PY
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
