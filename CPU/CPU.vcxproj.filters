@@ -11,7 +11,7 @@
     <ClCompile Include="..\lib\fit\GaussianFit.cpp">
       <Filter>Fit</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\Palm.cpp"/>
+    <ClCompile Include="..\lib\Palm.cpp" />
     <ClCompile Include="..\lib\tracking\Node.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
@@ -51,6 +51,9 @@
     <ClCompile Include="..\lib\tracking\TracksFit.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\fit\AstigSigmaFit.cpp">
+      <Filter>Fit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\fit\GaussianFit.hpp">
@@ -67,7 +70,7 @@
     </ClInclude>
     <ClInclude Include="..\lib\Constants.hpp" />
     <ClInclude Include="..\lib\ExportAPI.hpp" />
-    <ClInclude Include="..\lib\Palm.hpp"/>
+    <ClInclude Include="..\lib\Palm.hpp" />
     <ClInclude Include="..\lib\tracking\Node.hpp">
       <Filter>Tracking</Filter>
     </ClInclude>
@@ -119,6 +122,9 @@
     </ClInclude>
     <ClInclude Include="..\lib\tracking\ComputesParams.hpp">
       <Filter>Tracking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\fit\AstigSigmaFit.hpp">
+      <Filter>Fit</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
