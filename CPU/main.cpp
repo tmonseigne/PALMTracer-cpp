@@ -3,6 +3,7 @@
 
 #include "ExportAPI.hpp"
 #include "Palm.hpp"
+#include "fit/AstigFit.hpp"
 #include "localization/ATrous.hpp"
 #include "signal_processing/Alignment.hpp"
 #include "signal_processing/Matrix.hpp"
@@ -244,7 +245,7 @@ extern "C" EXPORT_API
 /// Si la valeur demandée dépasse le nombre de niveaux disponibles, le niveau maximal est utilisé.</param>
 void CALL_CONV Wavelett(const uint16_t* input, double* output, const uint32_t height, const uint32_t width, const uint32_t planes, uint32_t levelOutput)
 {
-	if (levelOutput == 0) { levelOutput = 1; }  // on force au niveau 1 si l'appelant donne 0
+	if (levelOutput == 0) { levelOutput = 1; } // on force au niveau 1 si l'appelant donne 0
 	//if (levelOutput == 0) { throw std::invalid_argument("levelOutput must be >= 1"); } // lever une exception dans une DLL Extern C n'est pas géré correctement par C# ou Python.
 
 	const palm_tracer::Vec2I Dim = {.x = width, .y = height};
@@ -259,5 +260,52 @@ void CALL_CONV Wavelett(const uint16_t* input, double* output, const uint32_t he
 		const palm_tracer::localization::ATrous Decomposition(image, Dim); // Objet pour la décomposition ondelettes (algorithme à trous).
 		const double* waveletPlane = Decomposition.wDecomp_[Level].data(); // Récupération du plan d'ondelettes demandé
 		std::copy_n(waveletPlane, Size, output + PlaneOffset);             // Copie du résultat dans le tableau de sortie
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+extern "C" EXPORT_API
+/// <summary>Calcule la calibration d'un modèle d'astigmatisme 3D à partir d'un jeu de points de calibration.</summary>
+/// <param name="input">Pointeur vers le tableau d'entrée contenant les points de calibration, au format (\f$\sigma_x, \sigma_y, z\f$).</param>
+/// <param name="output">Pointeur vers le buffer de sortie où seront écrites les valeurs du modèle (5 paramètres pour les 2 axes).</param>
+/// <param name="size">Nombre de points dans le tableau d'entrée.</param>
+/// <param name="pixelSize">Taille d'un pixel en unités physiques (en nanomètre/pixel).</param>
+void CALL_CONV Astigmatism3DCalibration(const double* input, double* output, const uint32_t size, const double pixelSize)
+{
+	// conversion de l'entrée en vecteur de points 3D.
+	const auto N = static_cast<size_t>(size);
+	std::vector<palm_tracer::Vec3D> dataset(N);
+	for (size_t i = 0, id = 0; i < N; ++i) {
+		dataset[i] = {.x = input[id], .y = input[id + 1], .z = input[id + 2]};
+		id += 3;
+	}
+
+	// Calculs
+	const palm_tracer::fit::AstigFit Fit(pixelSize);
+	const palm_tracer::fit::astig_model Model = Fit.Calibrate(dataset);
+
+	// Remplissage de la sortie
+	for (const auto& Axis : Model) { for (const auto& Param : Axis) { *output++ = Param; } }
+}
+
+//-------------------------------------------------------------------------------------------------
+extern "C" EXPORT_API
+void CALL_CONV Astigmatism3DEstimation(const double* input, double* output, const uint32_t size, const double pixelSize, const double* model, const double zMax)
+{
+	// conversion de l'entrée en vecteur de points 2D.
+	const auto N = static_cast<size_t>(size);
+
+	const palm_tracer::fit::astig_model Model = {
+		std::array{model[0], model[1], model[2], model[3], model[4]},
+		std::array{model[5], model[6], model[7], model[8], model[9]}
+	};
+
+	const std::array ZLimit = {-zMax, zMax};
+
+	// Calculs
+	const palm_tracer::fit::AstigFit Fit(pixelSize);
+	for (size_t i = 0, id = 0; i < N; ++i) {
+		*output++ = Fit.Estimate(Model, {.x = input[id], .y = input[id + 1]}, ZLimit);
+		id += 2;
 	}
 }

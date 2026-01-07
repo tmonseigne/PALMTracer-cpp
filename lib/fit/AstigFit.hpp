@@ -24,7 +24,7 @@ namespace palm_tracer::fit {
 /// - **c4** : Terme quartique sans dimension.
 /// - **A** : Amplitude (sigma au foyer) en nm.
 /// </summary>
-using astig_model = std::array<std::array<double, 5>, 2>; // [0]=X,[1]=Y ; [z0,w,c3,c4,A]
+using astig_model = std::array<std::array<double, 5>, 2>;
 
 /// <summary>Ajustement non linéaire (Levenberg–Marquardt) d'une courbe d'astigmatisme \f$\sigma(z)\f$, et estimation de Z à partir d'une paire \f$(\sigma_x, \sigma_y) \f$.</summary>
 /// <remarks>

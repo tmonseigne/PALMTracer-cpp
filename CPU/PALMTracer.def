@@ -8,3 +8,5 @@ EXPORTS
 	BlinkingReconnection
 	TracksCompute
 	Wavelett
+	Astigmatism3DCalibration
+	Astigmatism3DEstimation
