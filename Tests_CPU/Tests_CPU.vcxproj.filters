@@ -60,6 +60,10 @@
     <ClCompile Include="..\lib\tracking\TracksFit.cpp">
       <Filter>lib</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\fit\AstigFit.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="test_fit_AstigFit.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TiffManagement.hpp" />
@@ -133,6 +137,9 @@
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\ComputesParams.hpp">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\fit\AstigFit.hpp">
       <Filter>lib</Filter>
     </ClInclude>
   </ItemGroup>

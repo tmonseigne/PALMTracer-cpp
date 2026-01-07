@@ -114,7 +114,6 @@ jobs:
       - name: Generate Doxygen Documentation
         run: doxygen Doxyfile
 
-
       - name: Compute LOC badge (git-tracked files only)
         run: |
           git ls-files | cloc --json --list-file=- --out=cloc_raw.json --exclude-dir=input,output --exclude-ext=json,html,xml,csv

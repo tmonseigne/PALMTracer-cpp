@@ -1,6 +1,6 @@
 ///-------------------------------------------------------------------------------------------------
 ///
-/// \file AstigSigmaFit.hpp
+/// \file AstigFit.hpp
 /// \brief Classe d'ajustement non linéaire (Levenberg–Marquardt) d'une courbe d'astigmatisme \f$\sigma(z)\f$.
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
@@ -26,7 +26,7 @@ namespace palm_tracer::fit {
 /// </summary>
 using astig_model = std::array<std::array<double, 5>, 2>; // [0]=X,[1]=Y ; [z0,w,c3,c4,A]
 
-/// <summary>Ajustement non linéaire (Levenberg–Marquardt) d'une courbe d'astigmatisme \f$\sigma(z)\f$, et estimation de Z à partir d'une paire \f$(\sigma_x,\sigma_y)\f$.</summary>
+/// <summary>Ajustement non linéaire (Levenberg–Marquardt) d'une courbe d'astigmatisme \f$\sigma(z)\f$, et estimation de Z à partir d'une paire \f$(\sigma_x, \sigma_y) \f$.</summary>
 /// <remarks>
 /// Hypothèses importantes :
 /// - Les entrées \f$\sigma\f$ sont en pixels.
@@ -34,13 +34,13 @@ using astig_model = std::array<std::array<double, 5>, 2>; // [0]=X,[1]=Y ; [z0,w
 /// - Les paramètres retournés <c>A</c> sont en nanomètres.
 /// - <see cref="sampling_"/> et <see cref="pixelSize_"/> pilotent la conversion nm ↔ px.
 /// </remarks>
-class AstigSigmaFit {
+class AstigFit {
 public:
-	/// <summary>Constructeur de la classe <see cref="AstigSigmaFit"/>.</summary>
+	/// <summary>Constructeur de la classe <see cref="AstigFit"/>.</summary>
 	/// <param name="pixelSize">Taille de pixel (nm/px). Doit être strictement > 0.</param>
 	/// <param name="sampling">Facteur de sur-échantillonnage (sans dimension). 1 = pixels natifs caméra ; 2 = reconstruction sur grille 2× plus fine, etc.</param>
 	/// <remarks>Si le pipeline n'upsample pas les coordonnées / sigmas, laisser <paramref name="sampling"/> à 1.</remarks>
-	explicit AstigSigmaFit(const double pixelSize = 160, const double sampling = 1.0) : pixelSize_(pixelSize), sampling_(sampling) { }
+	explicit AstigFit(const double pixelSize = 160, const double sampling = 1.0) : pixelSize_(pixelSize), sampling_(sampling) { }
 
 	/// <summary>Calibre (fit LM) les deux courbes \f$\sigma_x(z)\f$ et \f$\sigma_y(z)\f$ à partir d'un tableau (σx, σy, z).</summary>
 	/// <param name="input">
@@ -60,11 +60,12 @@ public:
 	/// </remarks>
 	[[nodiscard]] astig_model Calibrate(const std::vector<Vec3D>& input) const;
 
-	/// <summary>Estime z (nm) en minimisant l'erreur quadratique entre \f$(\sigma_x,\sigma_y)\f$ mesurés et prédits par le modèle.</summary>
+	/// <summary>Estime z (nm) en minimisant l'erreur quadratique entre \f$(\sigma_x, \sigma_y)\f$ mesurés et prédits par le modèle.</summary>
 	/// <param name="model">Modèle d'astigmatisme (résultat de <see cref="Calibrate"/>).</param>
-	/// <param name="sigma">Mesure \f$(\sigma_x,\sigma_y)\f$ en pixels.</param>
+	/// <param name="sigma">Mesure \f$(\sigma_x, \sigma_y)\f$ en pixels.</param>
 	/// <param name="zLimit">Intervalle de recherche initial : <c>[zMin, zMax]</c> en nm.</param>
-	/// <param name="zStep">Nombre d'échantillons pour le pré-scan (grille grossière) avant raffinement. Doit être ≥ 3 (sinon division par <c>zStep-1</c>).</param>
+	/// <param name="zStep">Nombre d'échantillons pour le pré-scan (grille grossière) avant raffinement.
+	/// Doit être ≥ 3 (sinon division par <c>zStep-1</c>) et impaire si l'on veut le point 0 dans les choix initiaux.</param>
 	/// <returns>Z (nm) minimisant l'erreur sur l'intervalle.</returns>
 	/// <remarks>
 	/// Stratégie :
@@ -104,7 +105,7 @@ protected:
 	/// <remarks>
 	/// Sécurités numériques :
 	/// - <c>w</c> doit rester > 0 (sinon singularité).
-	/// - Le polynôme peut devenir négatif : on clamp à 0 avant la racine.
+	/// - Le polynôme peut devenir négatif : on clampe à 0 avant la racine.
 	/// </remarks>
 	[[nodiscard]] double getSigma(const std::array<double, 5>& coeffs, double z) const;
 
@@ -131,7 +132,7 @@ protected:
 	/// <param name="z">Positions z (nm).</param>
 	/// <param name="p">Paramètres courants.</param>
 	/// <param name="r">Sortie : résidus \f$ r_i = \sigma_{pred} - \sigma \f$.</param>
-	/// <param name="j">Sortie : jacobien \f$ j_{ik} = \dfrac{\partial\sigma_{pred}}{\partial p_k} \f$.</param>
+	/// <param name="j">Sortie : jacobien \f$ j_{ik} = \dfrac{\partial\sigma_{pred}}{\partial p_k}\f$.</param>
 	/// <returns>SSE (\f${px}^2\f$).</returns>
 	[[nodiscard]] double lm(const std::vector<double>& sigma, const std::vector<double>& z,
 	                        const std::array<double, N_PARAMS>& p, std::vector<double>& r, std::vector<std::array<double, N_PARAMS>>& j) const;
@@ -151,7 +152,7 @@ protected:
 	static bool solver(std::array<std::array<double, N_PARAMS>, N_PARAMS>& a, std::array<double, N_PARAMS>& b, std::array<double, N_PARAMS>& x);
 
 	//==================== Estimation Z ====================
-	/// <summary>Recherche du minimum de <c>getError(model, z, sigma)</c> sur l'intervalle [a,b] (méthode de Brent).</summary>
+	/// <summary>Recherche du minimum de <c>getError(model, z, sigma)</c> sur l'intervalle [a, b] (méthode de Brent).</summary>
 	/// <remarks>
 	/// La méthode de Brent combine :
 	/// - une étape "rapide" : interpolation parabolique (quand la fonction est suffisamment régulière)
@@ -160,7 +161,7 @@ protected:
 	/// Ici, la fonction minimisée est l'erreur entre les sigmas prédits par le modèle et les sigmas mesurés.
 	///
 	/// Hypothèses / limites importantes :
-	/// - La fonction n'a pas besoin d'être strictement convexe sur [a,b].
+	/// - La fonction n'a pas besoin d'être strictement convexe sur [a, b].
 	/// - Il est toutefois préférable d'appeler Brent sur un intervalle qui contient un unique minimum "local" (d'où l'intérêt d'un pré-scan avant Brent dans Estimate()).
 	/// </remarks>
 	/// <param name="a">Borne basse (Z en nm).</param>

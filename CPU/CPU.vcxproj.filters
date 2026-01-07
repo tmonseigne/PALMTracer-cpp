@@ -51,7 +51,7 @@
     <ClCompile Include="..\lib\tracking\TracksFit.cpp">
       <Filter>Tracking</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\fit\AstigSigmaFit.cpp">
+    <ClCompile Include="..\lib\fit\AstigFit.cpp">
       <Filter>Fit</Filter>
     </ClCompile>
   </ItemGroup>
@@ -123,7 +123,7 @@
     <ClInclude Include="..\lib\tracking\ComputesParams.hpp">
       <Filter>Tracking</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\fit\AstigSigmaFit.hpp">
+    <ClInclude Include="..\lib\fit\AstigFit.hpp">
       <Filter>Fit</Filter>
     </ClInclude>
   </ItemGroup>

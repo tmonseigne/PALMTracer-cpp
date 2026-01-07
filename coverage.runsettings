@@ -8,9 +8,7 @@
             <!-- Inclure uniquement tes modules (dll/exe) générés par ta solution -->
             <ModulePaths>
               <Include>
-                <!-- tes binaires de solution -->
-                <ModulePath>.*\\PALMTracer_CPU\.dll</ModulePath>
-                <ModulePath>.*\\Tests_CPU\.exe</ModulePath>
+                <ModulePath>.*\.(exe|dll)</ModulePath>
               </Include>
               <Exclude>
                 <!-- runtime & libs système -->
@@ -20,29 +18,39 @@
                 <!-- gtest & autres externes -->
                 <ModulePath>.*\\gtest.*</ModulePath>
                 <ModulePath>.*\\gmock.*</ModulePath>
+                <ModulePath>.*\\googletest.*</ModulePath>
+                <ModulePath>.*\\vcpkg\\.*</ModulePath>
+                <ModulePath>.*\\Windows\\.*</ModulePath>
+                <ModulePath>.*\\Microsoft Visual Studio\\.*</ModulePath>
               </Exclude>
             </ModulePaths>
 
-            <!-- Ciblage par fichiers source : n’inclure QUE ..\lib\* -->
             <Sources>
-              <Include>
-                <!-- adapte si besoin ; regex, penser à doubler les backslashes -->
-                <Source>.*\\PALMTracer-cpp\\lib\\.*</Source>
-              </Include>
               <Exclude>
-                <!-- exclure les tests -->
-                <Source>.*\\PALMTracer-cpp\\Tests_CPU\\.*</Source>
-                <!-- exclure tiers (si tu as external/) -->
-                <Source>.*\\PALMTracer-cpp\\external\\.*</Source>
+                <!-- les fichiers de tests et main de la DLL sont à éliminer -->
+                <Source>.*\\test_.*\.cpp</Source>
+                <Source>.*\\Tests_CPU\\.*</Source>
+                <Source>.*\\main.cpp</Source>
+                <!-- runtime & libs système (s'il reste des reliquat du Module Path) -->
+                <ModulePath>.*\\vcruntime.*</ModulePath>
+                <ModulePath>.*\\msvcp.*</ModulePath>
+                <ModulePath>.*\\windows\\system32\\.*</ModulePath>
+                <!-- gtest & autres externes (s'il reste des reliquat du Module Path) -->
+                <Source>.*\\gtest.*</Source>
+                <Source>.*\\gmock.*</Source>
+                <Source>.*\\googletest.*</Source>
+                <Source>.*\\vcpkg\\.*</Source>
+                <Source>.*\\Windows\\.*</Source>
+                <Source>.*\\Microsoft Visual Studio\\.*</Source>
               </Exclude>
             </Sources>
 
-            <!-- Optionnel : ignorer fonctions/types “bruit” -->
+            <!-- Exclure GoogleTest par nom de fonction (C++ natif) -->
             <Functions>
               <Exclude>
-                <Function>^std::.*</Function>
-                <Function>^__.*</Function>
                 <Function>^testing::.*</Function>
+                <Function>^::testing::.*</Function>
+                <Function>.*\btesting(_internal)?\b.*</Function>
               </Exclude>
             </Functions>
           </CodeCoverage>

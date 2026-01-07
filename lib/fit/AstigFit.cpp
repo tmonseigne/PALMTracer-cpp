@@ -1,4 +1,4 @@
-#include "AstigSigmaFit.hpp"
+#include "AstigFit.hpp"
 #include <limits>
 #include <ranges>
 #include <tuple> // Pour std::tie
@@ -6,7 +6,7 @@
 namespace palm_tracer::fit {
 //==================== Fonctions Principales ====================
 //-------------------------------------------------------------------------------------------------
-astig_model AstigSigmaFit::Calibrate(const std::vector<Vec3D>& input) const
+astig_model AstigFit::Calibrate(const std::vector<Vec3D>& input) const
 {
 	const size_t N = input.size();
 	std::vector<double> sx(N), sy(N), z(N);
@@ -24,7 +24,7 @@ astig_model AstigSigmaFit::Calibrate(const std::vector<Vec3D>& input) const
 }
 
 //-------------------------------------------------------------------------------------------------
-double AstigSigmaFit::Estimate(const astig_model& model, const Vec2D& sigma, const std::array<double, 2>& zLimit, const size_t zStep) const
+double AstigFit::Estimate(const astig_model& model, const Vec2D& sigma, const std::array<double, 2>& zLimit, const size_t zStep) const
 {
 	const double DeltaZ = zLimit[1] - zLimit[0];
 	double bestZ        = zLimit[0], bestE = std::numeric_limits<double>::infinity();
@@ -49,7 +49,7 @@ double AstigSigmaFit::Estimate(const astig_model& model, const Vec2D& sigma, con
 
 //==================== Modèle / coût ====================
 //-------------------------------------------------------------------------------------------------
-double AstigSigmaFit::getSigma(const std::array<double, N_PARAMS>& coeffs, const double z) const
+double AstigFit::getSigma(const std::array<double, N_PARAMS>& coeffs, const double z) const
 {
 	const double Z0 = coeffs[0], W = coeffs[1], C3 = coeffs[2], C4 = coeffs[3], A = coeffs[4]; // Extraction des coefficients
 
@@ -60,11 +60,11 @@ double AstigSigmaFit::getSigma(const std::array<double, N_PARAMS>& coeffs, const
 
 	const double Poly  = 1.0 + U2 + C3 * U3 + C4 * U4;       // Polynôme en U.
 	const double Sigma = A * std::sqrt(std::max(0.0, Poly)); // Sigma en nm (ajout d'une sécurité pour éviter les racines négatives)
-	return (sampling_ / pixelSize_) * Sigma;                 // Sigma en pixel.
+	return sampling_ / pixelSize_ * Sigma;                   // Sigma en pixel.
 }
 
 //-------------------------------------------------------------------------------------------------
-double AstigSigmaFit::getError(const astig_model& model, const double z, const Vec2D& sigma) const
+double AstigFit::getError(const astig_model& model, const double z, const Vec2D& sigma) const
 {
 	const Vec2D S     = {.x = getSigma(model[0], z), .y = getSigma(model[1], z)};
 	const Vec2D Delta = S - sigma;
@@ -73,10 +73,10 @@ double AstigSigmaFit::getError(const astig_model& model, const double z, const V
 
 //==================== Calibration LM ====================
 //-------------------------------------------------------------------------------------------------
-std::array<double, 5> AstigSigmaFit::fitAxis(const std::vector<double>& sigma, const std::vector<double>& z) const
+std::array<double, 5> AstigFit::fitAxis(const std::vector<double>& sigma, const std::vector<double>& z) const
 {
 	if (sigma.size() < 5 || sigma.size() != z.size()) { // Vérifie si les données sont suffisantes
-		std::array<double, N_PARAMS> res;
+		std::array<double, N_PARAMS> res{};
 		res.fill(-1.0);
 		return res; // Renvoie des -1 en cas d'erreur.
 	}
@@ -112,8 +112,8 @@ std::array<double, 5> AstigSigmaFit::fitAxis(const std::vector<double>& sigma, c
 
 	std::vector<double> residue;
 	std::vector<std::array<double, N_PARAMS>> jacobian;
-	std::array<std::array<double, N_PARAMS>, N_PARAMS> alpha;
-	std::array<double, N_PARAMS> beta, delta, pTry;
+	std::array<std::array<double, N_PARAMS>, N_PARAMS> alpha{};
+	std::array<double, N_PARAMS> beta{}, delta{}, pTry{};
 
 	for (size_t iteration = 0; iteration < N_ITER; ++iteration) { // Main Loop
 		// Calcul du Jacobien et du résidu
@@ -137,7 +137,7 @@ std::array<double, 5> AstigSigmaFit::fitAxis(const std::vector<double>& sigma, c
 		}
 
 		for (size_t i = 0; i < N_PARAMS; ++i) {
-			alpha[i][i] *= (1.0 + lambda);
+			alpha[i][i] *= 1.0 + lambda;
 			beta[i] = -beta[i];
 		}
 
@@ -173,8 +173,8 @@ std::array<double, 5> AstigSigmaFit::fitAxis(const std::vector<double>& sigma, c
 }
 
 //-------------------------------------------------------------------------------------------------
-double AstigSigmaFit::lm(const std::vector<double>& sigma, const std::vector<double>& z, const std::array<double, N_PARAMS>& p,
-                         std::vector<double>& r, std::vector<std::array<double, N_PARAMS>>& j) const
+double AstigFit::lm(const std::vector<double>& sigma, const std::vector<double>& z, const std::array<double, N_PARAMS>& p,
+                    std::vector<double>& r, std::vector<std::array<double, N_PARAMS>>& j) const
 {
 	const size_t N = z.size();
 	r.assign(N, 0.0);
@@ -213,7 +213,7 @@ double AstigSigmaFit::lm(const std::vector<double>& sigma, const std::vector<dou
 }
 
 //-------------------------------------------------------------------------------------------------
-double AstigSigmaFit::computeSSE(const std::vector<double>& sigma, const std::vector<double>& z, const std::array<double, N_PARAMS>& p) const
+double AstigFit::computeSSE(const std::vector<double>& sigma, const std::vector<double>& z, const std::array<double, N_PARAMS>& p) const
 {
 	const size_t N = z.size();
 	double res     = 0;
@@ -226,7 +226,7 @@ double AstigSigmaFit::computeSSE(const std::vector<double>& sigma, const std::ve
 }
 
 //-------------------------------------------------------------------------------------------------
-bool AstigSigmaFit::solver(std::array<std::array<double, N_PARAMS>, N_PARAMS>& a, std::array<double, N_PARAMS>& b, std::array<double, N_PARAMS>& x)
+bool AstigFit::solver(std::array<std::array<double, N_PARAMS>, N_PARAMS>& a, std::array<double, N_PARAMS>& b, std::array<double, N_PARAMS>& x)
 {
 	// Élimination Gauss avec pivot partiel.
 	for (size_t i = 0; i < N_PARAMS; ++i) {
@@ -266,12 +266,12 @@ bool AstigSigmaFit::solver(std::array<std::array<double, N_PARAMS>, N_PARAMS>& a
 }
 
 //-------------------------------------------------------------------------------------------------
-double AstigSigmaFit::brent(double a, double b, const astig_model& model, const Vec2D& sigma) const
+double AstigFit::brent(double a, double b, const astig_model& model, const Vec2D& sigma) const
 {
 	if (b < a) { std::swap(a, b); } // Normalisation de l'intervalle : on s'assure que a ≤ b.
 
 	// Constantes de la section dorée (Phi étant le nombre d'or)
-	// La section dorée permet de réduire l'intervalle [a,b] avec une convergence garantie, sans hypothèse forte sur la fonction.
+	// La section dorée permet de réduire l'intervalle [a, b] avec une convergence garantie, sans hypothèse forte sur la fonction.
 	constexpr double InvPhi  = 0.6180339887498948482;
 	constexpr double InvPhi2 = 1.0 - InvPhi;
 
@@ -288,19 +288,19 @@ double AstigSigmaFit::brent(double a, double b, const astig_model& model, const 
 	double fw = fx, fv = fx;
 
 	// Pas d / e
-	// d : déplacement choisi à l'itération courante (x -> x+d)
+	// d : déplacement choisi à l'itération courante (x ⇾ x+d)
 	// e : "déplacement précédent" (sert à décider si une parabole est autorisée)
 	// Dans Brent, e mémorise la longueur du mouvement qui a précédé, et contrôle le déclenchement de l'étape parabolique.
 	double d = 0.0, e = 0.0;
 
 
-	for (int iter = 0; iter < BRENT_ITER; ++iter) {
+	for (size_t iter = 0; iter < BRENT_ITER; ++iter) {
 		// Critère d'arrêt basé sur la taille de l'intervalle et la tolérance
 		const double M    = 0.5 * (a + b);
 		const double Tol1 = BRENT_TOL * std::abs(x) + 1e-12, Tol2 = 2.0 * Tol1;
 
 		// Condition classique de Brent : si x est suffisamment proche du milieu de l'intervalle au regard de sa demi-largeur, on considère que l'intervalle est "assez petit".
-		if (std::abs(x - M) <= (Tol2 - 0.5 * (b - a))) { return x; }
+		if (std::abs(x - M) <= Tol2 - 0.5 * (b - a)) { return x; }
 
 		// ---------- Tentative d'interpolation parabolique. ----------
 		// Elle peut accélérer énormément si la fonction est bien lisse près du minimum.
@@ -334,19 +334,19 @@ double AstigSigmaFit::brent(double a, double b, const astig_model& model, const 
 				d              = p / q; // Nouveau pas parabolique.
 				const double U = x + d; // Point candidat issu de la parabole.
 				// Protection : éviter un U trop proche des bords, ce qui pourrait nuire à la réduction effective de l'intervalle.
-				if ((U - a) < Tol2 || (b - U) < Tol2) { d = (x < M) ? Tol1 : -Tol1; }
+				if (U - a < Tol2 || b - U < Tol2) { d = x < M ? Tol1 : -Tol1; }
 			}
 		}
 
 		// ---------- Étape robuste : section dorée si parabole refusée ----------
 		// Si la parabole n'est pas fiable, on retombe sur une étape de section dorée, qui réduit forcément l'intervalle.
 		if (!parabolic) {
-			e = (x < M) ? (b - x) : (a - x); // Distance du point x vers le bord "du côté du minimum" (vers le côté où l'intervalle est plus large).
-			d = InvPhi2 * e;                 // Fraction "dorée" de e.
+			e = x < M ? b - x : a - x; // Distance du point x vers le bord "du côté du minimum" (vers le côté où l'intervalle est plus large).
+			d = InvPhi2 * e;           // Fraction "dorée" de e.
 		}
 
 		// On force un déplacement minimum (Tol1) pour éviter une stagnation due à des arrondis (x + d == x).
-		const double U  = x + ((std::abs(d) >= Tol1) ? d : ((d > 0.0) ? Tol1 : -Tol1));
+		const double U  = x + (std::abs(d) >= Tol1 ? d : d > 0.0 ? Tol1 : -Tol1);
 		const double Fu = getError(model, U, sigma);
 
 		if (Fu <= fx) { // U devient le nouveau meilleur point
