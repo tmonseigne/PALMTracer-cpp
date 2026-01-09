@@ -47,6 +47,17 @@ double AstigFit::Estimate(const astig_model& model, const Vec2D& sigma, const st
 	return brent(A, B, model, sigma);
 }
 
+//-------------------------------------------------------------------------------------------------
+std::vector<double> AstigFit::Estimate(const astig_model& model, const std::vector<Vec2D>& sigmas, const std::array<double, 2>& zLimit, const size_t zStep) const
+{
+	const int N = static_cast<int>(sigmas.size());
+	std::vector<double> res(N);
+
+	#pragma omp parallel for
+	for (int i = 0; i < N; ++i) { res[i] = Estimate(model, sigmas[i], zLimit, zStep); }
+	return res;
+}
+
 //==================== Modèle / coût ====================
 //-------------------------------------------------------------------------------------------------
 double AstigFit::getSigma(const std::array<double, N_PARAMS>& coeffs, const double z) const

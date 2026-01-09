@@ -63,16 +63,19 @@ TEST(AstigFitTests, Calibrate)
 	}
 }
 
+//-------------------------------------------------------------------------------------------------
 TEST(AstigFitTests, Estimate)
 {
 	const AstigFit Fit(PIXEL_SIZE, SAMPLING);
 	// création d'un dataset de 10 éléments entre -200 et 200 nm à partir du modele calibré.
-	const std::vector<Vec3D> Dataset = GetDataSet(REF_MODEL, 200, 10);
-	for (const auto& P : Dataset) {
-		const Vec2D Sigma{.x = P.x, .y = P.y};
-		const double Z = Fit.Estimate(REF_MODEL, Sigma, {-Z_MAX, Z_MAX});
-		std::cout << "Point " << P << ", Estimated z: " << Z << " nm\n";
-		EXPECT_NEAR(Z, P.z, 50.0); // tol 50 nm très très large.
+	const std::vector<Vec3D> Datas = GetDataSet(REF_MODEL, 200, 10);
+	std::vector<Vec2D> sigmas(Datas.size());
+	for (size_t i = 0; i < Datas.size(); ++i) { sigmas[i] = Vec2D{.x = Datas[i].x, .y = Datas[i].y}; }
+	const auto Res = Fit.Estimate(REF_MODEL, sigmas);
+
+	for (size_t i = 0; i < Datas.size(); ++i) {
+		std::cout << "Point " << Datas[i] << ", Estimated z: " << Res[i] << " nm\n";
+		EXPECT_NEAR(Res[i], Datas[i].z, 50.0); // tol 50 nm très très large.
 	}
 }
 
@@ -90,11 +93,7 @@ TEST(AstigFitTests, CalibrateBad)
 
 	const astig_model Model1 = Fit.Calibrate(dataset);
 
-	for (size_t ax = 0; ax < 2; ++ax) {
-		for (size_t k = 0; k < 5; ++k) {
-			EXPECT_NEAR(Model1[ax][k], -1, 1e-9);
-		}
-	}
+	for (size_t ax = 0; ax < 2; ++ax) { for (size_t k = 0; k < 5; ++k) { EXPECT_NEAR(Model1[ax][k], -1, 1e-9); } }
 
 
 	// Dataset trop aléatoire, l'algo devra sans doute tourner plus longtemps.
@@ -112,9 +111,9 @@ TEST(AstigFitTests, EstimateBad)
 	std::normal_distribution noise(0.0, 1.0); // bruit en px
 
 	// Dataset trop aléatoire, l'estimation sera plus complexe.
-	std::vector<Vec2D> dataset(N_POINTS);
-	for (auto& p : dataset) { p = Vec2D{.x = noise(rng), .y = noise(rng)}; }
+	std::vector<Vec2D> datas(N_POINTS);
+	for (auto& p : datas) { p = Vec2D{.x = noise(rng), .y = noise(rng)}; }
 
-	for (const auto& P : dataset) { [[maybe_unused]] const double Z = Fit.Estimate(REF_MODEL, P); }
+	[[maybe_unused]] const auto Res = Fit.Estimate(REF_MODEL, datas);
 }
 } // namespace palm_tracer::fit

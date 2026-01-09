@@ -1,5 +1,7 @@
 #include <cstdint>
 #include <iostream>
+#include <mutex>
+#include <omp.h>
 
 #include "ExportAPI.hpp"
 #include "Palm.hpp"
@@ -11,6 +13,16 @@
 #include "tracking/Tracking.hpp"
 #include "tracking/Tracks.hpp"
 
+
+static std::once_flag omp_init_flag;
+
+static void InitOpenMP()
+{
+	omp_set_dynamic(1);
+	// éventuellement d’autres réglages :
+	//omp_set_num_threads(static_cast<int>(std::thread::hardware_concurrency())); // Fixe un max
+	// omp_set_nested(...)
+}
 
 //-------------------------------------------------------------------------------------------------
 extern "C" EXPORT_API
@@ -33,6 +45,8 @@ extern "C" EXPORT_API
 void CALL_CONV Alignment(const uint16_t* input, uint16_t* output, const uint32_t height,
                          const uint32_t width, const uint32_t planes, const double* factors, const uint32_t upsampling)
 {
+	std::call_once(omp_init_flag, InitOpenMP);
+
 	std::array<std::array<double, 10>, 2> f{};
 	size_t idx = 0;
 	for (size_t i = 0; i < 2; ++i) { for (size_t j = 0; j < 10; ++j, ++idx) { f[i][j] = factors[idx]; } }
@@ -57,6 +71,8 @@ extern "C" EXPORT_API
 /// <returns>Seuil d'intensité calculé automatiquement, exprimé dans les mêmes unités que les valeurs de <paramref name="image" /> (converties en <c>double</c>).</returns>
 double CALL_CONV AutoThreshold(const uint16_t* input, const uint32_t height, const uint32_t width, const double* fit_params)
 {
+	std::call_once(omp_init_flag, InitOpenMP);
+
 	const auto PointsListSize = static_cast<size_t>(0.2 * static_cast<double>(height * width) * palm_tracer::N_LOCALIZATIONS);
 	std::vector<double> pointsList(PointsListSize);
 	const palm_tracer::Vec3I Dim = {.x = width, .y = height, .z = 1};
@@ -90,6 +106,8 @@ uint32_t CALL_CONV Localization(const uint16_t* input, double* output, const uin
                                 const uint32_t width, const uint32_t planes, const double thresholdVal, const double watershedRatio,
                                 const uint16_t fit, const double* fit_params)
 {
+	std::call_once(omp_init_flag, InitOpenMP);
+
 	const palm_tracer::Vec3I Dim = {.x = width, .y = height, .z = planes};
 
 	const auto Palm = palm_tracer::Palm(input, output, outputSize, Dim, thresholdVal, watershedRatio, fit, fit_params);
@@ -117,6 +135,8 @@ extern "C" EXPORT_API
 uint32_t CALL_CONV Tracking(const double* input, double* output, const double maxSpeed, const uint32_t minLife,
                             const double decrease, const double costBirth, const uint32_t nbTimes)
 {
+	std::call_once(omp_init_flag, InitOpenMP);
+
 	const auto Param = new palm_tracer::tracking::Parameters();
 
 	Param->maxSpeed_       = maxSpeed;
@@ -147,6 +167,8 @@ extern "C" EXPORT_API
 uint32_t CALL_CONV BlinkingReconnection(const double* input, double* output, const uint32_t nRow, const double pixelSize,
                                         const uint32_t mode, const uint32_t maxDuration, const double maxSpeed)
 {
+	std::call_once(omp_init_flag, InitOpenMP);
+
 	palm_tracer::tracking::Tracks tracks;
 	tracks.LoadTracking(input, nRow, pixelSize);
 	tracks.BlinkingReconnection(mode, maxDuration, maxSpeed);
@@ -190,6 +212,8 @@ bool CALL_CONV TracksCompute(const double* input, double* outputMSD, double* out
                              const bool isMSD, const bool isInd, const bool is3D,
                              const double pixelSize, const double exposureTime, const uint32_t fitMode, const double* fitParams)
 {
+	std::call_once(omp_init_flag, InitOpenMP);
+
 	palm_tracer::tracking::ComputesParams p = {
 		.mode = palm_tracer::tracking::fit_mode::linear,
 		.fitLength = static_cast<size_t>(fitParams[0]),
@@ -245,6 +269,8 @@ extern "C" EXPORT_API
 /// Si la valeur demandée dépasse le nombre de niveaux disponibles, le niveau maximal est utilisé.</param>
 void CALL_CONV Wavelett(const uint16_t* input, double* output, const uint32_t height, const uint32_t width, const uint32_t planes, uint32_t levelOutput)
 {
+	std::call_once(omp_init_flag, InitOpenMP);
+
 	if (levelOutput == 0) { levelOutput = 1; } // on force au niveau 1 si l'appelant donne 0
 	//if (levelOutput == 0) { throw std::invalid_argument("levelOutput must be >= 1"); } // lever une exception dans une DLL Extern C n'est pas géré correctement par C# ou Python.
 
@@ -272,6 +298,8 @@ extern "C" EXPORT_API
 /// <param name="pixelSize">Taille d'un pixel en unités physiques (en nanomètre/pixel).</param>
 void CALL_CONV Astigmatism3DCalibration(const double* input, double* output, const uint32_t size, const double pixelSize)
 {
+	std::call_once(omp_init_flag, InitOpenMP);
+
 	// conversion de l'entrée en vecteur de points 3D.
 	const auto N = static_cast<size_t>(size);
 	std::vector<palm_tracer::Vec3D> dataset(N);
@@ -292,8 +320,15 @@ void CALL_CONV Astigmatism3DCalibration(const double* input, double* output, con
 extern "C" EXPORT_API
 void CALL_CONV Astigmatism3DEstimation(const double* input, double* output, const uint32_t size, const double pixelSize, const double* model, const double zMax)
 {
+	std::call_once(omp_init_flag, InitOpenMP);
+
 	// conversion de l'entrée en vecteur de points 2D.
 	const auto N = static_cast<size_t>(size);
+	std::vector<palm_tracer::Vec2D> datas(N);
+	for (size_t i = 0, id = 0; i < N; ++i) {
+		datas[i] = {.x = input[id], .y = input[id + 1]};
+		id += 2;
+	}
 
 	const palm_tracer::fit::astig_model Model = {
 		std::array{model[0], model[1], model[2], model[3], model[4]},
@@ -304,8 +339,8 @@ void CALL_CONV Astigmatism3DEstimation(const double* input, double* output, cons
 
 	// Calculs
 	const palm_tracer::fit::AstigFit Fit(pixelSize);
-	for (size_t i = 0, id = 0; i < N; ++i) {
-		*output++ = Fit.Estimate(Model, {.x = input[id], .y = input[id + 1]}, ZLimit);
-		id += 2;
-	}
+	const std::vector<double> Res = Fit.Estimate(Model, datas, ZLimit);
+
+	// Remplissage de la sortie
+	for (const auto& Z : Res) { *output++ = Z; }
 }
