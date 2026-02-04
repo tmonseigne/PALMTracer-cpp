@@ -113,6 +113,7 @@
       <TargetMachine>MachineX64</TargetMachine>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <LargeAddressAware>true</LargeAddressAware>
+      <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -134,6 +135,7 @@
     <ClCompile Include="..\lib\tracking\Tracking.cpp" />
     <ClCompile Include="..\lib\tracking\TracksFit.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="..\lib\fit\AstigFit.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PALMTracer.def" />
@@ -164,6 +166,7 @@
     <ClInclude Include="..\lib\tracking\TimeNodes.hpp" />
     <ClInclude Include="..\lib\tracking\Tracking.hpp" />
     <ClInclude Include="..\lib\tracking\TracksFit.hpp" />
+    <ClInclude Include="..\lib\fit\AstigFit.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

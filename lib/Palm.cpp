@@ -28,8 +28,6 @@ Palm::Palm(const uint16_t* image, double* points, const size_t pointsListSize, c
 //-------------------------------------------------------------------------------------------------
 int Palm::Processing() const
 {
-	omp_set_dynamic(1); // Autorise l'adaptation automatique du nombre de threads.
-	//omp_set_num_threads(static_cast<int>(std::thread::hardware_concurrency())); // Fixe un max
 
 	std::vector<std::vector<std::array<double, N_LOCALIZATIONS>>> allPoints(dim_.z);
 
@@ -58,7 +56,6 @@ int Palm::Processing() const
 //-------------------------------------------------------------------------------------------------
 double Palm::AutoThreshold()
 {
-	omp_set_dynamic(1); // Autorise l'adaptation automatique du nombre de threads.
 	std::vector<std::array<double, N_LOCALIZATIONS>> points;
 	std::vector mask(size_, false); //  Creation du masque binaire (true = masque actif)
 	const double HalfRoi = fitParams_[0] / 2;
