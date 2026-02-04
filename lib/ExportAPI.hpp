@@ -20,9 +20,12 @@
 
 // Détection de plateforme et définition de la macro EXPORT_API
 #if defined(_WIN32) || defined(_WIN64)
-#define EXPORT_API __declspec(dllexport)
-#define CALL_CONV __stdcall
+#define PT_EXPORT __declspec(dllexport)
 #else
-#define EXPORT_API __attribute__((visibility("default")))
-#define CALL_CONV
+#define PT_EXPORT __attribute__((visibility("default")))
 #endif
+
+// Recommandé : cdecl partout (simplifie Python/Unix)
+#define PT_CALL
+#define PT_EXTERN_C extern "C"
+#define PT_API PT_EXTERN_C PT_EXPORT

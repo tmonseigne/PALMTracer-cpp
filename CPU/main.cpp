@@ -25,7 +25,6 @@ static void InitOpenMP()
 }
 
 //-------------------------------------------------------------------------------------------------
-extern "C" EXPORT_API
 /// <summary>Aligne un stack 3D d'images à l'aide de coefficients de correction fournis.
 ///
 /// Cette fonction applique une correction géométrique (translation / distorsion) sur chaque plan d'un stack volumique, typiquement pour compenser des décalages entre canaux ou entre plans.
@@ -42,8 +41,8 @@ extern "C" EXPORT_API
 /// Il doit contenir exactement 20 valeurs (<c>2 × 10</c>), organisées en 2 lignes de 10 coefficients (une ligne par axe) tels qu'attendus par <c>palm_tracer::Alignment</c>.</param>
 /// <param name="upsampling">Facteur de sur-échantillonnage utilisé pour le calcul sub-pixel de l'alignement.
 /// Une valeur supérieure à 1 permet un ajustement plus fin mais augmente le coût de calcul.</param>
-void CALL_CONV Alignment(const uint16_t* input, uint16_t* output, const uint32_t height,
-                         const uint32_t width, const uint32_t planes, const double* factors, const uint32_t upsampling)
+PT_API void PT_CALL Alignment(const uint16_t* input, uint16_t* output, const uint32_t height,
+                              const uint32_t width, const uint32_t planes, const double* factors, const uint32_t upsampling)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
@@ -57,7 +56,6 @@ void CALL_CONV Alignment(const uint16_t* input, uint16_t* output, const uint32_t
 }
 
 //-------------------------------------------------------------------------------------------------
-extern "C" EXPORT_API
 /// <summary>Calcule automatiquement un seuil d'intensité pour la détection de molécules sur une image.
 ///
 /// Cette fonction estime un seuil global en analysant la distribution d'intensité de l'image et en utilisant les paramètres d'ajustement <paramref name="fit_params" />.
@@ -69,7 +67,7 @@ extern "C" EXPORT_API
 /// <param name="fit_params">Tableau de paramètres de fit utilisés par l'algorithme de seuil automatique.
 /// Le contenu exact dépend de l'implémentation de <c>palm_tracer::Palm</c> (par exemple paramètres de PSF, bruit, etc.).</param>
 /// <returns>Seuil d'intensité calculé automatiquement, exprimé dans les mêmes unités que les valeurs de <paramref name="image" /> (converties en <c>double</c>).</returns>
-double CALL_CONV AutoThreshold(const uint16_t* input, const uint32_t height, const uint32_t width, const double* fit_params)
+PT_API double PT_CALL AutoThreshold(const uint16_t* input, const uint32_t height, const uint32_t width, const double* fit_params)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
@@ -101,10 +99,9 @@ double CALL_CONV AutoThreshold(const uint16_t* input, const uint32_t height, con
 /// <param name="fit">Mode d'ajustement (fit) à utiliser pour chaque spot. La signification exacte des valeurs dépend de l'implémentation de <c>palm_tracer::Palm</c>.</param>
 /// <param name="fit_params">Tableau de paramètres de fit (par exemple paramètres de PSF, initialisation, contraintes).</param>
 /// <returns>Nombre de valeurs effectivement écrites dans <paramref name="output" />.</returns>
-extern "C" EXPORT_API
-uint32_t CALL_CONV Localization(const uint16_t* input, double* output, const uint32_t outputSize, const uint32_t height,
-                                const uint32_t width, const uint32_t planes, const double thresholdVal, const double watershedRatio,
-                                const uint16_t fit, const double* fit_params)
+PT_API uint32_t PT_CALL Localization(const uint16_t* input, double* output, const uint32_t outputSize, const uint32_t height,
+                                     const uint32_t width, const uint32_t planes, const double thresholdVal, const double watershedRatio,
+                                     const uint32_t fit, const double* fit_params)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
@@ -131,9 +128,8 @@ uint32_t CALL_CONV Localization(const uint16_t* input, double* output, const uin
 /// <param name="costBirth">Coût associé à la création ou la fin d'une trajectoire (birth/death cost).</param>
 /// <param name="nbTimes">Nombre de frames / temps considérés dans la séquence.</param>
 /// <returns> Nombre de valeurs effectivement écrites dans <paramref name="output" />.</returns>
-extern "C" EXPORT_API
-uint32_t CALL_CONV Tracking(const double* input, double* output, const double maxSpeed, const uint32_t minLife,
-                            const double decrease, const double costBirth, const uint32_t nbTimes)
+PT_API uint32_t PT_CALL Tracking(const double* input, double* output, const double maxSpeed, const uint32_t minLife,
+                                 const double decrease, const double costBirth, const uint32_t nbTimes)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
@@ -163,9 +159,8 @@ uint32_t CALL_CONV Tracking(const double* input, double* output, const double ma
 /// <param name="maxDuration">Durée maximale (en nombre de frames) autorisée entre deux segments pour être considérés comme appartenant à la même trajectoire.</param>
 /// <param name="maxSpeed">Vitesse maximale autorisée des cibles pour reconnecter deux segments séparés par un blinking.</param>
 /// <returns></returns>
-extern "C" EXPORT_API
-uint32_t CALL_CONV BlinkingReconnection(const double* input, double* output, const uint32_t nRow, const double pixelSize,
-                                        const uint32_t mode, const uint32_t maxDuration, const double maxSpeed)
+PT_API uint32_t PT_CALL BlinkingReconnection(const double* input, double* output, const uint32_t nRow, const double pixelSize,
+                                             const uint32_t mode, const uint32_t maxDuration, const double maxSpeed)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
@@ -176,7 +171,6 @@ uint32_t CALL_CONV BlinkingReconnection(const double* input, double* output, con
 }
 
 //-------------------------------------------------------------------------------------------------
-extern "C" EXPORT_API
 /// <summary>Calcule des métriques sur les trajectoires (MSD, diffusion instantanée, fits).
 ///
 /// Cette fonction charge un ensemble de trajectoires et, en fonction des drapeaux
@@ -208,9 +202,9 @@ extern "C" EXPORT_API
 /// <param name="fitParams">Tableau de paramètres pour le fit. L'élément <c>fitParams[0]</c> doit contenir la longueur du fit (<c>fitLength</c>, nombre de points utilisés pour le fit).
 /// Les autres éléments peuvent être utilisés par des variantes futures.</param>
 /// <returns>Toujours <c>true</c> si l'exécution s'est terminée sans exception. En cas d'erreur interne, une exception C++ peut être levée et doit être gérée côté appelant .NET/Python.</returns>
-bool CALL_CONV TracksCompute(const double* input, double* outputMSD, double* outputInd, double* outputFit, const uint32_t nRow,
-                             const bool isMSD, const bool isInd, const bool is3D,
-                             const double pixelSize, const double exposureTime, const uint32_t fitMode, const double* fitParams)
+PT_API bool PT_CALL TracksCompute(const double* input, double* outputMSD, double* outputInd, double* outputFit, const uint32_t nRow,
+                                  const bool isMSD, const bool isInd, const bool is3D,
+                                  const double pixelSize, const double exposureTime, const uint32_t fitMode, const double* fitParams)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
@@ -252,7 +246,6 @@ bool CALL_CONV TracksCompute(const double* input, double* outputMSD, double* out
 
 
 //-------------------------------------------------------------------------------------------------
-extern "C" EXPORT_API
 /// <summary>Extrait un plan d'ondelettes d'un stack d'images en utilisant une décomposition à trous.
 ///
 /// Pour chaque plan 2D du stack d'entrée, cette fonction calcule une décomposition en ondelettes (algorithme à trous) via <c>palm_tracer::localization::ATrous</c>
@@ -267,7 +260,7 @@ extern "C" EXPORT_API
 /// <param name="levelOutput">Niveau de la décomposition à extraire.
 /// La numérotation commence à 1 côté API : <c>levelOutput = 1</c> correspond au premier niveau d'ondelettes.
 /// Si la valeur demandée dépasse le nombre de niveaux disponibles, le niveau maximal est utilisé.</param>
-void CALL_CONV Wavelett(const uint16_t* input, double* output, const uint32_t height, const uint32_t width, const uint32_t planes, uint32_t levelOutput)
+PT_API void PT_CALL Wavelett(const uint16_t* input, double* output, const uint32_t height, const uint32_t width, const uint32_t planes, uint32_t levelOutput)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
@@ -290,13 +283,12 @@ void CALL_CONV Wavelett(const uint16_t* input, double* output, const uint32_t he
 }
 
 //-------------------------------------------------------------------------------------------------
-extern "C" EXPORT_API
 /// <summary>Calcule la calibration d'un modèle d'astigmatisme 3D à partir d'un jeu de points de calibration.</summary>
 /// <param name="input">Pointeur vers le tableau d'entrée contenant les points de calibration, au format (\f$\sigma_x, \sigma_y, z\f$).</param>
 /// <param name="output">Pointeur vers le buffer de sortie où seront écrites les valeurs du modèle (5 paramètres pour les 2 axes).</param>
 /// <param name="size">Nombre de points dans le tableau d'entrée.</param>
 /// <param name="pixelSize">Taille d'un pixel en unités physiques (en nanomètre/pixel).</param>
-void CALL_CONV Astigmatism3DCalibration(const double* input, double* output, const uint32_t size, const double pixelSize)
+PT_API void PT_CALL Astigmatism3DCalibration(const double* input, double* output, const uint32_t size, const double pixelSize)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
@@ -317,8 +309,8 @@ void CALL_CONV Astigmatism3DCalibration(const double* input, double* output, con
 }
 
 //-------------------------------------------------------------------------------------------------
-extern "C" EXPORT_API
-void CALL_CONV Astigmatism3DEstimation(const double* input, double* output, const uint32_t size, const double pixelSize, const double* model, const double zMax)
+PT_API void PT_CALL Astigmatism3DEstimation(const double* input, double* output, const uint32_t size, const double pixelSize, const double* model,
+                                            const double zMax)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
