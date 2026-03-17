@@ -48,7 +48,8 @@ double AstigFit::Estimate(const astig_model& model, const Vec2D& sigma, const st
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<double> AstigFit::Estimate(const astig_model& model, const std::vector<Vec2D>& sigmas, const std::array<double, 2>& zLimit, const size_t zStep) const
+std::vector<double> AstigFit::Estimate(const astig_model& model, const std::vector<Vec2D>& sigmas, const std::array<double, 2>& zLimit,
+                                       const size_t zStep) const
 {
 	const int N = static_cast<int>(sigmas.size());
 	std::vector<double> res(N);

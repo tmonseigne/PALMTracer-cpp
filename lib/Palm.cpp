@@ -28,7 +28,6 @@ Palm::Palm(const uint16_t* image, double* points, const size_t pointsListSize, c
 //-------------------------------------------------------------------------------------------------
 int Palm::Processing() const
 {
-
 	std::vector<std::vector<std::array<double, N_LOCALIZATIONS>>> allPoints(dim_.z);
 
 	#pragma omp parallel for

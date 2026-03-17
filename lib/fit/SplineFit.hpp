@@ -56,7 +56,8 @@ protected:
 	/// <param name="p">Vecteur des paramètres de la PSF (offset, intensité, position).</param>
 	/// <param name="dudt">Vecteur des dérivées partielles du modèle par rapport aux paramètres.</param>
 	/// <param name="model">>Valeur du modèle au point considéré.</param>
-	void derivativeSpline(Vec3I& pos, const std::vector<double>& f, const std::array<std::vector<double>, 3>& df, const std::vector<double>& p, std::vector<double>& dudt, double& model) const;
+	void derivativeSpline(Vec3I& pos, const std::vector<double>& f, const std::array<std::vector<double>, 3>& df, const std::vector<double>& p,
+	                      std::vector<double>& dudt, double& model) const;
 
 	/// <summary>Met à jour le jacobien et l'hessienne pour le modèle MLE (Maximum Likelihood Estimation).
 	/// Utilise une vraisemblance basée sur la statistique de Poisson.</summary>

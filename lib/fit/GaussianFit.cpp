@@ -26,123 +26,132 @@ void GaussianFit::parseParams()
 //-------------------------------------------------------------------------------------------------
 void GaussianFit::fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
 {
+	// Vérification si la zone d'intérêt est entièrement dans l'image (évite les bords)
+	const auto Ux = static_cast<size_t>(infos.x_), Uy = static_cast<size_t>(infos.y_);
+	// On est sur les bords, on ne fait pas de fitting, on remplit avec des valeurs par défaut (offset, intensity, sigmaX/Y, theta = -1)
+	if (roiHalf_ > Ux || Ux >= dim_.x - roiHalf_ || roiHalf_ > Uy || Uy >= dim_.y - roiHalf_) {
+		fill(infos, point, infos.x_, infos.y_, infos.z_);
+		return;
+	}
+
 	// Valeurs par défaut
-	double offset = 0, intensity    = 0, rss         = -1,
-	       x      = infos.x_, y     = infos.y_, z    = infos.z_,
+	double x      = infos.x_, y     = infos.y_, z    = infos.z_,
 	       sigmaX = sigmaX_, sigmaY = sigmaY_, theta = theta_;
 
-	// Vérification si la zone d'intérêt est entièrement dans l'image (évite les bords)
-	const auto Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
-	if (roiHalf_ <= Ux && Ux < dim_.x - roiHalf_ && roiHalf_ <= Uy && Uy < dim_.y - roiHalf_) {
-		// Création des variables
-		double lambda = LAMBDA_0, minI = 0, maxI = 0;
-		LM_Workspace ws;
-		ws.Resize(n_, nParams_, nParams2_);
+	// Création des variables
+	double lambda = LAMBDA_0, minI = 0, maxI = 0;
+	LM_Workspace ws;
+	ws.Resize(n_, nParams_, nParams2_);
 
-		// Initialisation des données (Récupération des min/max, de la ROI et initialisation des paramètres du modèle et de ses bornes)
-		preCompute(Ux, Uy, ws.grid, minI, maxI);
-		initP(ws.p, x, y, z, minI, maxI);
+	// Initialisation des données (Récupération des min/max, de la ROI et initialisation des paramètres du modèle et de ses bornes)
+	preCompute(Ux, Uy, ws.grid, minI, maxI);
+	initP(ws.p, x, y, z, minI, maxI);
 
-		// Première itération de Levenberg-Marquardt et initialisation de l'erreur de référence
-		double err     = lm(ws);
-		double err_old = err;
+	// Première itération de Levenberg-Marquardt et initialisation de l'erreur de référence
+	double err     = lm(ws);
+	double err_old = err;
 
-		// Trouver la valeur absolue maximale
-		double m = std::ranges::max(std::views::transform(ws.beta, [](const double b) { return std::abs(b); }));
+	// Trouver la valeur absolue maximale
+	double m = std::ranges::max(std::views::transform(ws.beta, [](const double b) { return std::abs(b); }));
 
-		for (size_t iteration = ((m < EPSILON_1) ? N_ITER : 0); iteration < N_ITER; ++iteration) { // Main Loop
-			// Calcul de l'inverse de la matrice de courbure α
-			ws.alphaR = ws.alpha;                                                                                         // Copie de α
-			for (size_t i = 0; i < nParams_; ++i) { ws.alphaR[i * nParams_ + i] += lambda * ws.alpha[i * nParams_ + i]; } // αR = α + λ × diag(α)
-			matrix::InverseGaussJordan(ws.alphaR, ws.alphaRi, nParams_);                                                  // Inversion (Gauss-Jordan)
+	for (size_t iteration = ((m < EPSILON_1) ? N_ITER : 0); iteration < N_ITER; ++iteration) { // Main Loop
+		// Calcul de l'inverse de la matrice de courbure α
+		ws.alphaR = ws.alpha;                                                                                         // Copie de α
+		for (size_t i = 0; i < nParams_; ++i) { ws.alphaR[i * nParams_ + i] += lambda * ws.alpha[i * nParams_ + i]; } // αR = α + λ × diag(α)
+		matrix::InverseGaussJordan(ws.alphaR, ws.alphaRi, nParams_);                                                  // Inversion (Gauss-Jordan)
 
-			// Calcul du candidat (p + δp)
-			std::ranges::fill(ws.deltaP, 0.0);
-			for (size_t i = 0; i < nParams_; ++i) {
-				for (size_t j = 0; j < nParams_; ++j) { ws.deltaP[i] += ws.alphaRi[i * nParams_ + j] * ws.beta[j]; } // δP = αRi × β
-				ws.pTry[i] = std::clamp(ws.p[1][i] + ws.deltaP[i], ws.p[0][i], ws.p[2][i]);                          // pTry = clamp(p + δP)
-			}
-			// En cas de clamp de pTry, deltaP doit être recalculé.
-			for (size_t i = 0; i < nParams_; ++i) { ws.deltaP[i] = ws.pTry[i] - ws.p[1][i]; }
+		// Calcul du candidat (p + δp)
+		std::ranges::fill(ws.deltaP, 0.0);
+		for (size_t i = 0; i < nParams_; ++i) {
+			for (size_t j = 0; j < nParams_; ++j) { ws.deltaP[i] += ws.alphaRi[i * nParams_ + j] * ws.beta[j]; } // δP = αRi × β
+			ws.pTry[i] = std::clamp(ws.p[1][i] + ws.deltaP[i], ws.p[0][i], ws.p[2][i]);                          // pTry = clamp(p + δP)
+		}
+		// En cas de clamp de pTry, deltaP doit être recalculé.
+		for (size_t i = 0; i < nParams_; ++i) { ws.deltaP[i] = ws.pTry[i] - ws.p[1][i]; }
 
-			// Critère d'arrêt “petit pas”, si le pas réel est ~0 pour tous les paramètres. Inutile d'évaluer, on augmente λ.
-			bool tinyStep = true;
-			for (const double V : ws.deltaP) { tinyStep &= (std::abs(V) < 1e-15); }
-			if (tinyStep) {
-				if (lambda >= LAMBDA_MAX) { break; }               // On est déjà au max, on arrête
-				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX); // Augmentation de λ.
-				continue;                                          // On repart au début de la boucle
-			}
+		// Critère d'arrêt “petit pas”, si le pas réel est ~0 pour tous les paramètres. Inutile d'évaluer, on augmente λ.
+		bool tinyStep = true;
+		for (const double V : ws.deltaP) { tinyStep &= (std::abs(V) < 1e-15); }
+		if (tinyStep) {
+			if (lambda >= LAMBDA_MAX) { break; }               // On est déjà au max, on arrête
+			lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX); // Augmentation de λ.
+			continue;                                          // On repart au début de la boucle
+		}
 
-			// Gain prédit (pas d'éval d'image ici)
-			const double Gain = gain(ws);
-			if (Gain <= 0.0) {                                     // clairement pas bon → on n'évalue pas, on augmente λ et on retente
-				if (lambda >= LAMBDA_MAX) { break; }               // On est déjà au max, on arrête
-				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX); // Augmentation de λ.
-				// Critère d'arrêt “petit pas”, m = max (δP / p) (variation relative maximum parmi tous les paramètres)
-				m = 0.0;
-				for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::abs(ws.deltaP[i]) / std::max(std::abs(ws.p[1][i]), 1e-12)); }
-				if (m < EPSILON_2 && iteration >= 2) { break; } // On est trop faible est déjà 2 iterations, on arrête
-				continue;                                       // On repart au début de la boucle
-			}
-
-			// m = δPᵀ × (λ × δP + β)
-			for (size_t i = 0; i < nParams_; ++i) { ws.lBetaDeltaP[i] = lambda * ws.deltaP[i] + ws.beta[i]; }
-			m = std::inner_product(ws.deltaP.begin(), ws.deltaP.end(), ws.lBetaDeltaP.begin(), 0.0);
-
-			// Calcul de l'erreur pour l'essai en cours
-			const double Err_Try = getError(ws);
-			const double Rho     = (err - Err_Try) / (2.0 * m);
-
-			if (Rho > EPSILON_4) {                                  // On accepte : on remplace l'état courant par _try
-				err_old = err;                                      // Mise à jour de l'erreur de reference
-				ws.p[1] = ws.pTry;                                  // Mise à jour des paramètres du modèle
-				err     = lm(ws);                                   // Mise à jour de la ROI du modèle, la matrice alpha, le vecteur beta et de l'erreur.
-				lambda  = std::max(lambda / LAMBDA_DN, LAMBDA_MIN); // Diminution de λ.
-			}
-			else {                                                 // On refuse : on garde l'état courant
-				err = err_old;                                     // On reprend l'erreur de reference
-				if (lambda >= LAMBDA_MAX) { break; }               // On est déjà au max pour λ, on arrête
-				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX); // Augmentation de λ.
-			}
-
-			// Critères d'arrêts
+		// Gain prédit (pas d'éval d'image ici)
+		const double Gain = gain(ws);
+		if (Gain <= 0.0) {                                     // clairement pas bon → on n'évalue pas, on augmente λ et on retente
+			if (lambda >= LAMBDA_MAX) { break; }               // On est déjà au max, on arrête
+			lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX); // Augmentation de λ.
+			// Critère d'arrêt “petit pas”, m = max (δP / p) (variation relative maximum parmi tous les paramètres)
 			m = 0.0;
 			for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::abs(ws.deltaP[i]) / std::max(std::abs(ws.p[1][i]), 1e-12)); }
-			if (iteration >= 2) {                                         // Si on est déjà à 2 iterations
-				if (m < EPSILON_2) { break; }                             // Si le pas est trop faible
-				if (err / static_cast<double>(n_) < EPSILON_3) { break; } // Si l'erreur est trop faible
-				if (std::ranges::max(std::views::transform(ws.beta, [](const double b) { return std::abs(b); })) < EPSILON_1) { break; }
-			}
+			if (m < EPSILON_2 && iteration >= 2) { break; } // On est trop faible est déjà 2 iterations, on arrête
+			continue;                                       // On repart au début de la boucle
 		}
 
-		// Mise à jour des différents éléments
-		offset    = ws.p[1][0];
-		intensity = ws.p[1][1];
-		x         = ws.p[1][2];
-		y         = ws.p[1][3];
-		switch (mode_) {
-			case fit_mode::none:
-			case fit_mode::spline_3d_emccd:
-			case fit_mode::spline_3d_scmos:
-			case fit_mode::gaussian_2d_fixed: break;
-			case fit_mode::gaussian_2d_sigma: {
-				sigmaX = ws.p[1][4];
-				break;
-			}
-			case fit_mode::gaussian_3d_fixed: {
-				sigmaX = ws.p[1][4] / std::numbers::sqrt2_v<double>;
-				sigmaY = ws.p[1][5] / std::numbers::sqrt2_v<double>;
-				break;
-			}
-			case fit_mode::gaussian_3d_theta: {
-				sigmaX = ws.p[1][4] / std::numbers::sqrt2_v<double>;
-				sigmaY = ws.p[1][5] / std::numbers::sqrt2_v<double>;
-				theta  = ws.p[1][6];
-				break;
-			}
+		// m = δPᵀ × (λ × δP + β)
+		for (size_t i = 0; i < nParams_; ++i) { ws.lBetaDeltaP[i] = lambda * ws.deltaP[i] + ws.beta[i]; }
+		m = std::inner_product(ws.deltaP.begin(), ws.deltaP.end(), ws.lBetaDeltaP.begin(), 0.0);
+
+		// Calcul de l'erreur pour l'essai en cours
+		const double Err_Try = getError(ws);
+		const double Rho     = (err - Err_Try) / (2.0 * m);
+
+		if (Rho > EPSILON_4) {                                  // On accepte : on remplace l'état courant par _try
+			err_old = err;                                      // Mise à jour de l'erreur de reference
+			ws.p[1] = ws.pTry;                                  // Mise à jour des paramètres du modèle
+			err     = lm(ws);                                   // Mise à jour de la ROI du modèle, la matrice alpha, le vecteur beta et de l'erreur.
+			lambda  = std::max(lambda / LAMBDA_DN, LAMBDA_MIN); // Diminution de λ.
 		}
-		rss = computeR2(ws); // Calcul du R² sur XY
+		else {                                                 // On refuse : on garde l'état courant
+			err = err_old;                                     // On reprend l'erreur de reference
+			if (lambda >= LAMBDA_MAX) { break; }               // On est déjà au max pour λ, on arrête
+			lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX); // Augmentation de λ.
+		}
+
+		// Critères d'arrêts
+		m = 0.0;
+		for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::abs(ws.deltaP[i]) / std::max(std::abs(ws.p[1][i]), 1e-12)); }
+		if (iteration >= 2) {                                         // Si on est déjà à 2 iterations
+			if (m < EPSILON_2) { break; }                             // Si le pas est trop faible
+			if (err / static_cast<double>(n_) < EPSILON_3) { break; } // Si l'erreur est trop faible
+			if (std::ranges::max(std::views::transform(ws.beta, [](const double b) { return std::abs(b); })) < EPSILON_1) { break; }
+		}
+	}
+
+	// Mise à jour des différents éléments
+	const double Offset = ws.p[1][0], Intensity = ws.p[1][1];
+	x                   = ws.p[1][2], y         = ws.p[1][3];
+
+
+	const double RSS = computeR2(ws); // Calcul du R² sur XY
+	if (RSS < EPSILON) {
+		// En cas de problème ou MSE ridicule, on considère que le fitting a échoué et on remplit avec des valeurs par défaut (offset, intensity, sigmaX/Y, theta = -1)
+		fill(infos, point, x, y, infos.z_);
+		return;
+	}
+
+	switch (mode_) {
+		case fit_mode::none:
+		case fit_mode::spline_3d_emccd:
+		case fit_mode::spline_3d_scmos:
+		case fit_mode::gaussian_2d_fixed: break;
+		case fit_mode::gaussian_2d_sigma: {
+			sigmaX = ws.p[1][4];
+			break;
+		}
+		case fit_mode::gaussian_3d_fixed: {
+			sigmaX = ws.p[1][4] / std::numbers::sqrt2_v<double>;
+			sigmaY = ws.p[1][5] / std::numbers::sqrt2_v<double>;
+			break;
+		}
+		case fit_mode::gaussian_3d_theta: {
+			sigmaX = ws.p[1][4] / std::numbers::sqrt2_v<double>;
+			sigmaY = ws.p[1][5] / std::numbers::sqrt2_v<double>;
+			theta  = ws.p[1][6];
+			break;
+		}
 	}
 
 	// Post-normalisation selon le mode.
@@ -159,7 +168,7 @@ void GaussianFit::fit(const localization::SegmentationInfo& infos, std::array<do
 		case fit_mode::spline_3d_emccd:
 		case fit_mode::spline_3d_scmos: break;
 	}
-	fill(infos, point, offset, intensity, x, y, z, sigmaX, sigmaY, theta, rss);
+	fill(infos, point, x, y, z, Offset, Intensity, sigmaX, sigmaY, theta, RSS);
 }
 
 //==================== Levenberg-Marquardt ====================

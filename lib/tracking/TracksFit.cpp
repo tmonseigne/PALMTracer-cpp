@@ -184,7 +184,7 @@ void TracksFit::initP()
 			p_[0] = std::log(y_[1] / y_[0]) / std::numbers::ln2;
 			break;
 		}
-		case fit_mode::exponential: { // p = [X0, a, Tau, b]
+		case fit_mode::exponential: {        // p = [X0, a, Tau, b]
 			p_[0]             = 0.0;         // x0
 			p_[1]             = y_.back();   // a (plateau)
 			p_[3]             = 0.0;         // b (valeur à x0)

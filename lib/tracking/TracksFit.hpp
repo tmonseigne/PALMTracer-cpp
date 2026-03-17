@@ -64,19 +64,19 @@ public:
 	double Fit(const std::vector<double>& input);
 
 protected:
-	fit_mode mode_ = fit_mode::linear; ///< Mode de fitting utilisé.
-	size_t pSize_         = 0,                       ///< Nombre total de paramètres du modèle.
-	       fitLength_     = 0;                       ///< Taille de la fenêtre d'analyse.
-	bool hasBlink_        = false;                   ///< Indique si un scintillement a été détecté.
-	std::vector<double> x_,                          ///< Compteur de 1 à <see cref="fitLength_"/>.
-	                    y_,                          ///< Valeurs valides dans la fenêtre initiale.
-	                    p_,                          ///< Paramètres du modèle.
-	                    pTry_,                       ///< Paramètres temporaires du modèle lors des essais.
-	                    beta_,                       ///< Vecteur d'incrément des paramètres \f$\Delta p\f$ (taille <see cref="pSize_"/>).
-	                    f_;                          ///< Résultat pour chaque élément de la fonction de fitting avec les paramètres du modèle.
-	std::vector<std::vector<double>> alpha_,         ///< Matrice augmentée de LM.
-	                                 alphaR_,        ///< Matrice des multiplicateurs d'élimination gaussienne.
-	                                 df_;            ///< Résultat pour chaque élément de la dérivée de la fonction de fitting avec les paramètres du modèle.
+	fit_mode mode_    = fit_mode::linear;     ///< Mode de fitting utilisé.
+	size_t pSize_     = 0,                    ///< Nombre total de paramètres du modèle.
+	       fitLength_ = 0;                    ///< Taille de la fenêtre d'analyse.
+	bool hasBlink_    = false;                ///< Indique si un scintillement a été détecté.
+	std::vector<double> x_,                   ///< Compteur de 1 à <see cref="fitLength_"/>.
+	                    y_,                   ///< Valeurs valides dans la fenêtre initiale.
+	                    p_,                   ///< Paramètres du modèle.
+	                    pTry_,                ///< Paramètres temporaires du modèle lors des essais.
+	                    beta_,                ///< Vecteur d'incrément des paramètres \f$\Delta p\f$ (taille <see cref="pSize_"/>).
+	                    f_;                   ///< Résultat pour chaque élément de la fonction de fitting avec les paramètres du modèle.
+	std::vector<std::vector<double>> alpha_,  ///< Matrice augmentée de LM.
+	                                 alphaR_, ///< Matrice des multiplicateurs d'élimination gaussienne.
+	                                 df_;     ///< Résultat pour chaque élément de la dérivée de la fonction de fitting avec les paramètres du modèle.
 
 	static constexpr double LAMBDA_FACTOR_LOW  = 2,          ///< factor multiplicatif de lambda minimal.
 	                        LAMBDA_FACTOR_HIGH = 10,         ///< factor multiplicatif de lambda maximal.

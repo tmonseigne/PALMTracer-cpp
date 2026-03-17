@@ -48,9 +48,9 @@ void Fitting::Fit(const localization::Segmentation2D& segmentation, std::vector<
 }
 
 //-------------------------------------------------------------------------------------------------
-void Fitting::fill(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, const double offset, const double intensity,
-                   const double x, const double y, const double z, const double sigmaX, const double sigmaY, const double theta, const double rss,
-                   const double rssZ) const
+void Fitting::fill(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, const double x, const double y, const double z,
+                   const double offset, const double intensity, const double sigmaX, const double sigmaY, const double theta,
+                   const double rssXY, const double rssZ) const
 {
 	// Champs d'identité (non gérés ici)
 	point[0] = 0;  // Id
@@ -72,7 +72,8 @@ void Fitting::fill(const localization::SegmentationInfo& infos, std::array<doubl
 		case fit_mode::gaussian_3d_fixed:
 		case fit_mode::gaussian_3d_theta:
 			// I_int ≈ 2π × amplitude × sigmaX × sigmaY (pixels)
-			point[7] = 2.0 * std::numbers::pi * intensity * sigmaX * sigmaY;
+			if (intensity > EPSILON && sigmaX > EPSILON && sigmaY > EPSILON) { point[7] = 2.0 * std::numbers::pi * intensity * sigmaX * sigmaY; }
+			else { point[7] = -1; }
 			break;
 		case fit_mode::spline_3d_emccd:
 		case fit_mode::spline_3d_scmos: point[7] = intensity;
@@ -82,7 +83,7 @@ void Fitting::fill(const localization::SegmentationInfo& infos, std::array<doubl
 	point[8]  = sigmaX;           // Sigma X
 	point[9]  = sigmaY;           // Sigma Y
 	point[10] = theta;            // Theta (°)
-	point[11] = rss;              // MSE X et Y
+	point[11] = rssXY;            // MSE X et Y
 	point[12] = rssZ;             // MSE Z
 	point[13] = intensity;        // Amplitude
 	point[14] = offset;           // Offset

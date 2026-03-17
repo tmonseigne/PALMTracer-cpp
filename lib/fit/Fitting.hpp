@@ -81,24 +81,25 @@ protected:
 	/// <remarks>Implémentation par défaut : recopie les valeurs brutes <see cref="SegmentationInfo"/> via <see cref="fill"/>.</remarks>
 	virtual void fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
 	{
-		fill(infos, point, 0, 0, infos.x_, infos.y_, infos.z_);
+		fill(infos, point, infos.x_, infos.y_, infos.z_, 0, 0);
 	}
 
 	/// <summary>Remplit le vecteur de sortie <paramref name="point"/> après un ajustement.</summary>
 	/// <param name="infos">Informations initiales sur le point localisé.</param>
 	/// <param name="point">Sortie : localisation au format interne.</param>
-	/// <param name="offset">Fond/offset estimé.</param>
-	/// <param name="intensity">Amplitude/Intensité estimée.</param>
 	/// <param name="x">Coordonnée X estimée (en pixels).</param>
 	/// <param name="y">Coordonnée Y estimée (en pixels).</param>
 	/// <param name="z">Coordonnée Z estimée (unités dépendant du modèle spline ; 0 par défaut).</param>
+	/// <param name="offset">Fond/offset estimé.</param>
+	/// <param name="intensity">Amplitude/Intensité estimée.</param>
 	/// <param name="sigmaX">Écart-type estimé sur X (pixels).</param>
 	/// <param name="sigmaY">Écart-type estimé sur Y (pixels).</param>
 	/// <param name="theta">Angle d'ellipse (degrés, convention image).</param>
-	/// <param name="rss">Erreur quadratique moyenne (MSE) sur X et Y.</param>
+	/// <param name="rssXY">Erreur quadratique moyenne (MSE) sur X et Y.</param>
 	/// <param name="rssZ">Erreur quadratique moyenne (MSE) sur Z (si applicable).</param>
-	void fill(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, double offset, double intensity, double x, double y, double z = 0,
-	          double sigmaX = 0, double sigmaY = 0, double theta = 0, double rss = -1, double rssZ = -1) const;
+	void fill(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, double x, double y, double z = 0,
+	          double offset = -1, double intensity = -1, double sigmaX = -1, double sigmaY = -1, double theta = -1,
+	          double rssXY = -1, double rssZ = -1) const;
 
 	/// <summary>Prépare les données de la ROI centrée en (<paramref name="x"/>, <paramref name="y"/>) :
 	/// coordonnées relatives, intensités et bornes [min, max].</summary>

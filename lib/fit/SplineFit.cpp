@@ -50,120 +50,56 @@ void SplineFit::parseParams()
 //-------------------------------------------------------------------------------------------------
 void SplineFit::fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
 {
-	double offset    = 0,
-	       intensity = 0,
-	       x         = infos.x_,
-	       y         = infos.y_,
-	       z         = initZ_,
-	       rssXY     = -1,
-	       rssZ      = -1;
-
 	// Vérification si la zone d'intérêt est entièrement dans l'image (évite les bords)
-	const auto Ux = static_cast<size_t>(x), Uy = static_cast<size_t>(y);
-	if (roiHalf_ <= Ux && Ux < dim_.x - roiHalf_ && roiHalf_ <= Uy && Uy < dim_.y - roiHalf_) {
-		// Création des variables
-		double lambda = LAMBDA_0, minI = 0, maxI = 0, model = 0, err = std::numeric_limits<double>::max(), mu = 1 + lambda;
-		std::vector<double> hessian(nParams2_), l(nParams2_), u(nParams2_),
-		                    dudt(nParams_), jacobian(nParams_), jump(nParams_), update(nParams_),
-		                    f(SPLINE_PATCH_SIZE);
-		std::array df{std::vector<double>(SPLINE_PATCH_SIZE), std::vector<double>(SPLINE_PATCH_SIZE), std::vector<double>(SPLINE_PATCH_SIZE)};
-		std::vector<Pixel> grid(n_);
-		std::array<std::vector<double>, 3> p;
+	const auto Ux = static_cast<size_t>(infos.x_), Uy = static_cast<size_t>(infos.y_);
+	// On est sur les bords, on ne fait pas de fitting, on remplit avec des valeurs par défaut (offset, intensity, sigmaX/Y, theta = -1)
+	if (roiHalf_ > Ux || Ux >= dim_.x - roiHalf_ || roiHalf_ > Uy || Uy >= dim_.y - roiHalf_) {
+		fill(infos, point, infos.x_, infos.y_, infos.z_);
+		return;
+	}
 
-		// Initialization of data & t (A vérifier)
-		preCompute(Ux, Uy, grid, minI, maxI);
+	double x = infos.x_, y = infos.y_, z = initZ_;
 
-		// Initialisation du/des P :
-		// - Calcul du centre de masse de la région pour x et y
-		matrix::CenterOfMass(grid, roi_, x, y);
+	// Création des variables
+	double lambda = LAMBDA_0, minI = 0, maxI = 0, model = 0, err = std::numeric_limits<double>::max(), mu = 1 + lambda;
+	std::vector<double> hessian(nParams2_), l(nParams2_), u(nParams2_),
+	                    dudt(nParams_), jacobian(nParams_), jump(nParams_), update(nParams_),
+	                    f(SPLINE_PATCH_SIZE);
+	std::array df{std::vector<double>(SPLINE_PATCH_SIZE), std::vector<double>(SPLINE_PATCH_SIZE), std::vector<double>(SPLINE_PATCH_SIZE)};
+	std::vector<Pixel> grid(n_);
+	std::array<std::vector<double>, 3> p;
 
-		initP(p, x, y, z, minI, maxI);
-		p[1][1] *= intensityRatio_;                                                                // Change l'intensité pour la position actuelle.
-		p[2][4] = static_cast<double>(splineDim_.z);                                               // Change le maximum pour Z.
-		for (size_t i = 0; i < nParams_; ++i) { p[1][i] = std::clamp(p[1][i], p[0][i], p[2][i]); } // Clamp en cas de problème.
-		jump = {std::max(20.0, p[1][1]), std::max(100.0, p[1][1]), 1.0, 1.0, std::max(static_cast<double>(splineDim_.z) / 3.0, 2.0)};
+	// Initialization of data & t (A vérifier)
+	preCompute(Ux, Uy, grid, minI, maxI);
 
-		bool stop        = false;
-		size_t iteration = 0;
-		while (!stop) { // Main Loop
-			iteration++;
-			//----- Conservation des anciennes valeurs de l'erreur, du point, de l'update, et du lambda -----
-			const double OldErr                 = err;
-			const std::vector<double> OldP      = p[1];
-			const std::vector<double> OldUpdate = update;
-			const double OldLambda              = lambda;
-			//----- Remise à zéro des vecteurs -----
-			std::ranges::fill(jacobian, 0.0);
-			std::ranges::fill(hessian, 0.0);
-			std::ranges::fill(update, 0.0);
-			std::ranges::fill(l, 0.0);
-			std::ranges::fill(u, 0.0);
+	// Initialisation du/des P :
+	// - Calcul du centre de masse de la région pour x et y
+	matrix::CenterOfMass(grid, roi_, x, y);
 
-			//----- Calculs -----
-			// Calcul du patch 3D de 4x4x4 (64) (SPLINE_PATCH_SIDE = 4, SPLINE_PATCH_SIZE = 64)
-			const double Xr = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
-			             Yr = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
+	initP(p, x, y, z, minI, maxI);
+	p[1][1] *= intensityRatio_;                                                                // Change l'intensité pour la position actuelle.
+	p[2][4] = static_cast<double>(splineDim_.z);                                               // Change le maximum pour Z.
+	for (size_t i = 0; i < nParams_; ++i) { p[1][i] = std::clamp(p[1][i], p[0][i], p[2][i]); } // Clamp en cas de problème.
+	jump = {std::max(20.0, p[1][1]), std::max(100.0, p[1][1]), 1.0, 1.0, std::max(static_cast<double>(splineDim_.z) / 3.0, 2.0)};
 
-			const int Xi = static_cast<int>(std::floor(Xr)),
-			          Yi = static_cast<int>(std::floor(Yr)),
-			          Zi = static_cast<int>(std::floor(p[1][4]));
+	bool stop        = false;
+	size_t iteration = 0;
+	while (!stop) { // Main Loop
+		iteration++;
+		//----- Conservation des anciennes valeurs de l'erreur, du point, de l'update, et du lambda -----
+		const double OldErr                 = err;
+		const std::vector<double> OldP      = p[1];
+		const std::vector<double> OldUpdate = update;
+		const double OldLambda              = lambda;
+		//----- Remise à zéro des vecteurs -----
+		std::ranges::fill(jacobian, 0.0);
+		std::ranges::fill(hessian, 0.0);
+		std::ranges::fill(update, 0.0);
+		std::ranges::fill(l, 0.0);
+		std::ranges::fill(u, 0.0);
 
-			const double Xc = Xr - Xi, Yc = Yr - Yi, Zc = p[1][4] - Zi;
-			delta3D(Xc, Yc, Zc, f, df);
-			// Calcul des dérivées et initialisation du model
-			// offset utile, car la ROI et les coeffs ont peut-être des tailles différentes donc on recentre sur X et sur Y
-			// Exemple : ROI de 7 splineX de 11 : La ROI 7x7 est centrée à partir du point 2 dans la spline
-			Vec3I pos = {.x = 0, .y = 0, .z = static_cast<size_t>(Zi)};
-			for (size_t i = 0, idx = 0; i < roi_; ++i) {
-				pos.x = Xi + i + splineOffset_;
-				for (size_t j = 0; j < roi_; ++j, ++idx) {
-					pos.y = Yi + j + splineOffset_;
-					derivativeSpline(pos, f, df, p[1], dudt, model);
-					updateJacobianHessian(grid[idx].v, model, err, jacobian, hessian, dudt);
-				}
-			}
-
-			// Mise à jour de la matrice Hessian
-			for (size_t i = 0; i < nParams_; ++i) { hessian[i * nParams_ + i] = hessian[i * nParams_ + i] * mu; }
-
-			//----- Changements de P, mu, lambda -----
-			if (matrix::Cholesky(hessian, nParams_, l, u)) { // Si la Factorisation de Cholesky a réussi
-				// Calcul du vecteur de mise à jour
-				luEvaluate(l, u, jacobian, update);
-				// Mise à jour de la matrice de saut, la matrice update et de P.
-				for (size_t i = 0; i < nParams_; ++i) {
-					if (std::abs(OldUpdate[i]) > EPSILON && update[i] / OldUpdate[i] < -0.5) { jump[i] *= 0.5; }
-					const double Scale = update[i] / (1.0 + std::abs(update[i]) / jump[i]); // Pas de division par une grandeur instable
-					p[1][i] -= Scale;
-					p[1][i]   = std::clamp(p[1][i], p[0][i], p[2][i]);
-					update[i] = Scale;
-				}
-				if (err > OldErr) { // si erreur plus importante, restauration des valeurs et augmentation du lambda
-					err    = OldErr;
-					p[1]   = OldP;
-					update = OldUpdate;
-					lambda = OldLambda;
-					updateMuLambda(mu, lambda, true);
-				}
-				else { updateMuLambda(mu, lambda, false); } // sinon réduction
-			}
-			else { // restauration des valeurs et Augmentation du lambda si la factorisation a échoué
-				err    = OldErr;
-				p[1]   = OldP;
-				update = OldUpdate;
-				lambda = OldLambda;
-				updateMuLambda(mu, lambda, true);
-			}
-
-			//----- Conditions d'arrêts -----
-			if (iteration >= N_ITER) { stop = true; } // Si Nombre d'itérations maximum atteint, on arrête.
-			if (iteration > 2 && (err < EPSILON_1 || std::abs(err - OldErr) / err < EPSILON_1)) { stop = true; } // Si Convergence, on arrête.
-		}
-
-		//Calcul du CRLB
-		std::vector<double> m(nParams2_, 0.0), mInv(nParams2_, 0.0), crlb(nParams_);
-		std::ranges::fill(dudt, 0.0);
-
+		//----- Calculs -----
+		// Calcul du patch 3D de 4x4x4 (64) (SPLINE_PATCH_SIDE = 4, SPLINE_PATCH_SIZE = 64)
 		const double Xr = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
 		             Yr = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
 
@@ -182,39 +118,97 @@ void SplineFit::fit(const localization::SegmentationInfo& infos, std::array<doub
 			for (size_t j = 0; j < roi_; ++j, ++idx) {
 				pos.y = Yi + j + splineOffset_;
 				derivativeSpline(pos, f, df, p[1], dudt, model);
-				// Calcul de la matrice d'information de Fisher
-				for (size_t i2 = 0; i2 < nParams_; ++i2) {
-					for (size_t j2 = i2; j2 < nParams_; ++j2) {
-						m[i2 * nParams_ + j2] += dudt[j2] * dudt[i2] / model;
-						m[j2 * nParams_ + i2] = m[i2 * nParams_ + j2];
-					}
-				}
+				updateJacobianHessian(grid[idx].v, model, err, jacobian, hessian, dudt);
 			}
 		}
 
+		// Mise à jour de la matrice Hessian
+		for (size_t i = 0; i < nParams_; ++i) { hessian[i * nParams_ + i] = hessian[i * nParams_ + i] * mu; }
 
-		// Si la convergence est parfaite (ou le point pile sur une grille), des 0 seront présents, à remplacer pour calculer la matrice inverse.
-		for (size_t i = 0; i < nParams_; ++i) {
-			if (std::abs(m[i * nParams_ + i]) < std::numeric_limits<double>::epsilon()) { m[i * nParams_ + i] = EPSILON_2; }
+		//----- Changements de P, mu, lambda -----
+		if (matrix::Cholesky(hessian, nParams_, l, u)) { // Si la Factorisation de Cholesky a réussi
+			// Calcul du vecteur de mise à jour
+			luEvaluate(l, u, jacobian, update);
+			// Mise à jour de la matrice de saut, la matrice update et de P.
+			for (size_t i = 0; i < nParams_; ++i) {
+				if (std::abs(OldUpdate[i]) > EPSILON && update[i] / OldUpdate[i] < -0.5) { jump[i] *= 0.5; }
+				const double Scale = update[i] / (1.0 + std::abs(update[i]) / jump[i]); // Pas de division par une grandeur instable
+				p[1][i] -= Scale;
+				p[1][i]   = std::clamp(p[1][i], p[0][i], p[2][i]);
+				update[i] = Scale;
+			}
+			if (err > OldErr) { // si erreur plus importante, restauration des valeurs et augmentation du lambda
+				err    = OldErr;
+				p[1]   = OldP;
+				update = OldUpdate;
+				lambda = OldLambda;
+				updateMuLambda(mu, lambda, true);
+			}
+			else { updateMuLambda(mu, lambda, false); } // sinon réduction
+		}
+		else { // restauration des valeurs et Augmentation du lambda si la factorisation a échoué
+			err    = OldErr;
+			p[1]   = OldP;
+			update = OldUpdate;
+			lambda = OldLambda;
+			updateMuLambda(mu, lambda, true);
 		}
 
-		// Matrice inverse (CRLB=F^-1)
-		matrix::InverseLU(m, mInv, nParams_);
-
-		for (size_t i = 0; i < nParams_; ++i) { crlb[i] = SqrtReal(mInv[i * nParams_ + i]); }
-
-		// Assignation
-		offset    = crlb[0];
-		intensity = crlb[1];
-		x         = p[1][2] - static_cast<double>(roiHalf_) + infos.x_;
-		y         = p[1][3] - static_cast<double>(roiHalf_) + infos.y_;
-		z         = deltaZ_ * (p[1][4] - initZ_); //p[1][4]; //deltaZ_ * (p[1][4] - initZ_);
-		rssXY     = (crlb[2] + crlb[3]) / 2;
-		rssZ      = deltaZ_ * crlb[4];
+		//----- Conditions d'arrêts -----
+		if (iteration >= N_ITER) { stop = true; } // Si Nombre d'itérations maximum atteint, on arrête.
+		if (iteration > 2 && (err < EPSILON_1 || std::abs(err - OldErr) / err < EPSILON_1)) { stop = true; } // Si Convergence, on arrête.
 	}
-	else { z = 0; }
 
-	fill(infos, point, offset, intensity, x, y, z, 0, 0, 0, rssXY, rssZ);
+	//Calcul du CRLB
+	std::vector<double> m(nParams2_, 0.0), mInv(nParams2_, 0.0), crlb(nParams_);
+	std::ranges::fill(dudt, 0.0);
+
+	const double Xr = -1 * (p[1][2] - static_cast<double>(roiHalf_) + 0.5),
+	             Yr = -1 * (p[1][3] - static_cast<double>(roiHalf_) + 0.5);
+
+	const int Xi = static_cast<int>(std::floor(Xr)),
+	          Yi = static_cast<int>(std::floor(Yr)),
+	          Zi = static_cast<int>(std::floor(p[1][4]));
+
+	const double Xc = Xr - Xi, Yc = Yr - Yi, Zc = p[1][4] - Zi;
+	delta3D(Xc, Yc, Zc, f, df);
+	// Calcul des dérivées et initialisation du model
+	// offset utile, car la ROI et les coeffs ont peut-être des tailles différentes donc on recentre sur X et sur Y
+	// Exemple : ROI de 7 splineX de 11 : La ROI 7x7 est centrée à partir du point 2 dans la spline
+	Vec3I pos = {.x = 0, .y = 0, .z = static_cast<size_t>(Zi)};
+	for (size_t i = 0, idx = 0; i < roi_; ++i) {
+		pos.x = Xi + i + splineOffset_;
+		for (size_t j = 0; j < roi_; ++j, ++idx) {
+			pos.y = Yi + j + splineOffset_;
+			derivativeSpline(pos, f, df, p[1], dudt, model);
+			// Calcul de la matrice d'information de Fisher
+			for (size_t i2 = 0; i2 < nParams_; ++i2) {
+				for (size_t j2 = i2; j2 < nParams_; ++j2) {
+					m[i2 * nParams_ + j2] += dudt[j2] * dudt[i2] / model;
+					m[j2 * nParams_ + i2] = m[i2 * nParams_ + j2];
+				}
+			}
+		}
+	}
+
+
+	// Si la convergence est parfaite (ou le point pile sur une grille), des 0 seront présents, à remplacer pour calculer la matrice inverse.
+	for (size_t i = 0; i < nParams_; ++i) { if (std::abs(m[i * nParams_ + i]) < std::numeric_limits<double>::epsilon()) { m[i * nParams_ + i] = EPSILON_2; } }
+
+	// Matrice inverse (CRLB=F^-1)
+	matrix::InverseLU(m, mInv, nParams_);
+
+	for (size_t i = 0; i < nParams_; ++i) { crlb[i] = SqrtReal(mInv[i * nParams_ + i]); }
+
+	// Assignation
+	const double Offset = crlb[0], Intensity             = crlb[1],
+	             RSS_XY = (crlb[2] + crlb[3]) / 2, RSS_Z = deltaZ_ * crlb[4];
+
+	x = p[1][2] - static_cast<double>(roiHalf_) + infos.x_;
+	y = p[1][3] - static_cast<double>(roiHalf_) + infos.y_;
+	z = deltaZ_ * (p[1][4] - initZ_); //p[1][4]; //deltaZ_ * (p[1][4] - initZ_);
+
+	fill(infos, point, x, y, z, Offset, Intensity, 0, 0, 0, RSS_XY, RSS_Z);
 }
 
 //-------------------------------------------------------------------------------------------------

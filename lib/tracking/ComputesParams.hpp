@@ -36,11 +36,11 @@ enum class fit_mode : uint8_t {
 
 /// <summary>Structure contenant les paramètres de calcul pour le module de tracking.</summary>
 struct ComputesParams {
-	fit_mode mode = fit_mode::linear; ///< Mode d'ajustement utilisé pour les calculs statistiques (voir <see cref="fit_mode"/>).
-	size_t fitLength     = 0;                       ///< Longueur de la fenêtre de calcul (nombre d'échantillons).
-	bool is3D            = false;                   ///< Active le calcul 3D si <c>true</c> (sinon 2D).
-	double pixelSize     = 0.160;                   ///< Taille d'un pixel en unités réelles (micromètre).
-	double exposureTime  = 0.05;                    ///< Temps d'exposition (seconde), noté \f$ \Delta t \f$.
+	fit_mode mode       = fit_mode::linear; ///< Mode d'ajustement utilisé pour les calculs statistiques (voir <see cref="fit_mode"/>).
+	size_t fitLength    = 0;                ///< Longueur de la fenêtre de calcul (nombre d'échantillons).
+	bool is3D           = false;            ///< Active le calcul 3D si <c>true</c> (sinon 2D).
+	double pixelSize    = 0.160;            ///< Taille d'un pixel en unités réelles (micromètre).
+	double exposureTime = 0.05;             ///< Temps d'exposition (seconde), noté \f$ \Delta t \f$.
 };
 
 /// <summary>Surcharge de l'opérateur d'affichage pour <see cref="ComputesParams"/>. Format : <c>(mode, fitLength, is3D, pixelSize, exposureTime)</c>.</summary>
