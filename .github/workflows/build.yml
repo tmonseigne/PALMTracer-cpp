@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # ---------- Dépendances ----------
       - name: Setup MSBuild (Windows)
@@ -45,7 +45,7 @@ jobs:
           vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v1
+        uses: jwlawson/actions-setup-cmake@v2
 
       - name: Install OpenMP (macOS)
         if: matrix.os == 'macos-latest'
@@ -79,7 +79,7 @@ jobs:
         run: mkdir -p Output && cp build/lib*.so* Output/ || true && cp build/lib*.dylib* Output/ || true
 
       - name: Upload compiled artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: compiled-libs-${{ matrix.os }}
           path: Output/*
@@ -106,7 +106,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Doxygen
         run: sudo apt-get update && sudo apt-get install -y doxygen graphviz cloc
