@@ -12,8 +12,8 @@ constexpr double PIXEL_SIZE     = 160.0;
 constexpr double Z_MAX          = 600.0;
 constexpr size_t N_POINTS       = 1000;
 constexpr astig_model REF_MODEL = {
-	std::array{-50.0, 300.0, 0.06, 0.02, 140.0},
-	std::array{70.0, 320.0, -0.04, 0.01, 150.0}
+	std::array{-60.0, 300.0, 0.06, 0.02, 140.0},
+	std::array{60.0, 300.0, -0.06, 0.02, 140.0}
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -51,16 +51,36 @@ static std::vector<Vec3D> GetDataSet(const astig_model& model = REF_MODEL, const
 TEST(AstigFitTests, Calibrate)
 {
 	const AstigFit Fit(PIXEL_SIZE, SAMPLING);
-	const std::vector<Vec3D> Dataset = GetDataSet();
+	std::vector<Vec3D> dataset = GetDataSet();
 
-	const astig_model Model = Fit.Calibrate(Dataset);
+	const astig_model Model = Fit.Calibrate(dataset, false);
 
 	for (size_t ax = 0; ax < 2; ++ax) {
 		for (size_t k = 0; k < 5; ++k) {
 			std::cout << "Param axis " << ax << " [" << k << "] : fitted = " << Model[ax][k] << ", true = " << REF_MODEL[ax][k] << '\n';
-			EXPECT_NEAR(Model[ax][k], REF_MODEL[ax][k], std::abs(0.1 * REF_MODEL[ax][k]) + 5.0); // tol 10% + offset 5 unités Vérifs grossières
+			EXPECT_NEAR(Model[ax][k], REF_MODEL[ax][k], 5); // offset 5 unités Vérifs grossières
 		}
 	}
+
+	// Modèle centré : on vérifie que les sigmas sont proches à z=0 (sinon on aurait un décalage systématique dans l'estimation de Z)
+	for (auto& d : dataset) { d.z += 50.0; } // on décale le dataset de 50 nm pour éviter que le bruit ne masque un éventuel problème de centrage.
+	const astig_model ModelC = Fit.Calibrate(dataset, true);
+	for (size_t ax = 0; ax < 2; ++ax) {
+		for (size_t k = 0; k < 5; ++k) {
+			// tol plus large sur z0, on ne s'attend pas à ce qu'il soit exactement égal, mais il doit être proche.
+			if (k == 0) { EXPECT_NEAR(Model[ax][k], ModelC[ax][k], 5); }
+			else { EXPECT_NEAR(Model[ax][k], ModelC[ax][k], 0.01); }
+		}
+	}
+
+	const double Sx0 = SigmaModel(ModelC[0], 0.0);
+	const double Sy0 = SigmaModel(ModelC[1], 0.0);
+
+	std::cout << "SigmaX(0) = " << Sx0 << '\n';
+	std::cout << "SigmaY(0) = " << Sy0 << '\n';
+	std::cout << "|diff| = " << std::abs(Sx0 - Sy0) << '\n';
+
+	EXPECT_NEAR(Sx0, Sy0, 0.01); // ou 0.02 / 0.05 selon le bruit
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -91,15 +111,13 @@ TEST(AstigFitTests, CalibrateBad)
 	std::vector<Vec3D> dataset(2);
 	for (auto& p : dataset) { p = Vec3D{.x = noise(rng), .y = noise(rng), .z = noise(rng)}; }
 
-	const astig_model Model1 = Fit.Calibrate(dataset);
-
+	const astig_model Model1 = Fit.Calibrate(dataset, false);
 	for (size_t ax = 0; ax < 2; ++ax) { for (size_t k = 0; k < 5; ++k) { EXPECT_NEAR(Model1[ax][k], -1, 1e-9); } }
-
 
 	// Dataset trop aléatoire, l'algo devra sans doute tourner plus longtemps.
 	dataset.resize(N_POINTS);
 	for (auto& p : dataset) { p = Vec3D{.x = noise(rng), .y = noise(rng), .z = noise(rng)}; }
-	[[maybe_unused]] const astig_model Model2 = Fit.Calibrate(dataset);
+	[[maybe_unused]] const astig_model Model2 = Fit.Calibrate(dataset, false);
 }
 
 //-------------------------------------------------------------------------------------------------

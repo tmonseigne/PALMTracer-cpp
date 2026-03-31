@@ -288,7 +288,8 @@ PT_API void PT_CALL Wavelett(const uint16_t* input, double* output, const uint32
 /// <param name="output">Pointeur vers le buffer de sortie où seront écrites les valeurs du modèle (5 paramètres pour les 2 axes).</param>
 /// <param name="size">Nombre de points dans le tableau d'entrée.</param>
 /// <param name="pixelSize">Taille d'un pixel en unités physiques (en nanomètre/pixel).</param>
-PT_API void PT_CALL Astigmatism3DCalibration(const double* input, double* output, const uint32_t size, const double pixelSize)
+/// <param name="center">Permet de centrer le modèle pour que \f$\sigma_x(0) \approx \sigma_y(0)\f$.</param>
+PT_API void PT_CALL Astigmatism3DCalibration(const double* input, double* output, const uint32_t size, const double pixelSize, const bool center = true)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
@@ -302,7 +303,7 @@ PT_API void PT_CALL Astigmatism3DCalibration(const double* input, double* output
 
 	// Calculs
 	const palm_tracer::fit::AstigFit Fit(pixelSize);
-	const palm_tracer::fit::astig_model Model = Fit.Calibrate(dataset);
+	const palm_tracer::fit::astig_model Model = Fit.Calibrate(dataset, center);
 
 	// Remplissage de la sortie
 	for (const auto& Axis : Model) { for (const auto& Param : Axis) { *output++ = Param; } }

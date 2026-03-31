@@ -49,6 +49,7 @@ public:
 	/// - <c>input[i].y</c> = \f$\sigma_y\f$ en pixels
 	/// - <c>input[i].z</c> = z en nanomètres
 	/// </param>
+	/// <param name="center">Permet de centrer le modèle pour que \f$\sigma_x(0) \approx \sigma_y(0)\f$.</param>
 	/// <returns>
 	/// Le modèle 2×5 :
 	/// - <c>res[0] = [z0x, wx, c3x, c4x, Ax]</c>
@@ -58,7 +59,7 @@ public:
 	/// - Les axes X et Y sont ajustés indépendamment (<see cref="fitAxis"/>).
 	/// - En cas d'entrée invalide (tailles incohérentes, N trop petit), l'axe concerné renvoie un vecteur rempli de -1.
 	/// </remarks>
-	[[nodiscard]] astig_model Calibrate(const std::vector<Vec3D>& input) const;
+	[[nodiscard]] astig_model Calibrate(const std::vector<Vec3D>& input, bool center = true) const;
 
 	/// <summary>Estime z (nm) en minimisant l'erreur quadratique entre \f$(\sigma_x, \sigma_y)\f$ mesurés et prédits par le modèle.</summary>
 	/// <param name="model">Modèle d'astigmatisme (résultat de <see cref="Calibrate"/>).</param>
@@ -186,5 +187,14 @@ protected:
 	/// <param name="sigma">Sigmas mesurés (X/Y en px).</param>
 	/// <returns>La valeur de z (nm) qui minimise l'erreur sur [a, b].</returns>
 	[[nodiscard]] double brent(double a, double b, const astig_model& model, const Vec2D& sigma) const;
+
+	/// <summary>Recherche la position axiale où les courbes SigmaX et SigmaY se croisent le mieux.</summary>
+	/// <param name="model">Modèle astigmatique complet [X, Y].</param>
+	/// <param name="z">Positions axiales expérimentales en nm.</param>
+	/// <returns>
+	/// Position axiale du centre astigmatique, en nm.
+	/// Si aucun croisement strict n'est trouvé, renvoie la position minimisant |SigmaX - SigmaY|.
+	/// </returns>
+	[[nodiscard]] double findAstigmaticCenter(const astig_model& model, const std::vector<double>& z) const;
 };
 } // namespace palm_tracer::fit

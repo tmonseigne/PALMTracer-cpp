@@ -6,7 +6,7 @@
 namespace palm_tracer::fit {
 //==================== Fonctions Principales ====================
 //-------------------------------------------------------------------------------------------------
-astig_model AstigFit::Calibrate(const std::vector<Vec3D>& input) const
+astig_model AstigFit::Calibrate(const std::vector<Vec3D>& input, const bool center) const
 {
 	const size_t N = input.size();
 	std::vector<double> sx(N), sy(N), z(N);
@@ -20,6 +20,12 @@ astig_model AstigFit::Calibrate(const std::vector<Vec3D>& input) const
 	astig_model res;
 	res[0] = fitAxis(sx, z); // Axe X
 	res[1] = fitAxis(sy, z); // Axe Y
+
+	if (center) {
+		const double Zc = findAstigmaticCenter(res, z);
+		res[0][0] -= Zc, res[1][0] -= Zc;
+	}
+
 	return res;
 }
 
@@ -381,5 +387,70 @@ double AstigFit::brent(double a, double b, const astig_model& model, const Vec2D
 	}
 
 	return x;
+}
+
+//-------------------------------------------------------------------------------------------------
+double AstigFit::findAstigmaticCenter(const astig_model& model, const std::vector<double>& z) const
+{
+	if (z.empty()) { return 0.0; }
+
+	auto [zMinIt, zMaxIt] = std::ranges::minmax_element(z);
+	const double zMin     = *zMinIt;
+	const double zMax     = *zMaxIt;
+
+	if (zMax <= zMin) { return zMin; }
+
+	constexpr size_t N_SAMPLES = 2048;
+	constexpr size_t N_BISECT  = 64;
+
+	auto delta = [this, &model](const double zz) -> double { return getSigma(model[0], zz) - getSigma(model[1], zz); };
+
+	double prevZ = zMin, prevD            = delta(prevZ);
+	double bestD = std::abs(prevD), bestZ = prevZ;
+
+	for (size_t i = 1; i < N_SAMPLES; ++i) {
+		const double T  = static_cast<double>(i) / static_cast<double>(N_SAMPLES - 1);
+		const double zz = zMin + T * (zMax - zMin);
+		const double dd = delta(zz);
+
+		const double absD = std::abs(dd);
+		if (absD < bestD) { bestD = absD, bestZ = zz; }
+
+		// Si on a un zéro exact ou un changement de signe, on fait une bissection locale pour affiner la solution.
+		if ((prevD == 0.0) || (dd == 0.0) || ((prevD < 0.0) != (dd < 0.0))) {
+			double leftZ  = prevZ;
+			double rightZ = zz;
+			double leftD  = prevD;
+			double rightD = dd;
+
+			for (size_t k = 0; k < N_BISECT; ++k) {
+				const double midZ = 0.5 * (leftZ + rightZ);
+				const double midD = delta(midZ);
+
+				if (std::abs(midD) < bestD) {
+					bestD = std::abs(midD);
+					bestZ = midZ;
+				}
+
+				if (midD == 0.0) { return midZ; }
+
+				if ((leftD < 0.0) != (midD < 0.0)) {
+					rightZ = midZ;
+					rightD = midD;
+				}
+				else {
+					leftZ = midZ;
+					leftD = midD;
+				}
+			}
+
+			return bestZ;
+		}
+
+		prevZ = zz;
+		prevD = dd;
+	}
+
+	return bestZ;
 }
 } // namespace palm_tracer::fit
