@@ -95,7 +95,8 @@ TEST(AstigFitTests, Estimate)
 
 	for (size_t i = 0; i < Datas.size(); ++i) {
 		std::cout << "Point " << Datas[i] << ", Estimated z: " << Res[i] << " nm\n";
-		EXPECT_NEAR(Res[i], Datas[i].z, 50.0); // tol 50 nm très très large.
+		EXPECT_NEAR(Res[i].x, Datas[i].z, 40.0); // tol 40 nm très très large.
+		EXPECT_LT(Res[i].y, 0.002); // Erreur par rapport au modèle très faible.
 	}
 }
 

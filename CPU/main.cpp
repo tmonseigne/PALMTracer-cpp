@@ -310,6 +310,13 @@ PT_API void PT_CALL Astigmatism3DCalibration(const double* input, double* output
 }
 
 //-------------------------------------------------------------------------------------------------
+/// <summary>Calcule la position axiale Z d'un jeu de points de à partir d'un modèle d'astigmatisme 3D.</summary>
+/// <param name="input">Pointeur vers le tableau d'entrée contenant les points, au format (\f$\sigma_x, \sigma_y, z\f$).</param>
+/// <param name="output">Pointeur vers le buffer de sortie où seront écrites les valeurs Z et l'erreur associée pour chaque point.</param>
+/// <param name="size">Nombre de points dans le tableau d'entrée.</param>
+/// <param name="pixelSize">Taille d'un pixel en unités physiques (en nanomètre/pixel).</param>
+/// <param name="model">Pointeur vers le buffer du modèle (5 paramètres pour les 2 axes).</param>
+/// <param name="zMax">Borne absolue Z (nm).</param>
 PT_API void PT_CALL Astigmatism3DEstimation(const double* input, double* output, const uint32_t size, const double pixelSize, const double* model,
                                             const double zMax)
 {
@@ -332,8 +339,11 @@ PT_API void PT_CALL Astigmatism3DEstimation(const double* input, double* output,
 
 	// Calculs
 	const palm_tracer::fit::AstigFit Fit(pixelSize);
-	const std::vector<double> Res = Fit.Estimate(Model, datas, ZLimit);
+	const std::vector<palm_tracer::Vec2D> Res = Fit.Estimate(Model, datas, ZLimit);
 
 	// Remplissage de la sortie
-	for (const auto& Z : Res) { *output++ = Z; }
+	for (const auto& Z : Res) {
+		*output++ = Z.x;
+		*output++ = Z.y;
+	}
 }

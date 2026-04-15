@@ -67,14 +67,14 @@ public:
 	/// <param name="zLimit">Intervalle de recherche initial : <c>[zMin, zMax]</c> en nm.</param>
 	/// <param name="zStep">Nombre d'échantillons pour le pré-scan (grille grossière) avant raffinement.
 	/// Doit être ≥ 3 (sinon division par <c>zStep-1</c>) et impaire si l'on veut le point 0 dans les choix initiaux.</param>
-	/// <returns>Z (nm) minimisant l'erreur sur l'intervalle.</returns>
+	/// <returns>Z (nm) minimisant l'erreur sur l'intervalle ainsi que l'erreur associée.</returns>
 	/// <remarks>
 	/// Stratégie :
 	/// 1) pré-scan sur <paramref name="zLimit"/> pour trouver un bon point initial,
 	/// 2) raffinement par <see cref="brent"/> sur un sous-intervalle autour du meilleur point.
 	/// </remarks>
-	[[nodiscard]] double Estimate(const astig_model& model, const Vec2D& sigma,
-	                              const std::array<double, 2>& zLimit = {-800.0, 800.0}, size_t zStep = 201) const;
+	[[nodiscard]] Vec2D Estimate(const astig_model& model, const Vec2D& sigma,
+	                             const std::array<double, 2>& zLimit = {-800.0, 800.0}, size_t zStep = 201) const;
 
 	/// <summary>Estime z (nm) en minimisant l'erreur quadratique entre \f$(\sigma_x, \sigma_y)\f$ mesurés et prédits par le modèle.</summary>
 	/// <param name="model">Modèle d'astigmatisme (résultat de <see cref="Calibrate"/>).</param>
@@ -82,14 +82,14 @@ public:
 	/// <param name="zLimit">Intervalle de recherche initial : <c>[zMin, zMax]</c> en nm.</param>
 	/// <param name="zStep">Nombre d'échantillons pour le pré-scan (grille grossière) avant raffinement.
 	/// Doit être ≥ 3 (sinon division par <c>zStep-1</c>) et impaire si l'on veut le point 0 dans les choix initiaux.</param>
-	/// <returns>Z (nm) minimisant l'erreur sur l'intervalle.</returns>
+	/// <returns>Z (nm) minimisant l'erreur sur l'intervalle ainsi que l'erreur associée.</returns>
 	/// <remarks>
 	/// Stratégie :
 	/// 1) pré-scan sur <paramref name="zLimit"/> pour trouver un bon point initial,
 	/// 2) raffinement par <see cref="brent"/> sur un sous-intervalle autour du meilleur point.
 	/// </remarks>
-	[[nodiscard]] std::vector<double> Estimate(const astig_model& model, const std::vector<Vec2D>& sigmas,
-	                                           const std::array<double, 2>& zLimit = {-800.0, 800.0}, size_t zStep = 201) const;
+	[[nodiscard]] std::vector<Vec2D> Estimate(const astig_model& model, const std::vector<Vec2D>& sigmas,
+	                                          const std::array<double, 2>& zLimit = {-800.0, 800.0}, size_t zStep = 201) const;
 
 protected:
 	double pixelSize_; ///< Taille de pixel en nanomètre. Attention entre les nanomètres et les micromètres lors des appels
@@ -181,12 +181,12 @@ protected:
 	/// - La fonction n'a pas besoin d'être strictement convexe sur [a, b].
 	/// - Il est toutefois préférable d'appeler Brent sur un intervalle qui contient un unique minimum "local" (d'où l'intérêt d'un pré-scan avant Brent dans Estimate()).
 	/// </remarks>
-	/// <param name="a">Borne basse (Z en nm).</param>
-	/// <param name="b">Borne haute (Z en nm).</param>
+	/// <param name="a">Borne basse Z (nm).</param>
+	/// <param name="b">Borne haute Z (nm).</param>
 	/// <param name="model">Modèle d'astigmatisme (2×5 coefficients).</param>
 	/// <param name="sigma">Sigmas mesurés (X/Y en px).</param>
-	/// <returns>La valeur de z (nm) qui minimise l'erreur sur [a, b].</returns>
-	[[nodiscard]] double brent(double a, double b, const astig_model& model, const Vec2D& sigma) const;
+	/// <returns>La valeur de Z (nm) qui minimise l'erreur sur [a, b] ainsi que l'erreur associée.</returns>
+	[[nodiscard]] Vec2D brent(double a, double b, const astig_model& model, const Vec2D& sigma) const;
 
 	/// <summary>Recherche la position axiale où les courbes SigmaX et SigmaY se croisent le mieux.</summary>
 	/// <param name="model">Modèle astigmatique complet [X, Y].</param>

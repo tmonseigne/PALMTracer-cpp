@@ -30,7 +30,7 @@ astig_model AstigFit::Calibrate(const std::vector<Vec3D>& input, const bool cent
 }
 
 //-------------------------------------------------------------------------------------------------
-double AstigFit::Estimate(const astig_model& model, const Vec2D& sigma, const std::array<double, 2>& zLimit, const size_t zStep) const
+Vec2D AstigFit::Estimate(const astig_model& model, const Vec2D& sigma, const std::array<double, 2>& zLimit, const size_t zStep) const
 {
 	const double DeltaZ = zLimit[1] - zLimit[0];
 	double bestZ        = zLimit[0], bestE = std::numeric_limits<double>::infinity();
@@ -54,11 +54,11 @@ double AstigFit::Estimate(const astig_model& model, const Vec2D& sigma, const st
 }
 
 //-------------------------------------------------------------------------------------------------
-std::vector<double> AstigFit::Estimate(const astig_model& model, const std::vector<Vec2D>& sigmas, const std::array<double, 2>& zLimit,
-                                       const size_t zStep) const
+std::vector<Vec2D> AstigFit::Estimate(const astig_model& model, const std::vector<Vec2D>& sigmas, const std::array<double, 2>& zLimit,
+                                      const size_t zStep) const
 {
 	const int N = static_cast<int>(sigmas.size());
-	std::vector<double> res(N);
+	std::vector<Vec2D> res(N);
 
 	#pragma omp parallel for
 	for (int i = 0; i < N; ++i) { res[i] = Estimate(model, sigmas[i], zLimit, zStep); }
@@ -284,7 +284,7 @@ bool AstigFit::solver(std::array<std::array<double, N_PARAMS>, N_PARAMS>& a, std
 }
 
 //-------------------------------------------------------------------------------------------------
-double AstigFit::brent(double a, double b, const astig_model& model, const Vec2D& sigma) const
+Vec2D AstigFit::brent(double a, double b, const astig_model& model, const Vec2D& sigma) const
 {
 	if (b < a) { std::swap(a, b); } // Normalisation de l'intervalle : on s'assure que a ≤ b.
 
@@ -318,7 +318,7 @@ double AstigFit::brent(double a, double b, const astig_model& model, const Vec2D
 		const double Tol1 = BRENT_TOL * std::abs(x) + 1e-12, Tol2 = 2.0 * Tol1;
 
 		// Condition classique de Brent : si x est suffisamment proche du milieu de l'intervalle au regard de sa demi-largeur, on considère que l'intervalle est "assez petit".
-		if (std::abs(x - M) <= Tol2 - 0.5 * (b - a)) { return x; }
+		if (std::abs(x - M) <= Tol2 - 0.5 * (b - a)) { return Vec2D{.x = x, .y = fx}; }
 
 		// ---------- Tentative d'interpolation parabolique. ----------
 		// Elle peut accélérer énormément si la fonction est bien lisse près du minimum.
@@ -386,7 +386,7 @@ double AstigFit::brent(double a, double b, const astig_model& model, const Vec2D
 		}
 	}
 
-	return x;
+	return Vec2D{.x = x, .y = fx};
 }
 
 //-------------------------------------------------------------------------------------------------
