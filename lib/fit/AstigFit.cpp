@@ -395,37 +395,35 @@ double AstigFit::findAstigmaticCenter(const astig_model& model, const std::vecto
 	if (z.empty()) { return 0.0; }
 
 	auto [zMinIt, zMaxIt] = std::ranges::minmax_element(z);
-	const double zMin     = *zMinIt;
-	const double zMax     = *zMaxIt;
+	const double zMin     = *zMinIt, zMax = *zMaxIt;
 
 	if (zMax <= zMin) { return zMin; }
 
-	constexpr size_t N_SAMPLES = 2048;
-	constexpr size_t N_BISECT  = 64;
+	constexpr size_t N_SAMPLES = 2048, N_BISECT = 64;
 
 	auto delta = [this, &model](const double zz) -> double { return getSigma(model[0], zz) - getSigma(model[1], zz); };
 
-	double prevZ = zMin, prevD            = delta(prevZ);
-	double bestD = std::abs(prevD), bestZ = prevZ;
+	double prevZ = zMin, prevD            = delta(prevZ),
+	       bestD = std::abs(prevD), bestZ = prevZ;
 
 	for (size_t i = 1; i < N_SAMPLES; ++i) {
-		const double T  = static_cast<double>(i) / static_cast<double>(N_SAMPLES - 1);
-		const double zz = zMin + T * (zMax - zMin);
-		const double dd = delta(zz);
+		const double T  = static_cast<double>(i) / static_cast<double>(N_SAMPLES - 1),
+		             zz = zMin + T * (zMax - zMin),
+		             dd = delta(zz);
 
 		const double absD = std::abs(dd);
-		if (absD < bestD) { bestD = absD, bestZ = zz; }
+		if (absD < bestD) {
+			bestD = absD;
+			bestZ = zz;
+		}
 
 		// Si on a un zéro exact ou un changement de signe, on fait une bissection locale pour affiner la solution.
 		if ((prevD == 0.0) || (dd == 0.0) || ((prevD < 0.0) != (dd < 0.0))) {
-			double leftZ  = prevZ;
-			double rightZ = zz;
-			double leftD  = prevD;
-			double rightD = dd;
+			double leftZ = prevZ, rightZ = zz, leftD = prevD;
 
 			for (size_t k = 0; k < N_BISECT; ++k) {
-				const double midZ = 0.5 * (leftZ + rightZ);
-				const double midD = delta(midZ);
+				const double midZ = 0.5 * (leftZ + rightZ),
+				             midD = delta(midZ);
 
 				if (std::abs(midD) < bestD) {
 					bestD = std::abs(midD);
@@ -434,10 +432,7 @@ double AstigFit::findAstigmaticCenter(const astig_model& model, const std::vecto
 
 				if (midD == 0.0) { return midZ; }
 
-				if ((leftD < 0.0) != (midD < 0.0)) {
-					rightZ = midZ;
-					rightD = midD;
-				}
+				if ((leftD < 0.0) != (midD < 0.0)) { rightZ = midZ; }
 				else {
 					leftZ = midZ;
 					leftD = midD;

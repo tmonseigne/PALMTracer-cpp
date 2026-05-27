@@ -1,6 +1,5 @@
 #include "Tracking.hpp"
 #include <algorithm>
-#include <chrono>
 #include <cmath>
 
 #include "Constants.hpp"
@@ -106,20 +105,9 @@ void Tracking::readPointsList()
 			params_->maxY_ = std::max(params_->maxY_, str.y_);
 		}
 
-		// Tri des noeuds par intensité pour un instant t
-		size_t indexMax = 0;
-		for (size_t i = 0; i < timeNodes_[t].nNodes_ - 1; ++i) {
-			double maxIntensity = -1.;
-			for (size_t j = i; j < timeNodes_[t].nNodes_; ++j) {
-				if (maxIntensity < timeNodes_[t][j].intensity_) {
-					maxIntensity = timeNodes_[t][j].intensity_;
-					indexMax     = j;
-				}
-			}
-			std::swap(timeNodes_[t].nodes_[indexMax], timeNodes_[t].nodes_[i]);
-		}
-
-		index += (nNodes + 1) * N_IN_PARAMS; // (À vérifier)
+		// Tri des nœuds par intensité décroissante pour un instant t.
+		std::ranges::sort(timeNodes_[t].nodes_, [](const Node& a, const Node& b) { return a.intensity_ > b.intensity_; });
+		index += (nNodes + 1) * N_IN_PARAMS;
 	}
 
 	// Pré-calcul de la distance aux bords
