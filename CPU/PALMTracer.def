@@ -5,7 +5,6 @@ EXPORTS
 	AutoThreshold
 	Localization
 	Tracking
-	Tracking2
 	BlinkingReconnection
 	TracksCompute
 	Wavelett

@@ -8,16 +8,13 @@
 
 #include <rapidcsv.h>
 
-#include "tracking/Parameters.hpp"
-#include "tracking/Tracking.hpp"
-
 namespace palm_tracer::tracking {
 const std::filesystem::path PATH          = std::filesystem::path(__FILE__).parent_path();
 const std::filesystem::path INPUT_PATH    = PATH / "Input";
 const std::filesystem::path OUTPUT_PATH   = PATH / "Output";
 const std::filesystem::path REF_FILE_PATH = INPUT_PATH / "localizations-parsed.csv";
 
-//////////////////////////////////////////////////
+//-------------------------------------------------------------------------------------------------
 inline std::vector<double> ReadVector1D(const std::filesystem::path& path)
 {
 	// Ouverture du fichier
@@ -39,22 +36,22 @@ inline std::vector<double> ReadVector1D(const std::filesystem::path& path)
 }
 
 //-------------------------------------------------------------------------------------------------
-TEST(TrackingTests, Discontinuous)
-{
-	const std::vector<double> Input = ReadVector1D(REF_FILE_PATH);
-	std::cout << "Input size: " << Input.size() << std::endl;
-
-	std::vector output(688, 0.0); // Pré-allocation du buffer de sortie
-
-	const auto Param = new Parameters();
-
-	Param->maxSpeed_       = 5;
-	Param->costBirthDeath_ = 0.5;
-
-	Tracking tracking(Input.data(), output.data(), 2, 10.0 / 100.0, 64, Param);
-	const size_t Count = tracking.Processing();
-	delete Param;
-}
+//TEST(TrackingTests, Discontinuous)
+//{
+//	const std::vector<double> Input = ReadVector1D(REF_FILE_PATH);
+//	std::cout << "Input size: " << Input.size() << std::endl;
+//
+//	std::vector output(688, 0.0); // Pré-allocation du buffer de sortie
+//
+//	const auto Param = new Parameters();
+//
+//	Param->maxSpeed_       = 5;
+//	Param->costBirthDeath_ = 0.5;
+//
+//	Tracking tracking(Input.data(), output.data(), 2, 10.0 / 100.0, 64, Param);
+//	const size_t Count = tracking.Processing();
+//	delete Param;
+//}
 
 //-------------------------------------------------------------------------------------------------
 } // namespace palm_tracer::tracking

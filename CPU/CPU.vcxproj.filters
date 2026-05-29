@@ -12,15 +12,6 @@
       <Filter>Fit</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\Palm.cpp" />
-    <ClCompile Include="..\lib\tracking\Node.cpp">
-      <Filter>Tracking</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\tracking\TimeNodes.cpp">
-      <Filter>Tracking</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\tracking\Tracking.cpp">
-      <Filter>Tracking</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\fit\SplineFit.cpp">
       <Filter>Fit</Filter>
     </ClCompile>
@@ -71,18 +62,6 @@
     <ClInclude Include="..\lib\Constants.hpp" />
     <ClInclude Include="..\lib\ExportAPI.hpp" />
     <ClInclude Include="..\lib\Palm.hpp" />
-    <ClInclude Include="..\lib\tracking\Node.hpp">
-      <Filter>Tracking</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tracking\Parameters.hpp">
-      <Filter>Tracking</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tracking\TimeNodes.hpp">
-      <Filter>Tracking</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tracking\Tracking.hpp">
-      <Filter>Tracking</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\fit\SplineFit.hpp">
       <Filter>Fit</Filter>
     </ClInclude>

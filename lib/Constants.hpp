@@ -35,11 +35,6 @@ constexpr double EPSILON = 1e-7;
 // Track, Plane, Id, X, Y, Z, Integrated Intensity, Surface
 constexpr size_t N_TRACKING = 8; ///< Nombre de paramètres à renvoyer lors du tracking.
 
-// Anciennement "Sigma X", "Sigma Y", "Theta", "Y", "X", "Intensity 0", "Intensity Offset", "MSE Gaussian", "Intensity", "Surface", "Z", "Pair Distance", "Id"
-// Maintenant Id, X, Y, Z, Integrated Intensity, Surface
-constexpr size_t N_IN_PARAMS = 6; ///< Nombre de paramètres reçu lors du tracking.
-constexpr size_t N_IN_PARAMS_2 = 4; ///< Nombre de paramètres reçu lors du tracking.
-
 //=================================================
 //==================== SPLINES ====================
 //=================================================

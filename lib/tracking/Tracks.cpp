@@ -68,7 +68,6 @@ uint64_t Tracks::Tracking(const double* input, uint64_t* output, const size_t nP
 {
 	auto trackingPoints = loadPoints(input, nPoints); // Liste des input de mon tableau input, à construire
 	const auto Planes   = getPlaneRanges(trackingPoints);
-	//for (const auto& R : Planes) { std::cout << "Plane range: " << R.begin << " to " << R.end << std::endl; }
 	track(trackingPoints, Planes, maxDistance);
 	return fillTrackingIdOutput(trackingPoints, output);
 }
@@ -390,7 +389,7 @@ void Tracks::track(std::vector<TrackingPoint>& points, const std::vector<PlaneRa
 	const double MaxDistance2 = maxDistance * maxDistance; // Pré-calcul du carré de la distance maximale pour éviter les racines carrées répétées
 
 	#pragma omp parallel for schedule(dynamic)
-	for (int plane = 0; plane < static_cast<int>(planes.size()); ++plane) {
+	for (int plane = 0; plane < static_cast<int>(planes.size() - 1); ++plane) {
 		const PlaneRange& Current = planes[plane];
 		const PlaneRange& Next    = planes[plane + 1];
 

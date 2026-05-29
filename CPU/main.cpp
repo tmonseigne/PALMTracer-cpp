@@ -1,5 +1,4 @@
 #include <cstdint>
-#include <iostream>
 #include <mutex>
 #include <omp.h>
 
@@ -9,8 +8,6 @@
 #include "localization/ATrous.hpp"
 #include "signal_processing/Alignment.hpp"
 #include "signal_processing/Matrix.hpp"
-#include "tracking/Parameters.hpp"
-#include "tracking/Tracking.hpp"
 #include "tracking/Tracks.hpp"
 
 
@@ -113,39 +110,13 @@ PT_API uint64_t PT_CALL Localization(const uint16_t* input, double* output, cons
 
 
 //-------------------------------------------------------------------------------------------------
-/// <summary>Construit des trajectoires (tracking) à partir d'une liste de localisations.
-///
-/// Cette fonction associe des positions (points) entre images successives pour former des trajectoires, en imposant des contraintes de vitesse maximale et de durée minimale.
-/// Les trajectoires résultantes sont écrites dans <paramref name="trc" /> sous forme de tableau plat.</summary>
-/// <param name="input">Pointeur vers le tableau des localisations (entrée), sous forme de <c>double</c>.
-/// Le format exact (x, y, t, z, etc.) est celui attendu par <c>palm_tracer::tracking::Tracking</c>.</param>
-/// <param name="output">Pointeur vers le tableau de sortie contenant les trajectoires construites.
-/// Le format exact est défini par l'implémentation de <c>palm_tracer::tracking::Tracking</c>.</param>
-/// <param name="maxSpeed">Vitesse maximale autorisée pour relier deux points consécutifs (en unités de pixels par frame ou selon la convention interne).</param>
-/// <param name="minLife">Durée de vie minimale (en nombre de frames) d'une trajectoire pour être conservée. Les trajectoires plus courtes pourront être rejetées.</param>
-/// <param name="decrease">Facteur de décroissance (en pourcentage) du coût dans l'algorithme de tracking.
-/// La valeur est interprétée comme un pourcentage et sera convertie en fraction interne (<c>decrease / 100.0</c>).</param>
-/// <param name="costBirth">Coût associé à la création ou la fin d'une trajectoire (birth/death cost).</param>
-/// <param name="nbTimes">Nombre de frames / temps considérés dans la séquence.</param>
-/// <returns> Nombre de valeurs effectivement écrites dans <paramref name="output" />.</returns>
-PT_API uint64_t PT_CALL Tracking(const double* input, double* output, const double maxSpeed, const uint64_t minLife,
-	const double decrease, const double costBirth, const uint64_t nbTimes)
-{
-	std::call_once(omp_init_flag, InitOpenMP);
-
-	const auto Param = new palm_tracer::tracking::Parameters();
-
-	Param->maxSpeed_ = maxSpeed;
-	Param->costBirthDeath_ = costBirth;
-
-	palm_tracer::tracking::Tracking tracking(input, output, minLife, decrease / 100.0, nbTimes, Param);
-	const uint64_t Count = tracking.Processing();
-	delete Param;
-
-	return Count;
-}
-
-PT_API uint64_t PT_CALL Tracking2(const double* input, uint64_t* output, const uint64_t nPoints, const double maxDistance)
+/// <summary>Construit des trajectoires 2D à partir d'un tableau contigu de localisations simples, puis exporte le couple <c>(Id, Track)</c> de chaque point.</summary>
+/// <param name="input">Tableau d'entrée contigu de doubles contenant 4 valeurs par point : <c>Id</c>, <c>Plane</c>, <c>X</c>, <c>Y</c>.</param>
+/// <param name="output">Tableau de sortie contigu préalloué en entiers 64 bits. Il reçoit deux valeurs par point : <c>Id</c>, puis identifiant de trajectoire.</param>
+/// <param name="nPoints">Nombre de points présents dans <paramref name="input"/>.</param>
+/// <param name="maxDistance">Distance maximale autorisée entre deux points de deux plans consécutifs pour créer une liaison.</param>
+/// <returns>Nombre total de valeurs écrites dans <paramref name="output"/>, soit <c>2 × nPoints</c>.</returns>
+PT_API uint64_t PT_CALL Tracking(const double* input, uint64_t* output, const uint64_t nPoints, const double maxDistance)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 	return palm_tracer::tracking::Tracks::Tracking(input, output, nPoints, maxDistance);
@@ -155,8 +126,7 @@ PT_API uint64_t PT_CALL Tracking2(const double* input, uint64_t* output, const u
 //-------------------------------------------------------------------------------------------------
 /// <summary>Réassocie les trajectoires interrompues à cause du blinking (reconnexion des blinkings).
 ///
-/// Cette fonction charge des trajectoires existantes, tente de reconnecter les segments séparés par des périodes de clignotement (blinking),
-/// puis écrit le résultat dans <paramref name="output" />.
+/// Cette fonction charge des trajectoires existantes, tente de reconnecter les segments séparés par des périodes de clignotement (blinking), puis écrit le résultat dans <paramref name="output"/>.
 /// </summary>
 /// <param name="input">Pointeur vers le tableau d'entrée contenant les trajectoires initiales, tel que produit par <c>Tracking</c> ou une étape précédente.</param>
 /// <param name="output">Pointeur vers le tableau de sortie contenant les trajectoires après reconnexion des blinkings. Le buffer doit être pré-alloué.</param>
@@ -174,7 +144,7 @@ PT_API uint64_t PT_CALL BlinkingReconnection(const double* input, double* output
 	palm_tracer::tracking::Tracks tracks;
 	tracks.LoadTracking(input, nRow, pixelSize);
 	tracks.BlinkingReconnection(mode, maxDuration, maxSpeed);
-	return static_cast<uint64_t>(tracks.FillOutput(output));
+	return tracks.FillOutput(output);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -275,14 +245,14 @@ PT_API void PT_CALL Wavelett(const uint16_t* input, double* output, const uint64
 	//if (levelOutput == 0) { throw std::invalid_argument("levelOutput must be >= 1"); } // lever une exception dans une DLL Extern C n'est pas géré correctement par C# ou Python.
 
 	const palm_tracer::Vec2I Dim = {.x = width, .y = height};
-	const uint64_t Size            = Dim.GetSize();
-	const uint64_t Level           = std::min(levelOutput - 1, static_cast<uint64_t>(palm_tracer::N_PLANES) - 1); // le niveau 1 correspond à l'index 0 du tableau
+	const uint64_t Size          = Dim.GetSize();
+	const uint64_t Level         = std::min(levelOutput - 1, static_cast<uint64_t>(palm_tracer::N_PLANES) - 1); // le niveau 1 correspond à l'index 0 du tableau
 
 	#pragma omp parallel for schedule(static)
 	// Parallélisation sur les plans avec un planning statique (plus efficace si les boucles font exactement le même temps)
 	for (int i = 0; i < static_cast<int>(planes); ++i) {
 		const uint64_t PlaneOffset = i * Size;
-		const uint16_t* image    = input + PlaneOffset;
+		const uint16_t* image      = input + PlaneOffset;
 		const palm_tracer::localization::ATrous Decomposition(image, Dim); // Objet pour la décomposition ondelettes (algorithme à trous).
 		const double* waveletPlane = Decomposition.wDecomp_[Level].data(); // Récupération du plan d'ondelettes demandé
 		std::copy_n(waveletPlane, Size, output + PlaneOffset);             // Copie du résultat dans le tableau de sortie

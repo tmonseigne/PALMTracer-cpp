@@ -44,12 +44,17 @@ public:
 	/// <remarks>La colonne “Track” correspond à l'index de la trajectoire dans le tableau interne, réindexé à partir de 1 après éventuelles opérations de reconnexion.</remarks>
 	size_t FillOutput(double* output) const;
 
-	/// <summary></summary>
-	/// <param name="input"></param>
-	/// <param name="output"></param>
-	/// <param name="nPoints"></param>
-	/// <param name="maxDistance"></param>
-	/// <returns></returns>
+	/// <summary>Construit des trajectoires 2D à partir d'un tableau contigu de localisations simples, puis exporte le couple <c>(Id, Track)</c> de chaque point.</summary>
+	/// <param name="input">Tableau d'entrée contigu de doubles contenant 4 valeurs par point : <c>Id</c>, <c>Plane</c>, <c>X</c>, <c>Y</c>.</param>
+	/// <param name="output">Tableau de sortie contigu préalloué en entiers 64 bits. Il reçoit deux valeurs par point : <c>Id</c>, puis identifiant de trajectoire.</param>
+	/// <param name="nPoints">Nombre de points présents dans <paramref name="input"/>.</param>
+	/// <param name="maxDistance">Distance maximale autorisée entre deux points de deux plans consécutifs pour créer une liaison.</param>
+	/// <returns>Nombre total de valeurs écrites dans <paramref name="output"/>, soit <c>2 × nPoints</c>.</returns>
+	/// <remarks>
+	/// Les numéros de trajectoires sont recalculés à partir de 1 après l'association gloutonne.
+	/// L'entrée peut être non triée : les points sont triés en interne par plan puis par identifiant avant la recherche des liaisons.
+	/// La fonction est pensée pour l'interface DLL/ctypes et ne conserve aucun état dans l'instance <see cref="Tracks"/>.
+	/// </remarks>
 	static uint64_t Tracking(const double* input, uint64_t* output, size_t nPoints, double maxDistance);
 
 	/// <summary>Reconnecte des trajectoires disjointes lorsqu'elles sont séparées par un scintillement (frames manquantes).</summary>
@@ -124,27 +129,50 @@ protected:
 	std::vector<track_t> t_;                              ///< Ensemble des trajectoires manipulées.
 	static constexpr double INSTANT_DIFFUSION_MIN = 1e-6; ///< Diffusion instantanée minimale.
 
-	/// <summary></summary>
-	/// <param name="points"></param>
-	/// <param name="nPoints"></param>
-	/// <returns></returns>
+	/// <summary>Convertit un tableau brut <c>(Id, Plane, X, Y)</c> en liste de points de tracking triée par plan puis par identifiant.</summary>
+	/// <param name="points">Tableau d'entrée contigu de doubles contenant 4 valeurs par point : <c>Id</c>, <c>Plane</c>, <c>X</c>, <c>Y</c>.</param>
+	/// <param name="nPoints">Nombre de points à lire dans <paramref name="points"/>.</param>
+	/// <returns>Vecteur de <see cref="TrackingPoint"/> initialisés, triés par <c>point.plane_</c> croissant puis par <c>point.id_</c> croissant.</returns>
+	/// <remarks>
+	/// Cette méthode ne conserve que les informations utiles au tracking 2D rapide : identifiant, plan et position XY en pixels.
+	/// Les champs de chaînage (<c>previous</c>, <c>next</c>, <c>trackId</c>) conservent leurs valeurs par défaut définies par <see cref="TrackingPoint"/>.
+	/// Complexité : \f$\mathcal{O}(N \log N)\f$ à cause du tri final.
+	/// </remarks>
 	[[nodiscard]] static std::vector<TrackingPoint> loadPoints(const double* points, size_t nPoints);
 
-	/// <summary></summary>
-	/// <param name="points"></param>
-	/// <returns></returns>
+	/// <summary>Calcule les intervalles d'indices correspondant à chaque plan dans une liste de points déjà triée.</summary>
+	/// <param name="points">Points triés par plan croissant puis par identifiant croissant.</param>
+	/// <returns>
+	/// Vecteur de plages <see cref="PlaneRange"/> indexé relativement au premier plan observé.
+	/// Pour un plan <c>p</c>, la plage est accessible par <c>res[p - MinPlane]</c> et représente l'intervalle demi-ouvert <c>[begin, end[</c> dans <paramref name="points"/>.
+	/// </returns>
+	/// <remarks>
+	/// Les plans absents sont représentés par une plage vide (<c>begin == end</c>) positionnée à l'indice d'insertion logique.
+	/// Précondition : <paramref name="points"/> doit être trié par <c>point.plane_</c> croissant.
+	/// Complexité : \f$\mathcal{O}(N + P)\f$, avec \f$N\f$ le nombre de points et \f$P\f$ le nombre de plans couverts entre le premier et le dernier plan.
+	/// </remarks>
 	[[nodiscard]] static std::vector<PlaneRange> getPlaneRanges(const std::vector<TrackingPoint>& points);
 
-	/// <summary></summary>
-	/// <param name="points"></param>
-	/// <param name="planes"></param>
-	/// <param name="maxDistance"></param>
+	/// <summary>Associe gloutonnement les points de plans consécutifs pour construire des trajectoires 2D.</summary>
+	/// <param name="points">Points triés et modifiables. Les champs <c>previous</c>, <c>next</c> et <c>trackId</c> sont mis à jour en place.</param>
+	/// <param name="planes">Plages d'indices par plan, typiquement calculées par <see cref="getPlaneRanges"/>.</param>
+	/// <param name="maxDistance">Distance maximale autorisée entre deux points de plans consécutifs.</param>
+	/// <remarks>
+	/// Pour chaque paire de plans consécutifs, tous les candidats dont la distance quadratique est inférieure à <c>maxDistance²</c> sont générés,
+	/// triés par distance croissante puis par indices, puis validés de manière gloutonne si les deux extrémités sont encore libres.
+	/// Les couples de plans sont indépendants pour la génération des candidats et peuvent être traités en parallèle, mais l'attribution finale des identifiants de trajectoire reste séquentielle pour garder un résultat déterministe.
+	/// Complexité principale : \f$\sum_t \mathcal{O}(n_t\,n_{t+1})\f$ pour la génération des candidats, plus le coût des tris locaux.
+	/// </remarks>
 	static void track(std::vector<TrackingPoint>& points, const std::vector<PlaneRange>& planes, double maxDistance);
 
-	/// <summary></summary>
-	/// <param name="points"></param>
-	/// <param name="output"></param>
-	/// <returns></returns>
+	/// <summary>Écrit les identifiants de trajectoire calculés dans un tableau de sortie compatible DLL.</summary>
+	/// <param name="points">Points de tracking après association, contenant les champs <c>point.id_</c> et <c>trackId</c> finalisés.</param>
+	/// <param name="output">Tableau de sortie contigu préalloué. Il reçoit deux entiers par point : <c>Id</c>, puis <c>Track</c>.</param>
+	/// <returns>Nombre total de valeurs écrites dans <paramref name="output"/>, soit <c>2 × points.size()</c>.</returns>
+	/// <remarks>
+	/// L'ordre d'écriture suit l'ordre interne de <paramref name="points"/>, donc le tri par plan/identifiant effectué en amont.
+	/// Le réappariement côté Python doit donc se faire par la colonne <c>Id</c> plutôt que par l'ordre des lignes d'origine.
+	/// </remarks>
 	static uint64_t fillTrackingIdOutput(const std::vector<TrackingPoint>& points, uint64_t* output);
 
 	/// <summary> Calcule la distance maximale autorisée pour une reconnexion en fonction du <paramref name="mode"/> choisi, de la durée du scintillement et de la vitesse maximale spécifiée.</summary>

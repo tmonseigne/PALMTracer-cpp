@@ -10,15 +10,6 @@
     <ClCompile Include="..\lib\localization\Segmentation2D.cpp">
       <Filter>lib</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\tracking\Node.cpp">
-      <Filter>lib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\tracking\TimeNodes.cpp">
-      <Filter>lib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\tracking\Tracking.cpp">
-      <Filter>lib</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\fit\Fitting.cpp">
       <Filter>lib</Filter>
     </ClCompile>
@@ -84,18 +75,6 @@
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\localization\SegmentationInfo.hpp">
-      <Filter>lib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tracking\Node.hpp">
-      <Filter>lib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tracking\Parameters.hpp">
-      <Filter>lib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tracking\TimeNodes.hpp">
-      <Filter>lib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\tracking\Tracking.hpp">
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\fit\Fitting.hpp">
