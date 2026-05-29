@@ -41,14 +41,14 @@ static void InitOpenMP()
 /// Il doit contenir exactement 20 valeurs (<c>2 × 10</c>), organisées en 2 lignes de 10 coefficients (une ligne par axe) tels qu'attendus par <c>palm_tracer::Alignment</c>.</param>
 /// <param name="upsampling">Facteur de sur-échantillonnage utilisé pour le calcul sub-pixel de l'alignement.
 /// Une valeur supérieure à 1 permet un ajustement plus fin mais augmente le coût de calcul.</param>
-PT_API void PT_CALL Alignment(const uint16_t* input, uint16_t* output, const uint32_t height,
-                              const uint32_t width, const uint32_t planes, const double* factors, const uint32_t upsampling)
+PT_API void PT_CALL Alignment(const uint16_t* input, uint16_t* output, const uint64_t height,
+                              const uint64_t width, const uint64_t planes, const double* factors, const uint64_t upsampling)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
 	std::array<std::array<double, 10>, 2> f{};
-	size_t idx = 0;
-	for (size_t i = 0; i < 2; ++i) { for (size_t j = 0; j < 10; ++j, ++idx) { f[i][j] = factors[idx]; } }
+	uint64_t idx = 0;
+	for (uint64_t i = 0; i < 2; ++i) { for (uint64_t j = 0; j < 10; ++j, ++idx) { f[i][j] = factors[idx]; } }
 
 	palm_tracer::Alignment align;
 	const palm_tracer::Vec3I Dim = {.x = width, .y = height, .z = planes};
@@ -67,11 +67,11 @@ PT_API void PT_CALL Alignment(const uint16_t* input, uint16_t* output, const uin
 /// <param name="fit_params">Tableau de paramètres de fit utilisés par l'algorithme de seuil automatique.
 /// Le contenu exact dépend de l'implémentation de <c>palm_tracer::Palm</c> (par exemple paramètres de PSF, bruit, etc.).</param>
 /// <returns>Seuil d'intensité calculé automatiquement, exprimé dans les mêmes unités que les valeurs de <paramref name="image" /> (converties en <c>double</c>).</returns>
-PT_API double PT_CALL AutoThreshold(const uint16_t* input, const uint32_t height, const uint32_t width, const double* fit_params)
+PT_API double PT_CALL AutoThreshold(const uint16_t* input, const uint64_t height, const uint64_t width, const double* fit_params)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
-	const auto PointsListSize = static_cast<size_t>(0.2 * static_cast<double>(height * width) * palm_tracer::N_LOCALIZATIONS);
+	const auto PointsListSize = static_cast<uint64_t>(0.2 * static_cast<double>(height * width) * palm_tracer::N_LOCALIZATIONS);
 	std::vector<double> pointsList(PointsListSize);
 	const palm_tracer::Vec3I Dim = {.x = width, .y = height, .z = 1};
 
@@ -99,9 +99,9 @@ PT_API double PT_CALL AutoThreshold(const uint16_t* input, const uint32_t height
 /// <param name="fit">Mode d'ajustement (fit) à utiliser pour chaque spot. La signification exacte des valeurs dépend de l'implémentation de <c>palm_tracer::Palm</c>.</param>
 /// <param name="fit_params">Tableau de paramètres de fit (par exemple paramètres de PSF, initialisation, contraintes).</param>
 /// <returns>Nombre de valeurs effectivement écrites dans <paramref name="output" />.</returns>
-PT_API uint32_t PT_CALL Localization(const uint16_t* input, double* output, const uint32_t outputSize, const uint32_t height,
-                                     const uint32_t width, const uint32_t planes, const double thresholdVal, const double watershedRatio,
-                                     const uint32_t fit, const double* fit_params)
+PT_API uint64_t PT_CALL Localization(const uint16_t* input, double* output, const uint64_t outputSize, const uint64_t height,
+                                     const uint64_t width, const uint64_t planes, const double thresholdVal, const double watershedRatio,
+                                     const uint64_t fit, const double* fit_params)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
@@ -128,22 +128,29 @@ PT_API uint32_t PT_CALL Localization(const uint16_t* input, double* output, cons
 /// <param name="costBirth">Coût associé à la création ou la fin d'une trajectoire (birth/death cost).</param>
 /// <param name="nbTimes">Nombre de frames / temps considérés dans la séquence.</param>
 /// <returns> Nombre de valeurs effectivement écrites dans <paramref name="output" />.</returns>
-PT_API uint32_t PT_CALL Tracking(const double* input, double* output, const double maxSpeed, const uint32_t minLife,
-                                 const double decrease, const double costBirth, const uint32_t nbTimes)
+PT_API uint64_t PT_CALL Tracking(const double* input, double* output, const double maxSpeed, const uint64_t minLife,
+	const double decrease, const double costBirth, const uint64_t nbTimes)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
 	const auto Param = new palm_tracer::tracking::Parameters();
 
-	Param->maxSpeed_       = maxSpeed;
+	Param->maxSpeed_ = maxSpeed;
 	Param->costBirthDeath_ = costBirth;
 
 	palm_tracer::tracking::Tracking tracking(input, output, minLife, decrease / 100.0, nbTimes, Param);
-	const size_t Count = tracking.Processing();
+	const uint64_t Count = tracking.Processing();
 	delete Param;
 
-	return static_cast<uint32_t>(Count);
+	return Count;
 }
+
+PT_API uint64_t PT_CALL Tracking2(const double* input, uint64_t* output, const uint64_t nPoints, const double maxDistance)
+{
+	std::call_once(omp_init_flag, InitOpenMP);
+	return palm_tracer::tracking::Tracks::Tracking(input, output, nPoints, maxDistance);
+}
+
 
 //-------------------------------------------------------------------------------------------------
 /// <summary>Réassocie les trajectoires interrompues à cause du blinking (reconnexion des blinkings).
@@ -159,15 +166,15 @@ PT_API uint32_t PT_CALL Tracking(const double* input, double* output, const doub
 /// <param name="maxDuration">Durée maximale (en nombre de frames) autorisée entre deux segments pour être considérés comme appartenant à la même trajectoire.</param>
 /// <param name="maxSpeed">Vitesse maximale autorisée des cibles pour reconnecter deux segments séparés par un blinking.</param>
 /// <returns></returns>
-PT_API uint32_t PT_CALL BlinkingReconnection(const double* input, double* output, const uint32_t nRow, const double pixelSize,
-                                             const uint32_t mode, const uint32_t maxDuration, const double maxSpeed)
+PT_API uint64_t PT_CALL BlinkingReconnection(const double* input, double* output, const uint64_t nRow, const double pixelSize,
+                                             const uint64_t mode, const uint64_t maxDuration, const double maxSpeed)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
 	palm_tracer::tracking::Tracks tracks;
 	tracks.LoadTracking(input, nRow, pixelSize);
 	tracks.BlinkingReconnection(mode, maxDuration, maxSpeed);
-	return static_cast<uint32_t>(tracks.FillOutput(output));
+	return static_cast<uint64_t>(tracks.FillOutput(output));
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -202,15 +209,15 @@ PT_API uint32_t PT_CALL BlinkingReconnection(const double* input, double* output
 /// <param name="fitParams">Tableau de paramètres pour le fit. L'élément <c>fitParams[0]</c> doit contenir la longueur du fit (<c>fitLength</c>, nombre de points utilisés pour le fit).
 /// Les autres éléments peuvent être utilisés par des variantes futures.</param>
 /// <returns>Toujours <c>true</c> si l'exécution s'est terminée sans exception. En cas d'erreur interne, une exception C++ peut être levée et doit être gérée côté appelant .NET/Python.</returns>
-PT_API bool PT_CALL TracksCompute(const double* input, double* outputMSD, double* outputInd, double* outputFit, const uint32_t nRow,
+PT_API bool PT_CALL TracksCompute(const double* input, double* outputMSD, double* outputInd, double* outputFit, const uint64_t nRow,
                                   const bool isMSD, const bool isInd, const bool is3D,
-                                  const double pixelSize, const double exposureTime, const uint32_t fitMode, const double* fitParams)
+                                  const double pixelSize, const double exposureTime, const uint64_t fitMode, const double* fitParams)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
 	palm_tracer::tracking::ComputesParams p = {
 		.mode = palm_tracer::tracking::fit_mode::linear,
-		.fitLength = static_cast<size_t>(fitParams[0]),
+		.fitLength = static_cast<uint64_t>(fitParams[0]),
 		.is3D = is3D,
 		.pixelSize = pixelSize,
 		.exposureTime = exposureTime
@@ -260,7 +267,7 @@ PT_API bool PT_CALL TracksCompute(const double* input, double* outputMSD, double
 /// <param name="levelOutput">Niveau de la décomposition à extraire.
 /// La numérotation commence à 1 côté API : <c>levelOutput = 1</c> correspond au premier niveau d'ondelettes.
 /// Si la valeur demandée dépasse le nombre de niveaux disponibles, le niveau maximal est utilisé.</param>
-PT_API void PT_CALL Wavelett(const uint16_t* input, double* output, const uint32_t height, const uint32_t width, const uint32_t planes, uint32_t levelOutput)
+PT_API void PT_CALL Wavelett(const uint16_t* input, double* output, const uint64_t height, const uint64_t width, const uint64_t planes, uint64_t levelOutput)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
@@ -268,13 +275,13 @@ PT_API void PT_CALL Wavelett(const uint16_t* input, double* output, const uint32
 	//if (levelOutput == 0) { throw std::invalid_argument("levelOutput must be >= 1"); } // lever une exception dans une DLL Extern C n'est pas géré correctement par C# ou Python.
 
 	const palm_tracer::Vec2I Dim = {.x = width, .y = height};
-	const size_t Size            = Dim.GetSize();
-	const size_t Level           = std::min(levelOutput - 1, static_cast<uint32_t>(palm_tracer::N_PLANES) - 1); // le niveau 1 correspond à l'index 0 du tableau
+	const uint64_t Size            = Dim.GetSize();
+	const uint64_t Level           = std::min(levelOutput - 1, static_cast<uint64_t>(palm_tracer::N_PLANES) - 1); // le niveau 1 correspond à l'index 0 du tableau
 
 	#pragma omp parallel for schedule(static)
 	// Parallélisation sur les plans avec un planning statique (plus efficace si les boucles font exactement le même temps)
 	for (int i = 0; i < static_cast<int>(planes); ++i) {
-		const size_t PlaneOffset = i * Size;
+		const uint64_t PlaneOffset = i * Size;
 		const uint16_t* image    = input + PlaneOffset;
 		const palm_tracer::localization::ATrous Decomposition(image, Dim); // Objet pour la décomposition ondelettes (algorithme à trous).
 		const double* waveletPlane = Decomposition.wDecomp_[Level].data(); // Récupération du plan d'ondelettes demandé
@@ -289,14 +296,14 @@ PT_API void PT_CALL Wavelett(const uint16_t* input, double* output, const uint32
 /// <param name="size">Nombre de points dans le tableau d'entrée.</param>
 /// <param name="pixelSize">Taille d'un pixel en unités physiques (en nanomètre/pixel).</param>
 /// <param name="center">Permet de centrer le modèle pour que \f$\sigma_x(0) \approx \sigma_y(0)\f$.</param>
-PT_API void PT_CALL Astigmatism3DCalibration(const double* input, double* output, const uint32_t size, const double pixelSize, const bool center = true)
+PT_API void PT_CALL Astigmatism3DCalibration(const double* input, double* output, const uint64_t size, const double pixelSize, const bool center = true)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
 	// conversion de l'entrée en vecteur de points 3D.
-	const auto N = static_cast<size_t>(size);
+	const auto N = static_cast<uint64_t>(size);
 	std::vector<palm_tracer::Vec3D> dataset(N);
-	for (size_t i = 0, id = 0; i < N; ++i) {
+	for (uint64_t i = 0, id = 0; i < N; ++i) {
 		dataset[i] = {.x = input[id], .y = input[id + 1], .z = input[id + 2]};
 		id += 3;
 	}
@@ -317,15 +324,15 @@ PT_API void PT_CALL Astigmatism3DCalibration(const double* input, double* output
 /// <param name="pixelSize">Taille d'un pixel en unités physiques (en nanomètre/pixel).</param>
 /// <param name="model">Pointeur vers le buffer du modèle (5 paramètres pour les 2 axes).</param>
 /// <param name="zMax">Borne absolue Z (nm).</param>
-PT_API void PT_CALL Astigmatism3DEstimation(const double* input, double* output, const uint32_t size, const double pixelSize, const double* model,
+PT_API void PT_CALL Astigmatism3DEstimation(const double* input, double* output, const uint64_t size, const double pixelSize, const double* model,
                                             const double zMax)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
 	// conversion de l'entrée en vecteur de points 2D.
-	const auto N = static_cast<size_t>(size);
+	const auto N = static_cast<uint64_t>(size);
 	std::vector<palm_tracer::Vec2D> datas(N);
-	for (size_t i = 0, id = 0; i < N; ++i) {
+	for (uint64_t i = 0, id = 0; i < N; ++i) {
 		datas[i] = {.x = input[id], .y = input[id + 1]};
 		id += 2;
 	}

@@ -15,6 +15,7 @@
 
 #include "ComputesParams.hpp"
 #include "Point.hpp"
+#include "TrackingPoint.hpp"
 
 namespace palm_tracer::tracking {
 /// <summary>Classe manipulant un ensemble de trajectoires.
@@ -43,8 +44,13 @@ public:
 	/// <remarks>La colonne “Track” correspond à l'index de la trajectoire dans le tableau interne, réindexé à partir de 1 après éventuelles opérations de reconnexion.</remarks>
 	size_t FillOutput(double* output) const;
 
-	// TODO À terme, implémenter une méthode de suivi plus avancée que l'approche aléatoire.
-	// void Tracking(const double* points, double* tracks, const size_t minLife, const double decrease, const size_t ntimes, Parameters* params);
+	/// <summary></summary>
+	/// <param name="input"></param>
+	/// <param name="output"></param>
+	/// <param name="nPoints"></param>
+	/// <param name="maxDistance"></param>
+	/// <returns></returns>
+	static uint64_t Tracking(const double* input, uint64_t* output, size_t nPoints, double maxDistance);
 
 	/// <summary>Reconnecte des trajectoires disjointes lorsqu'elles sont séparées par un scintillement (frames manquantes).</summary>
 	/// <param name="mode">Mode de dispersion utilisé pour calculer la distance maximale de recherche (<see cref="blinking_mode"/>).</param>
@@ -117,6 +123,29 @@ public:
 protected:
 	std::vector<track_t> t_;                              ///< Ensemble des trajectoires manipulées.
 	static constexpr double INSTANT_DIFFUSION_MIN = 1e-6; ///< Diffusion instantanée minimale.
+
+	/// <summary></summary>
+	/// <param name="points"></param>
+	/// <param name="nPoints"></param>
+	/// <returns></returns>
+	[[nodiscard]] static std::vector<TrackingPoint> loadPoints(const double* points, size_t nPoints);
+
+	/// <summary></summary>
+	/// <param name="points"></param>
+	/// <returns></returns>
+	[[nodiscard]] static std::vector<PlaneRange> getPlaneRanges(const std::vector<TrackingPoint>& points);
+
+	/// <summary></summary>
+	/// <param name="points"></param>
+	/// <param name="planes"></param>
+	/// <param name="maxDistance"></param>
+	static void track(std::vector<TrackingPoint>& points, const std::vector<PlaneRange>& planes, double maxDistance);
+
+	/// <summary></summary>
+	/// <param name="points"></param>
+	/// <param name="output"></param>
+	/// <returns></returns>
+	static uint64_t fillTrackingIdOutput(const std::vector<TrackingPoint>& points, uint64_t* output);
 
 	/// <summary> Calcule la distance maximale autorisée pour une reconnexion en fonction du <paramref name="mode"/> choisi, de la durée du scintillement et de la vitesse maximale spécifiée.</summary>
 	/// <param name="mode">Mode de dispersion des points (<see cref="blinking_mode"/>).</param>

@@ -63,6 +63,16 @@ size_t Tracks::FillOutput(double* output) const
 	return idx;
 }
 
+//-------------------------------------------------------------------------------------------------
+uint64_t Tracks::Tracking(const double* input, uint64_t* output, const size_t nPoints, const double maxDistance)
+{
+	auto trackingPoints = loadPoints(input, nPoints); // Liste des input de mon tableau input, à construire
+	const auto Planes   = getPlaneRanges(trackingPoints);
+	//for (const auto& R : Planes) { std::cout << "Plane range: " << R.begin << " to " << R.end << std::endl; }
+	track(trackingPoints, Planes, maxDistance);
+	return fillTrackingIdOutput(trackingPoints, output);
+}
+
 //==================== Computes ====================
 //-------------------------------------------------------------------------------------------------
 void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, const double maxSpeed)
@@ -318,6 +328,125 @@ size_t Tracks::getFitResSize(const fit_mode mode)
 	}
 	return 0;
 }
+
+//==================== Tracking ====================
+//-------------------------------------------------------------------------------------------------
+std::vector<TrackingPoint> Tracks::loadPoints(const double* points, const size_t nPoints)
+{
+	std::vector<TrackingPoint> res(nPoints);
+
+	for (size_t i = 0, idx = 0; i < nPoints; ++i) {
+		auto& p          = res[i];
+		p.point.id_      = static_cast<size_t>(points[idx++]);
+		p.point.plane_   = static_cast<size_t>(points[idx++]);
+		p.point.posPx_.x = points[idx++];
+		p.point.posPx_.y = points[idx++];
+	}
+
+	std::ranges::sort(res, [](const TrackingPoint& a, const TrackingPoint& b) {
+		if (a.point.plane_ != b.point.plane_) { return a.point.plane_ < b.point.plane_; }
+		return a.point.id_ < b.point.id_;
+	});
+
+	return res;
+}
+
+//-------------------------------------------------------------------------------------------------
+std::vector<PlaneRange> Tracks::getPlaneRanges(const std::vector<TrackingPoint>& points)
+{
+	std::vector<PlaneRange> res;
+	if (points.empty()) { return res; }
+
+	const size_t MinPlane = points.front().point.plane_;
+	const size_t MaxPlane = points.back().point.plane_;
+
+	res.resize(MaxPlane - MinPlane + 1);
+
+	size_t begin = 0;
+	size_t plane = MinPlane;
+
+	for (size_t i = 0; i < points.size(); ++i) {
+		const size_t CurrentPlane = points[i].point.plane_;
+
+		while (plane < CurrentPlane) {
+			res[plane - MinPlane] = {.begin = begin, .end = begin};
+			++plane;
+		}
+
+		begin = i;
+		while (i + 1 < points.size() && points[i + 1].point.plane_ == CurrentPlane) { ++i; }
+
+		res[CurrentPlane - MinPlane] = {.begin = begin, .end = i + 1};
+		begin                        = i + 1;
+		plane                        = CurrentPlane + 1;
+	}
+
+	return res;
+}
+
+//-------------------------------------------------------------------------------------------------
+void Tracks::track(std::vector<TrackingPoint>& points, const std::vector<PlaneRange>& planes, const double maxDistance)
+{
+	const double MaxDistance2 = maxDistance * maxDistance; // Pré-calcul du carré de la distance maximale pour éviter les racines carrées répétées
+
+	#pragma omp parallel for schedule(dynamic)
+	for (int plane = 0; plane < static_cast<int>(planes.size()); ++plane) {
+		const PlaneRange& Current = planes[plane];
+		const PlaneRange& Next    = planes[plane + 1];
+
+		if (Current.begin == Current.end || Next.begin == Next.end) { continue; }
+
+		std::vector<Candidate> candidates;
+		candidates.reserve((Current.end - Current.begin) * (Next.end - Next.begin));
+
+		for (size_t i = Current.begin; i < Current.end; ++i) {
+			for (size_t j = Next.begin; j < Next.end; ++j) {
+				const double D2 = points[i].GetSqDistance(points[j]);
+				if (D2 <= MaxDistance2) { candidates.emplace_back(i, j, D2); }
+			}
+		}
+
+		std::ranges::sort(candidates, [](const Candidate& a, const Candidate& b) {
+			if (std::abs(a.distance2 - b.distance2) > std::numeric_limits<double>::epsilon()) { return a.distance2 < b.distance2; }
+			if (a.from != b.from) { return a.from < b.from; }
+			return a.to < b.to;
+		});
+
+		for (const Candidate& C : candidates) {
+			TrackingPoint& from = points[C.from];
+			TrackingPoint& to   = points[C.to];
+
+			if (from.next != INVALID_INDEX || to.previous != INVALID_INDEX) { continue; }
+
+			from.next   = C.to;
+			to.previous = C.from;
+		}
+	}
+
+	size_t trackId = 1;
+	for (TrackingPoint& point : points) {
+		if (point.previous != INVALID_INDEX) { continue; }
+		for (TrackingPoint* current = &point; current != nullptr;) {
+			current->trackId = trackId;
+			if (current->next == INVALID_INDEX) { break; }
+			current = &points[current->next];
+		}
+
+		++trackId;
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+uint64_t Tracks::fillTrackingIdOutput(const std::vector<TrackingPoint>& points, uint64_t* output)
+{
+	size_t idx = 0;
+	for (const auto& P : points) {
+		output[idx++] = P.point.id_; // Id
+		output[idx++] = P.trackId;   // Track
+	}
+	return idx;
+}
+
 
 //-------------------------------------------------------------------------------------------------
 std::ostream& operator<<(std::ostream& os, const Tracks& tracks)

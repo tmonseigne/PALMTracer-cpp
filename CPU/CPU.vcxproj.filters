@@ -126,6 +126,9 @@
     <ClInclude Include="..\lib\fit\AstigFit.hpp">
       <Filter>Fit</Filter>
     </ClInclude>
+    <ClInclude Include="..\lib\tracking\TrackingPoint.hpp">
+      <Filter>Tracking</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="PALMTracer.def" />
