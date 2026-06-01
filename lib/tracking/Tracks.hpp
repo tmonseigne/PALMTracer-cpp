@@ -23,8 +23,6 @@ namespace palm_tracer::tracking {
 /// La classe permet de charger des trajectoires, de les reconnecter en cas de scintillement, et de les exporter dans un format tabulaire générique.
 /// </summary>
 class Tracks {
-	using track_t = std::vector<Point>; ///< Type représentant une trajectoire individuelle (suite de points).
-
 public:
 	Tracks()  = default; ///< Constructeur par défaut de la classe <see cref="Tracks"/>.
 	~Tracks() = default; ///< Destructeur par défaut de la classe <see cref="Tracks"/>.
@@ -35,7 +33,7 @@ public:
 	/// <param name="nRow">Nombre de lignes (points) dans le tableau.</param>
 	/// <param name="pixelSize">Taille d'un pixel en unités réelles (nanomètre).</param>
 	/// <remarks>Cette fonction initialise le vecteur interne de trajectoires <c>t_</c>.</remarks>
-	void LoadTracking(const double* input, size_t nRow, double pixelSize);
+	void LoadTracks(const double* input, size_t nRow, double pixelSize);
 
 	/// <summary>Exporte les trajectoires actuelles vers un tableau 2D brut.</summary>
 	/// <param name="output">Pointeur vers un tableau de sortie contigu de doubles.
@@ -88,7 +86,7 @@ public:
 	/// - Les bacs (lags) sans paires observées sont mis à <c>-1</c>.
 	/// - Complexité : \f$\mathcal{O}(N^2)\f$ pour \f$N\f$ le nombre de points par trajectoire.
 	/// </remarks>
-	[[nodiscard]] static std::vector<double> ComputeMSD(const track_t& track, size_t start = 0, size_t end = 0);
+	[[nodiscard]] static std::vector<double> ComputeMSD(const Track& track, size_t start = 0, size_t end = 0);
 
 	/// <summary>Calcule le <b>MSD</b> pour l'ensemble des trajectoires.</summary>
 	/// <returns>Tableau 2D avec un nombre de lignes égal au nombre de trajectoires ; chaque ligne a une taille égale au lag maximal de la trajectoire (les lags sans observations valent -1).</returns>
@@ -101,7 +99,7 @@ public:
 	/// <param name="track">Trajectoire à analyser.</param>
 	/// <param name="p">Paramètres de configuration des calculs.</param>
 	/// <returns>Un vecteur de taille \f$\max(0, N - \text{fitLength})\f$ où \f$N\f$ est la longueur de la trajectoire.</returns>
-	[[nodiscard]] static std::vector<double> ComputeInstantDiffusion(const track_t& track, const ComputesParams& p);
+	[[nodiscard]] static std::vector<double> ComputeInstantDiffusion(const Track& track, const ComputesParams& p);
 
 	/// <summary>Estime la <b>diffusion instantanée</b> pour l'ensemble des trajectoires.</summary>
 	/// <param name="p">Paramètres de configuration des calculs.</param>
@@ -112,7 +110,7 @@ public:
 	/// <param name="track">Trajectoire à analyser.</param>
 	/// <param name="p">Paramètres de configuration des calculs.</param>
 	/// <returns>Tableau contenant le résultat des métriques (taille et contenu dépendant du mode d'ajustement).</returns>
-	[[nodiscard]] static std::vector<double> ComputeFitMetrics(const track_t& track, const ComputesParams& p);
+	[[nodiscard]] static std::vector<double> ComputeFitMetrics(const Track& track, const ComputesParams& p);
 
 	/// <summary>Calcule des métriques de diffusion pour les trajectoires et réalise un ou plusieurs fittings du MSD.</summary>
 	/// <param name="p">Paramètres de configuration des calculs.</param>
@@ -126,7 +124,7 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, const Tracks& tracks);
 
 protected:
-	std::vector<track_t> t_;                              ///< Ensemble des trajectoires manipulées.
+	std::vector<Track> t_;                              ///< Ensemble des trajectoires manipulées.
 	static constexpr double INSTANT_DIFFUSION_MIN = 1e-6; ///< Diffusion instantanée minimale.
 
 	/// <summary>Convertit un tableau brut <c>(Id, Plane, X, Y)</c> en liste de points de tracking triée par plan puis par identifiant.</summary>

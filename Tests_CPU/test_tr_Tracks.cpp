@@ -13,6 +13,49 @@ namespace palm_tracer::tracking {
 // Tolérance relative (scale) + plancher absolu (abs_floor) pour valeurs ~0
 inline double RelAbsTol(const double ref, const double scale = 1e-9, const double abs_floor = 1e-12) { return std::max(abs_floor, std::abs(ref) * scale); }
 
+
+//-------------------------------------------------------------------------------------------------
+TEST(TracksTests, Tracking)
+{
+	const std::vector<double> InitialPoints = {
+		// Plan 3
+		1, 3, 0.0, 0.0,   // track 1 -> 4.
+		2, 3, 10.0, 10.0, // seul, pas de correspondance.
+		3, 3, 5.0, 5.0,   // conflit vers 6, mais perd contre 4.
+
+		// Plan 4
+		4, 4, 0.2, 0.0, // proche de 1 et 3, gagne avec 1.
+		5, 4, 0.6, 0.0, // aussi proche de 1, mais 1 déjà utilisé.
+		6, 4, 5.2, 5.0, // proche de 3 -> track 3.
+
+		// Plan 6 : discontinuité, plan 5 vide
+		7, 6, 0.3, 0.0,   // pas relié à 4/5, car plan 5 vide.
+		8, 6, 20.0, 20.0, // seul.
+
+		// Plan 7
+		9, 7, 0.4, 0.0,   // relié à 7.
+		10, 7, 20.2, 20.0 // relié à 8.
+	};
+
+	const std::vector<uint64_t> Ref = {
+		1, 1, //		1->4
+		2, 2, // 2 seul. |
+		3, 3, //		 |	3->6
+		4, 1, //		1->4 |
+		5, 4, // 5 seul.	 |
+		6, 3, //			3->6
+		7, 5, //				7->9
+		8, 6, //		8->10	 |
+		9, 5, //		  |		7->9
+		10, 6 //		8->10
+	};
+
+	constexpr size_t N = 10;
+	std::vector<uint64_t> output(N * 2, 0);
+	Tracks::Tracking(InitialPoints.data(), output.data(), N, 1);
+	for (size_t i = 0; i < N * 2; ++i) { EXPECT_EQ(output[i], Ref[i]); }
+}
+
 //-------------------------------------------------------------------------------------------------
 TEST(TracksTests, BlinkingReconnection)
 {
@@ -68,7 +111,7 @@ TEST(TracksTests, BlinkingReconnection)
 	constexpr size_t MaxDuration = 4;
 	constexpr double MaxSpeed    = 2;
 	Tracks tracks;
-	tracks.LoadTracking(InitialTracks.data(), 18, 1);
+	tracks.LoadTracks(InitialTracks.data(), 18, 1);
 	std::cout << " Initial Tracks : \n" << tracks << "\n";
 
 	std::vector<double> output(Size, 0);
@@ -98,12 +141,12 @@ TEST(TracksTests, MSD)
 		3, 7, 10, 2, 1, 1, 14, 14,
 	};
 	const std::vector<std::vector<double>> Ref = {
-		{-1, -1, -1, 1},
-		{15.6666667, 27, 61},
-		{20, -1, -1, 25, 25, 1},
+		{1, -1, -1, -1, 1},
+		{2, 15.6666667, 27, 61},
+		{3, 20, -1, -1, 25, 25, 1},
 	};
 	Tracks tracks;
-	tracks.LoadTracking(InitialTracks.data(), 10, 1);
+	tracks.LoadTracks(InitialTracks.data(), 10, 1);
 	const auto Res = tracks.ComputeAllMSD();
 	for (size_t i = 0; i < Ref.size(); ++i) { for (size_t j = 0; j < Ref.size(); ++j) { EXPECT_NEAR(Res[i][j], Ref[i][j], 1e-5); } }
 
@@ -120,11 +163,12 @@ TEST(TracksTests, InstantDiffusion)
 		1, 3, 3, 3, 3, 3, 3, 3,
 		1, 4, 4, 4, 4, 4, 4, 4,
 	};
-	const std::vector<std::vector<double>> Ref = {{30, 30}};
+	const std::vector<std::vector<double>> Ref = {{1, 30, 30}};
 	Tracks tracks;
-	tracks.LoadTracking(InitialTracks.data(), 4, 1);
+	tracks.LoadTracks(InitialTracks.data(), 4, 1);
 	constexpr ComputesParams Cp = {.mode = fit_mode::linear, .fitLength = 2, .is3D = true, .pixelSize = 0.160, .exposureTime = 0.05};
 	const auto Res              = tracks.ComputeAllInstantDiffusion(Cp);
+
 	for (size_t i = 0; i < Ref.size(); ++i) { for (size_t j = 0; j < Ref[i].size(); ++j) { EXPECT_DOUBLE_EQ(Res[i][j], Ref[i][j]); } }
 
 	// Print
@@ -140,12 +184,12 @@ TEST(TracksTests, ComputeAllFit)
 		1, 4, 4, 4, 4, 4, 4, 4,
 	};
 	const std::vector<std::vector<std::vector<double>>> Ref = {
-		{{4, 10, 30, -6, 1, 40, -10, 0.979592}},                                                  // linear
-		{{4, 10, 30, -6, 1, 2, 3, 1, 34.641016}},                                                 // power
-		{{4, 10, 30, -6, 1, 29012085.510261, 48353453.768656, -4.217218, 0.979592, 4664.660863}}, // exponential
+		{{1, 4, 10, 30, -6, 1, 40, -10, 0.979592}},                                                  // linear
+		{{1, 4, 10, 30, -6, 1, 2, 3, 1, 34.641016}},                                                 // power
+		{{1, 4, 10, 30, -6, 1, 29012085.510261, 48353453.768656, -4.217218, 0.979592, 4664.660863}}, // exponential
 	};
 	Tracks tracks;
-	tracks.LoadTracking(InitialTracks.data(), 4, 1);
+	tracks.LoadTracks(InitialTracks.data(), 4, 1);
 	const std::vector Modes = {fit_mode::linear, fit_mode::power, fit_mode::exponential};
 	for (size_t i = 0; i < Modes.size(); ++i) {
 		const ComputesParams Cp = {.mode = Modes[i], .fitLength = 2, .is3D = true, .pixelSize = 0.160, .exposureTime = 0.05};

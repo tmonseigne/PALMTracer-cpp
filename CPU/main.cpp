@@ -103,8 +103,7 @@ PT_API uint64_t PT_CALL Localization(const uint16_t* input, double* output, cons
 	std::call_once(omp_init_flag, InitOpenMP);
 
 	const palm_tracer::Vec3I Dim = {.x = width, .y = height, .z = planes};
-
-	const auto Palm = palm_tracer::Palm(input, output, outputSize, Dim, thresholdVal, watershedRatio, fit, fit_params);
+	const auto Palm              = palm_tracer::Palm(input, output, outputSize, Dim, thresholdVal, watershedRatio, fit, fit_params);
 	return Palm.Processing();
 }
 
@@ -116,10 +115,11 @@ PT_API uint64_t PT_CALL Localization(const uint16_t* input, double* output, cons
 /// <param name="nPoints">Nombre de points présents dans <paramref name="input"/>.</param>
 /// <param name="maxDistance">Distance maximale autorisée entre deux points de deux plans consécutifs pour créer une liaison.</param>
 /// <returns>Nombre total de valeurs écrites dans <paramref name="output"/>, soit <c>2 × nPoints</c>.</returns>
-PT_API uint64_t PT_CALL Tracking(const double* input, uint64_t* output, const uint64_t nPoints, const double maxDistance)
+PT_API void PT_CALL Tracking(const double* input, uint64_t* output, const uint64_t nPoints, const double maxDistance)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
-	return palm_tracer::tracking::Tracks::Tracking(input, output, nPoints, maxDistance);
+
+	palm_tracer::tracking::Tracks::Tracking(input, output, nPoints, maxDistance);
 }
 
 
@@ -130,7 +130,7 @@ PT_API uint64_t PT_CALL Tracking(const double* input, uint64_t* output, const ui
 /// </summary>
 /// <param name="input">Pointeur vers le tableau d'entrée contenant les trajectoires initiales, tel que produit par <c>Tracking</c> ou une étape précédente.</param>
 /// <param name="output">Pointeur vers le tableau de sortie contenant les trajectoires après reconnexion des blinkings. Le buffer doit être pré-alloué.</param>
-/// <param name="nRow">Nombre de lignes (trajets / points) dans le tableau d'entrée. La signification exacte dépend du format adopté dans <c>Tracks::LoadTracking</c>.</param>
+/// <param name="nRow">Nombre de lignes (trajets / points) dans le tableau d'entrée. La signification exacte dépend du format adopté dans <c>Tracks::LoadTracks</c>.</param>
 /// <param name="pixelSize">Taille d'un pixel, en unités physiques (par exemple µm/pixel). Utilisée pour convertir les distances en unités physiques lors de la reconnexion.</param>
 /// <param name="mode">Mode de diffusion des cibles. La signification des différents modes est définie par <c>Tracks::BlinkingReconnection</c>.</param>
 /// <param name="maxDuration">Durée maximale (en nombre de frames) autorisée entre deux segments pour être considérés comme appartenant à la même trajectoire.</param>
@@ -142,7 +142,7 @@ PT_API uint64_t PT_CALL BlinkingReconnection(const double* input, double* output
 	std::call_once(omp_init_flag, InitOpenMP);
 
 	palm_tracer::tracking::Tracks tracks;
-	tracks.LoadTracking(input, nRow, pixelSize);
+	tracks.LoadTracks(input, nRow, pixelSize);
 	tracks.BlinkingReconnection(mode, maxDuration, maxSpeed);
 	return tracks.FillOutput(output);
 }
@@ -159,11 +159,11 @@ PT_API uint64_t PT_CALL BlinkingReconnection(const double* input, double* output
 /// <item><description>et/ou des métriques de fit (linéaire, puissance, exponentiel).</description></item>
 /// </list>
 /// Les résultats sont encodés sous forme de tableaux irréguliers (voir <c>palm_tracer::matrix::SendIrregularArray</c>).</summary>
-/// <param name="input">Pointeur vers le tableau d'entrée contenant les trajectoires, au format attendu par <c>Tracks::LoadTracking</c>.</param>
+/// <param name="input">Pointeur vers le tableau d'entrée contenant les trajectoires, au format attendu par <c>Tracks::LoadTracks</c>.</param>
 /// <param name="outputMSD">Pointeur vers le tableau de sortie pour les MSD, si <paramref name="isMSD" /> est vrai.</param>
 /// <param name="outputInd">Pointeur vers le tableau de sortie pour les coefficients de diffusion instantanée, si <paramref name="isInd" /> est vrai.</param>
 /// <param name="outputFit">Pointeur vers le tableau de sortie pour les résultats des fits (selon <paramref name="fitMode" />).</param>
-/// <param name="nRow">Nombre de lignes dans le tableau d'entrée (nombre de points ou de trajectoires, selon la convention de <c>LoadTracking</c>).</param>
+/// <param name="nRow">Nombre de lignes dans le tableau d'entrée (nombre de points ou de trajectoires, selon la convention de <c>LoadTracks</c>).</param>
 /// <param name="isMSD">Si vrai, calcule et remplit <paramref name="outputMSD" /> avec les MSD de toutes les trajectoires.</param>
 /// <param name="isInd">Si vrai, calcule et remplit <paramref name="outputInd" /> avec les coefficients de diffusion instantanée pour chaque trajectoire.</param>
 /// <param name="is3D">Indique si les trajectoires sont 3D (<c>true</c>) ou 2D (<c>false</c>), ce qui affecte le calcul des métriques.</param>
@@ -193,7 +193,7 @@ PT_API bool PT_CALL TracksCompute(const double* input, double* outputMSD, double
 		.exposureTime = exposureTime
 	};
 	palm_tracer::tracking::Tracks tracks;
-	tracks.LoadTracking(input, nRow, pixelSize);
+	tracks.LoadTracks(input, nRow, pixelSize);
 
 	if (isMSD) {
 		const auto MSD = tracks.ComputeAllMSD();

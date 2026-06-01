@@ -55,7 +55,6 @@
       <Filter>lib</Filter>
     </ClCompile>
     <ClCompile Include="test_fit_AstigFit.cpp" />
-    <ClCompile Include="test_tr_Tracking.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TiffManagement.hpp" />

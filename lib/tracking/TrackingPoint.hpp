@@ -17,9 +17,9 @@ static constexpr size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
 /// <summary></summary>
 struct TrackingPoint {
 	Point point;
-	size_t next        = INVALID_INDEX;
-	size_t previous    = INVALID_INDEX;
-	size_t trackId     = 0;
+	size_t next     = INVALID_INDEX;
+	size_t previous = INVALID_INDEX;
+	size_t trackId  = 0;
 
 	/// <summary></summary>
 	/// <param name="other"></param>
@@ -42,5 +42,11 @@ struct Candidate {
 	size_t from      = INVALID_INDEX;
 	size_t to        = INVALID_INDEX;
 	double distance2 = 0.0;
+};
+
+/// <summary></summary>
+struct Track {
+	size_t id = 0;
+	std::vector<Point> points; ///< Liste des points de la trajectoire.
 };
 } // namespace palm_tracer::tracking

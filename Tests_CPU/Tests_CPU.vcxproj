@@ -121,7 +121,6 @@
     <ClCompile Include="test_sp_Matrix.cpp" />
     <ClCompile Include="test_sp_Spline.cpp" />
     <ClCompile Include="test_tr_Point.cpp" />
-    <ClCompile Include="test_tr_Tracking.cpp" />
     <ClCompile Include="test_tr_Tracks.cpp" />
   </ItemGroup>
   <ItemGroup>
