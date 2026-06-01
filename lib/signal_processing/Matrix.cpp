@@ -68,8 +68,7 @@ size_t SendIrregularArray(const std::vector<std::vector<double>>& data, double* 
 			++nRow;
 			continue;
 		}
-		output[idx++] = static_cast<double>(Row.size() + 1); // Écrit L (longueur) comme double (la lecture côté Python fera int(...)).
-		output[idx++] = static_cast<double>(nRow); // Écrit le numéro de la ligne (ainsi une ligne vide ne provoquera pas de comportements non voulus).
+		output[idx++] = static_cast<double>(Row.size());  // Écrit L (longueur) comme double (la lecture côté Python fera int(...)).
 		for (const double V : Row) { output[idx++] = V; } // Écrit les L valeurs
 		++nRow;
 	}

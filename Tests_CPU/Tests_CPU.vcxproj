@@ -92,11 +92,7 @@
     <ClInclude Include="..\lib\signal_processing\Spline.hpp" />
     <ClInclude Include="..\lib\Structs.hpp" />
     <ClInclude Include="..\lib\tracking\ComputesParams.hpp" />
-    <ClInclude Include="..\lib\tracking\Node.hpp" />
-    <ClInclude Include="..\lib\tracking\Parameters.hpp" />
     <ClInclude Include="..\lib\tracking\Point.hpp" />
-    <ClInclude Include="..\lib\tracking\TimeNodes.hpp" />
-    <ClInclude Include="..\lib\tracking\Tracking.hpp" />
     <ClInclude Include="..\lib\tracking\Tracks.hpp" />
     <ClInclude Include="..\lib\tracking\TracksFit.hpp" />
     <ClInclude Include="TiffManagement.hpp" />
@@ -115,9 +111,6 @@
     <ClCompile Include="..\lib\signal_processing\Matrix.cpp" />
     <ClCompile Include="..\lib\signal_processing\PSF.cpp" />
     <ClCompile Include="..\lib\signal_processing\Spline.cpp" />
-    <ClCompile Include="..\lib\tracking\Node.cpp" />
-    <ClCompile Include="..\lib\tracking\TimeNodes.cpp" />
-    <ClCompile Include="..\lib\tracking\Tracking.cpp" />
     <ClCompile Include="..\lib\tracking\Tracks.cpp" />
     <ClCompile Include="..\lib\tracking\TracksFit.cpp" />
     <ClCompile Include="test_fit_AstigFit.cpp" />
@@ -128,7 +121,6 @@
     <ClCompile Include="test_sp_Matrix.cpp" />
     <ClCompile Include="test_sp_Spline.cpp" />
     <ClCompile Include="test_tr_Point.cpp" />
-    <ClCompile Include="test_tr_Tracking.cpp" />
     <ClCompile Include="test_tr_Tracks.cpp" />
   </ItemGroup>
   <ItemGroup>

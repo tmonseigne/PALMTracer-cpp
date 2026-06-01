@@ -8,12 +8,23 @@ namespace palm_tracer {
 constexpr double EPSILON = 1e-10;
 const std::vector NAN_VECTOR(3, std::numeric_limits<double>::quiet_NaN());
 
+//-------------------------------------------------------------------------------------------------
+TEST(MatrixTest, Print)
+{
+	const std::vector<std::vector<double>> M1 = {{1, 2}, {3, 4}};
+	const std::vector<double> M2              = {2, 1, 2, 3, 3, 4, 5, -1};
+	matrix::PrintMatrix(M1);
+	matrix::PrintMatrix(M2, 4, 2);
+	matrix::PrintVolume(M2, Vec3I(2, 2, 2));
+	matrix::PrintVector(M2);
+	EXPECT_TRUE(true);
+}
 
 //-------------------------------------------------------------------------------------------------
 TEST(MatrixTest, SendIrregular)
 {
 	const std::vector<std::vector<double>> Data = {{1, 2}, {3, 4, 5}, {}};
-	const std::vector<double> Ref               = {3, 1, 1, 2, 4, 2, 3, 4, 5, -1};
+	const std::vector<double> Ref               = {2, 1, 2, 3, 3, 4, 5, -1};
 
 	std::vector res(Ref.size(), 0.0);
 	const size_t N = matrix::SendIrregularArray(Data, res.data());
