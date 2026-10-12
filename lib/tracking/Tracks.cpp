@@ -436,6 +436,7 @@ void Tracks::track(std::vector<TrackingPoint>& points, const std::vector<PlaneRa
 		std::vector<Candidate> candidates;
 		candidates.reserve((Current.end - Current.begin) * (Next.end - Next.begin));
 
+		// Pour chaque point du plan courant, on cherche les points du plan suivant qui sont dans la distance maximale
 		for (size_t i = Current.begin; i < Current.end; ++i) {
 			for (size_t j = Next.begin; j < Next.end; ++j) {
 				const double D2 = points[i].GetSqDistance(points[j]);
@@ -443,16 +444,20 @@ void Tracks::track(std::vector<TrackingPoint>& points, const std::vector<PlaneRa
 			}
 		}
 
+		// Tri des candidats par distance croissante, puis par index croissant pour garantir la stabilité
 		std::ranges::sort(candidates, [](const Candidate& a, const Candidate& b) {
 			if (std::abs(a.distance2 - b.distance2) > std::numeric_limits<double>::epsilon()) { return a.distance2 < b.distance2; }
 			if (a.from != b.from) { return a.from < b.from; }
 			return a.to < b.to;
 		});
 
+		// Pour chaque candidat, on relie les points si aucun des deux n'est déjà relié
 		for (const Candidate& C : candidates) {
+			// les points ne sont accedés pour le plan P uniquement pour next et pour le plan P+1 pour previous, donc pas de data race possible
 			TrackingPoint& from = points[C.from];
 			TrackingPoint& to   = points[C.to];
 
+			// Si l'un des deux est déjà relié, on ignore ce candidat. Utile, car on a trié par distance croissante, donc on garde le plus proche.
 			if (from.next != INVALID_INDEX || to.previous != INVALID_INDEX) { continue; }
 
 			from.next   = C.to;
@@ -460,13 +465,14 @@ void Tracks::track(std::vector<TrackingPoint>& points, const std::vector<PlaneRa
 		}
 	}
 
+	// Attribution des identifiants de trajectoire
 	size_t trackId = 1;
 	for (TrackingPoint& point : points) {
-		if (point.previous != INVALID_INDEX) { continue; }
-		for (TrackingPoint* current = &point; current != nullptr;) {
-			current->trackId = trackId;
-			if (current->next == INVALID_INDEX) { break; }
-			current = &points[current->next];
+		if (point.previous != INVALID_INDEX) { continue; }           // On ne commence que par les points qui n'ont pas de précédent (têtes de trajectoire).
+		for (TrackingPoint* current = &point; current != nullptr;) { // Parcours de la chaîne de points reliés
+			current->trackId = trackId;                              // Attribution de l'identifiant de trajectoire
+			if (current->next == INVALID_INDEX) { break; }           // Fin de la chaîne
+			current = &points[current->next];                        // Passage au point suivant
 		}
 
 		++trackId;

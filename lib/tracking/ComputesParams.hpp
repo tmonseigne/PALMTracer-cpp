@@ -19,7 +19,7 @@ enum class blinking_mode : uint8_t {
 	linear     ///< Distance maximale croissant linéairement avec le temps écoulé.
 };
 
-/// <summary>Mode du modèle d'ajustement pour les calculs statistiques des trajectoires.
+/// <summary>Mode du modèle d'ajustement pour l'analyse statistique des trajectoires.
 /// L'ajustement cherche le vecteur de paramètres <c>p</c> qui minimise la somme des carrés :
 /// \f[ \Phi(p) = \sum_{i=0}^{N-1}\big(y_i - f(x_i; p)\big)^2 \f] (moindres carrés non pondérés).
 /// La qualité peut être évaluée via <see cref="TracksFit::computeR2"/>.</summary>

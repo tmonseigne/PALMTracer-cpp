@@ -14,7 +14,7 @@ et ce projet adhère à [Semantic Versioning](https://semver.org/lang/fr/).
 ### Ajouté
 
 - Ajout de plusieurs helper d'affichage de matrices pour le debug.
-- Ajout d'une classe dédiée aux calculs sur trajectoire.
+- Ajout d'une classe dédiée à l'analyse des trajectoires.
 - Ajout d'une fonction de reconnexion de trajectoires suite au scintillements. ([#27](https://github.com/tmonseigne/PALMTracer-cpp/pull/27))
 - Ajout des calculs de différentes métriques sur les trajectoires. ([#29](https://github.com/tmonseigne/PALMTracer-cpp/pull/29))
 - Ajout de nombreux tests

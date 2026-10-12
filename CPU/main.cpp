@@ -148,7 +148,7 @@ PT_API uint64_t PT_CALL BlinkingReconnection(const double* input, double* output
 }
 
 //-------------------------------------------------------------------------------------------------
-/// <summary>Calcule des métriques sur les trajectoires (MSD, diffusion instantanée, fits).
+/// <summary>Analyse les trajectoires (MSD, diffusion instantanée, fits).
 ///
 /// Cette fonction charge un ensemble de trajectoires et, en fonction des drapeaux
 /// <paramref name="isMSD" />, <paramref name="isInd" /> et <paramref name="fitMode" />,
@@ -179,7 +179,7 @@ PT_API uint64_t PT_CALL BlinkingReconnection(const double* input, double* output
 /// <param name="fitParams">Tableau de paramètres pour le fit. L'élément <c>fitParams[0]</c> doit contenir la longueur du fit (<c>fitLength</c>, nombre de points utilisés pour le fit).
 /// Les autres éléments peuvent être utilisés par des variantes futures.</param>
 /// <returns>Toujours <c>true</c> si l'exécution s'est terminée sans exception. En cas d'erreur interne, une exception C++ peut être levée et doit être gérée côté appelant .NET/Python.</returns>
-PT_API bool PT_CALL TracksCompute(const double* input, double* outputMSD, double* outputInd, double* outputFit, const uint64_t nRow,
+PT_API bool PT_CALL TrackAnalysis(const double* input, double* outputMSD, double* outputInd, double* outputFit, const uint64_t nRow,
                                   const bool isMSD, const bool isInd, const bool is3D,
                                   const double pixelSize, const double exposureTime, const uint64_t fitMode, const double* fitParams)
 {
