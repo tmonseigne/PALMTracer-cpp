@@ -1,6 +1,9 @@
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <random>
+#include <string>
+#include <vector>
 #include <gtest/gtest.h>
 
 #include "Structs.hpp"
@@ -15,6 +18,34 @@ constexpr astig_model REF_MODEL = {
 	std::array{-60.0, 300.0, 0.06, 0.02, 140.0},
 	std::array{60.0, 300.0, -0.06, 0.02, 140.0}
 };
+
+/// <summary>Modèle dont les deux sigmas varient en sens opposés sur le domaine testé, pour une estimation axiale non ambiguë.</summary>
+constexpr astig_model ESTIMATE_MODEL = {
+	std::array{-1000.0, 1000.0, 0.0, 0.0, 160.0},
+	std::array{1000.0, 1000.0, 0.0, 0.0, 160.0}
+};
+
+/// <summary>Scénario d'estimation axiale avec bornes de recherche fixes à ±500 nm.</summary>
+struct EstimateTestParams {
+	double observedZ; ///< <summary>Position utilisée pour générer les sigmas observés, en nm.</summary>
+	double expectedZ; ///< <summary>Position attendue après estimation dans le domaine, en nm.</summary>
+	const char* name; ///< <summary>Identifiant anglais du scénario Google Test.</summary>
+};
+
+constexpr std::array<EstimateTestParams, 9> ESTIMATE_CASES = {{
+	{-600.0, -500.0, "BelowLowerBound"},
+	{-500.0, -500.0, "AtLowerBound"},
+	{-499.0, -499.0, "NearLowerBound"},
+	{-123.4, -123.4, "NegativeBetweenGridPoints"},
+	{0.0, 0.0, "AtCenter"},
+	{123.4, 123.4, "PositiveBetweenGridPoints"},
+	{499.0, 499.0, "NearUpperBound"},
+	{500.0, 500.0, "AtUpperBound"},
+	{600.0, 500.0, "AboveUpperBound"}
+}};
+
+/// <summary>Tests paramétrés des limites et du raffinement de l'estimation axiale.</summary>
+class AstigFitEstimateTests : public testing::TestWithParam<EstimateTestParams> { };
 
 //-------------------------------------------------------------------------------------------------
 static double SigmaModel(const std::array<double, 5>& p, const double z)
@@ -97,6 +128,66 @@ TEST(AstigFitTests, Estimate)
 		std::cout << "Point " << Datas[i] << ", Estimated z: " << Res[i] << " nm\n";
 		EXPECT_NEAR(Res[i].x, Datas[i].z, 40.0); // tol 40 nm très très large.
 		EXPECT_LT(Res[i].y, 0.002); // Erreur par rapport au modèle très faible.
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+TEST_P(AstigFitEstimateTests, EstimateWithinLimits)
+{
+	const AstigFit Fit(PIXEL_SIZE, SAMPLING);
+	const auto& [observedZ, expectedZ, name] = GetParam();
+	SCOPED_TRACE(name);
+	const Vec2D Sigma = {.x = SigmaModel(ESTIMATE_MODEL[0], observedZ), .y = SigmaModel(ESTIMATE_MODEL[1], observedZ)};
+	const Vec2D Res = Fit.Estimate(ESTIMATE_MODEL, Sigma, {-500.0, 500.0});
+
+	if (std::abs(expectedZ) == 500.0) { EXPECT_DOUBLE_EQ(Res.x, expectedZ); }
+	else {
+		EXPECT_NEAR(Res.x, expectedZ, 1.0);
+		EXPECT_GT(Res.x, -500.0);
+		EXPECT_LT(Res.x, 500.0);
+	}
+
+	// L'erreur retournée doit correspondre au Z effectivement retenu, y compris en cas de saturation.
+	const double Dx = SigmaModel(ESTIMATE_MODEL[0], Res.x) - Sigma.x;
+	const double Dy = SigmaModel(ESTIMATE_MODEL[1], Res.x) - Sigma.y;
+	EXPECT_NEAR(Res.y, Dx * Dx + Dy * Dy, 1e-12);
+	EXPECT_GE(Res.y, 0.0);
+	if (std::abs(observedZ) > 500.0) { EXPECT_GT(Res.y, 0.0); }
+
+	// Pour les positions entre deux points de grille, Brent doit réellement améliorer l'estimation initiale.
+	if (std::abs(observedZ) == 123.4) {
+		const double GridZ = std::round(observedZ / 5.0) * 5.0; // Grille de 201 points sur [-500, 500].
+		const double GridDx = SigmaModel(ESTIMATE_MODEL[0], GridZ) - Sigma.x;
+		const double GridDy = SigmaModel(ESTIMATE_MODEL[1], GridZ) - Sigma.y;
+		EXPECT_LT(Res.y, GridDx * GridDx + GridDy * GridDy);
+	}
+}
+
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
+
+INSTANTIATE_TEST_SUITE_P(
+	AxialLimits, AstigFitEstimateTests, testing::ValuesIn(ESTIMATE_CASES),
+	[](const testing::TestParamInfo<EstimateTestParams>& info) { return std::string(info.param.name); });
+
+//-------------------------------------------------------------------------------------------------
+TEST(AstigFitTests, EstimateBatchWithinLimits)
+{
+	const AstigFit Fit(PIXEL_SIZE, SAMPLING);
+	std::vector<Vec2D> sigmas;
+	sigmas.reserve(ESTIMATE_CASES.size());
+	for (const auto& scenario : ESTIMATE_CASES) {
+		sigmas.push_back({.x = SigmaModel(ESTIMATE_MODEL[0], scenario.observedZ), .y = SigmaModel(ESTIMATE_MODEL[1], scenario.observedZ)});
+	}
+
+	const auto Res = Fit.Estimate(ESTIMATE_MODEL, sigmas, {-500.0, 500.0});
+	ASSERT_EQ(Res.size(), ESTIMATE_CASES.size());
+	for (size_t i = 0; i < Res.size(); ++i) {
+		SCOPED_TRACE(ESTIMATE_CASES[i].name);
+		const Vec2D Scalar = Fit.Estimate(ESTIMATE_MODEL, sigmas[i], {-500.0, 500.0});
+		EXPECT_DOUBLE_EQ(Res[i].x, Scalar.x);
+		EXPECT_DOUBLE_EQ(Res[i].y, Scalar.y);
 	}
 }
 
