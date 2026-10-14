@@ -32,17 +32,19 @@ struct EstimateTestParams {
 	const char* name; ///< <summary>Identifiant anglais du scénario Google Test.</summary>
 };
 
-constexpr std::array<EstimateTestParams, 9> ESTIMATE_CASES = {{
-	{-600.0, -500.0, "BelowLowerBound"},
-	{-500.0, -500.0, "AtLowerBound"},
-	{-499.0, -499.0, "NearLowerBound"},
-	{-123.4, -123.4, "NegativeBetweenGridPoints"},
-	{0.0, 0.0, "AtCenter"},
-	{123.4, 123.4, "PositiveBetweenGridPoints"},
-	{499.0, 499.0, "NearUpperBound"},
-	{500.0, 500.0, "AtUpperBound"},
-	{600.0, 500.0, "AboveUpperBound"}
-}};
+constexpr std::array<EstimateTestParams, 9> ESTIMATE_CASES = {
+	{
+		{-600.0, -500.0, "BelowLowerBound"},
+		{-500.0, -500.0, "AtLowerBound"},
+		{-499.0, -499.0, "NearLowerBound"},
+		{-123.4, -123.4, "NegativeBetweenGridPoints"},
+		{0.0, 0.0, "AtCenter"},
+		{123.4, 123.4, "PositiveBetweenGridPoints"},
+		{499.0, 499.0, "NearUpperBound"},
+		{500.0, 500.0, "AtUpperBound"},
+		{600.0, 500.0, "AboveUpperBound"}
+	}
+};
 
 /// <summary>Tests paramétrés des limites et du raffinement de l'estimation axiale.</summary>
 class AstigFitEstimateTests : public testing::TestWithParam<EstimateTestParams> { };
@@ -127,7 +129,7 @@ TEST(AstigFitTests, Estimate)
 	for (size_t i = 0; i < Datas.size(); ++i) {
 		std::cout << "Point " << Datas[i] << ", Estimated z: " << Res[i] << " nm\n";
 		EXPECT_NEAR(Res[i].x, Datas[i].z, 40.0); // tol 40 nm très très large.
-		EXPECT_LT(Res[i].y, 0.002); // Erreur par rapport au modèle très faible.
+		EXPECT_LT(Res[i].y, 0.002);              // Erreur par rapport au modèle très faible.
 	}
 }
 
@@ -138,7 +140,7 @@ TEST_P(AstigFitEstimateTests, EstimateWithinLimits)
 	const auto& [observedZ, expectedZ, name] = GetParam();
 	SCOPED_TRACE(name);
 	const Vec2D Sigma = {.x = SigmaModel(ESTIMATE_MODEL[0], observedZ), .y = SigmaModel(ESTIMATE_MODEL[1], observedZ)};
-	const Vec2D Res = Fit.Estimate(ESTIMATE_MODEL, Sigma, {-500.0, 500.0});
+	const Vec2D Res   = Fit.Estimate(ESTIMATE_MODEL, Sigma, {-500.0, 500.0});
 
 	if (std::abs(expectedZ) == 500.0) { EXPECT_DOUBLE_EQ(Res.x, expectedZ); }
 	else {
@@ -156,7 +158,7 @@ TEST_P(AstigFitEstimateTests, EstimateWithinLimits)
 
 	// Pour les positions entre deux points de grille, Brent doit réellement améliorer l'estimation initiale.
 	if (std::abs(observedZ) == 123.4) {
-		const double GridZ = std::round(observedZ / 5.0) * 5.0; // Grille de 201 points sur [-500, 500].
+		const double GridZ  = std::round(observedZ / 5.0) * 5.0; // Grille de 201 points sur [-500, 500].
 		const double GridDx = SigmaModel(ESTIMATE_MODEL[0], GridZ) - Sigma.x;
 		const double GridDy = SigmaModel(ESTIMATE_MODEL[1], GridZ) - Sigma.y;
 		EXPECT_LT(Res.y, GridDx * GridDx + GridDy * GridDy);

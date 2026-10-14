@@ -10,7 +10,7 @@
 #include "signal_processing/Matrix.hpp"
 #include "signal_processing/Spline.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::signal_processing {
 //-------------------------------------------------------------------------------------------------
 TEST(BSpline3DTests, DiracImpulse)
 {
@@ -41,4 +41,4 @@ TEST(BSpline3DTests, DiracImpulse)
 	//	std::cout << "\n";
 	//}
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::signal_processing

@@ -2,12 +2,16 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cmath>
 #include <filesystem>
+#include <numeric>
+#include <tuple>
 
+#include "TestUtils.hpp"
 #include "TiffManagement.hpp"
 #include "signal_processing//Alignment.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::signal_processing {
 const std::filesystem::path PATH          = std::filesystem::path(__FILE__).parent_path();
 const std::filesystem::path REF_FILE_PATH = PATH / "Input/Alignement_Reference.tiff";
 const std::filesystem::path OUTPUT_PATH   = PATH / "Output";
@@ -18,6 +22,9 @@ struct AlignTestParams {
 	std::array<std::array<double, 10>, 2> factors;
 	int upsampling;
 };
+
+/// <summary>Affiche le fichier du scenario au lieu du contenu binaire des coefficients.</summary>
+void PrintTo(const AlignTestParams& value, std::ostream* stream) { *stream << std::filesystem::path(value.outputPath).stem().string(); }
 
 //-------------------------------------------------------------------------------------------------
 class AlignmentTests : public testing::TestWithParam<AlignTestParams> { };
@@ -51,9 +58,155 @@ TEST(AlignmentTests, BlankCallWithFactor)
 	constexpr std::array<std::array<double, 10>, 2> Factors = {};
 
 	align.Align(input.data(), output.data(), Dim, Factors, Upsampling);
+	EXPECT_EQ(output, input);
 }
 
-TEST_P(AlignmentTests, AlignmentCore)
+/// <summary>Verifie l'identite et la reutilisation d'un objet sur une pile non carree.</summary>
+TEST(AlignmentTests, IdentityAndReuse)
+{
+	constexpr Vec3I Dim{.x = 7, .y = 5, .z = 3};
+	std::array<std::array<double, 10>, 2> factors{};
+	factors[0][7] = factors[1][8] = 1;
+	std::vector<uint16_t> input(Dim.GetSize()), output(Dim.GetSize(), 0);
+	std::iota(input.begin(), input.end(), uint16_t{1});
+	Alignment align;
+	align.Align(input.data(), output.data(), Dim, factors, 1);
+	EXPECT_EQ(output, input);
+	std::ranges::reverse(input);
+	align.Align(input.data(), output.data(), Dim, factors, 1);
+	EXPECT_EQ(output, input);
+}
+
+/// <summary>Verifie la translation entiere et le remplissage des bords par des zeros.</summary>
+TEST(AlignmentTests, IntegerTranslation)
+{
+	constexpr Vec3I Dim{.x = 6, .y = 5, .z = 2};
+	std::array<std::array<double, 10>, 2> factors{};
+	factors[0][7] = factors[1][8] = factors[0][9] = factors[1][9] = 1;
+	std::vector<uint16_t> input(Dim.GetSize()), output(Dim.GetSize(), 999), expected(Dim.GetSize(), 0);
+	std::iota(input.begin(), input.end(), uint16_t{1});
+	for (size_t z = 0; z < Dim.z; ++z) {
+		for (size_t y = 1; y < Dim.y; ++y) {
+			for (size_t x = 1; x < Dim.x; ++x) { expected[z * Dim.GetPlaneSize() + y * Dim.x + x] = input[z * Dim.GetPlaneSize() + (y - 1) * Dim.x + x - 1]; }
+		}
+	}
+	Alignment align;
+	align.Align(input.data(), output.data(), Dim, factors, 1);
+	EXPECT_EQ(output, expected);
+}
+
+/// <summary>Verifie tous les pixels de la transposition sans melanger les plans.</summary>
+TEST(AlignmentTests, TransposePixels)
+{
+	constexpr Vec3I Dim{.x = 5, .y = 5, .z = 2};
+	std::array<std::array<double, 10>, 2> factors{};
+	factors[0][8] = factors[1][7] = 1;
+	std::vector<uint16_t> input(Dim.GetSize()), output(Dim.GetSize(), 0), expected(Dim.GetSize(), 0);
+	std::iota(input.begin(), input.end(), uint16_t{1});
+	for (size_t z = 0; z < Dim.z; ++z) {
+		for (size_t y = 0; y < Dim.y; ++y) {
+			for (size_t x = 0; x < Dim.x; ++x) { expected[z * Dim.GetPlaneSize() + y * Dim.x + x] = input[z * Dim.GetPlaneSize() + x * Dim.x + y]; }
+		}
+	}
+	Alignment align;
+	align.Align(input.data(), output.data(), Dim, factors, 1);
+	EXPECT_EQ(output, expected);
+}
+
+namespace {
+/// <summary>Acces aux coordonnees polynomiales sans modifier l'API de production.</summary>
+class AlignmentAccess final : public Alignment {
+public:
+	/// <summary>Evalue un seul coefficient du polynome sur l'axe choisi.</summary>
+	Vec2D Coordinate(const size_t coefficient, const bool vertical)
+	{
+		factors_                                = {};
+		factors_[vertical ? 1 : 0][coefficient] = 2.5;
+		Vec2D result{};
+		computeCoord(2, 3, result.x, result.y);
+		return result;
+	}
+};
+
+/// <summary>Controle chaque monome et chacun des deux axes independamment.</summary>
+class AlignmentPolynomialTests : public testing::TestWithParam<std::tuple<size_t, bool>> { };
+
+/// <summary>Deformations non lineaires dont les recouvrements se calculent analytiquement.</summary>
+class AlignmentWarpTests : public testing::TestWithParam<bool> { };
+}
+
+/// <summary>Verifie l'ordre des dix coefficients cubiques, quadratiques et affines.</summary>
+TEST_P(AlignmentPolynomialTests, CoordinateMonomials)
+{
+	const auto [coefficient, vertical] = GetParam();
+	constexpr std::array<double, 10> Monomials{8, 27, 12, 18, 4, 9, 6, 2, 3, 1};
+	AlignmentAccess align;
+	const auto Result = align.Coordinate(coefficient, vertical);
+	EXPECT_DOUBLE_EQ(vertical ? Result.y : Result.x, 2.5 * Monomials[coefficient]);
+	EXPECT_DOUBLE_EQ(vertical ? Result.x : Result.y, 0);
+}
+
+INSTANTIATE_TEST_SUITE_P(Coefficients, AlignmentPolynomialTests,
+                         testing::Combine(testing::Range(size_t{0}, size_t{10}), testing::Bool()),
+                         ([](const testing::TestParamInfo<std::tuple<size_t, bool>>& info) {
+	                         constexpr std::array Names{"XCubed", "YCubed", "XSquaredY", "XYSquared", "XSquared", "YSquared", "XY", "X", "Y", "Constant"};
+	                         return std::string(std::get<1>(info.param) ? "Vertical" : "Horizontal") + Names[std::get<0>(info.param)];
+	                         }));
+
+/// <summary>Verifie tous les poids d'une translation fractionnaire par une interpolation bilineaire independante.</summary>
+TEST(AlignmentTests, FractionalTranslation)
+{
+	constexpr Vec3I Dim{.x = 6, .y = 5, .z = 2};
+	std::array<std::array<double, 10>, 2> factors{};
+	factors[0][7] = factors[1][8] = 1;
+	factors[0][9] = 0.25;
+	factors[1][9] = 0.5;
+	std::vector<uint16_t> input(Dim.GetSize()), output(Dim.GetSize(), 999), expected(Dim.GetSize());
+	for (size_t i = 0; i < input.size(); ++i) { input[i] = static_cast<uint16_t>(16 * (i + 1)); }
+	for (size_t z = 0; z < Dim.z; ++z) {
+		for (size_t y = 0; y < Dim.y; ++y) {
+			for (size_t x = 0; x < Dim.x; ++x) {
+				double value = 0;
+				for (size_t dy = 0; dy < 2; ++dy) {
+					for (size_t dx = 0; dx < 2; ++dx) {
+						if (x < dx || y < dy) { continue; }
+						value += (dx == 0 ? 0.75 : 0.25) * 0.5 * input[z * Dim.GetPlaneSize() + (y - dy) * Dim.x + x - dx];
+					}
+				}
+				expected[z * Dim.GetPlaneSize() + y * Dim.x + x] = static_cast<uint16_t>(std::lround(value));
+			}
+		}
+	}
+	Alignment align;
+	align.Align(input.data(), output.data(), Dim, factors, 1);
+	EXPECT_EQ(output, expected);
+}
+
+/// <summary>Le pixel source devient un parallelogramme dont les aires de recouvrement sont connues.</summary>
+TEST_P(AlignmentWarpTests, PolynomialPixelOverlap)
+{
+	constexpr Vec3I Dim{.x = 6, .y = 5, .z = 1};
+	std::array<std::array<double, 10>, 2> factors{};
+	factors[0][7] = factors[1][8] = 1;
+	// X' = X + Y^2/4 ou X' = X + Y^3/8 ; Y' = Y.
+	factors[0][GetParam() ? 1 : 5] = GetParam() ? 0.125 : 0.25;
+	std::vector<uint16_t> input(Dim.GetSize(), 0), output(Dim.GetSize(), 0), expected(Dim.GetSize(), 0);
+	input[Dim.x + 1] = 160;
+	// Les coins sont relies lineairement par le splatting : integration de deux trapezes.
+	expected[Dim.x + 1] = GetParam() ? 70 : 60;
+	expected[Dim.x + 2] = GetParam() ? 90 : 100;
+	Alignment align;
+	align.Align(input.data(), output.data(), Dim, factors, 1);
+	EXPECT_EQ(output, expected);
+	EXPECT_EQ(std::accumulate(output.begin(), output.end(), uint64_t{0}), 160);
+}
+
+INSTANTIATE_TEST_SUITE_P(Warps, AlignmentWarpTests, testing::Bool(),
+                         [](const testing::TestParamInfo<bool>& info) { return info.param ? "Cubic" : "Quadratic"; });
+
+#pragma region Rendus speciaux
+/// <summary>Produit les rendus et verifie la relecture exacte du TIFF effectivement enregistre.</summary>
+TEST_P(AlignmentTests, SavesAndReloadsTransformedStack)
 {
 	if (!exists(OUTPUT_PATH)) { create_directories(OUTPUT_PATH); }
 	const auto& [outputPath, factors, upsampling] = GetParam();
@@ -76,7 +229,17 @@ TEST_P(AlignmentTests, AlignmentCore)
 
 	SaveTiff3D(outputPath.c_str(), output.data(), Newdim);
 
-	SUCCEED();
+	if (GetParam().factors == std::array<std::array<double, 10>, 2>{}) {
+		EXPECT_TRUE(std::ranges::all_of(output, [](const uint16_t value) { return value == 0; }));
+	}
+	else { EXPECT_TRUE(std::ranges::any_of(output, [](const uint16_t value) { return value > 0; })); }
+	std::vector<uint16_t> reloaded;
+	Vec3I reloadedDim{};
+	LoadTiff3D(outputPath.c_str(), reloaded, reloadedDim);
+	EXPECT_EQ(reloadedDim.x, Newdim.x);
+	EXPECT_EQ(reloadedDim.y, Newdim.y);
+	EXPECT_EQ(reloadedDim.z, Newdim.z);
+	EXPECT_EQ(reloaded, output);
 }
 
 #ifndef INSTANTIATE_TEST_SUITE_P
@@ -161,5 +324,11 @@ INSTANTIATE_TEST_SUITE_P(
 		return factors;
 		}(), 2
 		}
-	));
-} // namespace palm_tracer
+	),
+	([](const testing::TestParamInfo<AlignTestParams>& info) {
+		constexpr std::array Names{"Collapsed", "Identity", "TranslateQuarter", "TranslateHalf", "TranslateThreeQuarters",
+		"TranslateOne", "Zoom", "Transpose", "TranslateHalfUpsampled"};
+		return Names[info.index];
+		}));
+#pragma endregion Rendus speciaux
+} // namespace palm_tracer::signal_processing

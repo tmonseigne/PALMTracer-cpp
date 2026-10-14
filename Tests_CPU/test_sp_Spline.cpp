@@ -11,7 +11,7 @@
 #include "signal_processing/Matrix.hpp"
 #include "signal_processing/Spline.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::signal_processing {
 constexpr size_t ROI      = 29,
                  DISTANCE = 50,
                  DZ       = 10;
@@ -447,4 +447,4 @@ TEST(SplineTests, Calibrate)
 	std::cerr << "[WARNING] Ce test utilise une matrice non linéaire, ce qui produit une interpolation différente dans MATLAB. Mais résultat cohérent.\n";
 	SUCCEED();
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::signal_processing

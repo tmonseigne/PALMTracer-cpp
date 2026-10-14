@@ -1,21 +1,46 @@
-#include <gtest/gtest.h>
-
-#include <algorithm>
-#include <array>
-#include <numbers>
-#include <numeric>
-
-#include "Structs.hpp"
-#include "signal_processing/Matrix.hpp"
+#include "Constants.hpp"
+#include "TestUtils.hpp"
 #include "tracking/Tracks.hpp"
 
+#include <array>
+#include <cmath>
+#include <map>
+#include <tuple>
+
 namespace palm_tracer::tracking {
-// Tolérance relative (scale) + plancher absolu (abs_floor) pour valeurs ~0
-inline double RelAbsTol(const double ref, const double scale = 1e-9, const double abs_floor = 1e-12) { return std::max(abs_floor, std::abs(ref) * scale); }
+namespace {
+/// <summary>Colonnes du format de suivi commun aux deux langages.</summary>
+const std::vector<size_t> TrackColumns{0, 1, 2, 3, 4, 5, 6, 7};
 
+/// <summary>Charge les trajectoires et annule Z pour les calculs 2D.</summary>
+Tracks LoadTracksData(const bool is3D)
+{
+	auto table = LoadCsv(InputPath / "tracking2.csv");
+	if (!is3D) { for (auto& row : table) { row[5] = 0; } }
+	const auto Input = Flatten(table, TrackColumns);
+	Tracks result;
+	result.LoadTracks(Input.data(), table.size(), 1.0);
+	return result;
+}
 
-//-------------------------------------------------------------------------------------------------
-TEST(TracksTests, Tracking)
+using TrackingParams = std::tuple<size_t, bool, bool>;
+
+/// <summary>Variantes du suivi par mode d'ajustement, watershed et ordre d'entree.</summary>
+class TrackingTests : public testing::TestWithParam<TrackingParams> { };
+
+/// <summary>Modes de reconnexion independants valides sur fichiers CSV.</summary>
+class BlinkingTests : public testing::TestWithParam<size_t> { };
+
+/// <summary>Calculs calibres avec et sans coordonnee axiale.</summary>
+class TrackAnalysisTests : public testing::TestWithParam<bool> { };
+
+/// <summary>Ajustements non lineaires, complementaires au modele lineaire teste en 2D et 3D.</summary>
+class TrackFitTests : public testing::TestWithParam<size_t> { };
+} // namespace
+
+#pragma region Tracking
+/// <summary>Verifie les associations lorsque des plans sont absents.</summary>
+TEST(TracksTests, TrackingWithGaps)
 {
 	const std::vector<double> InitialPoints = {
 		// Plan 3
@@ -56,75 +81,81 @@ TEST(TracksTests, Tracking)
 	for (size_t i = 0; i < N * 2; ++i) { EXPECT_EQ(output[i], Ref[i]); }
 }
 
-//-------------------------------------------------------------------------------------------------
-TEST(TracksTests, BlinkingReconnection)
+/// <summary>Compare les associations Id/Track, y compris lorsque les localisations sont inversees.</summary>
+TEST_P(TrackingTests, Links)
 {
-	const std::vector<double> InitialTracks = {
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 99, 2, 1, 1, 1, 2, 2,
-		2, 1, 3, 6, 1, 1, 3, 3, 2, 2, 4, 6, 1, 1, 4, 4,
-		3, 3, 5, 4, 1, 1, 5, 5, 3, 4, 6, 4, 1, 1, 6, 6,
-		4, 3, 7, 5, 1, 1, 7, 7, 4, 4, 8, 5, 1, 1, 8, 8,
-		5, 5, 9, 4, 1, 1, 9, 9, 5, 6, 10, 4, 1, 1, 10, 10,
-		6, 11, 11, 1, 1, 1, 11, 11, 6, 12, 12, 1, 1, 1, 12, 12,
-		7, 16, 13, 5, 1, 1, 13, 13, 7, 17, 14, 5, 1, 1, 14, 14,
-		8, 31, 15, 1, 1, 1, 15, 15, 8, 32, 16, 1, 1, 1, 16, 16,
-		9, 36, 17, 9, 1, 1, 17, 17, 9, 37, 18, 9, 1, 1, 18, 18
-	};
-
-	const std::array Ref = {
-		std::vector<double>{
-			1, 1, 1, 1, 1, 1, 1, 1, 1, 99, 2, 1, 1, 1, 2, 2,
-			2, 1, 3, 6, 1, 1, 3, 3, 2, 2, 4, 6, 1, 1, 4, 4,
-			2, 3, 7, 5, 1, 1, 7, 7, 2, 4, 8, 5, 1, 1, 8, 8,
-			2, 5, 9, 4, 1, 1, 9, 9, 2, 6, 10, 4, 1, 1, 10, 10,
-			3, 3, 5, 4, 1, 1, 5, 5, 3, 4, 6, 4, 1, 1, 6, 6,
-			4, 11, 11, 1, 1, 1, 11, 11, 4, 12, 12, 1, 1, 1, 12, 12,
-			5, 16, 13, 5, 1, 1, 13, 13, 5, 17, 14, 5, 1, 1, 14, 14,
-			6, 31, 15, 1, 1, 1, 15, 15, 6, 32, 16, 1, 1, 1, 16, 16,
-			7, 36, 17, 9, 1, 1, 17, 17, 7, 37, 18, 9, 1, 1, 18, 18
-		},
-		std::vector<double>{
-			1, 1, 1, 1, 1, 1, 1, 1, 1, 99, 2, 1, 1, 1, 2, 2,
-			2, 1, 3, 6, 1, 1, 3, 3, 2, 2, 4, 6, 1, 1, 4, 4,
-			2, 3, 7, 5, 1, 1, 7, 7, 2, 4, 8, 5, 1, 1, 8, 8,
-			2, 5, 9, 4, 1, 1, 9, 9, 2, 6, 10, 4, 1, 1, 10, 10,
-			3, 3, 5, 4, 1, 1, 5, 5, 3, 4, 6, 4, 1, 1, 6, 6,
-			4, 11, 11, 1, 1, 1, 11, 11, 4, 12, 12, 1, 1, 1, 12, 12,
-			4, 16, 13, 5, 1, 1, 13, 13, 4, 17, 14, 5, 1, 1, 14, 14,
-			5, 31, 15, 1, 1, 1, 15, 15, 5, 32, 16, 1, 1, 1, 16, 16,
-			6, 36, 17, 9, 1, 1, 17, 17, 6, 37, 18, 9, 1, 1, 18, 18
-		},
-		std::vector<double>{
-			1, 1, 1, 1, 1, 1, 1, 1, 1, 99, 2, 1, 1, 1, 2, 2,
-			2, 1, 3, 6, 1, 1, 3, 3, 2, 2, 4, 6, 1, 1, 4, 4,
-			2, 3, 7, 5, 1, 1, 7, 7, 2, 4, 8, 5, 1, 1, 8, 8,
-			2, 5, 9, 4, 1, 1, 9, 9, 2, 6, 10, 4, 1, 1, 10, 10,
-			3, 3, 5, 4, 1, 1, 5, 5, 3, 4, 6, 4, 1, 1, 6, 6,
-			4, 11, 11, 1, 1, 1, 11, 11, 4, 12, 12, 1, 1, 1, 12, 12,
-			4, 16, 13, 5, 1, 1, 13, 13, 4, 17, 14, 5, 1, 1, 14, 14,
-			5, 31, 15, 1, 1, 1, 15, 15, 5, 32, 16, 1, 1, 1, 16, 16,
-			5, 36, 17, 9, 1, 1, 17, 17, 5, 37, 18, 9, 1, 1, 18, 18
-		}
-	};
-
-	const size_t Size            = InitialTracks.size();
-	constexpr size_t MaxDuration = 4;
-	constexpr double MaxSpeed    = 2;
-	Tracks tracks;
-	tracks.LoadTracks(InitialTracks.data(), 18, 1);
-	std::cout << " Initial Tracks : \n" << tracks << "\n";
-
-	std::vector<double> output(Size, 0);
-	for (size_t mode = 0; mode < 3; ++mode) {
-		tracks.BlinkingReconnection(mode, MaxDuration, MaxSpeed);
-		std::cout << " Reconnected Tracks (" << mode << ", " << MaxDuration << ", " << MaxSpeed << ") : \n" << tracks << "\n";
-		tracks.FillOutput(output.data());
-		for (size_t i = 0; i < Size; ++i) { EXPECT_DOUBLE_EQ(output[i], Ref[mode][i]); }
-	}
+	const auto [fit, watershed, reverse] = GetParam();
+	const std::string Suffix             = "103.6_" + std::string(watershed ? "True_" : "False_") + std::to_string(fit) + "_1.0_0.0_7";
+	auto localizations                   = LoadCsv(InputPath / "ref" / ("stack-localizations-" + Suffix + ".csv"));
+	// Seules les localisations d'intensite integree positive participent au suivi.
+	std::erase_if(localizations, [](const auto& row) { return row[7] <= 0; });
+	const auto Expected = LoadCsv(InputPath / "ref" / ("stack-tracking-" + Suffix + "-5.csv"));
+	if (reverse) { std::ranges::reverse(localizations); }
+	const auto Input = Flatten(localizations, {0, 1, 4, 5});
+	std::vector<uint64_t> output(2 * localizations.size() + 1, UINT64_MAX);
+	ASSERT_EQ(Tracks::Tracking(Input.data(), output.data(), localizations.size(), 5), 2 * localizations.size());
+	EXPECT_EQ(output.back(), UINT64_MAX);
+	std::map<uint64_t, uint64_t> expected, actual;
+	for (const auto& Row : Expected) { ASSERT_TRUE(expected.emplace(static_cast<uint64_t>(Row[2]), static_cast<uint64_t>(Row[0])).second); }
+	for (size_t i = 0; i < 2 * localizations.size(); i += 2) { ASSERT_TRUE(actual.emplace(output[i], output[i + 1]).second); }
+	EXPECT_EQ(actual, expected);
 }
 
-//-------------------------------------------------------------------------------------------------
-TEST(TracksTests, MSD)
+INSTANTIATE_TEST_SUITE_P(, TrackingTests,
+                           testing::Combine(testing::Values(size_t{0}, size_t{1}, size_t{2}, size_t{3}, size_t{4}), testing::Bool(), testing::Bool()),
+                           ([](const testing::TestParamInfo<TrackingParams>& info) {
+	                           constexpr std::array Names{"NoFit", "GaussianXY", "GaussianSigma", "GaussianSigmaXY", "GaussianTheta"};
+	                           return std::string(Names[std::get<0>(info.param)]) + (std::get<1>(info.param) ? "WithWatershed" : "WithoutWatershed")
+	                           + (std::get<2>(info.param) ? "Reversed" : "Ordered");
+	                           }));
+
+/// <summary>Une entree sans point ne doit rien ecrire dans le tampon de sortie.</summary>
+TEST(TracksTests, TrackingEmptyInput)
+{
+	uint64_t output = 123;
+	EXPECT_EQ(Tracks::Tracking(nullptr, &output, 0, 5), 0);
+	EXPECT_EQ(output, 123);
+}
+#pragma endregion Tracking
+
+#pragma region BlinkingReconnection
+/// <summary>Compare toutes les trajectoires reconnectees aux valeurs attendues.</summary>
+TEST_P(BlinkingTests, Reconnection)
+{
+	const auto Initial  = LoadCsv(InputPath / "tracking.csv");
+	const auto Input    = Flatten(Initial, TrackColumns);
+	const auto Expected = LoadCsv(InputPath / "ref" / ("tracking-blinking-" + std::to_string(GetParam()) + ".csv"));
+	Tracks tracks;
+	tracks.LoadTracks(Input.data(), Initial.size(), 1);
+	tracks.BlinkingReconnection(GetParam(), 4, 2);
+	std::vector<double> output(Input.size() + 1, -12345);
+	ASSERT_EQ(tracks.FillOutput(output.data()), Input.size());
+	EXPECT_DOUBLE_EQ(output.back(), -12345);
+	Table actual;
+	for (size_t i = 0; i < Input.size(); i += N_TRACKING) {
+		actual.emplace_back(output.begin() + static_cast<ptrdiff_t>(i), output.begin() + static_cast<ptrdiff_t>(i + N_TRACKING));
+	}
+	ExpectTableNear(actual, Expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(, BlinkingTests, testing::Range(size_t{0}, size_t{3}),
+                           ([](const testing::TestParamInfo<size_t>& info) {
+	                           constexpr std::array Names{"Stationary", "Diffusive", "Linear"};
+	                           return Names[info.param];
+	                           }));
+
+/// <summary>La reconnexion d'un objet initialement vide conserve des sorties vides.</summary>
+TEST(TracksTests, BlinkingEmptyState)
+{
+	Tracks tracks;
+	tracks.BlinkingReconnection(0, 4, 2);
+	EXPECT_EQ(tracks.FillOutput(nullptr), 0);
+}
+#pragma endregion BlinkingReconnection
+
+#pragma region Analyses
+/// <summary>Verifie tous les lags et les valeurs manquantes de trajectoires discontinues.</summary>
+TEST(TracksTests, MSDWithGaps)
 {
 	const std::vector<double> InitialTracks = {
 		1, 1, 1, 1, 1, 1, 1, 1,
@@ -148,62 +179,61 @@ TEST(TracksTests, MSD)
 	Tracks tracks;
 	tracks.LoadTracks(InitialTracks.data(), 10, 1);
 	const auto Res = tracks.ComputeAllMSD();
-	for (size_t i = 0; i < Ref.size(); ++i) { for (size_t j = 0; j < Ref.size(); ++j) { EXPECT_NEAR(Res[i][j], Ref[i][j], 1e-5); } }
-
-	// Print
-	matrix::PrintMatrix(Res);
+	ExpectTableNear(Res, Ref);
 }
 
-//-------------------------------------------------------------------------------------------------
+/// <summary>Compare tous les lags MSD aux references 2D et 3D.</summary>
+TEST_P(TrackAnalysisTests, MSD)
+{
+	const auto Tracks = LoadTracksData(GetParam());
+	ExpectTableNear(Tracks.ComputeAllMSD(), LoadCsv(InputPath / "ref" / (GetParam() ? "tracking2-MSD-True.csv" : "tracking2-MSD-False.csv")));
+}
+
+/// <summary>Compare le modele lineaire et les metriques initiales aux references 2D et 3D.</summary>
+TEST_P(TrackAnalysisTests, Fit)
+{
+	const auto Tracks = LoadTracksData(GetParam());
+	const ComputesParams Params{.mode = fit_mode::linear, .fitLength = 4, .is3D = GetParam(), .pixelSize = 1, .exposureTime = 1};
+	ExpectTableNear(Tracks.ComputeAllFitMetrics(Params), LoadCsv(InputPath / "ref" / (GetParam() ? "tracking2-Fit-True.csv" : "tracking2-Fit-False.csv")), 1e-5,
+	                1e-5);
+}
+
+INSTANTIATE_TEST_SUITE_P(, TrackAnalysisTests, testing::Bool(),
+                           [](const testing::TestParamInfo<bool>& info) { return info.param ? "Spatial3D" : "Planar2D"; });
+
+/// <summary>La reference historique de diffusion instantanee est exprimee en logarithme decimal.</summary>
 TEST(TracksTests, InstantDiffusion)
 {
-	const std::vector<double> InitialTracks = {
-		1, 1, 1, 1, 1, 1, 1, 1,
-		1, 2, 2, 2, 2, 2, 2, 2,
-		1, 3, 3, 3, 3, 3, 3, 3,
-		1, 4, 4, 4, 4, 4, 4, 4,
-	};
-	const std::vector<std::vector<double>> Ref = {{1, 30, 30}};
-	Tracks tracks;
-	tracks.LoadTracks(InitialTracks.data(), 4, 1);
-	constexpr ComputesParams Cp = {.mode = fit_mode::linear, .fitLength = 2, .is3D = true, .pixelSize = 0.160, .exposureTime = 0.05};
-	const auto Res              = tracks.ComputeAllInstantDiffusion(Cp);
-
-	for (size_t i = 0; i < Ref.size(); ++i) { for (size_t j = 0; j < Ref[i].size(); ++j) { EXPECT_DOUBLE_EQ(Res[i][j], Ref[i][j]); } }
-
-	// Print
-	matrix::PrintMatrix(Res);
+	const auto Tracks = LoadTracksData(true);
+	const ComputesParams Params{.mode = fit_mode::linear, .fitLength = 4, .is3D = true, .pixelSize = 1, .exposureTime = 1};
+	auto expected = LoadCsv(InputPath / "ref/tracking2-InstantD-True.csv");
+	for (auto& row : expected) { for (size_t i = 1; i < row.size(); ++i) { row[i] = std::pow(10.0, row[i]); } }
+	ExpectTableNear(Tracks.ComputeAllInstantDiffusion(Params), expected, 1e-5);
 }
 
-TEST(TracksTests, ComputeAllFit)
+/// <summary>Compare les modeles de puissance et exponentiel sur une trajectoire 2D commune.</summary>
+TEST_P(TrackFitTests, Fit)
 {
-	const std::vector<double> InitialTracks = {
-		1, 1, 1, 1, 1, 1, 1, 1,
-		1, 2, 2, 2, 2, 2, 2, 2,
-		1, 3, 3, 3, 3, 3, 3, 3,
-		1, 4, 4, 4, 4, 4, 4, 4,
-	};
-	const std::vector<std::vector<std::vector<double>>> Ref = {
-		{{1, 4, 10, 30, -6, 1, 40, -10, 0.979592}},                                                  // linear
-		{{1, 4, 10, 30, -6, 1, 2, 3, 1, 34.641016}},                                                 // power
-		{{1, 4, 10, 30, -6, 1, 29012085.510261, 48353453.768656, -4.217218, 0.979592, 4664.660863}}, // exponential
-	};
-	Tracks tracks;
-	tracks.LoadTracks(InitialTracks.data(), 4, 1);
-	const std::vector Modes = {fit_mode::linear, fit_mode::power, fit_mode::exponential};
-	for (size_t i = 0; i < Modes.size(); ++i) {
-		const ComputesParams Cp = {.mode = Modes[i], .fitLength = 2, .is3D = true, .pixelSize = 0.160, .exposureTime = 0.05};
-		std::cout << "params : " << Cp << " : \n";
-		const auto Res = tracks.ComputeAllFitMetrics(Cp);
-		for (size_t j = 0; j < Ref[i].size(); ++j) {
-			for (size_t k = 0; k < Ref[i][j].size(); ++k) {
-				// À cause de Mac, on va permettre une plus grande tolerance dans la comparaison (un pourcentage de la valeur en gros).
-				const double Tol = RelAbsTol(Res[j][k], 1e-3, 1e-4);
-				EXPECT_NEAR(Res[j][k], Ref[i][j][k], Tol);
-			}
-		}
-		// Print
-		matrix::PrintMatrix(Res);
-	}
+	constexpr std::array Modes{fit_mode::linear, fit_mode::power, fit_mode::exponential};
+	const auto Tracks = LoadTracksData(false);
+	const ComputesParams Params{.mode = Modes[GetParam()], .fitLength = 4, .is3D = false, .pixelSize = 1, .exposureTime = 1};
+	ExpectTableNear(Tracks.ComputeAllFitMetrics(Params), LoadCsv(InputPath / "ref" / ("tracking2-Fit-" + std::to_string(GetParam() + 1) + ".csv")), 1e-5, 1e-3);
 }
+
+INSTANTIATE_TEST_SUITE_P(, TrackFitTests, testing::Range(size_t{1}, size_t{3}),
+                           ([](const testing::TestParamInfo<size_t>& info) {
+	                           constexpr std::array Names{"Linear", "Power", "Exponential"};
+	                           return Names[info.param];
+	                           }));
+
+/// <summary>Les analyses d'un objet sans trajectoire donnent des tableaux vides.</summary>
+TEST(TracksTests, AnalysisEmptyState)
+{
+	const Tracks Tracks;
+	const ComputesParams Params{.fitLength = 4};
+	EXPECT_TRUE(Tracks.ComputeAllMSD().empty());
+	EXPECT_TRUE(Tracks.ComputeAllInstantDiffusion(Params).empty());
+	EXPECT_TRUE(Tracks.ComputeAllFitMetrics(Params).empty());
+}
+#pragma endregion Analyses
 } // namespace palm_tracer::tracking

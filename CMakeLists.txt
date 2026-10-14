@@ -84,6 +84,7 @@ add_executable(test_cpu ${TESTS_FILES} ${CPU_SRC} ${CPU_HDRS})
 
 # === Gestion manuelle OpenMP cross-plateforme ===
 configure_openmp_for_target(test_cpu)
+apply_strict_fp(test_cpu)
 
 
 find_package(GTest REQUIRED)
@@ -107,6 +108,8 @@ set(GTEST_ARGS
 # IMPORTANT : NE PAS faire add_test(NAME CPU_Tests COMMAND CPU_Tests ...)
 # On laisse CMake découvrir chaque test gtest → tests CTest individuels.
 gtest_discover_tests(test_cpu
+  NO_PRETTY_TYPES
+  NO_PRETTY_VALUES
   EXTRA_ARGS        ${GTEST_ARGS}
   WORKING_DIRECTORY $<TARGET_FILE_DIR:test_cpu>
   DISCOVERY_MODE    PRE_TEST           # robuste en CI
@@ -114,7 +117,7 @@ gtest_discover_tests(test_cpu
 )
 
 # Copy des éléments dans le dossier de build (en cas de pépin avec le CI, on en créé plus)
-file(COPY Tests_CPU/Input/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests_CPU)
+file(COPY Tests_CPU/Input/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests_CPU/Input)
 # Créer des dossiers Output au moment de la configuration (en cas de pépin avec le CI, on en créé plus)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Output)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Tests_CPU/Output)
