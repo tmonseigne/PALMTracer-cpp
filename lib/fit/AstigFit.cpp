@@ -47,9 +47,9 @@ Vec2D AstigFit::Estimate(const astig_model& model, const Vec2D& sigma, const std
 	}
 
 	// Utilisation de la méthode de Brent pour affiner l'estimation
-	const double Dz = DeltaZ / static_cast<double>(zStep - 1);
-	const double A  = std::max(zLimit[0], std::min(bestZ - 2.0 * Dz, zLimit[1]));
-	const double B  = std::max(zLimit[0], std::min(bestZ + 2.0 * Dz, zLimit[1]));
+	const double Dz     = DeltaZ / static_cast<double>(zStep - 1);
+	const double A      = std::max(zLimit[0], std::min(bestZ - 2.0 * Dz, zLimit[1]));
+	const double B      = std::max(zLimit[0], std::min(bestZ + 2.0 * Dz, zLimit[1]));
 	const Vec2D Refined = brent(A, B, model, sigma);
 	// La grille inclut les bornes exactes : les conserver si Brent ne réduit pas l'erreur évite une saturation légèrement intérieure.
 	return Refined.y < bestE ? Refined : Vec2D{.x = bestZ, .y = bestE};

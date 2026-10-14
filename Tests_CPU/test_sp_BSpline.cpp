@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <numeric>
+#include <type_traits>
+#include <utility>
 
 #include "Palm.hpp"
 #include "Structs.hpp"
@@ -10,7 +12,52 @@
 #include "signal_processing/Matrix.hpp"
 #include "signal_processing/Spline.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::signal_processing {
+/// <summary>Vérifie le transfert effectif des allocations sans exécuter l'algorithme spline.</summary>
+TEST(BSpline3DTests, MovesBuffers)
+{
+	static_assert(std::is_nothrow_move_constructible_v<BSpline3D>);
+	static_assert(std::is_nothrow_move_assignable_v<BSpline3D>);
+	BSpline3D source;
+	source.dim_              = {.x = 2, .y = 3, .z = 4};
+	source.coeffs_           = {1, 2, 3};
+	source.coeffsPadded_     = {4, 5};
+	source.coeffsHDR_        = {6, 7};
+	source.coeffsFinal_      = {8, 9};
+	source.filters_[0]       = {{0.25, 0.5}};
+	const auto* const Coeffs = source.coeffs_.data();
+	const auto* const Padded = source.coeffsPadded_.data();
+	const auto* const HDR    = source.coeffsHDR_.data();
+	const auto* const Final  = source.coeffsFinal_.data();
+	const auto* const Filter = source.filters_[0].data();
+
+	BSpline3D moved(std::move(source));
+	EXPECT_EQ(moved.coeffs_.data(), Coeffs);
+	EXPECT_EQ(moved.coeffsPadded_.data(), Padded);
+	EXPECT_EQ(moved.coeffsHDR_.data(), HDR);
+	EXPECT_EQ(moved.coeffsFinal_.data(), Final);
+	EXPECT_EQ(moved.filters_[0].data(), Filter);
+	EXPECT_EQ(moved.dim_.GetSize(), 24);
+
+	BSpline3D destination;
+	destination.coeffsFinal_ = {-1};
+	destination              = std::move(moved);
+	EXPECT_EQ(destination.coeffs_.data(), Coeffs);
+	EXPECT_EQ(destination.coeffsPadded_.data(), Padded);
+	EXPECT_EQ(destination.coeffsHDR_.data(), HDR);
+	EXPECT_EQ(destination.coeffsFinal_.data(), Final);
+	EXPECT_EQ(destination.filters_[0].data(), Filter);
+	EXPECT_EQ(destination.coeffsFinal_, (std::vector<double>{8, 9}));
+
+	// La copie reste disponible et ne partage pas les coefficients modifiables.
+	BSpline3D copied(destination);
+	copied.coeffsFinal_[0] = 10;
+	EXPECT_DOUBLE_EQ(destination.coeffsFinal_[0], 8);
+	source                 = copied;
+	source.coeffsFinal_[0] = 11;
+	EXPECT_DOUBLE_EQ(copied.coeffsFinal_[0], 10);
+}
+
 //-------------------------------------------------------------------------------------------------
 TEST(BSpline3DTests, DiracImpulse)
 {
@@ -41,4 +88,4 @@ TEST(BSpline3DTests, DiracImpulse)
 	//	std::cout << "\n";
 	//}
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::signal_processing

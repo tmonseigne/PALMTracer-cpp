@@ -55,9 +55,17 @@
       <Filter>lib</Filter>
     </ClCompile>
     <ClCompile Include="test_fit_AstigFit.cpp" />
+    <ClCompile Include="test_fit_Fitting.cpp" />
+    <ClCompile Include="test_loc_Segmentation2D.cpp" />
+    <ClCompile Include="test_tr_TracksFit.cpp" />
+    <ClCompile Include="test_Palm.cpp" />
+    <ClCompile Include="test_TiffManagement.cpp" />
+    <ClCompile Include="test_loc_ATrous.cpp" />
+    <ClCompile Include="test_sp_PSF.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TiffManagement.hpp" />
+    <ClInclude Include="TestUtils.hpp" />
     <ClInclude Include="..\lib\Constants.hpp">
       <Filter>lib</Filter>
     </ClInclude>

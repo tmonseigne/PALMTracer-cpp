@@ -19,7 +19,10 @@ inline void LoadTiff3D(const char* filename, std::vector<uint16_t>& data, palm_t
 		TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
 		TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &depth);
 
-		if (depth != 16) { throw std::runtime_error("Le TIFF doit être en 16 bits"); }
+		if (depth != 16) {
+			TIFFClose(tif);
+			throw std::runtime_error("Le TIFF doit être en 16 bits");
+		}
 
 		if (frame == 0) {
 			dim.x = w;
@@ -32,10 +35,10 @@ inline void LoadTiff3D(const char* filename, std::vector<uint16_t>& data, palm_t
 			}
 		}
 
-		std::vector<uint16_t> buf(w * h);
+		std::vector<uint16_t> buf(static_cast<size_t>(w) * h);
 
 		for (uint32_t row = 0; row < h; ++row) {
-			if (TIFFReadScanline(tif, buf.data() + row * w, row) < 0) {
+			if (TIFFReadScanline(tif, buf.data() + static_cast<size_t>(row) * w, row) < 0) {
 				TIFFClose(tif);
 				throw std::runtime_error("Erreur de lecture scanline");
 			}
@@ -44,7 +47,7 @@ inline void LoadTiff3D(const char* filename, std::vector<uint16_t>& data, palm_t
 		data.insert(data.end(), buf.begin(), buf.end());
 		frame++;
 	}
-	while (TIFFReadDirectory(tif));
+	while (TIFFReadDirectory(tif) != 0);
 
 	dim.z = frame;
 
@@ -68,7 +71,7 @@ inline void SaveTiff3D(const char* filename, const uint16_t* data, const palm_tr
 
 		for (uint32_t y = 0; y < dim.y; ++y) {
 			const uint16_t* row_data = data + z * dim.x * dim.y + y * dim.x;
-			TIFFWriteScanline(tif, (void*)row_data, y);
+			TIFFWriteScanline(tif, const_cast<uint16_t*>(row_data), y);
 		}
 
 		TIFFWriteDirectory(tif);

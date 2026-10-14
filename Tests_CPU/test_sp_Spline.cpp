@@ -11,7 +11,7 @@
 #include "signal_processing/Matrix.hpp"
 #include "signal_processing/Spline.hpp"
 
-namespace palm_tracer {
+namespace palm_tracer::signal_processing {
 constexpr size_t ROI      = 29,
                  DISTANCE = 50,
                  DZ       = 10;
@@ -200,7 +200,7 @@ TEST(SplineTests, GetOverlapMinimal)
 	double norm = 0.0;
 
 	spline.SetMembers(Dim, 5, DISTANCE, DZ);
-	// changement des smallBeadSize pour avoir un equivalent
+	// changement des smallBeadSize pour avoir un équivalent
 	spline.smallXIndices_ = {1, 2, 3};
 	spline.smallZIndices_ = {1};
 
@@ -322,7 +322,7 @@ TEST(SplineTests, SoftNormalization)
 //-------------------------------------------------------------------------------------------------
 TEST(SplineTests, GetPSFMinimal)
 {
-	// La parallelisation sur le CI Linux et FFTW3 plante parfois, on force un thread unique (cas pour les très petites matrices).
+	// La parallélisation sur le CI Linux et FFTW3 plante parfois, on force un thread unique (cas pour les très petites matrices).
 	#ifdef _OPENMP
 	const int prev_threads = omp_get_max_threads();
 	omp_set_num_threads(1);
@@ -349,7 +349,7 @@ TEST(SplineTests, GetPSFMinimal)
 	//matrix::PrintVolume(beads[2], Dim);
 
 	spline.SetMembers(Dim, 7, DISTANCE, DZ);
-	// changement des smallBeadSize pour avoir un equivalent
+	// changement des smallBeadSize pour avoir un équivalent
 	spline.smallXIndices_ = {0, 1, 2, 3, 4, 5, 6};
 	spline.smallZIndices_ = {1, 2, 3};
 
@@ -432,7 +432,7 @@ TEST(SplineTests, Calibrate)
 		nBeads /= N_LOCALIZATIONS;
 		std::cout << nBeads << " Beads found " << "\n";
 		std::vector<Vec2I> beads;
-		beads.reserve(nBeads);
+		beads.réserve(nBeads);
 		for (size_t i = 0; i < nBeads; ++i) {
 			const size_t Idx = i * N_LOCALIZATIONS,
 			             X   = static_cast<size_t>(std::round(pointsList[Idx + 4])),
@@ -447,4 +447,4 @@ TEST(SplineTests, Calibrate)
 	std::cerr << "[WARNING] Ce test utilise une matrice non linéaire, ce qui produit une interpolation différente dans MATLAB. Mais résultat cohérent.\n";
 	SUCCEED();
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::signal_processing

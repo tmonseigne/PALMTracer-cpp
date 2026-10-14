@@ -31,13 +31,9 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # ---------- Dépendances ----------
-      - name: Setup MSBuild (Windows)
-        if: matrix.os == 'windows-latest'
-        uses: microsoft/setup-msbuild@v2
-
       - name: Install vcpkg
         uses: lukka/run-vcpkg@v11
         with:
@@ -49,9 +45,11 @@ jobs:
 
       - name: Install OpenMP (macOS)
         if: matrix.os == 'macos-latest'
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+          HOMEBREW_NO_INSTALL_CLEANUP: '1'
         run: |
-          brew update
-          brew install llvm libomp
+          brew install --formula llvm libomp
           echo "Check for omp.h:"
           find /opt/homebrew -name omp.h || true
           echo "LDFLAGS=-L/opt/homebrew/opt/libomp/lib" >> $GITHUB_ENV
@@ -63,7 +61,7 @@ jobs:
         run: >
           cmake -B build -S .
           -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
-          -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="$CXXFLAGS" -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS"
+          -DCMAKE_BUILD_TYPE=Release
 
        # ---------- Build ----------
       - name: Build CPU
@@ -79,7 +77,7 @@ jobs:
         run: mkdir -p Output && cp build/lib*.so* Output/ || true && cp build/lib*.dylib* Output/ || true
 
       - name: Upload compiled artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: compiled-libs-${{ matrix.os }}
           path: Output/*
@@ -92,24 +90,35 @@ jobs:
         working-directory: build
         run: ctest -C Release -V --output-junit=ctest-report.xml
 
-      # Pas vraiment utile c'est ultra basique, il dit juste tout va bien, pas d'affichage un peu sympa.
-      # - name: Upload JUnit report
-      #   uses: mikepenz/action-junit-report@v5
-      #   if: ${{ always() }}
-      #   with:
-      #     report_paths: build/ctest-report.xml
-      #     check_name: CTest / GoogleTest (${{ matrix.os }})
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-${{ matrix.os }}
+          path: build/ctest-report.xml
+          if-no-files-found: warn
 
   Documentation:
     name: Generate & Deploy Doxygen Docs
+    needs: Build
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Doxygen
         run: sudo apt-get update && sudo apt-get install -y doxygen graphviz cloc
+
+      - name: Download test results
+        uses: actions/download-artifact@v8
+        with:
+          pattern: test-results-*
+          path: out/test-reports
+
+      - name: Generate test report
+        run: python3 Docs/tools/junit_to_markdown.py out/test-reports/*/*.xml --output Docs/reports/test_report.md
 
       - name: Generate Doxygen Documentation
         run: doxygen Doxyfile
@@ -132,13 +141,13 @@ jobs:
           PY
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload documentation to GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: 'Docs/html/'
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

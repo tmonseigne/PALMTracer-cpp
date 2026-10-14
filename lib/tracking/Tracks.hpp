@@ -124,7 +124,7 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, const Tracks& tracks);
 
 protected:
-	std::vector<Track> t_;                              ///< Ensemble des trajectoires manipulées.
+	std::vector<Track> t_;                                ///< Ensemble des trajectoires manipulées.
 	static constexpr double INSTANT_DIFFUSION_MIN = 1e-6; ///< Diffusion instantanée minimale.
 
 	/// <summary>Convertit un tableau brut <c>(Id, Plane, X, Y)</c> en liste de points de tracking triée par plan puis par identifiant.</summary>

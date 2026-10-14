@@ -1,16 +1,22 @@
 #include <gtest/gtest.h>
 
 #include <numeric>
+#include <tuple>
+
+#include "TestUtils.hpp"
 
 #include "signal_processing/Interpolation.hpp"
 #include "signal_processing/Matrix.hpp"
 
 
-namespace palm_tracer {
+namespace palm_tracer::signal_processing {
 constexpr auto MODE        = interpolation_mode::trilinear;
 constexpr auto CROP        = true;
 constexpr std::array MODES = {interpolation_mode::trilinear, interpolation_mode::cubic, interpolation_mode::cubic_weight, interpolation_mode::spline};
 constexpr std::array CROPS = {true, false};
+
+/// <summary>Variantes indépendantes des méthodes d'interpolation et du traitement des bords.</summary>
+class InterpolationModeTests : public testing::TestWithParam<std::tuple<interpolation_mode, bool>> { };
 
 //-------------------------------------------------------------------------------------------------
 TEST(InterpolationTests, ZoomFactor)
@@ -75,7 +81,8 @@ TEST(InterpolationTests, ZoomFactor)
 		55.0000, 55.5000, 56.0000, 56.5000, 57.0000, 56.5000, 57.0000, 57.5000, 58.0000, 58.5000,
 		58.0000, 58.5000, 59.0000, 59.5000, 60.0000
 	};
-	for (size_t i = 0; i < Zoomed0.size(); ++i) { EXPECT_DOUBLE_EQ(Zoomed1[i], Ref1[i]); }
+	ASSERT_EQ(Zoomed1.size(), Ref1.size());
+	for (size_t i = 0; i < Zoomed1.size(); ++i) { EXPECT_DOUBLE_EQ(Zoomed1[i], Ref1[i]); }
 
 
 	const auto Zoomed2 = Interp.Zoom(volume, Size, 2, newSize);
@@ -373,7 +380,7 @@ TEST(InterpolationTests, GetShift3D)
 	//	0.0, 0.0, 0.0,  0.0, 34.1, 35.1,  0.0, 37.1, 38.1, 0.0, 40.1, 41.1,
 	//	0.0, 0.0, 0.0,  0.0, 46.1, 47.1,  0.0, 49.1, 50.1, 0.0, 52.1, 53.1,
 	//};
-	constexpr Vec3D Ref = {.x = 0.025, .y = 0.025, .z = 0}; // interpolated shifted matrix result is different
+	constexpr Vec3D Ref = {.x = 0.025, .y = 0.025, .z = 0}; // interpolated shifted matrix result is différent
 
 	const auto Res = Interp.GetShift(volume, Shifted, Size);
 	EXPECT_DOUBLE_EQ(Res.x, Ref.x);
@@ -397,8 +404,8 @@ TEST(InterpolationTests, Upsample)
 }
 
 //-------------------------------------------------------------------------------------------------
-// A petite dimension, l'interpolation lineaire fonctionne comme sous Matlab sans probleme même avec des 0.
-TEST(InterpolationTests, NonLinearMatrix)
+// A petite dimension, l'interpolation linéaire fonctionne comme sous Matlab sans probleme même avec des 0.
+TEST_P(InterpolationModeTests, NonLinearMatrix)
 {
 	constexpr Vec3I Size             = {.x = 3, .y = 3, .z = 2};
 	const std::vector<double> Volume = {
@@ -410,18 +417,30 @@ TEST(InterpolationTests, NonLinearMatrix)
 		6, 10, 0,
 		5, 7, 0
 	};
-	for (const auto M : MODES) {
-		for (const auto C : CROPS) {
-			Vec3I newSize{};
-			const Interpolation3D Interp(M, C);
-			const auto Zoomed = Interp.Zoom(Volume, Size, 1, newSize);
-			//std::cout << "==================================================\n";
-			//std::cout << "Mode " << static_cast<int>(M) << ", Crop " << C << "\n";
-			//matrix::PrintVolume(Zoomed, newSize);
-			//constexpr Vec3D Shift = {.x = 0.15, .y = 0.25, .z = 0.5};
-			//const auto Shifted   = Interp.Shift(Volume, Size, Shift);
-			//matrix::PrintVolume(Shifted, Size);
+	const auto [mode, crop] = GetParam();
+	Vec3I newSize{};
+	const Interpolation3D Interp(mode, crop);
+	const auto Zoomed = Interp.Zoom(Volume, Size, 1, newSize);
+	EXPECT_EQ(newSize.x, 5);
+	EXPECT_EQ(newSize.y, 5);
+	EXPECT_EQ(newSize.z, 3);
+	ASSERT_EQ(Zoomed.size(), newSize.GetSize());
+	EXPECT_TRUE(std::ranges::all_of(Zoomed, [](const double value) { return std::isfinite(value); }));
+	// L'interpolation trilineaire conserve exactement les noeuds de la grille initiale.
+	if (mode == interpolation_mode::trilinear) {
+		for (size_t z = 0; z < Size.z; ++z) {
+			for (size_t y = 0; y < Size.y; ++y) {
+				for (size_t x = 0; x < Size.x; ++x) {
+					EXPECT_DOUBLE_EQ(Zoomed[2 * z * newSize.GetPlaneSize() + 2 * y * newSize.x + 2 * x], Volume[z * Size.GetPlaneSize() + y * Size.x + x]);
+				}
+			}
 		}
 	}
 }
-} // namespace palm_tracer
+
+INSTANTIATE_TEST_SUITE_P(Modes, InterpolationModeTests, testing::Combine(testing::ValuesIn(MODES), testing::Bool()),
+                         ([](const testing::TestParamInfo<std::tuple<interpolation_mode, bool>>& info) {
+	                         constexpr std::array Names{"Trilinear", "Cubic", "CubicWeight", "Spline"};
+	                         return std::string(Names[static_cast<size_t>(std::get<0>(info.param))]) + (std::get<1>(info.param) ? "Crop" : "KeepBorders");
+	                         }));
+} // namespace palm_tracer::signal_processing

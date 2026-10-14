@@ -4,7 +4,7 @@
 #include "signal_processing/Matrix.hpp"
 
 
-namespace palm_tracer {
+namespace palm_tracer::signal_processing {
 constexpr double EPSILON = 1e-10;
 const std::vector NAN_VECTOR(3, std::numeric_limits<double>::quiet_NaN());
 
@@ -233,4 +233,4 @@ TEST(MatrixTest, InverseLU)
 	EXPECT_NEAR(inv[2], -0.2, EPSILON);
 	EXPECT_NEAR(inv[3], 0.4, EPSILON);
 }
-} // namespace palm_tracer
+} // namespace palm_tracer::signal_processing

@@ -31,7 +31,11 @@
   <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
-  <ItemDefinitionGroup />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <OpenMPSupport>true</OpenMPSupport>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PreprocessorDefinitions>X64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -96,6 +100,7 @@
     <ClInclude Include="..\lib\tracking\Tracks.hpp" />
     <ClInclude Include="..\lib\tracking\TracksFit.hpp" />
     <ClInclude Include="TiffManagement.hpp" />
+    <ClInclude Include="TestUtils.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\lib\fit\AstigFit.cpp" />
@@ -114,6 +119,13 @@
     <ClCompile Include="..\lib\tracking\Tracks.cpp" />
     <ClCompile Include="..\lib\tracking\TracksFit.cpp" />
     <ClCompile Include="test_fit_AstigFit.cpp" />
+    <ClCompile Include="test_fit_Fitting.cpp" />
+    <ClCompile Include="test_loc_Segmentation2D.cpp" />
+    <ClCompile Include="test_tr_TracksFit.cpp" />
+    <ClCompile Include="test_Palm.cpp" />
+    <ClCompile Include="test_TiffManagement.cpp" />
+    <ClCompile Include="test_loc_ATrous.cpp" />
+    <ClCompile Include="test_sp_PSF.cpp" />
     <ClCompile Include="test_sp_Alignment.cpp" />
     <ClCompile Include="test_sp_BSpline.cpp" />
     <ClCompile Include="test_sp_FFT.cpp" />
