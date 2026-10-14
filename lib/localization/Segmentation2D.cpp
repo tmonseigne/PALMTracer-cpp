@@ -155,7 +155,7 @@ void Segmentation2D::ComputeStatistics()
 		info.x_ /= info.mean_;
 		info.y_ /= info.mean_;
 		info.intensity_ = info.mean_;
-		info.stdev_     = std::sqrt((info.stdev_ - info.mean_) / info.surf_);
+		info.stdev_     = std::sqrt(std::max(0.0, (info.stdev_ - info.mean_ * info.mean_ / info.surf_) / info.surf_));
 		info.mean_ /= info.surf_;
 	}
 }
@@ -246,7 +246,7 @@ void Segmentation2D::filterStructureWS()
 
 		// Réattribution des nouvelles étiquettes
 		label = 0;
-		for (int i = 0; i <= static_cast<int>(wsFusions.size()); ++i) { if (wsFusions[i].structToBecome == i) { wsFusions[i].newIndex = ++label; } }
+		for (int i = 0; i < static_cast<int>(wsFusions.size()); ++i) { if (wsFusions[i].structToBecome == i) { wsFusions[i].newIndex = ++label; } }
 
 		for (uint16_t& s : map_) {
 			if (s != 0) {
