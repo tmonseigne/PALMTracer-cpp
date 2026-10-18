@@ -37,7 +37,7 @@ function(apply_strict_fp TARGET_NAME)
     endif()
 endfunction()
 
-# === Fonction de configuration d'OpenMP pour Unix & Mac ===
+# === Configuration d'OpenMP commune a la bibliotheque et aux tests ===
 function(configure_openmp_for_target TARGET_NAME)
     if(APPLE)
         find_package(OpenMP)
@@ -50,7 +50,7 @@ function(configure_openmp_for_target TARGET_NAME)
             target_compile_options(${TARGET_NAME} PUBLIC -Xpreprocessor -fopenmp -I/opt/homebrew/include)
             target_link_libraries(${TARGET_NAME} PUBLIC /opt/homebrew/lib/libomp.dylib)
         endif()
-    elseif(UNIX)
+    elseif(UNIX OR MSVC)
         find_package(OpenMP REQUIRED)
         target_link_libraries(${TARGET_NAME} PUBLIC OpenMP::OpenMP_CXX)
     endif()
