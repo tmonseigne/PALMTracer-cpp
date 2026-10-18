@@ -8,7 +8,7 @@
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
 ///
 /// \details
-/// Cette bibliothèque propose des fonctions inline pour calculer :
+/// Cette bibliothèque proposé des fonctions inline pour calculer :
 /// - la FFT 3D directe d'un volume réel (double),
 /// - la FFT 3D inverse d'un volume complexe,
 /// - le produit de Fourier croisé entre deux volumes FFTés,

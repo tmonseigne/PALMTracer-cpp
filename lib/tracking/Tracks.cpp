@@ -2,7 +2,7 @@
 #include "Constants.hpp"
 
 #include <cmath>
-#include <omp.h>
+#include <limits>
 
 #include "TracksFit.hpp"
 
@@ -14,39 +14,34 @@ void Tracks::LoadTracks(const double* input, const size_t nRow, const double pix
 	// Remise à zéro.
 	t_.clear();
 
-	// Récupération du nombre de trajectoires pour préallouer le tableau
-	const auto NTracks = static_cast<size_t>(input[(nRow - 1) * N_TRACKING]); // Uniquement le numéro de trajectoire de la dernière ligne
-	t_.reserve(NTracks);
+	if (nRow == 0) { return; }
 
-	Track currentTrack;                              // Trajectoire en cours (réutilisée entre groupes)
-	currentTrack.id = static_cast<size_t>(input[0]); // Identifiant original non forcément égal à 0.
-	currentTrack.points.reserve(64);                 // Heuristique: évite quelques reallocs sur petites tracks
-
-	for (size_t i = 0, r = 0; i < nRow; ++i, r += N_TRACKING) {
-		const auto Id = static_cast<size_t>(input[r]); // Identifiant de la trajectoire du point actuel
-
-		// Nouveau groupe de trajectoire détecté
-		if (Id != currentTrack.id) {
-			if (!currentTrack.points.empty()) { t_.emplace_back(std::move(currentTrack)); }
-
-			currentTrack    = Track{};
-			currentTrack.id = Id;
-			currentTrack.points.reserve(64);
+	// Les identifiants peuvent être clairsemes : reserver selon les groupes réels.
+	size_t groups = 1;
+	for (size_t i = 1; i < nRow; ++i) { if (static_cast<size_t>(input[i * N_TRACKING]) != static_cast<size_t>(input[(i - 1) * N_TRACKING])) { ++groups; } }
+	t_.reserve(groups);
+	for (size_t begin = 0; begin < nRow;) {
+		const auto Id = static_cast<size_t>(input[begin * N_TRACKING]);
+		size_t end    = begin + 1;
+		while (end < nRow && static_cast<size_t>(input[end * N_TRACKING]) == Id) { ++end; }
+		Track currentTrack;
+		currentTrack.id = Id;
+		currentTrack.points.reserve(end - begin);
+		for (size_t i = begin; i < end; ++i) {
+			const size_t R    = i * N_TRACKING;
+			const Vec3D PosPx = {.x = input[R + 3], .y = input[R + 4], .z = input[R + 5]};
+			const Vec3D Pos   = {.x = PosPx.x * pixelSize, .y = PosPx.y * pixelSize, .z = PosPx.z};
+			// Ajout du point (emplace_back = construction in-place)
+			currentTrack.points.emplace_back(static_cast<size_t>(input[R + 2]), // Id
+			                                 static_cast<size_t>(input[R + 1]), // Plan
+			                                 PosPx,                             // Position en pixel
+			                                 Pos,                               // Position en unités physiques
+			                                 input[R + 6],                      // Intensité
+			                                 input[R + 7]);                     // Surface
 		}
-
-		const Vec3D PosPx = {.x = input[r + 3], .y = input[r + 4], .z = input[r + 5]};
-		const Vec3D Pos   = {.x = PosPx.x * pixelSize, .y = PosPx.y * pixelSize, .z = PosPx.z};
-
-		// Ajout du point (emplace_back = construction in-place)
-		currentTrack.points.emplace_back(static_cast<size_t>(input[r + 2]), // Id
-		                                 static_cast<size_t>(input[r + 1]), // Plan
-		                                 PosPx,                             // Position en pixel
-		                                 Pos,                               // Position
-		                                 input[r + 6],                      // Intensité
-		                                 input[r + 7]);                     // Surface
+		t_.emplace_back(std::move(currentTrack));
+		begin = end;
 	}
-
-	if (!currentTrack.points.empty()) { t_.emplace_back(std::move(currentTrack)); } // Ne pas oublier d'ajouter la dernière trajectoire
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -99,9 +94,8 @@ void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, c
 		while (true) {
 			if (t_[current].points.empty()) { break; }            // Au cas où, mais théoriquement impossible.
 			const Point& Lp = t_[current].points.back();          // Dernier point de la trajectoire i.
-			size_t bJ       = std::numeric_limits<size_t>::max(), // Indice (j) du meilleur point.
-			       bT       = std::numeric_limits<size_t>::max(); // Différence temporelle avec le meilleur point.
-			double bD       = std::numeric_limits<double>::max(); // Différence spatiale avec le meilleur point.
+			size_t bJ       = std::numeric_limits<size_t>::max(); // Indice (j) du meilleur point.
+			auto bestCost   = getReconnectionCost(std::numeric_limits<size_t>::max(), std::numeric_limits<double>::max());
 
 			// Cherche le meilleur j non encore pris (hors tête) et non vide
 			for (size_t j = head + 1; j < N; ++j) {
@@ -110,14 +104,15 @@ void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, c
 				if (Fp.plane_ <= Lp.plane_) { continue; } // Vérification de continuité temporelle.
 				const size_t Dp = Fp.plane_ - Lp.plane_;  // Calcul du temps (nombre de plans entre les trajectoires).
 				// (à vérifier, mais un break est possible, car les trajectoires sont triées par plan de démarrage)
-				if (Dp > maxDuration || Dp > bT) { continue; }                               // Vérification de validité temporelle.
+				if (Dp > maxDuration) { continue; }                                          // Vérification de validité temporelle.
 				const double D    = Fp.GetDistance(Lp),                                      // Calcul de la distance.
 				             MaxD = getMaxDistance(mode, static_cast<double>(Dp), maxSpeed); // Calcul de la distance maximale.
-				if (D >= bD || D > MaxD) { continue; }                                       // Vérification de validité Spatiale.
+				if (D > MaxD) { continue; }                                                  // Vérification de validité spatiale.
+				const auto Cost = getReconnectionCost(Dp, D);
+				if (!(Cost < bestCost)) { continue; } // A coût égal, conserver le premier candidat rencontre.
 
-				bJ = j;  // Mise à jour de l'élément sélectionné.
-				bT = Dp; // Mise à jour de la durée (nombre de plan).
-				bD = D;  // Mise à jour de la distance.
+				bJ       = j;
+				bestCost = Cost;
 			}
 
 			if (bJ == std::numeric_limits<size_t>::max()) { break; } // Aucune trajectoire de trouvé, on sort du while
@@ -150,6 +145,19 @@ void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, c
 		new_tracks.emplace_back(std::move(acc));
 	}
 	t_.swap(new_tracks); // t_ devient le résultat reconstruit (complexité : O(1))
+}
+
+//-------------------------------------------------------------------------------------------------
+std::pair<size_t, double> Tracks::getReconnectionCost(const size_t frameGap, const double distance)
+{
+	// Choix actuel : priorité stricte à la frame la plus proche, puis à la distance à frame égale.
+	// La comparaison lexicographique permet à un candidat plus précoce de gagner même s'il est plus éloigné.
+	// Variante future possible : C = wt * (frameGap / Tref) + wd * (distance / Dref)^2.
+	// Un coût scalaire pourrait être retourne sous la forme {0, C} pour supprimer la priorité stricte au temps.
+	// On pourrait ajouter wi * log((I_next + epsilon) / (I_previous + epsilon))^2 pour la continuite d'intensité,
+	// en transmettant aussi les intensités. Poids et échelles Tref/Dref seraient à valider physiquement.
+	// Ces variantes ne sont pas actives : contraintes de recherche et arbitrage global glouton restent séparés.
+	return {frameGap, distance};
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -276,7 +284,7 @@ std::vector<double> Tracks::ComputeFitMetrics(const Track& track, const Computes
 	double err               = fit.Fit(MSD);
 	std::vector<double> pFit = fit.GetP();
 	// Une erreur négative indique un problème durant le fitting, un blinking invalide la fenêtre de base
-	if ((err < 0) || fit.HasBlink()) { return std::vector<double>{}; }
+	if ((err < 0) || fit.HasBlink()) { return {}; }
 
 	double s   = pFit[0] / SlopeRatio; // Pente
 	res[idx++] = s < INSTANT_DIFFUSION_MIN ? INSTANT_DIFFUSION_MIN : s;
@@ -290,7 +298,7 @@ std::vector<double> Tracks::ComputeFitMetrics(const Track& track, const Computes
 	fit.SetMode(fitP);
 	err  = fit.Fit(MSD);
 	pFit = fit.GetP();
-	if (err < 0) { return std::vector<double>{}; } // Si échec, on arrête.
+	if (err < 0) { return {}; } // Si échec, on arrête.
 	// (ici le blinking est autorisé, on fait toute la trajectoire, il y en aura forcément en cas de reconnexion)
 
 	// Remplissage suivant le mode
@@ -314,10 +322,10 @@ std::vector<double> Tracks::ComputeFitMetrics(const Track& track, const Computes
 			break;
 		}
 		case fit_mode::exponential: {
-			if (pFit[1] + pFit[3] <= 0) { return std::vector<double>{}; } // Contrainte de positivité.
-			res[idx++] = pFit[1];                                         // Plateau
-			res[idx++] = pFit[2] / p.exposureTime;                        // Tau // Divisé par temps d'exposition
-			res[idx++] = pFit[3];                                         // b
+			if (pFit[1] + pFit[3] <= 0) { return {}; } // Contrainte de positivité.
+			res[idx++] = pFit[1];                      // Plateau
+			res[idx++] = pFit[2] / p.exposureTime;     // Tau // Divisé par temps d'exposition
+			res[idx++] = pFit[3];                      // b
 			res[idx++] = err;
 			res[idx++] = std::sqrt(0.75 * (pFit[1] + pFit[3]));
 			break;
@@ -424,17 +432,18 @@ std::vector<PlaneRange> Tracks::getPlaneRanges(const std::vector<TrackingPoint>&
 //-------------------------------------------------------------------------------------------------
 void Tracks::track(std::vector<TrackingPoint>& points, const std::vector<PlaneRange>& planes, const double maxDistance)
 {
+	const size_t Transitions  = planes.empty() ? 0 : planes.size() - 1;
 	const double MaxDistance2 = maxDistance * maxDistance; // Pré-calcul du carré de la distance maximale pour éviter les racines carrées répétées
 
 	#pragma omp parallel for schedule(dynamic)
-	for (int plane = 0; plane < static_cast<int>(planes.size() - 1); ++plane) {
+	for (int plane = 0; plane < static_cast<int>(Transitions); ++plane) {
 		const PlaneRange& Current = planes[plane];
 		const PlaneRange& Next    = planes[plane + 1];
 
 		if (Current.begin == Current.end || Next.begin == Next.end) { continue; }
 
 		std::vector<Candidate> candidates;
-		candidates.reserve((Current.end - Current.begin) * (Next.end - Next.begin));
+		candidates.reserve(Current.end - Current.begin);
 
 		// Pour chaque point du plan courant, on cherche les points du plan suivant qui sont dans la distance maximale
 		for (size_t i = Current.begin; i < Current.end; ++i) {
@@ -446,7 +455,9 @@ void Tracks::track(std::vector<TrackingPoint>& points, const std::vector<PlaneRa
 
 		// Tri des candidats par distance croissante, puis par index croissant pour garantir la stabilité
 		std::ranges::sort(candidates, [](const Candidate& a, const Candidate& b) {
-			if (std::abs(a.distance2 - b.distance2) > std::numeric_limits<double>::epsilon()) { return a.distance2 < b.distance2; }
+			// Comparaison exacte nécessaire pour garantir un ordre faible strict ; une tolérance n'est pas transitive.
+			// ReSharper disable once CppClangTidyClangDiagnosticFloatEqual
+			if (a.distance2 != b.distance2) { return a.distance2 < b.distance2; }
 			if (a.from != b.from) { return a.from < b.from; }
 			return a.to < b.to;
 		});

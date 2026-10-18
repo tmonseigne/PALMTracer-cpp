@@ -1,7 +1,7 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file Structs.hpp
-/// \brief  Fichier de structures necessaire aux algorithmes.
+/// \brief  Fichier de structures nécessaire aux algorithmes.
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 01/07/2025.

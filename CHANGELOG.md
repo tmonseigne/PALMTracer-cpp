@@ -18,7 +18,7 @@ et ce projet adhère à [Semantic Versioning](https://semver.org/lang/fr/).
 - Ajout d'une fonction de reconnexion de trajectoires suite au scintillements. ([#27](https://github.com/tmonseigne/PALMTracer-cpp/pull/27))
 - Ajout des calculs de différentes métriques sur les trajectoires. ([#29](https://github.com/tmonseigne/PALMTracer-cpp/pull/29))
 - Ajout de nombreux tests
-- Execution des tests sur Windows, Mac et Unix
+- Exécution des tests sur Windows, Mac et Unix
 
 ### Modifié
 

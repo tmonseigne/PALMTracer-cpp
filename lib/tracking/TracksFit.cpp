@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
+#include <limits>
 #include <numbers>
 #include <numeric>
 #include <span>
@@ -23,7 +23,8 @@ void TracksFit::SetMode(const ComputesParams& p)
 	// Récupération du Fit length et allocation des tableaux dépendant de la taille de la fenêtre
 	SetFitLength(p);
 
-	// Allocation des tableaux dépendant du nombre de paramètres, l'utilisation de Assign qui remet à 0 les éléments au lieu du resize qui ne met à 0 que les nouveaux.
+	// Allocation des tableaux dépendant du nombre de paramètres, l'utilisation de Assign qui remet à 0 les éléments au lieu du resize qui ne met à 0 que les
+	// nouveaux.
 	p_.assign(pSize_, 0.0);
 	alpha_.assign(pSize_, std::vector(pSize_ + 1, 0.0)); // Attention Alpha possede N lignes et N + 1 colonnes
 	alphaR_.assign(pSize_, std::vector(pSize_, 0.0));    // Attention Alpha possede N lignes et N + 1 colonnes
@@ -45,16 +46,24 @@ void TracksFit::SetFitLength(const ComputesParams& p)
 double TracksFit::Fit(const std::vector<double>& input)
 {
 	if (!checkInputValidity(input)) { return -1; }
+	const size_t ConfiguredLength = fitLength_;
 
 	// Initialisation
 	fillXY(input);
-	if (fitLength_ < 2) { return -1; } // Sécurité supplémentaire en cas de scintillement massif.
+	if (fitLength_ < 2) {
+		SetFitLength(ComputesParams{.fitLength = ConfiguredLength});
+		return -1; // Sécurité supplémentaire en cas de scintillement massif.
+	}
 	initP();
-	double mu     = 0,
-	       lambda = 0.001, lambdaOld = lambda, lambdaFactor = LAMBDA_FACTOR_HIGH,
-	       errOld = computeR2(p_);
+	double lambda = 0.001, lambdaOld = lambda, lambdaFactor = LAMBDA_FACTOR_HIGH,
+	       errOld = computeError(p_);
+	if (!std::isfinite(errOld)) {
+		if (fitLength_ != ConfiguredLength) { SetFitLength(ComputesParams{.fitLength = ConfiguredLength}); }
+		return -1;
+	}
 
 	for (size_t iteration = 0, k = 0; iteration < N_ITER && k < N_K; ++iteration) { // Main Loop
+		if (errOld <= 0 || !std::isfinite(lambda)) { break; }
 		// Étape LM : construit alpha avec lambda, puis résout pour beta (δp)
 		computeAlpha(lambda);
 		const bool Ok = computeBeta();
@@ -72,15 +81,14 @@ double TracksFit::Fit(const std::vector<double>& input)
 		for (size_t i = 0; i < pSize_; ++i) { pTry_[i] = p_[i] + beta_[i]; }
 
 		// Calcul de l'erreur pour l'essai en cours
-		const double ErrTry = computeR2(pTry_);
+		const double ErrTry = computeError(pTry_);
 
-		// Mise à jour de mu et lambda
-		mu               = (ErrTry > EPSILON_ERR) ? ErrTry / errOld : 0.0;
-		const double Rho = (ErrTry - errOld) / (ErrTry > EPSILON_ERR ? ErrTry : 1);
-
-		if (mu > EPSILON_MU) { lambda *= lambdaFactor; } // Mauvaise iteration, on durcit lambda et on retente
+		// Un essai rejete ne modifie ni les paramètres ni le coût de l'état accepté.
+		const bool Accepted = std::isfinite(ErrTry) && ErrTry <= errOld;
+		if (!Accepted) { lambda *= lambdaFactor; }
 		else {
-			if (std::abs(Rho) < EPSILON_RHO) { ++k; } // Changement détectée
+			const double Rho = (errOld - ErrTry) / errOld;
+			k                = Rho < EPSILON_RHO ? k + 1 : 0;
 			lambda /= lambdaFactor;
 			p_     = pTry_;  // accepte le nouveau point
 			errOld = ErrTry; // met à jour le coût
@@ -92,15 +100,18 @@ double TracksFit::Fit(const std::vector<double>& input)
 			lambdaOld    = lambda;
 		}
 
-		// Critères d'arrêts
+		// Seul un pas accepté peut déclencher la convergence.
+		if (!Accepted) { continue; }
 		double m = 0.0;
 		for (size_t i = 0; i < pSize_; ++i) { m = std::max(m, std::abs(beta_[i]) / std::max(std::abs(p_[i]), 1e-12)); }
-		if (iteration >= 2) {                                                           // Si on est déjà à 2 iterations
+		if (iteration >= 2) {                                                           // Si on est déjà à 2 itérations
 			if (m < EPSILON_STEP) { break; }                                            // Si le pas est trop faible
 			if (errOld / static_cast<double>(fitLength_) < EPSILON_ERR_STOP) { break; } // Si l'erreur est trop faible
 		}
 	}
-	return computeR2(p_); // R² final
+	const double Score = computeR2(p_); // Calculer le R2 sur les seuls lags valides avant de restaurer les buffers.
+	if (fitLength_ != ConfiguredLength) { SetFitLength(ComputesParams{.fitLength = ConfiguredLength}); }
+	return Score;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -326,7 +337,6 @@ void TracksFit::pivot(const size_t index)
 		if (std::abs(maxRow[k]) > std::numeric_limits<double>::epsilon()) { maxRow[k] = Vi / maxRow[k]; }
 	}
 	double max = maxRow[0];
-	if (std::abs(max) <= std::numeric_limits<double>::epsilon()) { return; }
 
 	// Pivot
 	for (size_t i = index + 1, k = 1; i < pSize_; ++i, ++k) {
@@ -340,23 +350,36 @@ void TracksFit::pivot(const size_t index)
 }
 
 //-------------------------------------------------------------------------------------------------
+double TracksFit::computeError(const std::vector<double>& p)
+{
+	base(p);
+	double error = 0;
+	for (size_t i = 0; i < fitLength_; ++i) {
+		const double Residual = y_[i] - f_[i];
+		error += Residual * Residual;
+	}
+	return error;
+}
+
+//-------------------------------------------------------------------------------------------------
 double TracksFit::computeR2(const std::vector<double>& p)
 {
-	base(p); // Calcules la prédiction f_ à partir des paramètres
+	base(p); // Calcule la prédiction f_ à partir des paramètres
 	if (fitLength_ == 0) { return std::numeric_limits<double>::quiet_NaN(); }
 
-	// Moyenne de Y.
-	const double Mu = std::accumulate(y_.begin(), y_.end(), 0.0) / static_cast<double>(fitLength_);
+	const double MuY = std::accumulate(y_.begin(), y_.end(), 0.0) / static_cast<double>(fitLength_),
+	             MuF = std::accumulate(f_.begin(), f_.end(), 0.0) / static_cast<double>(fitLength_);
 
-	// Sommes des carrés : résiduels (s1) et totale (s2)
-	double s1 = 0.0, s2 = 0.0;
+	// Même score que le fit gaussien : corrélation centrée au carré, pas 1-SSE/SST.
+	double covariance = 0, varianceY = 0, varianceF = 0;
 	for (size_t i = 0; i < fitLength_; ++i) {
-		const double D1 = y_[i] - f_[i],
-		             D2 = y_[i] - Mu;
-		s1 += D1 * D1;
-		s2 += D2 * D2;
+		const double Dy = y_[i] - MuY, Df = f_[i] - MuF;
+		covariance += Dy * Df;
+		varianceY += Dy * Dy;
+		varianceF += Df * Df;
 	}
-	if (s2 == 0.0) { return 0.0; } // Variance nulle : éviter /0 ; comportement choisi : R² = 0.0 (documenté ci-dessus).
-	return 1 - (s1 / s2);
+	if (varianceY <= 0 || varianceF <= 0) { return 0; }
+	const double R = covariance / std::sqrt(varianceY) / std::sqrt(varianceF);
+	return std::isfinite(R) ? std::clamp(R * R, 0.0, 1.0) : 0;
 }
 } // namespace palm_tracer::tracking

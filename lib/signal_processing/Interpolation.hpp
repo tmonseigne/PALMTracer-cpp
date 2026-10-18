@@ -84,7 +84,7 @@ public:
 	static Vec3D SubpixelMax(const std::vector<double>& volume, const Vec3I& dim, const Vec3D& pos, double delta = 0.05, double w = 1.0);
 
 	/// <summary>Réalise un suréchantillonnage isotrope par un facteur flottant.
-	/// Equivalent à interp3(..., 'method') avec Xq = 1:1/factor:N.
+	/// Équivalent à interp3(..., 'method') avec Xq = 1:1/factor:N.
 	/// </summary>
 	/// <param name="volume">Vecteur linéarisé représentant un volume 3D en mémoire ligne-colonne-plan (X-Y-Z).</param>
 	/// <param name="dim">Dimensions du volume source (width=X, height=Y, depth=Z).</param>

@@ -31,7 +31,7 @@ public:
 
 	/// <summary>Mode d'alignement avec calcul des coefficients à partir d'images de référence.</summary>
 	/// <param name="highSNR">Image de référence (alignée) avec un haut rapport signal/bruit.</param>
-	/// <param name="lowSNR">Image de référence (désalignée) avec un haut faible signal/bruit.</param>
+	/// <param name="lowSNR">Image de référence (désalignée) avec un faible rapport signal/bruit.</param>
 	/// <param name="input">Données d'entrée (pile d'images à réaligner).</param>
 	/// <param name="output">Pointeur vers la zone mémoire de sortie (même taille que `input`).</param>
 	/// <param name="dim">Dimensions du volume 3D (width=X, height=Y, depth=Z).</param>
@@ -86,7 +86,8 @@ protected:
 
 	/// <summary>>Pré-calcul des contributions pour chaque pixel cible en fonction de la déformation pour une interpolation plus rapide.
 	///
-	/// Cette carte contient, pour chaque pixel de l'image cible, les coordonnées sources correspondantes ainsi que les poids associés à l'interpolation.</summary>
+	/// Cette carte contient, pour chaque pixel de l'image cible, les coordonnées sources correspondantes ainsi que les poids associés à
+	/// l'interpolation.</summary>
 	/// <remarks>Utilise un splatting inverse avec suréchantillonnage.</remarks>
 	void precomputeTransformMap();
 

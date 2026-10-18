@@ -6,9 +6,8 @@
 /// \version 1.3.0.
 /// \date 17/07/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
-/// \remarks Ce code est basé sur celui de SMAP <a href="https://github.com/jries/SMAP">github.com/jries/SMAP</a>.
-///
-/// \todo Attention le calcul final nécessite l'interpolation spline de matlab et il persiste une différence.
+/// <remarks>Ce code est basé sur celui de SMAP <a href="https://github.com/jries/SMAP">github.com/jries/SMAP</a>.
+/// TODO : le calcul final nécessite l'interpolation spline de MATLAB et présente encore une différence.</remarks>
 ///-------------------------------------------------------------------------------------------------
 
 #pragma once

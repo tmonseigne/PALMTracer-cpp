@@ -26,7 +26,8 @@ namespace palm_tracer::fit {
 /// </summary>
 using astig_model = std::array<std::array<double, 5>, 2>;
 
-/// <summary>Ajustement non linéaire (Levenberg–Marquardt) d'une courbe d'astigmatisme \f$\sigma(z)\f$, et estimation de Z à partir d'une paire \f$(\sigma_x, \sigma_y) \f$.</summary>
+/// <summary>Ajustement non linéaire (Levenberg–Marquardt) d'une courbe d'astigmatisme \f$\sigma(z)\f$, et estimation de Z à partir d'une paire \f$(\sigma_x,
+/// \sigma_y) \f$.</summary>
 /// <remarks>
 /// Hypothèses importantes :
 /// - Les entrées \f$\sigma\f$ sont en pixels.
@@ -58,6 +59,8 @@ public:
 	/// <remarks>
 	/// - Les axes X et Y sont ajustés indépendamment (<see cref="fitAxis"/>).
 	/// - En cas d'entrée invalide (tailles incohérentes, N trop petit), l'axe concerné renvoie un vecteur rempli de -1.
+	/// - Les candidats sont contrôlés sur l'intervalle des z fournis, avant recentrage. Un recentrage de Zc déplace
+	/// aussi cet intervalle vers [min(z)-Zc, max(z)-Zc] ; il ne garantit pas une extrapolation jusqu'à un Zmax arbitraire.
 	/// </remarks>
 	[[nodiscard]] astig_model Calibrate(const std::vector<Vec3D>& input, bool center = true) const;
 
@@ -67,11 +70,13 @@ public:
 	/// <param name="zLimit">Intervalle de recherche initial : <c>[zMin, zMax]</c> en nm.</param>
 	/// <param name="zStep">Nombre d'échantillons pour le pré-scan (grille grossière) avant raffinement.
 	/// Doit être ≥ 3 (sinon division par <c>zStep-1</c>) et impaire si l'on veut le point 0 dans les choix initiaux.</param>
-	/// <returns>Z (nm) minimisant l'erreur sur l'intervalle ainsi que l'erreur associée.</returns>
+	/// <returns><c>x</c> : Z (nm) minimisant la SSE ; <c>y</c> : score de compatibilité des sigmas entre 0 et 1, plus grand = meilleur.</returns>
 	/// <remarks>
 	/// Stratégie :
 	/// 1) pré-scan sur <paramref name="zLimit"/> pour trouver un bon point initial,
 	/// 2) raffinement par <see cref="brent"/> sur un sous-intervalle autour du meilleur point.
+	/// Le score est calculé ensuite par <see cref="getQuality"/> ; il ne participe pas à la minimisation.
+	/// Il remplace l'ancienne SSE retournée, sans changer la position Z. Voir \ref axial_quality_score pour la formule et ses limites.
 	/// </remarks>
 	[[nodiscard]] Vec2D Estimate(const astig_model& model, const Vec2D& sigma,
 	                             const std::array<double, 2>& zLimit = {-800.0, 800.0}, size_t zStep = 201) const;
@@ -82,7 +87,7 @@ public:
 	/// <param name="zLimit">Intervalle de recherche initial : <c>[zMin, zMax]</c> en nm.</param>
 	/// <param name="zStep">Nombre d'échantillons pour le pré-scan (grille grossière) avant raffinement.
 	/// Doit être ≥ 3 (sinon division par <c>zStep-1</c>) et impaire si l'on veut le point 0 dans les choix initiaux.</param>
-	/// <returns>Z (nm) minimisant l'erreur sur l'intervalle ainsi que l'erreur associée.</returns>
+	/// <returns>Pour chaque mesure, <c>x</c> = Z (nm) et <c>y</c> = score de compatibilité entre 0 et 1, comme la surcharge scalaire.</returns>
 	/// <remarks>
 	/// Stratégie :
 	/// 1) pré-scan sur <paramref name="zLimit"/> pour trouver un bon point initial,
@@ -93,7 +98,7 @@ public:
 
 protected:
 	double pixelSize_; ///< Taille de pixel en nanomètre. Attention entre les nanomètres et les micromètres lors des appels
-	double sampling_;  ///< Techniquement inutile, on n'enregistre pas les coordonnées apres upsampling donc il est toujours à 1.
+	double sampling_;  ///< Techniquement inutile, on n'enregistre pas les coordonnées après upsampling donc il est toujours à 1.
 
 	//==================== Hyperparamètres de la calibration ====================
 	static constexpr size_t N_PARAMS = 5,     ///< Nombre de paramètres par axe.
@@ -102,9 +107,10 @@ protected:
 	                        TOL_STEP = 1e-9,  ///< Tolérance numérique générique (évite division par 0).
 	                        TOL_COST = 1e-12; ///< Critère d'arrêt relatif sur le coût.
 
-	static constexpr size_t BRENT_ITER = 80;   ///< Itérations max Brent.
-	static constexpr double BRENT_TOL  = 1e-3, ///< Tolérance (nm) sur l'argmin.
-	                        Z_TOL      = 1e-9; ///< Tolérance (nm) pour tests d'égalité flottante sur Z.
+	static constexpr size_t BRENT_ITER    = 80;   ///< Itérations max Brent.
+	static constexpr double BRENT_TOL     = 1e-3, ///< Tolérance (nm) sur l'argmin.
+	                        Z_TOL         = 1e-9; ///< Tolérance (nm) pour tests d'égalité flottante sur Z.
+	static constexpr double QUALITY_SCALE = 0.2;  ///< Écart relatif RMS de 20 % correspondant au score 0.5 ; convention, pas une incertitude.
 
 	//==================== Modèle / coût ====================
 	/// <summary>Calcule sigma (px) pour un axe à une position z (nm).\n
@@ -154,8 +160,20 @@ protected:
 	/// <remarks>
 	/// - Initialise p par heuristiques (\f$\sigma_{min} \rightarrow z_0\f$, \f$\Delta{z} \rightarrow w\f$, etc.).
 	/// - Contraintes : <c>w</c> et <c>A</c> clampés à un epsilon strictement positif.
+	/// - Un candidat n'est accepté que si son polynôme reste strictement supérieur à 1e-18 sur tout
+	/// l'intervalle de calibration [min(z), max(z)], afin de rester hors de la troncature du Jacobien.
+	/// Cette contrainte ne garantit pas la validité d'une extrapolation au-delà de cet intervalle.
 	/// </remarks>
 	[[nodiscard]] std::array<double, 5> fitAxis(const std::vector<double>& sigma, const std::vector<double>& z) const;
+
+	/// <summary>Vérifie la positivité du polynôme d'un axe sur un intervalle fermé de calibration.</summary>
+	/// <param name="p">Paramètres [z0, w, c3, c4, A], finis, avec w et A strictement positifs.</param>
+	/// <param name="zMin">Borne inférieure de calibration, en nm.</param>
+	/// <param name="zMax">Borne supérieure de calibration, en nm.</param>
+	/// <returns>True si le polynôme est fini et supérieur à 1e-18 aux bornes et à tous ses points stationnaires intérieurs.</returns>
+	/// <remarks>Avec \f$P(u)=1+u^2+c_3u^3+c_4u^4\f$, les points stationnaires vérifient
+	/// \f$P'(u)=u(2+3c_3u+4c_4u^2)=0\f$. Le contrôle est donc continu, sans grille ni contrainte de symétrie.</remarks>
+	[[nodiscard]] static bool isValidAxis(const std::array<double, N_PARAMS>& p, double zMin, double zMax);
 
 	/// <summary>Évalue résidus et jacobien (analytique) pour un axe, et retourne la SSE.</summary>
 	/// <param name="sigma">Mesures \f$\sigma_x\f$ (px).</param>

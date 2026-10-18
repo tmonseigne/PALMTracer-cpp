@@ -23,7 +23,7 @@ enum class fit_mode : uint8_t {
 	gaussian_2d_fixed, ///< Ajustement Gaussien 2D avec \f$\sigma\f$ fixé (uniquement X et Y).
 	gaussian_2d_sigma, ///< Ajustement Gaussien 2D avec estimation de \f$\sigma\f$ isotrope.
 	gaussian_3d_fixed, ///< Ajustement Gaussien 3D avec \f$\theta\f$ fixé et estimation de \f$\sigma_x\f$ et \f$\sigma_y\f$.
-	gaussian_3d_theta, ///< Ajustement Gaussien 3D avec estimation de \f$\sigma_x\f$, \f$\sigma_y\f$ et \f$\theta\f$</c>.
+	gaussian_3d_theta, ///< Ajustement Gaussien 3D avec estimation de \f$\sigma_x\f$, \f$\sigma_y\f$ et \f$\theta\f$.
 	spline_3d_emccd,   ///< Ajustement par PSF spline (capteur EMCCD).
 	spline_3d_scmos    ///< Ajustement par PSF spline (capteur sCMOS).
 };
@@ -36,7 +36,7 @@ public:
 	/// <param name="mode">Mode de fitting gaussien/spline.</param>
 	/// <param name="image">Image 2D d'entrée (hauteur × largeur), valeurs entières non-signées 16 bits.</param>
 	/// <param name="dim">Dimensions de l'image (X, Y).</param>
-	/// <param name="maxPoints">Nombre maximum de points par plan (prévention d'un débordement dans la sortie <c>points</c> de <see cref="Fit"/>).</param>
+	/// <param name="maxPoints">Nombre maximum de points par plan (prévention d'un débordement dans la sortie <c>points</c> de <see cref="FitAll"/>).</param>
 	/// <param name="fitParams">Paramètres pour l'ajustement (dépendent du <paramref name="mode"/> ; voir <see cref="parseParams"/>).</param>
 	explicit Fitting(const fit_mode mode, const uint16_t* image, const Vec2I& dim, const size_t maxPoints, const double* fitParams)
 		: mode_(mode), image_(image), dim_(dim), maxPoints_(maxPoints), fitParams_(fitParams) { initialize(); }
@@ -96,9 +96,10 @@ protected:
 	/// <param name="intensity">Amplitude/Intensité estimée.</param>
 	/// <param name="sigmaX">Écart-type estimé sur X (pixels).</param>
 	/// <param name="sigmaY">Écart-type estimé sur Y (pixels).</param>
-	/// <param name="theta">Angle d'ellipse (degrés, convention image).</param>
-	/// <param name="rssXY">Erreur quadratique moyenne (MSE) sur X et Y.</param>
-	/// <param name="rssZ">Erreur quadratique moyenne (MSE) sur Z (si applicable).</param>
+	/// <param name="theta">Angle d'ellipse en radians pour le fit gaussien ; le wrapper Python le convertit en degrés.</param>
+	/// <param name="rssXY">Indicateur du modèle : corrélation au carré pour le fit gaussien, -1 si non calculé.
+	/// La colonne de sortie conserve le nom historique MSE XY.</param>
+	/// <param name="rssZ">Indicateur axial propre au modèle, -1 si non calculé ; transmis sans conversion dans la colonne MSE Z.</param>
 	void fill(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, double x, double y, double z = 0,
 	          double offset = -1, double intensity = -1, double sigmaX = -1, double sigmaY = -1, double theta = -1,
 	          double rssXY = -1, double rssZ = -1) const;

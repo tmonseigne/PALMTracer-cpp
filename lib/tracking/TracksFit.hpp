@@ -31,12 +31,14 @@ public:
 	explicit TracksFit(const ComputesParams& p);
 
 	/// <summary>Configure le mode d'ajustement et initialise les structures internes en conséquence.\n
-	/// Appelle <c><see cref="SetFitLength"/>(...)</c> pour allouer les tableaux dépendant de la fenêtre, puis redimensionne les structures liées au nombre de paramètres (<see cref="pSize_"/>).</summary>
+	/// Appelle <c><see cref="SetFitLength"/>(...)</c> pour allouer les tableaux dépendant de la fenêtre, puis redimensionne les structures liées au nombre de
+	/// paramètres (<see cref="pSize_"/>).</summary>
 	/// <param name="p">Paramètres de configuration des calculs.</param>
 	/// <remarks>
 	/// - Met à jour <see cref="mode_"/> puis <see cref="pSize_"/> via <c>getPSize()</c>.\n
 	/// - Appelle <c><see cref="SetFitLength"/>(...)</c> : <see cref="x_"/>, <see cref="y_"/>, <see cref="f_"/>, <see cref="df_"/> sont redimensionnés.\n
-	/// - Alloue/resize <see cref="p_"/>, <see cref="alpha_"/> (taille \f$p_{Size} \times (p_{Size}+1)\f$), <see cref="alphaR_"/> (\f$p_{Size} \times p_{Size}\f$), <see cref="beta_"/>, <see cref="pTry_"/>.\n
+	/// - Alloue/resize <see cref="p_"/>, <see cref="alpha_"/> (taille \f$p_{Size} \times (p_{Size}+1)\f$), <see cref="alphaR_"/> (\f$p_{Size} \times
+	/// p_{Size}\f$), <see cref="beta_"/>, <see cref="pTry_"/>.\n
 	/// </remarks>
 	void SetMode(const ComputesParams& p);
 
@@ -60,7 +62,12 @@ public:
 
 	/// <summary>Exécute l'ajustement non linéaire (Levenberg–Marquardt) pour le mode courant sur le vecteur en entrée.</summary>
 	/// <param name="input">Série d'entrées (ex. MSD), de longueur supérieure ou égale à <see cref="fitLength_"/>.</param>
-	/// <returns>R² au point final <see cref="p_"/> (via <c><see cref="computeR2"/>(p_)</c>). Renvoie <c>-1</c> si l'entrée est invalide.</returns>
+	/// <returns>Corrélation de Pearson au carré entre observations et modèle final, entre 0 et 1 comme pour le fit gaussien.
+	/// Renvoie <c>-1</c> si l'entrée est invalide ou si le coût initial n'est pas fini.</returns>
+	/// <remarks>La SSE pilote l'acceptation des pas et la convergence ; le score n'est calculé qu'a la fin.
+	/// La corrélation au carré ne pénalise pas un décalage ou un changement d'échelle du modèle et ne mesure pas une incertitude physique.
+	/// Après retrait des lags manquants, restaure la longueur configurée et les buffers pour l'appel suivant,
+	/// y compris si moins de deux lags restent valides. Les paramètres ajustes et <see cref="HasBlink"/> sont conservés.</remarks>
 	double Fit(const std::vector<double>& input);
 
 protected:
@@ -80,13 +87,11 @@ protected:
 
 	static constexpr double LAMBDA_FACTOR_LOW  = 2,          ///< factor multiplicatif de lambda minimal.
 	                        LAMBDA_FACTOR_HIGH = 10,         ///< factor multiplicatif de lambda maximal.
-	                        EPSILON_ERR        = 2 * 1e-6,   ///< Seuil de convergence.
-	                        EPSILON_MU         = 10,         ///< Seuil pour \f$\mu\f$.
-	                        EPSILON_RHO        = 0.001,      ///< Seuil pour \f$\rho\f$.
+	                        EPSILON_RHO        = 0.001,      ///< Seuil de diminution relative de la SSE.
 	                        EPSILON_STEP       = 1e-6,       ///< Seuil pour un pas trop faible.
-	                        EPSILON_ERR_STOP   = 1e-6;       ///< Seuil pour une nouvelle erreur trop faible.
+	                        EPSILON_ERR_STOP   = 1e-6;       ///< Seuil sur la moyenne des carrés des résidus acceptés.
 	static constexpr size_t N_ITER             = 500;        ///< Nombre maximal d'itérations autorisées dans l'algorithme d'optimisation.
-	static constexpr size_t N_K                = N_ITER / 4; ///< Nombre maximal d'itérations ayant entrainé une mise à jour du modèle.
+	static constexpr size_t N_K                = N_ITER / 4; ///< Nombre maximal de petites améliorations successives du coût.
 
 	/// <summary>Retourne le nombre de paramètres <see cref="pSize_"/> attendu pour le <see cref="fit_mode"/> courant.</summary>
 	/// <returns>
@@ -115,11 +120,14 @@ protected:
 	/// </remarks>
 	[[nodiscard]] bool checkInputValidity(const std::vector<double>& input) const;
 
-	/// <summary>Remplit <see cref="x_"/> et <see cref="y_"/> à partir de l'<paramref name="input"/>  (ex. MSD) en conservant les valeurs strictement supérieures à <c>-1</c>.\n
+	/// <summary>Remplit <see cref="x_"/> et <see cref="y_"/> à partir de l'<paramref name="input"/>  (ex. MSD) en conservant les valeurs strictement
+	/// supérieures à <c>-1</c>.\n
 	/// Et en « tassant » <see cref="y_"/> (et implicitement <see cref="x_"/>) pour supprimer les trous (blinking).</summary>
-	/// <param name="input">Série d'entrées de longueur supérieure ou égale à <see cref="fitLength_"/>. Les valeurs supérieures à <c>-1</c> sont considérées valides.</param>
+	/// <param name="input">Série d'entrées de longueur supérieure ou égale à <see cref="fitLength_"/>. Les valeurs supérieures à <c>-1</c> sont considérées
+	/// valides.</param>
 	/// <remarks>
-	/// - Pour <c>i=0 .. fitLength_ - 1</c> : \f$X[i] \leftarrow i+1\f$ ; si \f$input[i] > -1\f$ alors \f$Y[write] \leftarrow input[i]\f$, sinon l'élément est sauté.\n
+	/// - Pour <c>i=0 .. fitLength_ - 1</c> : \f$X[i] \leftarrow i+1\f$ ; si \f$input[i] > -1\f$ alors \f$Y[write] \leftarrow input[i]\f$, sinon l'élément est
+	/// sauté.\n
 	/// - Met à jour <c>nY_ = fitLength_ - (nombre de sauts)</c>.\n
 	/// - Complexité : \f$\mathcal{O}(\text{fit}_{Length})\f$.
 	/// </remarks>
@@ -154,7 +162,8 @@ protected:
 	/// - <b>Linear</b> : \f$f(x)=a\times x + b,\quad p=[a, b]\f$.\n
 	///   \f[\frac{\partial f}{\partial a} = x,\quad\frac{\partial f}{\partial b} = 1\f]\n
 	/// - <b>Power</b> : \f$f(x)=a \times x^{\alpha}+b,\quad p=[\alpha, a, b]\f$\n
-	///   \f[\frac{\partial f}{\partial p} = a \times \ln(x) \times x^{\alpha},\quad \frac{\partial f}{\partial a} = x^{\alpha},\quad \frac{\partial f}{\partial b} = 1\f]\n
+	/// \f[\frac{\partial f}{\partial p} = a \times \ln(x) \times x^{\alpha},\quad \frac{\partial f}{\partial a} = x^{\alpha},\quad \frac{\partial f}{\partial
+	/// b} = 1\f]\n
 	///   Pour \f$x \le 0\f$ et \f$p\f$ non entier, <c>std::pow</c> peut produire <c>NaN</c>.\n
 	/// - <b>Exponential</b> : \f[f(x)=(b - a)\exp(-\tfrac{x-x_0}{\tau}) + a,\quad p=[x_0, a, \tau, b]\f]\n
 	///   \f[\begin{aligned}
@@ -166,7 +175,8 @@ protected:
 	/// </remarks>
 	void deriv();
 
-	/// <summary>Construit la matrice augmentée <see cref="alpha_"/> pour un pas de Levenberg–Marquardt, à partir de la prédiction <see cref="f_"/> et du Jacobien <see cref="df_"/>.</summary>
+	/// <summary>Construit la matrice augmentée <see cref="alpha_"/> pour un pas de Levenberg–Marquardt, à partir de la prédiction <see cref="f_"/> et du
+	/// Jacobien <see cref="df_"/>.</summary>
 	/// <param name="lambda">Paramètre de Levenberg–Marquardt (\f$\lambda \ge 0\f$). La diagonale est multipliée par \f$(1+\lambda)\f$.</param>
 	/// <remarks>On forme la matrice de taille <c><see cref="pSize_"/> × (<see cref="pSize_"/> + 1)</c> :
 	/// \f[
@@ -186,25 +196,32 @@ protected:
 	/// En cas d'échec, <see cref="beta_"/> ← 0 (pas nul) ; l'appelant peut augmenter <c>lambda</c> et retenter.</remarks>
 	bool computeBeta();
 
-	/// <summary>Effectue un pivot partiel échelonné sur la matrice augmentée <see cref="alpha_"/> pour le système linéaire courant, en prenant <paramref name="index"/> comme ligne de départ.</summary>
+	/// <summary>Effectue un pivot partiel échelonné sur la matrice augmentée <see cref="alpha_"/> pour le système linéaire courant, en prenant <paramref
+	/// name="index"/> comme ligne de départ.</summary>
 	/// <param name="index">Ligne de départ. Doit vérifier <c><paramref name="index"/> < <see cref="pSize_"/></c>.</param>
 	/// <remarks>La matrice <see cref="alpha_"/> est supposée augmentée : <c>alpha_.cols() == pSize_ + 1</c>.\n
 	/// L'algorithme :\n
-	/// 1) Pour chaque ligne \f$i \in [\text{index}, p_{Size}-1]\f$, on calcule  \f$m_{i-\text{index}} = \max_j \lvert\alpha_{i, j}\rvert\f$ pour \f$j \in [\text{index}, p_{Size}-1]\f$.\n
+	/// 1) Pour chaque ligne \f$i \in [\text{index}, p_{Size}-1]\f$, on calcule  \f$m_{i-\text{index}} = \max_j \lvert\alpha_{i, j}\rvert\f$ pour \f$j \in
+	/// [\text{index}, p_{Size}-1]\f$.\n
 	/// 2) Si \f$m[...] \neq 0\f$, on normalise \f$m_{i-\text{index}} = \frac{\lvert\alpha_{i, \text{index}}\rvert}{m_{i-\text{index}}}\f$.\n
 	/// 3) On amène en ligne <paramref name="index"/> la ligne ayant la plus grande valeur \f$m[...]\f$ via un échange de lignes,
 	///    en échangeant toutes les colonnes \f$j \in [\text{index}, p_{Size}]\f$ (incluant le membre de droite).</remarks>
 	void pivot(size_t index);
 
-	/// <summary>Calcule le coefficient de détermination R² entre les observations <see cref="y_"/> et la prédiction <c>f_(p)</c> calculée via <c><see cref="base"/>(<paramref name="p"/>)</c>.\n
-	/// R² est défini par : \f[R^2 = 1 - \frac{\sum_i (y_i - f_i)^2}{\sum_i (y_i - \bar{y})^2}\f]  avec \f$\bar{y}\f$ la moyenne des \f$y_i\f$.</summary>
+	/// <summary>Calcule le coût quadratique utilisé par l'optimiseur, sans normalisation par la variance.</summary>
+	/// <param name="p">Paramètres du modèle à évaluer.</param>
+	/// <returns>Somme des carrés des résidus : \f$\sum_i (y_i-f(x_i,p))^2\f$.</returns>
+	[[nodiscard]] double computeError(const std::vector<double>& p);
+
+	/// <summary>Calcule la corrélation de Pearson au carré, comme le fit gaussien.
+	/// \f[R^2 = \frac{\left(\sum_i (y_i-\bar y)(f_i-\bar f)\right)^2}
+	/// {\sum_i (y_i-\bar y)^2\sum_i (f_i-\bar f)^2}\f]</summary>
 	/// <param name="p">Paramètres du modèle utilisés par <c><see cref="base"/>(...)</c> pour produire la prédiction <see cref="f_"/>. </param>
-	/// <returns>La valeur de R².</returns>
+	/// <returns>Score entre 0 et 1 ; 0 si l'une des séries est constante ou la corrélation non finie.</returns>
 	/// <remarks>
-	/// - <b>Interprétation</b> : \f$1.0\f$ = ajustement parfait, peut être <b>négatif</b> si le modèle est moins bon que la moyenne.\n
-	/// - Ce n'est pas un « chi-deux réduit ». Pour un \f$\chi^2\f$ ou une log-vraisemblance (p.ex. fit gaussien), utiliser une autre métrique.
+	/// - Un score de 1 indique une relation affine parfaite, y compris de pente négative ; ce n'est pas une SSE normalisée.
+	/// - Le score ne dépend que des lags valides de la trajectoire courante, jamais des autres trajectoires.
 	/// - Si <see cref="y_"/> est vide, la fonction renvoie <c>NaN</c>.
-	/// - Si la variance de <see cref="y_"/> est nulle (tous les \f$y_i\f$ égaux), on renvoie \f$0.0\f$ pour éviter une division par zéro.
 	/// - <see cref="y_"/> et <see cref="f_"/> doivent avoir la même taille après l'appel à <c><see cref="base"/>(p)</c>.
 	/// </remarks>
 	[[nodiscard]] double computeR2(const std::vector<double>& p);

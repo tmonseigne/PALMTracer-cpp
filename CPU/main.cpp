@@ -24,7 +24,8 @@ static void InitOpenMP()
 //-------------------------------------------------------------------------------------------------
 /// <summary>Aligne un stack 3D d'images à l'aide de coefficients de correction fournis.
 ///
-/// Cette fonction applique une correction géométrique (translation / distorsion) sur chaque plan d'un stack volumique, typiquement pour compenser des décalages entre canaux ou entre plans.
+/// Cette fonction applique une correction géométrique (translation / distorsion) sur chaque plan d'un stack volumique, typiquement pour compenser des décalages
+/// entre canaux ou entre plans.
 /// Les images d'entrée et de sortie sont stockées sous forme de stack 3D : <c>planes</c> plans successifs de taille <c>width × height</c>.
 /// </summary>
 /// <param name="input">Pointeur vers le buffer d'entrée contenant le stack d'images.
@@ -35,7 +36,8 @@ static void InitOpenMP()
 /// <param name="width">Largeur (en pixels) de chaque plan 2D.</param>
 /// <param name="planes">Nombre de plans dans le stack 3D (dimension Z).</param>
 /// <param name="factors"> Tableau de coefficients de correction d'alignement.
-/// Il doit contenir exactement 20 valeurs (<c>2 × 10</c>), organisées en 2 lignes de 10 coefficients (une ligne par axe) tels qu'attendus par <c>palm_tracer::Alignment</c>.</param>
+/// Il doit contenir exactement 20 valeurs (<c>2 × 10</c>), organisées en 2 lignes de 10 coefficients (une ligne par axe) tels qu'attendus par
+/// <c>palm_tracer::Alignment</c>.</param>
 /// <param name="upsampling">Facteur de sur-échantillonnage utilisé pour le calcul sub-pixel de l'alignement.
 /// Une valeur supérieure à 1 permet un ajustement plus fin mais augmente le coût de calcul.</param>
 PT_API void PT_CALL Alignment(const uint16_t* input, uint16_t* output, const uint64_t height,
@@ -55,7 +57,8 @@ PT_API void PT_CALL Alignment(const uint16_t* input, uint16_t* output, const uin
 //-------------------------------------------------------------------------------------------------
 /// <summary>Calcule automatiquement un seuil d'intensité pour la détection de molécules sur une image.
 ///
-/// Cette fonction estime un seuil global en analysant la distribution d'intensité de l'image et en utilisant les paramètres d'ajustement <paramref name="fit_params" />.
+/// Cette fonction estime un seuil global en analysant la distribution d'intensité de l'image et en utilisant les paramètres d'ajustement <paramref
+/// name="fit_params" />.
 /// Elle est pensée pour être utilisée avant un appel à <c>Localization</c>.</summary>
 /// <param name="input">Pointeur vers le buffer d'entrée contenant le stack d'images.
 /// Le buffer doit contenir <c>planes × width × height</c> pixels de type <c>uint16_t</c>, stockés plan par plan (plan 0, puis plan 1, etc.).</param>
@@ -63,7 +66,8 @@ PT_API void PT_CALL Alignment(const uint16_t* input, uint16_t* output, const uin
 /// <param name="width">Largeur (en pixels) de chaque plan 2D.</param>
 /// <param name="fit_params">Tableau de paramètres de fit utilisés par l'algorithme de seuil automatique.
 /// Le contenu exact dépend de l'implémentation de <c>palm_tracer::Palm</c> (par exemple paramètres de PSF, bruit, etc.).</param>
-/// <returns>Seuil d'intensité calculé automatiquement, exprimé dans les mêmes unités que les valeurs de <paramref name="image" /> (converties en <c>double</c>).</returns>
+/// <returns>Seuil d'intensité calculé automatiquement, exprimé dans les mêmes unités que les valeurs de <paramref name="input" /> (converties en
+/// <c>double</c>).</returns>
 PT_API double PT_CALL AutoThreshold(const uint16_t* input, const uint64_t height, const uint64_t width, const double* fit_params)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
@@ -79,21 +83,26 @@ PT_API double PT_CALL AutoThreshold(const uint16_t* input, const uint64_t height
 //-------------------------------------------------------------------------------------------------
 /// <summary>Effectue la localisation des molécules sur un stack d'images (2D ou 3D).
 ///
-/// Cette fonction détecte les maxima locaux au-dessus d'un seuil, applique éventuellement un watershed, puis réalise un ajustement de PSF (fit) pour chaque spot détecté.
-/// Les résultats sont écrits dans <paramref name="pointsList" /> sous forme de tableau plat de <c>double</c> (format défini par <c>palm_tracer::Palm</c>).</summary>
+/// Cette fonction détecte les maxima locaux au-dessus d'un seuil, applique éventuellement un watershed, puis réalise un ajustement de PSF (fit) pour chaque
+/// spot détecté.
+/// Les résultats sont écrits dans <paramref name="output" /> sous forme de tableau plat de <c>double</c> (format défini par
+/// <c>palm_tracer::Palm</c>).</summary>
 /// <param name="input">Pointeur vers le buffer d'entrée contenant le stack d'images.
 /// Le buffer doit contenir <c>planes × width × height</c> pixels de type <c>uint16_t</c>, stockés plan par plan (plan 0, puis plan 1, etc.).</param>
 /// <param name="output">Pointeur vers le tableau de sortie contenant les localisations détectées.
 /// Le tableau doit être pré-alloué et suffisamment grand pour contenir <paramref name="outputSize"/> valeurs.
 /// Le format exact (ordre des colonnes : x, y, z, intensité, etc.) est défini par <c>palm_tracer::Palm</c>.</param>
-/// <param name="outputSize">Taille (en nombre de <c>double</c>) du tableau <paramref name="pointsList" />.
+/// <param name="outputSize">Taille (en nombre de <c>double</c>) du tableau <paramref name="output" />.
 /// Si le nombre de localisations dépasse la capacité du tableau, l'excédent sera ignoré.</param>
 /// <param name="height">Hauteur (en pixels) de chaque plan 2D.</param>
 /// <param name="width">Largeur (en pixels) de chaque plan 2D.</param>
 /// <param name="planes">Nombre de plans dans le stack 3D (dimension Z).</param>
-/// <param name="thresholdVal">Seuil d'intensité utilisé pour la détection des spots. Les pixels en dessous de ce seuil ne sont pas considérés comme candidats.</param>
-/// <param name="watershedRatio">Paramètre de contrôle du watershed / séparation des spots voisins. Une valeur plus élevée favorise une séparation plus agressive des maxima.</param>
-/// <param name="fit">Mode d'ajustement (fit) à utiliser pour chaque spot. La signification exacte des valeurs dépend de l'implémentation de <c>palm_tracer::Palm</c>.</param>
+/// <param name="thresholdVal">Seuil d'intensité utilisé pour la détection des spots. Les pixels en dessous de ce seuil ne sont pas considérés comme
+/// candidats.</param>
+/// <param name="watershedRatio">Seuil de fusion des bassins : 0 conserve les maxima distincts (Watershed activé dans Python),
+/// 10 autorise leur fusion (Watershed désactivé). Une valeur plus élevée favorise la fusion, et non la séparation.</param>
+/// <param name="fit">Mode d'ajustement (fit) à utiliser pour chaque spot. La signification exacte des valeurs dépend de l'implémentation de
+/// <c>palm_tracer::Palm</c>.</param>
 /// <param name="fit_params">Tableau de paramètres de fit (par exemple paramètres de PSF, initialisation, contraintes).</param>
 /// <returns>Nombre de valeurs effectivement écrites dans <paramref name="output" />.</returns>
 PT_API uint64_t PT_CALL Localization(const uint16_t* input, double* output, const uint64_t outputSize, const uint64_t height,
@@ -109,12 +118,14 @@ PT_API uint64_t PT_CALL Localization(const uint16_t* input, double* output, cons
 
 
 //-------------------------------------------------------------------------------------------------
-/// <summary>Construit des trajectoires 2D à partir d'un tableau contigu de localisations simples, puis exporte le couple <c>(Id, Track)</c> de chaque point.</summary>
+/// <summary>Construit des trajectoires 2D à partir d'un tableau contigu de localisations simples, puis exporte le couple <c>(Id, Track)</c> de chaque
+/// point.</summary>
 /// <param name="input">Tableau d'entrée contigu de doubles contenant 4 valeurs par point : <c>Id</c>, <c>Plane</c>, <c>X</c>, <c>Y</c>.</param>
-/// <param name="output">Tableau de sortie contigu préalloué en entiers 64 bits. Il reçoit deux valeurs par point : <c>Id</c>, puis identifiant de trajectoire.</param>
+/// <param name="output">Tableau de sortie contigu préalloué en entiers 64 bits. Il reçoit deux valeurs par point : <c>Id</c>, puis identifiant de
+/// trajectoire.</param>
 /// <param name="nPoints">Nombre de points présents dans <paramref name="input"/>.</param>
 /// <param name="maxDistance">Distance maximale autorisée entre deux points de deux plans consécutifs pour créer une liaison.</param>
-/// <returns>Nombre total de valeurs écrites dans <paramref name="output"/>, soit <c>2 × nPoints</c>.</returns>
+/// <remarks>Écrit <c>2 × nPoints</c> valeurs dans <paramref name="output"/> ; cet export ne renvoie pas de valeur.</remarks>
 PT_API void PT_CALL Tracking(const double* input, uint64_t* output, const uint64_t nPoints, const double maxDistance)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
@@ -126,16 +137,21 @@ PT_API void PT_CALL Tracking(const double* input, uint64_t* output, const uint64
 //-------------------------------------------------------------------------------------------------
 /// <summary>Réassocie les trajectoires interrompues à cause du blinking (reconnexion des blinkings).
 ///
-/// Cette fonction charge des trajectoires existantes, tente de reconnecter les segments séparés par des périodes de clignotement (blinking), puis écrit le résultat dans <paramref name="output"/>.
+/// Cette fonction charge des trajectoires existantes, tente de reconnecter les segments séparés par des périodes de clignotement (blinking), puis écrit le
+/// résultat dans <paramref name="output"/>.
 /// </summary>
-/// <param name="input">Pointeur vers le tableau d'entrée contenant les trajectoires initiales, tel que produit par <c>Tracking</c> ou une étape précédente.</param>
+/// <param name="input">Pointeur vers le tableau d'entrée contenant les trajectoires initiales, tel que produit par <c>Tracking</c> ou une étape
+/// précédente.</param>
 /// <param name="output">Pointeur vers le tableau de sortie contenant les trajectoires après reconnexion des blinkings. Le buffer doit être pré-alloué.</param>
-/// <param name="nRow">Nombre de lignes (trajets / points) dans le tableau d'entrée. La signification exacte dépend du format adopté dans <c>Tracks::LoadTracks</c>.</param>
-/// <param name="pixelSize">Taille d'un pixel, en unités physiques (par exemple µm/pixel). Utilisée pour convertir les distances en unités physiques lors de la reconnexion.</param>
+/// <param name="nRow">Nombre de lignes (trajets / points) dans le tableau d'entrée. La signification exacte dépend du format adopté dans
+/// <c>Tracks::LoadTracks</c>.</param>
+/// <param name="pixelSize">Taille d'un pixel, en unités physiques (par exemple µm/pixel). Utilisée pour convertir les distances en unités physiques lors de la
+/// reconnexion.</param>
 /// <param name="mode">Mode de diffusion des cibles. La signification des différents modes est définie par <c>Tracks::BlinkingReconnection</c>.</param>
-/// <param name="maxDuration">Durée maximale (en nombre de frames) autorisée entre deux segments pour être considérés comme appartenant à la même trajectoire.</param>
+/// <param name="maxDuration">Durée maximale (en nombre de frames) autorisée entre deux segments pour être considérés comme appartenant à la même
+/// trajectoire.</param>
 /// <param name="maxSpeed">Vitesse maximale autorisée des cibles pour reconnecter deux segments séparés par un blinking.</param>
-/// <returns></returns>
+/// <returns>Nombre de doubles écrits dans <paramref name="output"/>, par lignes de <c>N_TRACKING</c> valeurs.</returns>
 PT_API uint64_t PT_CALL BlinkingReconnection(const double* input, double* output, const uint64_t nRow, const double pixelSize,
                                              const uint64_t mode, const uint64_t maxDuration, const double maxSpeed)
 {
@@ -165,7 +181,8 @@ PT_API uint64_t PT_CALL BlinkingReconnection(const double* input, double* output
 /// <param name="outputFit">Pointeur vers le tableau de sortie pour les résultats des fits (selon <paramref name="fitMode" />).</param>
 /// <param name="nRow">Nombre de lignes dans le tableau d'entrée (nombre de points ou de trajectoires, selon la convention de <c>LoadTracks</c>).</param>
 /// <param name="isMSD">Si vrai, calcule et remplit <paramref name="outputMSD" /> avec les MSD de toutes les trajectoires.</param>
-/// <param name="isInd">Si vrai, calcule et remplit <paramref name="outputInd" /> avec les coefficients de diffusion instantanée pour chaque trajectoire.</param>
+/// <param name="isInd">Si vrai, calcule et remplit <paramref name="outputInd" /> avec les coefficients de diffusion instantanée pour chaque
+/// trajectoire.</param>
 /// <param name="is3D">Indique si les trajectoires sont 3D (<c>true</c>) ou 2D (<c>false</c>), ce qui affecte le calcul des métriques.</param>
 /// <param name="pixelSize">Taille d'un pixel en unités physiques (par exemple µm/pixel).</param>
 /// <param name="exposureTime">Temps d'exposition (ou intervalle temporel entre frames), en secondes.</param>
@@ -176,9 +193,11 @@ PT_API uint64_t PT_CALL BlinkingReconnection(const double* input, double* output
 /// <item><description><c>2</c> : fit de type puissance,</description></item>
 /// <item><description><c>3</c> : fit exponentiel.</description></item>
 /// </list></param>
-/// <param name="fitParams">Tableau de paramètres pour le fit. L'élément <c>fitParams[0]</c> doit contenir la longueur du fit (<c>fitLength</c>, nombre de points utilisés pour le fit).
+/// <param name="fitParams">Tableau de paramètres pour le fit. L'élément <c>fitParams[0]</c> doit contenir la longueur du fit (<c>fitLength</c>, nombre de
+/// points utilisés pour le fit).
 /// Les autres éléments peuvent être utilisés par des variantes futures.</param>
-/// <returns>Toujours <c>true</c> si l'exécution s'est terminée sans exception. En cas d'erreur interne, une exception C++ peut être levée et doit être gérée côté appelant .NET/Python.</returns>
+/// <returns>Toujours <c>true</c> si l'exécution s'est terminée sans exception. En cas d'erreur interne, une exception C++ peut être levée et doit être gérée
+/// côté appelant .NET/Python.</returns>
 PT_API bool PT_CALL TrackAnalysis(const double* input, double* outputMSD, double* outputInd, double* outputFit, const uint64_t nRow,
                                   const bool isMSD, const bool isInd, const bool is3D,
                                   const double pixelSize, const double exposureTime, const uint64_t fitMode, const double* fitParams)
@@ -225,7 +244,8 @@ PT_API bool PT_CALL TrackAnalysis(const double* input, double* outputMSD, double
 //-------------------------------------------------------------------------------------------------
 /// <summary>Extrait un plan d'ondelettes d'un stack d'images en utilisant une décomposition à trous.
 ///
-/// Pour chaque plan 2D du stack d'entrée, cette fonction calcule une décomposition en ondelettes (algorithme à trous) via <c>palm_tracer::localization::ATrous</c>
+/// Pour chaque plan 2D du stack d'entrée, cette fonction calcule une décomposition en ondelettes (algorithme à trous) via
+/// <c>palm_tracer::localization::ATrous</c>
 /// et copie le niveau demandé dans <paramref name="output" />.</summary>
 /// <param name="input">Pointeur vers le buffer d'entrée contenant le stack d'images.
 /// Le buffer doit contenir <c>planes × width × height</c> pixels de type <c>uint16_t</c>, stockés plan par plan (plan 0, puis plan 1, etc.).</param>
@@ -242,7 +262,8 @@ PT_API void PT_CALL Wavelett(const uint16_t* input, double* output, const uint64
 	std::call_once(omp_init_flag, InitOpenMP);
 
 	if (levelOutput == 0) { levelOutput = 1; } // on force au niveau 1 si l'appelant donne 0
-	//if (levelOutput == 0) { throw std::invalid_argument("levelOutput must be >= 1"); } // lever une exception dans une DLL Extern C n'est pas géré correctement par C# ou Python.
+	// if (levelOutput == 0) { throw std::invalid_argument("levelOutput must be >= 1"); } // lever une exception dans une DLL Extern C n'est pas géré
+	// correctement par C# ou Python.
 
 	const palm_tracer::Vec2I Dim = {.x = width, .y = height};
 	const uint64_t Size          = Dim.GetSize();
@@ -289,11 +310,14 @@ PT_API void PT_CALL Astigmatism3DCalibration(const double* input, double* output
 //-------------------------------------------------------------------------------------------------
 /// <summary>Calcule la position axiale Z d'un jeu de points de à partir d'un modèle d'astigmatisme 3D.</summary>
 /// <param name="input">Pointeur vers le tableau d'entrée contenant les points, au format (\f$\sigma_x, \sigma_y, z\f$).</param>
-/// <param name="output">Pointeur vers le buffer de sortie où seront écrites les valeurs Z et l'erreur associée pour chaque point.</param>
+/// <param name="output">Paires [Z en nm, score Q_Z entre 0 et 1] pour chaque point ; 1 indique une correspondance parfaite des sigmas.</param>
 /// <param name="size">Nombre de points dans le tableau d'entrée.</param>
 /// <param name="pixelSize">Taille d'un pixel en unités physiques (en nanomètre/pixel).</param>
 /// <param name="model">Pointeur vers le buffer du modèle (5 paramètres pour les 2 axes).</param>
 /// <param name="zMax">Borne absolue Z (nm).</param>
+/// <remarks>Le score de compatibilité Q_Z remplace l'ancienne SSE en pixels carrés, sans changer la recherche de Z.
+/// Il n'est ni un R2 ni une précision axiale ; voir la documentation de palm_tracer::fit::AstigFit et \ref axial_quality_score.
+/// Le format du buffer reste inchange. La colonne historique Python <c>MSE Z</c> contient desormais ce score, plus grand = meilleur.</remarks>
 PT_API void PT_CALL Astigmatism3DEstimation(const double* input, double* output, const uint64_t size, const double pixelSize, const double* model,
                                             const double zMax)
 {

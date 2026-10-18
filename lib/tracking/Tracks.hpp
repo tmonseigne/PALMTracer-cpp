@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file Tracks.hpp
-/// \brief Définition de la classe <see cref="Tracks"/> permettant de manipuler et de reconnecter des trajectoires issues du suivi de points (tracking) en microscopie.
+/// \brief Définition de la classe <see cref="Tracks"/> permettant de manipuler et de reconnecter des trajectoires issues du suivi de points (tracking) en
+/// microscopie.
 /// La classe fournit des méthodes de chargement, de recomposition et d'export des trajectoires au format tableau 2D.
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
@@ -11,6 +12,7 @@
 ///-------------------------------------------------------------------------------------------------
 #pragma once
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 #include "ComputesParams.hpp"
@@ -39,12 +41,15 @@ public:
 	/// <param name="output">Pointeur vers un tableau de sortie contigu de doubles.
 	/// Chaque ligne produite correspond à un point avec les mêmes colonnes que l'entrée (Track, Plan, Id, X, Y, Z, Intensité, Surface).</param>
 	/// <returns>Nombre total de valeurs écrites (soit 8 × nombre de points exportés).</returns>
-	/// <remarks>La colonne “Track” correspond à l'index de la trajectoire dans le tableau interne, réindexé à partir de 1 après éventuelles opérations de reconnexion.</remarks>
+	/// <remarks>La colonne “Track” correspond à l'index de la trajectoire dans le tableau interne, réindexé à partir de 1 après éventuelles opérations de
+	/// reconnexion.</remarks>
 	size_t FillOutput(double* output) const;
 
-	/// <summary>Construit des trajectoires 2D à partir d'un tableau contigu de localisations simples, puis exporte le couple <c>(Id, Track)</c> de chaque point.</summary>
+	/// <summary>Construit des trajectoires 2D à partir d'un tableau contigu de localisations simples, puis exporte le couple <c>(Id, Track)</c> de chaque
+	/// point.</summary>
 	/// <param name="input">Tableau d'entrée contigu de doubles contenant 4 valeurs par point : <c>Id</c>, <c>Plane</c>, <c>X</c>, <c>Y</c>.</param>
-	/// <param name="output">Tableau de sortie contigu préalloué en entiers 64 bits. Il reçoit deux valeurs par point : <c>Id</c>, puis identifiant de trajectoire.</param>
+	/// <param name="output">Tableau de sortie contigu préalloué en entiers 64 bits. Il reçoit deux valeurs par point : <c>Id</c>, puis identifiant de
+	/// trajectoire.</param>
 	/// <param name="nPoints">Nombre de points présents dans <paramref name="input"/>.</param>
 	/// <param name="maxDistance">Distance maximale autorisée entre deux points de deux plans consécutifs pour créer une liaison.</param>
 	/// <returns>Nombre total de valeurs écrites dans <paramref name="output"/>, soit <c>2 × nPoints</c>.</returns>
@@ -57,13 +62,16 @@ public:
 
 	/// <summary>Reconnecte des trajectoires disjointes lorsqu'elles sont séparées par un scintillement (frames manquantes).</summary>
 	/// <param name="mode">Mode de dispersion utilisé pour calculer la distance maximale de recherche (<see cref="blinking_mode"/>).</param>
-	/// <param name="maxDuration">Durée maximale (en nombre de plans) entre la fin d'une trajectoire et le début d'une autre pour qu'une reconnexion soit possible.</param>
+	/// <param name="maxDuration">Durée maximale (en nombre de plans) entre la fin d'une trajectoire et le début d'une autre pour qu'une reconnexion soit
+	/// possible.</param>
 	/// <param name="maxSpeed">Vitesse maximale (en pixels/plan) supposée pour un point entre deux plans consécutifs.</param>
 	/// <remarks>
 	/// La reconnexion est effectuée de manière gloutonne :
 	/// - priorité au plus petit décalage temporel \f$\Delta t\f$,
 	/// - puis, à  \f$\Delta t\f$ égal, priorité à la distance spatiale minimale,
 	/// sous réserve que cette distance soit inférieure au seuil calculé par <c>getMaxDistance</c>.
+	/// Le classement des candidats admissibles est centralise dans <see cref="getReconnectionCost"/>.
+	/// A coût exactement égal, le premier candidat rencontre est conservé ; l'association globale reste gloutonne.
 	/// </remarks>
 	void BlinkingReconnection(size_t mode, size_t maxDuration, double maxSpeed);
 
@@ -89,12 +97,15 @@ public:
 	[[nodiscard]] static std::vector<double> ComputeMSD(const Track& track, size_t start = 0, size_t end = 0);
 
 	/// <summary>Calcule le <b>MSD</b> pour l'ensemble des trajectoires.</summary>
-	/// <returns>Tableau 2D avec un nombre de lignes égal au nombre de trajectoires ; chaque ligne a une taille égale au lag maximal de la trajectoire (les lags sans observations valent -1).</returns>
+	/// <returns>Tableau 2D avec un nombre de lignes égal au nombre de trajectoires ; chaque ligne a une taille égale au lag maximal de la trajectoire (les lags
+	/// sans observations valent -1).</returns>
 	/// <remarks>En cas de blinking, les trajectoires plus longues contiennent des trous. Le résultat est moins précis (bruité), mais c'est convenu.</remarks>
 	[[nodiscard]] std::vector<std::vector<double>> ComputeAllMSD() const;
 
-	/// <summary>Estime la <b>diffusion instantanée</b> (Instant D) le long d'une trajectoire, via des <b>fenêtres glissantes</b> de longueur <c>ComputesParams::fitLength</c>.
-	/// Pour chaque fenêtre, on calcule le vecteur MSD local pour les décalages \f$i = 1..\text{fitLength}\f$, puis on ajuste une droite : \f$\mathrm{MSD}(\tau) \approx 2\,d\,D_{\text{inst}}\,\tau + C\f$, où \f$d\f$ est la dimension (2 ou 3) et \f$\tau = i\,\Delta t\f$.
+	/// <summary>Estime la <b>diffusion instantanée</b> (Instant D) le long d'une trajectoire, via des <b>fenêtres glissantes</b> de longueur
+	/// <c>ComputesParams::fitLength</c>.
+	/// Pour chaque fenêtre, on calcule le vecteur MSD local pour les décalages \f$i = 1..\text{fitLength}\f$, puis on ajuste une droite : \f$\mathrm{MSD}(\tau)
+	/// \approx 2\,d\,D_{\text{inst}}\,\tau + C\f$, où \f$d\f$ est la dimension (2 ou 3) et \f$\tau = i\,\Delta t\f$.
 	/// </summary>
 	/// <param name="track">Trajectoire à analyser.</param>
 	/// <param name="p">Paramètres de configuration des calculs.</param>
@@ -127,6 +138,13 @@ protected:
 	std::vector<Track> t_;                                ///< Ensemble des trajectoires manipulées.
 	static constexpr double INSTANT_DIFFUSION_MIN = 1e-6; ///< Diffusion instantanée minimale.
 
+	/// <summary>Coût lexicographique d'une reconnexion admissible : frames minimales, puis distance minimale.</summary>
+	/// <param name="frameGap">Différence de numéro de frame entre les deux extrémités, strictement positive.</param>
+	/// <param name="distance">Distance spatiale entre les deux extrémités, dans l'unité de <c>Point::pos_</c>.</param>
+	/// <returns>Paire \f$(\Delta f,d)\f$ a minimiser lexicographiquement ; ce n'est pas une somme pondérée.</returns>
+	/// <remarks>Les limites de durée et de distance restent des contraintes d'admissibilité séparées du coût.</remarks>
+	[[nodiscard]] static std::pair<size_t, double> getReconnectionCost(size_t frameGap, double distance);
+
 	/// <summary>Convertit un tableau brut <c>(Id, Plane, X, Y)</c> en liste de points de tracking triée par plan puis par identifiant.</summary>
 	/// <param name="points">Tableau d'entrée contigu de doubles contenant 4 valeurs par point : <c>Id</c>, <c>Plane</c>, <c>X</c>, <c>Y</c>.</param>
 	/// <param name="nPoints">Nombre de points à lire dans <paramref name="points"/>.</param>
@@ -142,7 +160,8 @@ protected:
 	/// <param name="points">Points triés par plan croissant puis par identifiant croissant.</param>
 	/// <returns>
 	/// Vecteur de plages <see cref="PlaneRange"/> indexé relativement au premier plan observé.
-	/// Pour un plan <c>p</c>, la plage est accessible par <c>res[p - MinPlane]</c> et représente l'intervalle demi-ouvert <c>[begin, end[</c> dans <paramref name="points"/>.
+	/// Pour un plan <c>p</c>, la plage est accessible par <c>res[p - MinPlane]</c> et représente l'intervalle demi-ouvert <c>[begin, end[</c> dans <paramref
+	/// name="points"/>.
 	/// </returns>
 	/// <remarks>
 	/// Les plans absents sont représentés par une plage vide (<c>begin == end</c>) positionnée à l'indice d'insertion logique.
@@ -158,7 +177,8 @@ protected:
 	/// <remarks>
 	/// Pour chaque paire de plans consécutifs, tous les candidats dont la distance quadratique est inférieure à <c>maxDistance²</c> sont générés,
 	/// triés par distance croissante puis par indices, puis validés de manière gloutonne si les deux extrémités sont encore libres.
-	/// Les couples de plans sont indépendants pour la génération des candidats et peuvent être traités en parallèle, mais l'attribution finale des identifiants de trajectoire reste séquentielle pour garder un résultat déterministe.
+	/// Les couples de plans sont indépendants pour la génération des candidats et peuvent être traités en parallèle, mais l'attribution finale des identifiants
+	/// de trajectoire reste séquentielle pour garder un résultat déterministe.
 	/// Complexité principale : \f$\sum_t \mathcal{O}(n_t\,n_{t+1})\f$ pour la génération des candidats, plus le coût des tris locaux.
 	/// </remarks>
 	static void track(std::vector<TrackingPoint>& points, const std::vector<PlaneRange>& planes, double maxDistance);
@@ -173,7 +193,8 @@ protected:
 	/// </remarks>
 	static uint64_t fillTrackingIdOutput(const std::vector<TrackingPoint>& points, uint64_t* output);
 
-	/// <summary> Calcule la distance maximale autorisée pour une reconnexion en fonction du <paramref name="mode"/> choisi, de la durée du scintillement et de la vitesse maximale spécifiée.</summary>
+	/// <summary> Calcule la distance maximale autorisée pour une reconnexion en fonction du <paramref name="mode"/> choisi, de la durée du scintillement et de
+	/// la vitesse maximale spécifiée.</summary>
 	/// <param name="mode">Mode de dispersion des points (<see cref="blinking_mode"/>).</param>
 	/// <param name="duration">Durée du scintillement (\f$\Delta t\f$, en nombre de plans).</param>
 	/// <param name="maxSpeed">Vitesse maximale supposée (micromètre/plan).</param>

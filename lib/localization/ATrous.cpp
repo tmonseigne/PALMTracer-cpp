@@ -17,35 +17,17 @@ ATrous::ATrous(const uint16_t* image, const Vec2I& dim)
 //-------------------------------------------------------------------------------------------------
 void ATrous::decomposition2D(const uint16_t* image)
 {
-	/**
-		WAVELET TRANSFORM WITH "A TROUS" ALGORITHM
-
-		Makes the transformation of the 2D signal "image".
-		"image" must be a uint16_t array of 2 dimentions ( 2D image).
-
-
-		The algorithm makes a decompostion of the input signal in "outputData.size(2)" wavelet planes ("outputData").
-		"outputData" is a FltArray of 3 dimentions. "outputData(0,0,4)" is the first point of the fifth wavelet plane.
-		The last plan is not a wavelet plane but the soft plane. So "outputData.size(2)" must be >1. If "outputData.size(2)"=2,
-		it computes the first wavelet plane and the soft plane. If the images are too short the algorithm won't be age too compute
-		all the planes. So "PlanesToUse" is a boolean array to indicate if the plane is computed. "planesToUse" must 1D array of
-		"outputData.size(2)" points.
-			!!! The "outputData" array and "planesToUse" array must be allocated before calling this function !!!
-
-		The "a trous" algorithm is a multiresolution analysis. The initialize the process, according to the theorem of multiresolution
-		ones have to project the signal to a Riesz basis of part of L2(R2) space (V0 basis). But you can also considere that you signal
-		is smooth enough to be already in this basis. If "realProj" is true the projection is done.
-	**/
-
-	//do the initialisation of multiresolution algorthm (initialisation of the first wavelet plane) signal is projected in V0 space
+	// Décomposition multirésolution à trous : le signal initial constitue l'approximation V0.
+	// Chaque lissage B3 produit V(j+1), puis le détail W(j) = V(j) - V(j+1).
+	// Les N_PLANES-1 premiers tableaux contiennent les détails ; le dernier conserve l'approximation résiduelle.
+	// Aucun rééchantillonnage ni aucune projection initiale supplémentaire n'est effectué ici.
 	std::transform(image, image + size_, wDecomp_[0].begin(), [](const uint16_t val) { return static_cast<double>(val); });
 
-	//Projection of the input signal in each wavelet space. the signal waveletPlanes[x] is the projection of the input signal in the W(x+1) space
+	// Construction successive des approximations et des détails, à résolution spatiale constante.
 	for (size_t i = 0; i < N_PLANES - 1; ++i) {
-		//Firstly it computes in waveletPlanes[x+1] the projection of V(x) with the knowlege of the projection in V(x-1)
+		// Approximation suivante par filtrage B3 à l'échelle courante.
 		b3SplineFiltering2D(wDecomp_[i], wDecomp_[i + 1], i);
-		//Secondly it computes in waveletPlanes[x] the projection of W(x+1)
-		//As proj(W(x+1)) = proj(W(x)) - proj(W(x+1));	proj(Vx) is in waveletPlanes[x+1] and proj(Vx+1) is in waveletPlanes[x+2]
+		// Détail à cette échelle : différence entre les deux approximations successives.
 		for (size_t j = 0; j < size_; ++j) { wDecomp_[i][j] -= wDecomp_[i + 1][j]; }
 	}
 }

@@ -229,7 +229,7 @@ std::vector<Vec3D> Spline::Align(const std::vector<double>& ref, std::vector<std
 	const auto SubRef    = matrix::ExtractSubVolume(ref, beadDim_, smallXIndices_, smallXIndices_, smallZ ? smallZIndices_ : zIndices_);
 	const Vec3I SmallDim = {.x = smallBeadDim_.x, .y = smallBeadDim_.y, .z = smallZ ? smallBeadDim_.z : beadDim_.z};
 
-	//#pragma omp parallel for ATTENTION: FFTW planning/execution non thread-safe -> boucle sérielle (temporaire)
+	//#pragma omp parallel for ATTENTION: FFTW planning/exécution non thread-safe -> boucle sérielle (temporaire)
 	//for (int i = 0; i < static_cast<int>(beads.size()); ++i) { // Pour chaque bille
 	for (size_t i = 0; i < beads.size(); ++i) { // Pour chaque bille
 		const Interpolation3D Interp(interpolation_mode::cubic_weight, true);
@@ -252,7 +252,7 @@ std::vector<std::vector<double>> Spline::SoftNormalization(const std::vector<std
 	xr.reserve(7);
 	for (size_t i = midBead_.x - CenterSize; i <= midBead_.x + CenterSize; ++i) { xr.push_back(i); }
 
-	// 4 iterations de la soft normalisation
+	// 4 itérations de la soft normalisation
 	for (size_t iter = 0; iter < 4; ++iter) {
 		constexpr double QuantileRatio = 0.75;
 		std::vector meanVolume(beadSize_, 0.0);
