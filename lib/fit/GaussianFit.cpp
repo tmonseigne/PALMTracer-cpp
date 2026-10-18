@@ -49,8 +49,7 @@ void GaussianFit::Fit(const localization::SegmentationInfo& infos, std::array<do
 	initP(ws.p, x, y, Z, minI, maxI);
 
 	// Première itération de Levenberg-Marquardt et initialisation de l'erreur de référence
-	double err     = lm(ws);
-	double err_old = err;
+	double err = lm(ws);
 
 	// Trouver la valeur absolue maximale
 	double m = std::ranges::max(std::views::transform(ws.beta, [](const double b) { return std::abs(b); }));
@@ -100,13 +99,11 @@ void GaussianFit::Fit(const localization::SegmentationInfo& infos, std::array<do
 		const double Rho     = (err - Err_Try) / (2.0 * m);
 
 		if (Rho > EPSILON_4) {                                  // On accepte : on remplace l'état courant par _try
-			err_old = err;                                      // Mise à jour de l'erreur de référence
 			ws.p[1] = ws.pTry;                                  // Mise à jour des paramètres du modèle
 			err     = lm(ws);                                   // Mise à jour de la ROI du modèle, la matrice alpha, le vecteur beta et de l'erreur.
 			lambda  = std::max(lambda / LAMBDA_DN, LAMBDA_MIN); // Diminution de λ.
 		}
-		else {                                                 // On refuse : on garde l'état courant
-			err = err_old;                                     // On reprend l'erreur de référence
+		else {                                                 // On refuse : paramètres, coût et Jacobien courants restent cohérents.
 			if (lambda >= LAMBDA_MAX) { break; }               // On est déjà au max pour λ, on arrête
 			lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX); // Augmentation de λ.
 		}
