@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cmath>
 #include <execution>
+#include <iterator>
 #include <numeric>
 #include <ranges>
 #include <vector>
@@ -62,15 +63,11 @@ size_t SendIrregularArray(const std::vector<std::vector<double>>& data, double* 
 {
 	if (output == nullptr) { throw std::invalid_argument{"Irregular2dArrayToOutputChecked: `output` nul."}; }
 	constexpr double EndSentinel = -1.0; // Sentinelle de fin (< 0)
-	size_t idx                   = 0, nRow = 1;
+	size_t idx                   = 0;
 	for (const auto& Row : data) {
-		if (Row.empty()) {
-			++nRow;
-			continue;
-		}
+		if (Row.empty()) { continue; }
 		output[idx++] = static_cast<double>(Row.size());  // Écrit L (longueur) comme double (la lecture côté Python fera int(...)).
 		for (const double V : Row) { output[idx++] = V; } // Écrit les L valeurs
-		++nRow;
 	}
 	output[idx++] = EndSentinel; // Sentinelle de fin
 	return idx;
@@ -85,7 +82,7 @@ std::vector<bool> GetValidIndex(const std::vector<double>& data)
 	std::vector<bool> mask;
 	mask.reserve(data.size());
 
-	for (const double V : data) { mask.push_back(std::isfinite(V) && !std::isnan(V)); }
+	std::ranges::transform(data, std::back_inserter(mask), [](const double v) { return std::isfinite(v) && !std::isnan(v); });
 
 	return mask;
 }
@@ -115,10 +112,10 @@ double SumValid(const std::vector<double>& data)
 //-------------------------------------------------------------------------------------------------
 double MeanValid(const std::vector<double>& data)
 {
-	auto valid       = data | std::views::filter([](const double v) { return std::isfinite(v) && !std::isnan(v); });
-	const double Sum = std::accumulate(valid.begin(), valid.end(), 0.0);
-	const auto Count = std::ranges::distance(valid);
-	return Count > 0 ? Sum / static_cast<double>(Count) : std::numeric_limits<double>::quiet_NaN();
+	auto valid         = data | std::views::filter([](const double v) { return std::isfinite(v) && !std::isnan(v); });
+	const double Total = std::accumulate(valid.begin(), valid.end(), 0.0);
+	const auto Count   = std::ranges::distance(valid);
+	return Count > 0 ? Total / static_cast<double>(Count) : std::numeric_limits<double>::quiet_NaN();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -134,15 +131,15 @@ double MeanWithMask(const std::vector<double>& data, const std::vector<bool>& ma
 
 	if (valid.empty()) { return std::numeric_limits<double>::quiet_NaN(); }
 
-	const double Sum = std::accumulate(valid.begin(), valid.end(), 0.0);
-	return Sum / static_cast<double>(valid.size());
+	const double Total = std::accumulate(valid.begin(), valid.end(), 0.0);
+	return Total / static_cast<double>(valid.size());
 }
 
 //-------------------------------------------------------------------------------------------------
 double Median(const std::vector<double>& data)
 {
 	std::vector<double> filtered;
-	for (const double V : data) { if (std::isfinite(V) && !std::isnan(V)) { filtered.push_back(V); } }
+	std::ranges::copy_if(data, std::back_inserter(filtered), [](const double v) { return std::isfinite(v) && !std::isnan(v); });
 	if (filtered.empty()) { return std::numeric_limits<double>::quiet_NaN(); }
 
 	const size_t Mid = filtered.size() / 2;
@@ -157,7 +154,7 @@ double Median(const std::vector<double>& data)
 double Quantile(const std::vector<double>& data, const double q)
 {
 	std::vector<double> filtered;
-	for (const double V : data) { if (std::isfinite(V) && !std::isnan(V)) { filtered.push_back(V); } }
+	std::ranges::copy_if(data, std::back_inserter(filtered), [](const double v) { return std::isfinite(v) && !std::isnan(v); });
 	if (filtered.empty()) { return std::numeric_limits<double>::quiet_NaN(); }
 
 	std::ranges::sort(filtered); // Tri complet du tableau
@@ -197,11 +194,11 @@ void Normalisation(std::vector<double>& a, const bool shift)
 {
 	if (shift) {
 		const double Min = *std::ranges::min_element(a);
-		for (auto& v : a) { v -= Min; }
+		std::ranges::transform(a, a.begin(), [Min](const double v) { return v - Min; });
 	}
-	const double Sum  = std::accumulate(a.begin(), a.end(), 0.0);
-	const double Norm = Sum > 0.0 ? 1.0 / Sum : 1.0;
-	for (auto& v : a) { v *= Norm; }
+	const double Total = std::accumulate(a.begin(), a.end(), 0.0);
+	const double Norm  = Total > 0.0 ? 1.0 / Total : 1.0;
+	std::ranges::transform(a, a.begin(), [Norm](const double v) { return v * Norm; });
 }
 
 //-------------------------------------------------------------------------------------------------

@@ -11,30 +11,32 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace palm_tracer::localization {
 /// <summary>Structure pour la fusion de régions (segmentation) avec potentiels et liens.</summary>
 struct WSFusion {
 	double maxPotentialWithNeighbor; ///< Potentiel maximal avec un voisin.
 	double minPotential;             ///< Potentiel minimal.
 	double maxPotential;             ///< Potentiel maximal.
-	int x;                           ///< Position x.
-	int y;                           ///< Position y.
-	int structInContact;             ///< Index de la structure en contact.
-	int structToBecome;              ///< Index de la structure à devenir.
-	int newIndex;                    ///< Nouvel index assigné.
+	uint32_t x;                      ///< Position x.
+	uint32_t y;                      ///< Position y.
+	uint32_t neighborLabel;          ///< Étiquette positive de la région voisine ; 0 indique l'absence de voisin.
+	uint32_t structToBecome;         ///< Index de la structure à devenir.
+	uint32_t newIndex;               ///< Nouvel index assigné.
 	bool locked;                     ///< Indique si verrouillé (pas modifiable).
 };
 
 /// <summary>Classe contenant des informations descriptives sur une région segmentée 2D.</summary>
 class SegmentationInfo {
 public:
-	double x_,         ///< Position x.
-	       y_,         ///< Position y.
-	       z_,         ///< Position z.
-	       intensity_, ///< Intensité totale dans la région.
-	       surf_,      ///< Surface de la région.
-	       mean_,      ///< Moyenne des intensités dans la région.
-	       stdev_;     ///< Écart-type des intensités dans la région.
+	double x_{},         ///< Position x.
+	       y_{},         ///< Position y.
+	       z_{},         ///< Position z.
+	       intensity_{}, ///< Intensité totale dans la région.
+	       surf_{},      ///< Surface de la région.
+	       mean_{},      ///< Moyenne des intensités dans la région.
+	       stdev_{};     ///< Écart-type des intensités dans la région.
 
 	/// <summary>Constructeur par défaut.</summary>
 	SegmentationInfo() = default;

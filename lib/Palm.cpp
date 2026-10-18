@@ -1,10 +1,9 @@
 #include "Palm.hpp"
 
-#include <omp.h>
-
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <compare>
 #include <execution>
 #include <numeric>
 #include <ranges>
@@ -22,18 +21,19 @@ namespace palm_tracer {
 Palm::Palm(const uint16_t* image, double* points, const size_t pointsListSize, const Vec3I& dim,
            const double thresholdVal, const double watershedRatio, const size_t fit, const double* fitParams)
 	: stack_(image), points_(points), dim_(dim), size_(dim.GetPlaneSize()),
-	  nPointsMaxPerPlane_((pointsListSize / N_LOCALIZATIONS) / dim.z),
+	  nPointsMaxPerPlane_(dim.z == 0 ? 0 : (pointsListSize / N_LOCALIZATIONS) / dim.z),
 	  thresholdVal_(thresholdVal), watershedRatio_(watershedRatio), fit_(fit), fitParams_(fitParams) { }
 
 //-------------------------------------------------------------------------------------------------
 int Palm::Processing() const
 {
+	if (nPointsMaxPerPlane_ == 0) { return 0; }
 	std::vector<std::vector<std::array<double, N_LOCALIZATIONS>>> allPoints(dim_.z);
 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(dim_.z); ++i) { processingPlane(i, allPoints[i]); }
 
-	// Copy et remplissage Remplissage de l'index global, du plan et de l'index par plan
+	// Copie par plan et attribution de l'identifiant global, du plan et de l'index local.
 	size_t count = 0, global = 1;
 	for (int i = 0; i < static_cast<int>(dim_.z); ++i) {
 		size_t local       = 1;
@@ -56,7 +56,7 @@ int Palm::Processing() const
 double Palm::AutoThreshold()
 {
 	std::vector<std::array<double, N_LOCALIZATIONS>> points;
-	std::vector mask(size_, false); //  Creation du masque binaire (true = masque actif)
+	std::vector mask(size_, false); //  Création du masque binaire (true = masque actif)
 	const double HalfRoi = fitParams_[0] / 2;
 
 	// Calcul de l'écart type initial
@@ -70,30 +70,31 @@ double Palm::AutoThreshold()
 		processingPlane(0, points);
 		// Mise à jour du masque
 		std::fill(mask.begin(), mask.end(), false);
-		for (auto& p : points) {
+		for (const auto& p : points) {
 			const auto Xmin = static_cast<size_t>(std::max(0, static_cast<int>(p[4] - HalfRoi))),
 			           Xmax = std::min(dim_.x, static_cast<size_t>(p[4] + HalfRoi)),
 			           Ymin = static_cast<size_t>(std::max(0, static_cast<int>(p[5] - HalfRoi))),
 			           Ymax = std::min(dim_.y, static_cast<size_t>(p[5] + HalfRoi));
 			for (size_t y = Ymin; y < Ymax; ++y) { for (size_t x = Xmin; x < Xmax; ++x) { mask[y * dim_.x + x] = true; } }
 		}
-		// Extraction des pixels non masqués (hors ROI)
-		std::vector<double> tmp;
-		tmp.reserve(size_); // pré-allocation
+		// Deux passages dans le même ordre, sans recopier les pixels hors masque.
+		size_t count = 0;
+		double sum   = 0;
 		for (size_t j = 0; j < size_; ++j) {
 			if (!mask[j]) {
-				tmp.push_back(stack_[j]); // image_ : image 2D stockée en 1D
+				sum += stack_[j];
+				++count;
 			}
 		}
 
 		// Si nombre de pixels restant insuffisant break
-		if (tmp.empty()) { break; }
+		if (count == 0) { break; }
 
 		// Calcul de l'écart type pour les pixels hors segmentation
-		mu       = std::accumulate(tmp.begin(), tmp.end(), 0.0) / static_cast<double>(tmp.size());
+		mu       = sum / static_cast<double>(count);
 		variance = 0.0;
-		for (const double V : tmp) { variance += (V - mu) * (V - mu); }
-		variance /= static_cast<double>(tmp.size());
+		for (size_t j = 0; j < size_; ++j) { if (!mask[j]) { variance += (stack_[j] - mu) * (stack_[j] - mu); } }
+		variance /= static_cast<double>(count);
 		variance = std::sqrt(variance);
 		if (std::abs(thresholdVal_ - variance) <= std::numeric_limits<double>::epsilon()) { break; } // Aucun changement
 		thresholdVal_ = variance;
@@ -118,45 +119,46 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 	switch (fit_) {
 		case 1: {
 			const fit::GaussianFit Gfit(fit::fit_mode::gaussian_2d_fixed, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Gfit.Fit(Segmentation, points);
+			Gfit.FitAll(Segmentation, points);
 			break;
 		}
 
 		case 2: { // Gaussian fit of 2D
 			const fit::GaussianFit Gfit(fit::fit_mode::gaussian_2d_sigma, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Gfit.Fit(Segmentation, points);
+			Gfit.FitAll(Segmentation, points);
 			break;
 		}
 
 		case 3: { // Gaussian fit of 3D Theta is constant
 			const fit::GaussianFit Gfit(fit::fit_mode::gaussian_3d_fixed, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Gfit.Fit(Segmentation, points);
+			Gfit.FitAll(Segmentation, points);
 			break;
 		}
 
 		case 4: { // Gaussian fit of 3D
 			const fit::GaussianFit Gfit(fit::fit_mode::gaussian_3d_theta, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Gfit.Fit(Segmentation, points);
+			Gfit.FitAll(Segmentation, points);
 			break;
 		}
 
 		case 5: { // Spline fit for Z on EMCCD sensor (maybe same call for sCMOS)
 			const fit::SplineFit Sfit(fit::fit_mode::spline_3d_emccd, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Sfit.Fit(Segmentation, points);
+			Sfit.FitAll(Segmentation, points);
 			break;
 		}
 
 		default: {
 			const fit::Fitting Sfit(fit::fit_mode::none, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Sfit.Fit(Segmentation, points);
+			Sfit.FitAll(Segmentation, points);
 			break;
 		}
 	}
 
 	// Tri par Y puis X (en cas peu probable de Y identique)
 	std::ranges::sort(points, [](const auto& a, const auto& b) {
-		if (std::abs(a[5] - b[5]) > EPSILON) { return a[5] < b[5]; } // Tri sur Y (p[5])
-		return a[4] < b[4];                                          // Puis sur X (p[4])
+		// L'ordre faible reste valide même si un ajustement produit un NaN.
+		if (const auto Order = std::weak_order(a[5], b[5]); Order != 0) { return Order < 0; }
+		return std::weak_order(a[4], b[4]) < 0;
 	});
 }
 } // namespace palm_tracer

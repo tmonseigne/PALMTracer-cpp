@@ -133,6 +133,19 @@ protected:
 	/// <returns>Erreur calculée : \f$(\Delta\sigma_x)^2 + (\Delta\sigma_y)^2\f$.</returns>
 	[[nodiscard]] double getError(const astig_model& model, double z, const Vec2D& sigma) const;
 
+	/// <summary>Convertit les résidus relatifs des sigmas en un score local de compatibilité, sans modifier le coût d'optimisation.
+	/// \f[r^2=\frac12\sum_{a\in\{x,y\}}\left(\frac{\sigma_a-\hat\sigma_a(z)}{\hat\sigma_a(z)}\right)^2,
+	/// \qquad Q_Z=\frac{1}{1+r^2/\tau^2},\quad\tau=0.20.\f]</summary>
+	/// <param name="model">Modèle astigmatique dont sont issues les largeurs prédites.</param>
+	/// <param name="z">Position Z retenue par la minimisation de la SSE, en nm.</param>
+	/// <param name="sigma">Largeurs observées, dans la même unité que les prédictions (pixels).</param>
+	/// <returns>Score entre 0 et 1 ; 0 si une largeur observée ou prédite est non finie ou non positive.</returns>
+	/// <remarks>Convention propre au projet, distincte d'un R2, d'une probabilité et d'une précision axiale.
+	/// Ne dépend ni des autres localisations ni de la ROI ; <c>zLimit</c> intervient seulement dans le choix de Z.
+	/// Un score élevé ne garantit ni une solution unique ni une bonne sensibilité axiale. Voir \ref axial_quality_score.
+	/// </remarks>
+	[[nodiscard]] double getQuality(const astig_model& model, double z, const Vec2D& sigma) const;
+
 	//==================== Calibration LM ====================
 	/// <summary> Ajuste un axe (X ou Y) via Levenberg–Marquardt en minimisant la SSE : \f[ \sum_i (\sigma_{pred}(z_i; p) - \sigma_i)^2 \f]</summary>
 	/// <param name="sigma">Mesures \f$\sigma\f$ (pixels), taille N.</param>

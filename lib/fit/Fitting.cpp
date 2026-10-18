@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <execution>
+#include <iostream>
 #include <numbers>
 #include <vector>
 
@@ -38,13 +39,20 @@ void Fitting::initialize()
 
 // ==================== Fit Computes ====================
 //-------------------------------------------------------------------------------------------------
-void Fitting::Fit(const localization::Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const
+void Fitting::FitAll(const localization::Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const
 {
-	const auto& P = segmentation.Infos();
-	points.resize(P.size());
+	const auto& P      = segmentation.Infos();
+	const size_t Count = std::min(P.size(), maxPoints_);
+	if (P.size() > maxPoints_) {
+		#pragma omp critical(FittingCapacityWarning)
+		{
+			std::cerr << "[WARNING] Density is too high; some points are missed (output capacity exceeded).\n";
+		}
+	}
+	points.resize(Count);
 
 	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(std::min<size_t>(P.size(), maxPoints_ - 1)); ++i) { fit(P[i], points[i]); }
+	for (int i = 0; i < static_cast<int>(Count); ++i) { Fit(P[i], points[i]); }
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -82,9 +90,9 @@ void Fitting::fill(const localization::SegmentationInfo& infos, std::array<doubl
 
 	point[8]  = sigmaX;           // Sigma X
 	point[9]  = sigmaY;           // Sigma Y
-	point[10] = theta;            // Theta (°)
-	point[11] = rssXY;            // MSE X et Y
-	point[12] = rssZ;             // MSE Z
+	point[10] = theta;            // Theta en radians pour le modèle gaussien.
+	point[11] = rssXY;            // Indicateur XY ; colonne historique MSE XY.
+	point[12] = rssZ;             // Indicateur axial ; colonne historique MSE Z.
 	point[13] = intensity;        // Amplitude
 	point[14] = offset;           // Offset
 	point[15] = infos.intensity_; // Intensité de la segmentation

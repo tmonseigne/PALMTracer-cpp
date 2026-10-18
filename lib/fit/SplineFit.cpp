@@ -48,7 +48,7 @@ void SplineFit::parseParams()
 }
 
 //-------------------------------------------------------------------------------------------------
-void SplineFit::fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
+void SplineFit::Fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
 {
 	// Vérification si la zone d'intérêt est entièrement dans l'image (évite les bords)
 	const auto Ux = static_cast<size_t>(infos.x_), Uy = static_cast<size_t>(infos.y_);

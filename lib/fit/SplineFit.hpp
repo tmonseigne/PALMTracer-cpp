@@ -22,6 +22,11 @@ public:
 	explicit SplineFit(const fit_mode mode, const uint16_t* image, const Vec2I& dim, const size_t maxPoints,
 	                   const double* fitParams) : Fitting(mode, image, dim, maxPoints, fitParams) { initialize(); }
 
+	/// <summary>Exécute un ajustement de modèle spline sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.</summary>
+	/// <param name="infos">Informations issues de la segmentation (position initiale, intensité, etc.).</param>
+	/// <param name="point">Sortie : localisation ajustée (format <see cref="N_LOCALIZATIONS"/>).</param>
+	void Fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const override;
+
 protected:
 	static constexpr double LAMBDA_0   = 0.1,   ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.
 	                        LAMBDA_MAX = 1e7,   ///< Valeur maximale autorisée pour lambda.
@@ -42,11 +47,6 @@ protected:
 
 	/// <summary>Parse les paramètres reçus pour l'ajustement.</summary>
 	void parseParams() override;
-
-	/// <summary>Exécute un ajustement de modèle spline sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.</summary>
-	/// <param name="infos">Informations issues de la segmentation (position initiale, intensité, etc.).</param>
-	/// <param name="point">Sortie : localisation ajustée (format <see cref="N_LOCALIZATIONS"/>).</param>
-	void fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const override;
 
 	/// <summary>Calcule les dérivées du modèle spline 3D en un point donné (x, y, z).
 	/// Remplit le vecteur des dérivées partielles (dudt) et évalue la valeur du modèle.</summary>

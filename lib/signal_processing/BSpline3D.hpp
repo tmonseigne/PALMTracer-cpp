@@ -55,6 +55,18 @@ public:
 	/// <param name="lambda">Paramètres de régularisation pour chaque dimension.</param>
 	BSpline3D(const std::vector<double>& volume, const Vec3I& dim, size_t degree = 3, const Vec3D& lambda = {});
 
+	/// <summary>Copie les coefficients dans des buffers indépendants.</summary>
+	BSpline3D(const BSpline3D&) = default;
+
+	/// <summary>Remplace les coefficients par une copie indépendante.</summary>
+	BSpline3D& operator=(const BSpline3D&) = default;
+
+	/// <summary>Transfere les buffers sans recopier les volumes ; la source reste destructible et reaffectable.</summary>
+	BSpline3D(BSpline3D&&) noexcept = default;
+
+	/// <summary>Remplace les coefficients par transfert des buffers, notamment depuis le temporaire de calibration.</summary>
+	BSpline3D& operator=(BSpline3D&&) noexcept = default;
+
 	/// <summary>Destructeur de la classe <see cref="BSpline3D"/>.</summary>
 	~BSpline3D() = default;
 

@@ -1,4 +1,6 @@
 #include "AstigFit.hpp"
+#include <algorithm>
+#include <cmath>
 #include <limits>
 #include <ranges>
 #include <tuple> // Pour std::tie
@@ -23,7 +25,8 @@ astig_model AstigFit::Calibrate(const std::vector<Vec3D>& input, const bool cent
 
 	if (center) {
 		const double Zc = findAstigmaticCenter(res, z);
-		res[0][0] -= Zc, res[1][0] -= Zc;
+		res[0][0] -= Zc;
+		res[1][0] -= Zc;
 	}
 
 	return res;
@@ -52,7 +55,8 @@ Vec2D AstigFit::Estimate(const astig_model& model, const Vec2D& sigma, const std
 	const double B      = std::max(zLimit[0], std::min(bestZ + 2.0 * Dz, zLimit[1]));
 	const Vec2D Refined = brent(A, B, model, sigma);
 	// La grille inclut les bornes exactes : les conserver si Brent ne réduit pas l'erreur évite une saturation légèrement intérieure.
-	return Refined.y < bestE ? Refined : Vec2D{.x = bestZ, .y = bestE};
+	const double Z = Refined.y < bestE ? Refined.x : bestZ;
+	return {.x = Z, .y = getQuality(model, Z, sigma)};
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -91,6 +95,19 @@ double AstigFit::getError(const astig_model& model, const double z, const Vec2D&
 	return Delta.x * Delta.x + Delta.y * Delta.y;
 }
 
+//-------------------------------------------------------------------------------------------------
+double AstigFit::getQuality(const astig_model& model, const double z, const Vec2D& sigma) const
+{
+	const Vec2D Predicted = {.x = getSigma(model[0], z), .y = getSigma(model[1], z)};
+	if (!std::isfinite(Predicted.x) || !std::isfinite(Predicted.y) || Predicted.x <= 0 || Predicted.y <= 0
+	    || !std::isfinite(sigma.x) || !std::isfinite(sigma.y) || sigma.x <= 0 || sigma.y <= 0) { return 0; }
+
+	// Conversion finale uniquement : la recherche de Z minimise toujours la SSE en pixels carrés.
+	const double Rx = (sigma.x - Predicted.x) / Predicted.x / QUALITY_SCALE,
+	             Ry = (sigma.y - Predicted.y) / Predicted.y / QUALITY_SCALE;
+	return 1.0 / (1.0 + 0.5 * (Rx * Rx + Ry * Ry));
+}
+
 //==================== Calibration LM ====================
 //-------------------------------------------------------------------------------------------------
 std::array<double, 5> AstigFit::fitAxis(const std::vector<double>& sigma, const std::vector<double>& z) const
@@ -127,8 +144,9 @@ std::array<double, 5> AstigFit::fitAxis(const std::vector<double>& sigma, const 
 	p[4] = std::max(p[4], TOL_STEP); // A
 
 	// ---------- LM ----------
-	const size_t N = z.size();
-	double lambda  = LAMBDA_0, last_cost = std::numeric_limits<double>::infinity();
+	const size_t N            = z.size();
+	double lambda             = LAMBDA_0, last_cost = std::numeric_limits<double>::infinity();
+	bool previousStepAccepted = false;
 
 	std::vector<double> residue;
 	std::vector<std::array<double, N_PARAMS>> jacobian;
@@ -138,11 +156,13 @@ std::array<double, 5> AstigFit::fitAxis(const std::vector<double>& sigma, const 
 	for (size_t iteration = 0; iteration < N_ITER; ++iteration) { // Main Loop
 		// Calcul du Jacobien et du résidu
 		const double Cost = lm(sigma, z, p, residue, jacobian);
-		if (last_cost < std::numeric_limits<double>::infinity()) {                    // Si ce n'est pas la première iteration.
+		// Un rejet laisse p et son coût inchangés : ce n'est pas une convergence, il faut retenter avec le nouveau lambda.
+		if (previousStepAccepted) {
 			const double Rel = std::abs(Cost - last_cost) / std::max(1.0, last_cost); // Changement relatif du coût
 			if (Rel < TOL_COST) { break; }                                            // Critère d'arrêt sur le coût
 		}
-		last_cost = Cost;
+		last_cost            = Cost;
+		previousStepAccepted = false;
 
 		// Construction des matrices alpha et beta
 		for (auto& a : alpha) { a.fill(0.0); }
@@ -172,6 +192,11 @@ std::array<double, 5> AstigFit::fitAxis(const std::vector<double>& sigma, const 
 		// Contraintes minimales
 		pTry[1] = std::max(pTry[1], TOL_STEP); // W
 		pTry[4] = std::max(pTry[4], TOL_STEP); // A
+		// Refuser le modèle avant d'évaluer son coût : la troncature à zéro ne doit pas masquer un candidat invalide.
+		if (!isValidAxis(pTry, zMin, zMax)) {
+			lambda *= 10.0;
+			continue;
+		}
 
 		const double CostTry = computeSSE(sigma, z, pTry);
 
@@ -183,13 +208,41 @@ std::array<double, 5> AstigFit::fitAxis(const std::vector<double>& sigma, const 
 		}
 
 		if (CostTry < Cost) {
-			p      = pTry;
-			lambda = std::max(1e-12, lambda / 5.0);
+			p                    = pTry;
+			lambda               = std::max(1e-12, lambda / 5.0);
+			previousStepAccepted = true;
 			if (stepMax < TOL_STEP) { break; }
 		}
 		else { lambda *= 10.0; }
 	}
 	return p;
+}
+
+//-------------------------------------------------------------------------------------------------
+bool AstigFit::isValidAxis(const std::array<double, N_PARAMS>& p, const double zMin, const double zMax)
+{
+	if (!std::ranges::all_of(p, [](const double value) { return std::isfinite(value); })
+	    || p[1] <= 0 || p[4] <= 0 || !std::isfinite(zMin) || !std::isfinite(zMax) || zMin > zMax) { return false; }
+	const double UMin = (zMin - p[0]) / p[1], UMax = (zMax - p[0]) / p[1];
+	if (!std::isfinite(UMin) || !std::isfinite(UMax)) { return false; }
+	auto positive = [&p](const double u) {
+		const double U2   = u * u, U3 = U2 * u, U4 = U3 * u;
+		const double Poly = 1.0 + U2 + p[2] * U3 + p[3] * U4;
+		return std::isfinite(Poly) && Poly > 1e-18;
+	};
+	if (!positive(UMin) || !positive(UMax)) { return false; }
+	// Le point stationnaire u=0 vérifie toujours P(0)=1. Les autres sont les racines d'un trinôme.
+	auto validRoot     = [&](const double u) { return u <= UMin || u >= UMax || positive(u); };
+	const double Scale = std::max({1.0, std::abs(p[2]), std::abs(p[3])});
+	const double A     = 4.0 * (p[3] / Scale), B = 3.0 * (p[2] / Scale), C = 2.0 / Scale;
+	// Comparaisons exactes : distinguer le degré du polynôme, sans négliger un petit coefficient non nul.
+	// ReSharper disable once CppClangTidyClangDiagnosticFloatEqual
+	if (A == 0.0) { return B == 0.0 || validRoot(-C / B); }
+	const double Discriminant = std::fma(-4.0 * A, C, B * B);
+	if (Discriminant < 0) { return true; }
+	// Forme stable : évite la soustraction de deux nombres proches dans l'une des racines.
+	const double Q = -0.5 * (B + std::copysign(std::sqrt(Discriminant), B));
+	return validRoot(Q / A) && validRoot(C / Q);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -366,8 +419,9 @@ Vec2D AstigFit::brent(double a, double b, const astig_model& model, const Vec2D&
 		}
 
 		// On force un déplacement minimum (Tol1) pour éviter une stagnation due à des arrondis (x + d == x).
-		const double U  = x + (std::abs(d) >= Tol1 ? d : d > 0.0 ? Tol1 : -Tol1);
-		const double Fu = getError(model, U, sigma);
+		const double MinStep = d > 0.0 ? Tol1 : -Tol1;
+		const double U       = x + (std::abs(d) >= Tol1 ? d : MinStep);
+		const double Fu      = getError(model, U, sigma);
 
 		if (Fu <= fx) { // U devient le nouveau meilleur point
 			// Mise à jour de l'intervalle
@@ -397,55 +451,55 @@ double AstigFit::findAstigmaticCenter(const astig_model& model, const std::vecto
 	if (z.empty()) { return 0.0; }
 
 	auto [zMinIt, zMaxIt] = std::ranges::minmax_element(z);
-	const double zMin     = *zMinIt, zMax = *zMaxIt;
+	const double ZMin     = *zMinIt, ZMax = *zMaxIt;
 
-	if (zMax <= zMin) { return zMin; }
+	if (ZMax <= ZMin) { return ZMin; }
 
 	constexpr size_t N_SAMPLES = 2048, N_BISECT = 64;
 
 	auto delta = [this, &model](const double zz) -> double { return getSigma(model[0], zz) - getSigma(model[1], zz); };
 
-	double prevZ = zMin, prevD            = delta(prevZ),
+	double prevZ = ZMin, prevD            = delta(prevZ),
 	       bestD = std::abs(prevD), bestZ = prevZ;
 
 	for (size_t i = 1; i < N_SAMPLES; ++i) {
-		const double T  = static_cast<double>(i) / static_cast<double>(N_SAMPLES - 1),
-		             zz = zMin + T * (zMax - zMin),
-		             dd = delta(zz);
+		const double T           = static_cast<double>(i) / static_cast<double>(N_SAMPLES - 1),
+		             ZSample     = ZMin + T * (ZMax - ZMin),
+		             DeltaSample = delta(ZSample);
 
-		const double absD = std::abs(dd);
-		if (absD < bestD) {
-			bestD = absD;
-			bestZ = zz;
+		const double AbsDelta = std::abs(DeltaSample);
+		if (AbsDelta < bestD) {
+			bestD = AbsDelta;
+			bestZ = ZSample;
 		}
 
 		// Si on a un zéro exact ou un changement de signe, on fait une bissection locale pour affiner la solution.
-		if ((prevD == 0.0) || (dd == 0.0) || ((prevD < 0.0) != (dd < 0.0))) {
-			double leftZ = prevZ, rightZ = zz, leftD = prevD;
+		if ((prevD == 0.0) || (DeltaSample == 0.0) || ((prevD < 0.0) != (DeltaSample < 0.0))) {
+			double leftZ = prevZ, rightZ = ZSample, leftD = prevD;
 
 			for (size_t k = 0; k < N_BISECT; ++k) {
-				const double midZ = 0.5 * (leftZ + rightZ),
-				             midD = delta(midZ);
+				const double MidZ     = 0.5 * (leftZ + rightZ),
+				             MidDelta = delta(MidZ);
 
-				if (std::abs(midD) < bestD) {
-					bestD = std::abs(midD);
-					bestZ = midZ;
+				if (std::abs(MidDelta) < bestD) {
+					bestD = std::abs(MidDelta);
+					bestZ = MidZ;
 				}
 
-				if (midD == 0.0) { return midZ; }
+				if (MidDelta == 0.0) { return MidZ; }
 
-				if ((leftD < 0.0) != (midD < 0.0)) { rightZ = midZ; }
+				if ((leftD < 0.0) != (MidDelta < 0.0)) { rightZ = MidZ; }
 				else {
-					leftZ = midZ;
-					leftD = midD;
+					leftZ = MidZ;
+					leftD = MidDelta;
 				}
 			}
 
 			return bestZ;
 		}
 
-		prevZ = zz;
-		prevD = dd;
+		prevZ = ZSample;
+		prevD = DeltaSample;
 	}
 
 	return bestZ;

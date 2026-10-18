@@ -1,7 +1,6 @@
 #include "PSF.hpp"
 
 #include <cmath>
-#include <execution>
 
 namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------

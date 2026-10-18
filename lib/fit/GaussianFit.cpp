@@ -24,7 +24,7 @@ void GaussianFit::parseParams()
 }
 
 //-------------------------------------------------------------------------------------------------
-void GaussianFit::fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
+void GaussianFit::Fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
 {
 	// Vérification si la zone d'intérêt est entièrement dans l'image (évite les bords)
 	const auto Ux = static_cast<size_t>(infos.x_), Uy = static_cast<size_t>(infos.y_);
@@ -35,8 +35,9 @@ void GaussianFit::fit(const localization::SegmentationInfo& infos, std::array<do
 	}
 
 	// Valeurs par défaut
-	double x      = infos.x_, y     = infos.y_, z    = infos.z_,
-	       sigmaX = sigmaX_, sigmaY = sigmaY_, theta = theta_;
+	const double Z = infos.z_;
+	double x       = infos.x_, y     = infos.y_,
+	       sigmaX  = sigmaX_, sigmaY = sigmaY_, theta = theta_;
 
 	// Création des variables
 	double lambda = LAMBDA_0, minI = 0, maxI = 0;
@@ -45,7 +46,7 @@ void GaussianFit::fit(const localization::SegmentationInfo& infos, std::array<do
 
 	// Initialisation des données (Récupération des min/max, de la ROI et initialisation des paramètres du modèle et de ses bornes)
 	preCompute(Ux, Uy, ws.grid, minI, maxI);
-	initP(ws.p, x, y, z, minI, maxI);
+	initP(ws.p, x, y, Z, minI, maxI);
 
 	// Première itération de Levenberg-Marquardt et initialisation de l'erreur de référence
 	double err     = lm(ws);
@@ -86,7 +87,7 @@ void GaussianFit::fit(const localization::SegmentationInfo& infos, std::array<do
 			// Critère d'arrêt “petit pas”, m = max (δP / p) (variation relative maximum parmi tous les paramètres)
 			m = 0.0;
 			for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::abs(ws.deltaP[i]) / std::max(std::abs(ws.p[1][i]), 1e-12)); }
-			if (m < EPSILON_2 && iteration >= 2) { break; } // On est trop faible est déjà 2 iterations, on arrête
+			if (m < EPSILON_2 && iteration >= 2) { break; } // On est trop faible est déjà 2 itérations, on arrête
 			continue;                                       // On repart au début de la boucle
 		}
 
@@ -99,13 +100,13 @@ void GaussianFit::fit(const localization::SegmentationInfo& infos, std::array<do
 		const double Rho     = (err - Err_Try) / (2.0 * m);
 
 		if (Rho > EPSILON_4) {                                  // On accepte : on remplace l'état courant par _try
-			err_old = err;                                      // Mise à jour de l'erreur de reference
+			err_old = err;                                      // Mise à jour de l'erreur de référence
 			ws.p[1] = ws.pTry;                                  // Mise à jour des paramètres du modèle
 			err     = lm(ws);                                   // Mise à jour de la ROI du modèle, la matrice alpha, le vecteur beta et de l'erreur.
 			lambda  = std::max(lambda / LAMBDA_DN, LAMBDA_MIN); // Diminution de λ.
 		}
 		else {                                                 // On refuse : on garde l'état courant
-			err = err_old;                                     // On reprend l'erreur de reference
+			err = err_old;                                     // On reprend l'erreur de référence
 			if (lambda >= LAMBDA_MAX) { break; }               // On est déjà au max pour λ, on arrête
 			lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX); // Augmentation de λ.
 		}
@@ -113,7 +114,7 @@ void GaussianFit::fit(const localization::SegmentationInfo& infos, std::array<do
 		// Critères d'arrêts
 		m = 0.0;
 		for (size_t i = 0; i < nParams_; ++i) { m = std::max(m, std::abs(ws.deltaP[i]) / std::max(std::abs(ws.p[1][i]), 1e-12)); }
-		if (iteration >= 2) {                                         // Si on est déjà à 2 iterations
+		if (iteration >= 2) {                                         // Si on est déjà à 2 itérations
 			if (m < EPSILON_2) { break; }                             // Si le pas est trop faible
 			if (err / static_cast<double>(n_) < EPSILON_3) { break; } // Si l'erreur est trop faible
 			if (std::ranges::max(std::views::transform(ws.beta, [](const double b) { return std::abs(b); })) < EPSILON_1) { break; }
@@ -122,12 +123,13 @@ void GaussianFit::fit(const localization::SegmentationInfo& infos, std::array<do
 
 	// Mise à jour des différents éléments
 	const double Offset = ws.p[1][0], Intensity = ws.p[1][1];
-	x                   = ws.p[1][2], y         = ws.p[1][3];
+	x                   = ws.p[1][2];
+	y                   = ws.p[1][3];
 
 
 	const double RSS = computeR2(ws); // Calcul du R² sur XY
 	if (RSS < EPSILON) {
-		// En cas de problème ou MSE ridicule, on considère que le fitting a échoué et on remplit avec des valeurs par défaut (offset, intensity, sigmaX/Y, theta = -1)
+		// Une corrélation au carré trop faible invalide le fit ; les paramètres de sortie gardent les valeurs d'échec.
 		fill(infos, point, x, y, infos.z_);
 		return;
 	}
@@ -168,7 +170,7 @@ void GaussianFit::fit(const localization::SegmentationInfo& infos, std::array<do
 		case fit_mode::spline_3d_emccd:
 		case fit_mode::spline_3d_scmos: break;
 	}
-	fill(infos, point, x, y, z, Offset, Intensity, sigmaX, sigmaY, theta, RSS);
+	fill(infos, point, x, y, Z, Offset, Intensity, sigmaX, sigmaY, theta, RSS);
 }
 
 //==================== Levenberg-Marquardt ====================

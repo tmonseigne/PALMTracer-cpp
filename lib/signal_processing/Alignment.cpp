@@ -3,7 +3,7 @@
 #include <algorithm> // std::min, std::max
 #include <cmath>	 // pour std::lround
 #include <iostream>
-#include <omp.h>
+#include <iterator>
 #include <stdexcept>
 
 
@@ -47,7 +47,8 @@ void Alignment::Align(const uint16_t* input, uint16_t* output, const Vec3I& dim,
 void Alignment::computeFactor()
 {
 	throw std::runtime_error("The method to compute factor isn't implemented use precompute constructor : "
-		"Alignment(const uint16_t* input, uint16_t* output, size_t height, size_t width, size_t planes, const std::array<std::array<double, 10>, 2>&factors, size_t upscale, size_t upscaleMode, bool spread)");
+		"Alignment(const uint16_t* input, uint16_t* output, size_t height, size_t width, size_t planes, "
+		"const std::array<std::array<double, 10>, 2>&factors, size_t upscale, size_t upscaleMode, bool spread)");
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -96,7 +97,7 @@ void Alignment::precomputeTransformMap()
 	const size_t UpSizeIm = UpW * UpH;
 	const double Step     = 1.0 / static_cast<double>(upsampling_);
 	transformMap_.resize(UpSizeIm); // chaque pixel cible contiendra une liste de contributions
-	// Supprime les contributions du precedent appel en conservant les capacites allouees.
+	// Supprime les contributions du précédent appel en conservant les capacités allouées.
 	for (auto& contributions : transformMap_) { contributions.clear(); }
 
 	#pragma omp parallel for
@@ -109,11 +110,13 @@ void Alignment::precomputeTransformMap()
 			const auto [x0, x1] = std::minmax({P[0].x, P[1].x, P[2].x, P[3].x});
 			const auto [y0, y1] = std::minmax({P[0].y, P[1].y, P[2].y, P[3].y});
 
-			// Récupération de la boite englobante avec le suréchantillonnage
-			const size_t Xmin = static_cast<size_t>(std::max(0.0, std::floor(x0))) * upsampling_;
-			const size_t Xmax = static_cast<size_t>(std::min(static_cast<double>(dim_.x - 1), std::ceil(x1))) * upsampling_;
-			const size_t Ymin = static_cast<size_t>(std::max(0.0, std::floor(y0))) * upsampling_;
-			const size_t Ymax = static_cast<size_t>(std::min(static_cast<double>(dim_.y - 1), std::ceil(y1))) * upsampling_;
+			// Rejeter les pixels hors champ avant toute conversion d'une borne négative en entier non signe.
+			if (x1 <= 0 || y1 <= 0 || x0 >= static_cast<double>(dim_.x) || y0 >= static_cast<double>(dim_.y)) { continue; }
+			const double Scale = static_cast<double>(upsampling_);
+			const size_t Xmin  = static_cast<size_t>(std::floor(std::max(0.0, x0) * Scale));
+			const size_t Xmax  = static_cast<size_t>(std::min(static_cast<double>(UpW - 1), std::ceil(x1 * Scale)));
+			const size_t Ymin  = static_cast<size_t>(std::floor(std::max(0.0, y0) * Scale));
+			const size_t Ymax  = static_cast<size_t>(std::min(static_cast<double>(UpH - 1), std::ceil(y1 * Scale)));
 
 			for (size_t j = Ymin; j <= Ymax; ++j) {
 				const double Ypix      = static_cast<double>(j) * Step;
@@ -123,7 +126,7 @@ void Alignment::precomputeTransformMap()
 					std::vector<Vec2D> clipped;
 					clipPolygon(P, clipped, Xpix, Ypix, Step);
 					if (!clipped.empty()) {
-						#pragma omp critical // Evite la concurrence lors d'écriture simultanée à transformMap_[dstIdx]
+						#pragma omp critical // Évite la concurrence lors d'écriture simultanée à transformMap_[dstIdx]
 						transformMap_[RowdstIdx + i].emplace_back(Contribution{.index = SrcIdx, .weight = getArea(clipped)});
 					}
 				}
@@ -173,7 +176,7 @@ void Alignment::clipPolygon(const std::vector<Vec2D>& poly, std::vector<Vec2D>& 
 	};
 
 	clipped.reserve(4);
-	for (const auto& P : poly) { clipped.push_back(P); }
+	std::ranges::copy(poly, std::back_inserter(clipped));
 	for (int edge = 0; edge < 4; ++edge) {
 		std::vector<Vec2D> input = clipped;
 		clipped.clear();

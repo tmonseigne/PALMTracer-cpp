@@ -40,7 +40,6 @@ private:
 
 	/// <summary>Applique la décomposition en ondelettes 2D par l'algorithme à trous sur une image d'entrée.</summary>
 	/// <param name="image">Pointeur vers l'image 2D d'entrée (tableau d'uint16_t).</param>
-	/// <returns>Nombre de plans effectivement calculés, ou W_SIZE_ERR en cas d'erreur.</returns>
 	void decomposition2D(const uint16_t* image);
 
 	/// <summary>Calcule \f$2^{val}\f$.</summary>

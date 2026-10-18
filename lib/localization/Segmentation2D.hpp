@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <vector>
 
 #include "ATrous.hpp"
@@ -67,7 +68,7 @@ private:
 	size_t size_;                             ///< Taille totale de l'image (height_ * width_).
 	double ratio_;                            ///< Rapport utilisé dans l'algorithme de Watershed.
 	std::vector<SegmentationInfo> infos_;     ///< Vecteur de structures 2D analysées ou filtrées.
-	std::vector<uint16_t> map_;               ///< Image segmentée (carte binaire des objets détectés).
+	std::vector<uint32_t> map_;               ///< Labels des régions, sans limite à 65535 objets par image.
 	std::vector<double> output_;              ///< Carte des valeurs utilisées pour la segmentation (après seuillage).
 
 	/// <summary>Alloue un vecteur de structures (`infos_`) pour un nombre donné de segments.</summary>

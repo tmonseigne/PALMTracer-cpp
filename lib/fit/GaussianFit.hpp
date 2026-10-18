@@ -35,6 +35,13 @@ public:
 	explicit GaussianFit(const fit_mode mode, const uint16_t* image, const Vec2I& dim, const size_t maxPoints,
 	                     const double* fitParams) : Fitting(mode, image, dim, maxPoints, fitParams) { initialize(); }
 
+	/// <summary>Ajuste le modèle Gaussien sur la ROI centrée en (<paramref name="infos"/>.x\_, y\_).\n
+	/// L'algorithme LM minimise \f$\chi^2=r^\top W r\f$ jusqu'aux critères d'arrêt.
+	/// Remplit <paramref name="point"/> avec offset, intensité, (x, y, z), \f$\sigma_x\f$, \f$\sigma_y\f$, \f$\theta\f$, R².</summary>
+	/// <param name="infos">Informations issues de la segmentation (position initiale, intensité, etc.).</param>
+	/// <param name="point">Sortie : localisation ajustée (format <see cref="N_LOCALIZATIONS"/>).</param>
+	void Fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const override;
+
 protected:
 	//==================== Hyperparamètres LM ====================
 	static constexpr double LAMBDA_0   = 1e-2, ///< Valeur initiale de \f$\lambda\f$ (LM).
@@ -97,13 +104,6 @@ protected:
 	//==================== Common Functions ====================
 	/// <summary>Parse <paramref name="fitParams_"/> provenant du constructeur et initialise <see cref="roi_"/>, <see cref="sigmaX_"/>, <see cref="sigmaY_"/>, <see cref="theta_"/>.</summary>
 	void parseParams() override;
-
-	/// <summary>Ajuste le modèle Gaussien sur la ROI centrée en (<paramref name="infos"/>.x\_, y\_).\n
-	/// L'algorithme LM minimise \f$\chi^2=r^\top W r\f$ jusqu'aux critères d'arrêt.
-	/// Remplit <paramref name="point"/> avec offset, intensité, (x, y, z), \f$\sigma_x\f$, \f$\sigma_y\f$, \f$\theta\f$, R².</summary>
-	/// <param name="infos">Informations issues de la segmentation (position initiale, intensité, etc.).</param>
-	/// <param name="point">Sortie : localisation ajustée (format <see cref="N_LOCALIZATIONS"/>).</param>
-	void fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const override;
 
 	//==================== Levenberg–Marquardt ====================
 	/// <summary>Évalue la PSF sur la ROI, accumule \f$\alpha\f$ et \f$\beta\f$ (Gauss–Newton)

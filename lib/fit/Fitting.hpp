@@ -48,10 +48,21 @@ public:
 	/// <param name="segmentation">Segmentation de l'image initiale (liste d'objets à ajuster).</param>
 	/// <param name="points">Sortie : tableau des localisations ajustées (taille ajustée par la méthode).</param>
 	/// <remarks>
-	/// Parcourt les objets retournés par <see cref="Segmentation2D::Infos"/> et applique <see cref="fit"/> à chacun.
+	/// Parcourt les objets retournés par <see cref="Segmentation2D::Infos"/> et applique <see cref="Fit"/> à chacun.
 	/// Bouclage parallèle (<c>OpenMP</c>) jusqu'à <see cref="maxPoints_"/>.
+	/// Émet un avertissement sur la sortie d'erreur une seule fois par appel si des points dépassent la capacité.
 	/// </remarks>
-	void Fit(const localization::Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const;
+	void FitAll(const localization::Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const;
+
+	/// <summary>Exécute l'ajustement sur une seule région, sans créer d'équipe OpenMP.</summary>
+	/// <param name="infos">Informations issues de la segmentation (position initiale, intensité, etc.).</param>
+	/// <param name="point">Sortie : localisation ajustée (format <see cref="N_LOCALIZATIONS"/>).</param>
+	/// <remarks>Implémentation par défaut : recopie les valeurs brutes via <see cref="fill"/>.
+	/// L'appelant peut répartir les régions d'un lot entre ses propres threads.</remarks>
+	virtual void Fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
+	{
+		fill(infos, point, infos.x_, infos.y_, infos.z_, 0, 0);
+	}
 
 protected:
 	fit_mode mode_;           ///< Mode de fitting utilisé.
@@ -74,15 +85,6 @@ protected:
 	/// <summary>Analyse les paramètres utilisateur (<see cref="fitParams_"/>) et configure l'objet (<see cref="roi_"/>, etc.).</summary>
 	/// <remarks>Implémentation par défaut : <c>roi_ = static_cast&lt;size_t&gt;(fitParams_[0])</c>. Les classes dérivées peuvent étendre cette logique.</remarks>
 	virtual void parseParams() { roi_ = static_cast<size_t>(fitParams_[0]); }
-
-	/// <summary>Exécute l'ajustement selon le mode sélectionné sur une ROI centrée sur (x, y) et produit la localisation estimée.</summary>
-	/// <param name="infos">Informations issues de la segmentation (position initiale, intensité, etc.).</param>
-	/// <param name="point">Sortie : localisation ajustée (format <see cref="N_LOCALIZATIONS"/>).</param>
-	/// <remarks>Implémentation par défaut : recopie les valeurs brutes <see cref="SegmentationInfo"/> via <see cref="fill"/>.</remarks>
-	virtual void fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
-	{
-		fill(infos, point, infos.x_, infos.y_, infos.z_, 0, 0);
-	}
 
 	/// <summary>Remplit le vecteur de sortie <paramref name="point"/> après un ajustement.</summary>
 	/// <param name="infos">Informations initiales sur le point localisé.</param>
