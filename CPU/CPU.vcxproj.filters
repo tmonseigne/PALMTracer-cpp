@@ -11,6 +11,9 @@
     <ClCompile Include="..\lib\fit\GaussianFit.cpp">
       <Filter>Fit</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\fit\GaussianModel.cpp">
+      <Filter>Fit</Filter>
+    </ClCompile>
     <ClCompile Include="..\lib\Palm.cpp" />
     <ClCompile Include="..\lib\fit\SplineFit.cpp">
       <Filter>Fit</Filter>
@@ -48,6 +51,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\fit\GaussianFit.hpp">
+      <Filter>Fit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\fit\GaussianModel.hpp">
       <Filter>Fit</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\localization\ATrous.hpp">

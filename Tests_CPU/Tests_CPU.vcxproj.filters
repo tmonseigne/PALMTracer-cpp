@@ -16,6 +16,9 @@
     <ClCompile Include="..\lib\fit\GaussianFit.cpp">
       <Filter>lib</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\fit\GaussianModel.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
     <ClCompile Include="..\lib\fit\SplineFit.cpp">
       <Filter>lib</Filter>
     </ClCompile>
@@ -58,6 +61,7 @@
     <ClCompile Include="test_ResourceMonitoring.cpp" />
     <ClCompile Include="test_fit_AstigFit.cpp" />
     <ClCompile Include="test_fit_Fitting.cpp" />
+    <ClCompile Include="test_fit_GaussianModel.cpp" />
     <ClCompile Include="test_loc_Segmentation2D.cpp" />
     <ClCompile Include="test_tr_TracksFit.cpp" />
     <ClCompile Include="test_Palm.cpp" />
@@ -91,6 +95,9 @@
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\fit\GaussianFit.hpp">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\fit\GaussianModel.hpp">
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\fit\SplineFit.hpp">

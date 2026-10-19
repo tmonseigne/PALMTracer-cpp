@@ -9,6 +9,7 @@
 ///
 ///-------------------------------------------------------------------------------------------------
 #pragma once
+#include <algorithm>
 #include <vector>
 
 #include "Fitting.hpp"
@@ -38,6 +39,10 @@ public:
 	/// <summary>Ajuste le modèle Gaussien sur la ROI centrée en (<paramref name="infos"/>.x\_, y\_).\n
 	/// L'algorithme LM minimise \f$\chi^2=r^\top W r\f$ jusqu'aux critères d'arrêt.
 	/// Remplit <paramref name="point"/> avec offset, intensité, (x, y, z), \f$\sigma_x\f$, \f$\sigma_y\f$, \f$\theta\f$, R².</summary>
+	/// <remarks>Les paramètres à dérivée nulle sont maintenus pour l'itération courante (notamment l'angle à l'isotropie).
+	/// Les buffers sont réutilisés dans un espace propre au thread appelant, sans état mutable partagé entre travailleurs.
+	/// Leur capacité est conservée jusqu'à la fin du thread et chaque ROI réinitialise ses données et paramètres.
+	/// Si l'inversion échoue malgré l'amortissement maximal ou si le pas n'est pas fini, retourne les sentinelles d'échec de <see cref="fill"/>.</remarks>
 	/// <param name="infos">Informations issues de la segmentation (position initiale, intensité, etc.).</param>
 	/// <param name="point">Sortie : localisation ajustée (format <see cref="N_LOCALIZATIONS"/>).</param>
 	void Fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const override;
@@ -77,7 +82,8 @@ protected:
 		std::vector<Pixel> grid;              ///< Grille de la ROI (coordonnées + intensité).
 		std::array<std::vector<double>, 3> p; ///< Bornes inférieures, valeurs courantes et bornes supérieures.
 
-		/// <summary>Alloue/redimensionne les buffers.</summary>
+		/// <summary>Redimensionne les buffers sans libérer leur capacité et restaure les poids unitaires.</summary>
+		/// <remarks>Les autres valeurs sont réécrites par la préparation de la ROI, des paramètres et de LM avant lecture.</remarks>
 		/// <param name="n">Nombre de pixels dans la ROI.</param>
 		/// <param name="np">Nombre de paramètres du modèle.</param>
 		/// <param name="np2">Carré du nombre de paramètres.</param>
@@ -94,7 +100,8 @@ protected:
 			pTry.resize(np);
 
 			hat.resize(n);
-			weight.resize(n, 1);
+			weight.resize(n);
+			std::fill(weight.begin(), weight.end(), 1.0);
 			delta.resize(n);
 			deltaW.resize(n);
 			grid.resize(n);
@@ -127,19 +134,5 @@ protected:
 	/// <returns>\f$R^2\in[0,1]\f$ (retourne 0 en cas de NaN).</returns>
 	[[nodiscard]] double computeR2(LM_Workspace& ws) const;
 
-	//==================== Run Computes ====================
-	/// <summary>PSF Gaussienne évaluée en (\f$x,y\f$) selon <see cref="mode_"/>.</summary>
-	/// <param name="p">Vecteur des paramètres de la PSF (intensité, position, sigma, offset...).</param>
-	/// <param name="x">Coordonnée x d'évaluation.</param>
-	/// <param name="y">Coordonnée y d'évaluation.</param>
-	/// <returns>Valeur de la PSF en (x, y).</returns>
-	[[nodiscard]] double psf(const std::vector<double>& p, double x, double y) const;
-
-	/// <summary>Gradient de la PSF par rapport aux paramètres (selon <see cref="mode_"/>).</summary>
-	/// <param name="grad">Vecteur de sortie du gradient (taille dépendant du mode).</param>
-	/// <param name="p">Paramètres de la PSF.</param>
-	/// <param name="x">Coordonnée x d'évaluation.</param>
-	/// <param name="y">Coordonnée y d'évaluation.</param>
-	void deriv(std::vector<double>& grad, const std::vector<double>& p, double x, double y) const;
 };
 } // namespace palm_tracer::fit

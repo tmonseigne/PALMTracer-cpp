@@ -52,10 +52,12 @@ public:
 	/// strictement plus de <c>VOLUME_MIN</c> pixels. Les autres filtres restent désactivés.</remarks>
 	void FilterData();
 
-	/// <summary>Retourne la liste des structures segmentées avec leurs informations (centroïde, intensité, etc.).</summary>
-	/// <returns>Un vecteur d'objets SegmentationInfo contenant les caractéristiques des structures détectées.</returns>
-	/// <remarks>Le mot-clé [[nodiscard]] indique que le résultat ne doit pas être ignoré.</remarks>
-	[[nodiscard]] std::vector<SegmentationInfo> Infos() const { return infos_; }
+	/// <summary>Accède aux mesures des régions segmentées sans copier leur vecteur.</summary>
+	/// <returns>Référence constante vers les informations détenues par la segmentation.</returns>
+	/// <remarks>La segmentation doit rester vivante et ne pas être modifiée pendant l'utilisation de la référence.
+	/// Une opération de segmentation, de filtrage ou de recalcul peut invalider les références sur ses éléments.
+	/// Utiliser <c>auto snapshot = segmentation.Infos()</c> pour conserver une copie indépendante.</remarks>
+	[[nodiscard]] const std::vector<SegmentationInfo>& Infos() const noexcept { return infos_; }
 
 	/// <summary>Effectue une segmentation intelligente de type watershed.
 	/// Cette méthode combine une détection des maxima locaux, un premier watershed, un filtrage morphologique optionnel, puis un second watershed.</summary>

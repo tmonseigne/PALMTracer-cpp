@@ -119,6 +119,7 @@
   <ItemGroup>
     <ClCompile Include="..\lib\fit\Fitting.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit.cpp" />
+    <ClCompile Include="..\lib\fit\GaussianModel.cpp" />
     <ClCompile Include="..\lib\fit\SplineFit.cpp" />
     <ClCompile Include="..\lib\localization\ATrous.cpp" />
     <ClCompile Include="..\lib\Palm.cpp" />
@@ -142,6 +143,7 @@
     <ClInclude Include="..\lib\ExportAPI.hpp" />
     <ClInclude Include="..\lib\fit\Fitting.hpp" />
     <ClInclude Include="..\lib\fit\GaussianFit.hpp" />
+    <ClInclude Include="..\lib\fit\GaussianModel.hpp" />
     <ClInclude Include="..\lib\fit\SplineFit.hpp" />
     <ClInclude Include="..\lib\localization\ATrous.hpp" />
     <ClInclude Include="..\lib\Palm.hpp" />

@@ -84,6 +84,7 @@
     <ClInclude Include="..\lib\fit\AstigFit.hpp" />
     <ClInclude Include="..\lib\fit\Fitting.hpp" />
     <ClInclude Include="..\lib\fit\GaussianFit.hpp" />
+    <ClInclude Include="..\lib\fit\GaussianModel.hpp" />
     <ClInclude Include="..\lib\fit\SplineFit.hpp" />
     <ClInclude Include="..\lib\localization\ATrous.hpp" />
     <ClInclude Include="..\lib\Palm.hpp" />
@@ -109,6 +110,7 @@
     <ClCompile Include="..\lib\fit\AstigFit.cpp" />
     <ClCompile Include="..\lib\fit\Fitting.cpp" />
     <ClCompile Include="..\lib\fit\GaussianFit.cpp" />
+    <ClCompile Include="..\lib\fit\GaussianModel.cpp" />
     <ClCompile Include="..\lib\fit\SplineFit.cpp" />
     <ClCompile Include="..\lib\localization\ATrous.cpp" />
     <ClCompile Include="..\lib\Palm.cpp" />
@@ -125,6 +127,7 @@
     <ClCompile Include="test_ResourceMonitoring.cpp" />
     <ClCompile Include="test_fit_AstigFit.cpp" />
     <ClCompile Include="test_fit_Fitting.cpp" />
+    <ClCompile Include="test_fit_GaussianModel.cpp" />
     <ClCompile Include="test_loc_Segmentation2D.cpp" />
     <ClCompile Include="test_tr_TracksFit.cpp" />
     <ClCompile Include="test_Palm.cpp" />

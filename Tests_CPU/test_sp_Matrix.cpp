@@ -1,12 +1,24 @@
 #include <gtest/gtest.h>
 
+#include <array>
+#include <limits>
 #include <numeric>
+#include <stdexcept>
 #include "signal_processing/Matrix.hpp"
 
 
 namespace palm_tracer::signal_processing {
 constexpr double EPSILON = 1e-10;
 const std::vector NAN_VECTOR(3, std::numeric_limits<double>::quiet_NaN());
+
+/// <summary>Matrices inversibles qui exigent un pivot ou un équilibrage des lignes.</summary>
+class GaussJordanPivotTests : public testing::TestWithParam<std::vector<double>> { };
+
+/// <summary>Matrices dont l'inversion doit échouer explicitement.</summary>
+class GaussJordanFailureTests : public testing::TestWithParam<std::vector<double>> { };
+
+/// <summary>Contrats de taille et de séparation des buffers de l'inversion.</summary>
+class GaussJordanArgumentTests : public testing::TestWithParam<size_t> { };
 
 //-------------------------------------------------------------------------------------------------
 TEST(MatrixTest, Print)
@@ -221,6 +233,69 @@ TEST(MatrixTest, InverseGaussJordan)
 	EXPECT_NEAR(inv[2], -0.2, EPSILON);
 	EXPECT_NEAR(inv[3], 0.4, EPSILON);
 }
+
+/// <summary>Vérifie A × inverse(A), y compris après permutation de plusieurs lignes.</summary>
+TEST_P(GaussJordanPivotTests, RecoversIdentity)
+{
+	const auto& Original = GetParam();
+	const size_t N       = Original.size() == 9 ? 3 : 2;
+	auto matrix          = Original;
+	std::vector<double> inverse(Original.size());
+	ASSERT_NO_THROW(matrix::InverseGaussJordan(matrix, inverse, N));
+	for (size_t i = 0; i < N; ++i) {
+		for (size_t j = 0; j < N; ++j) {
+			double product = 0.0;
+			for (size_t k = 0; k < N; ++k) { product += Original[i * N + k] * inverse[k * N + j]; }
+			EXPECT_NEAR(product, i == j ? 1.0 : 0.0, EPSILON);
+		}
+	}
+}
+
+INSTANTIATE_TEST_SUITE_P(Matrices, GaussJordanPivotTests,
+                         testing::Values(std::vector<double>{0, 1, 1, 0}, std::vector<double>{1e-20, 1, 1, 1},
+                                         std::vector<double>{1e-100, 0, 0, 1e100}, std::vector<double>{0, 0, 2, 3, 0, 0, 0, 4, 0}),
+                         ([](const testing::TestParamInfo<std::vector<double>>& info) {
+	                         constexpr std::array Names{"ZeroPivot", "TinyPivot", "DifferentRowScales", "MultipleSwaps"};
+	                         return Names[info.index];
+                         }));
+
+/// <summary>L'échec efface l'inverse partiel au lieu de laisser des NaN, Inf ou coefficients trompeurs.</summary>
+TEST_P(GaussJordanFailureTests, RejectsInvalidInverse)
+{
+	auto matrix = GetParam();
+	std::vector inverse(4, 42.0);
+	EXPECT_THROW(matrix::InverseGaussJordan(matrix, inverse, 2), std::domain_error);
+	for (const double Value : inverse) { EXPECT_DOUBLE_EQ(Value, 0.0); }
+}
+
+INSTANTIATE_TEST_SUITE_P(Matrices, GaussJordanFailureTests,
+                         testing::Values(std::vector<double>{1, 2, 2, 4}, std::vector<double>{1, 0, 0, 0},
+                                         std::vector<double>{1, 1, 1, std::nextafter(1.0, 2.0)},
+                                         std::vector<double>{NAN_VECTOR[0], 0, 0, 1},
+                                         std::vector<double>{std::numeric_limits<double>::infinity(), 0, 0, 1},
+                                         std::vector<double>{std::numeric_limits<double>::denorm_min(), 0, 0, 1}),
+                         ([](const testing::TestParamInfo<std::vector<double>>& info) {
+	                         constexpr std::array Names{
+		                         "DependentRows", "ZeroRow", "NumericallySingular", "NonFiniteNaN", "NonFiniteInfinity", "InverseOverflow"
+	                         };
+	                         return Names[info.index];
+                         }));
+
+/// <summary>Les buffers et la dimension sont validés avant tout accès ou mutation.</summary>
+TEST_P(GaussJordanArgumentTests, RejectsInvalidDimensions)
+{
+	std::vector<double> matrix{1, 0, 0, 1}, inverse(4);
+	const size_t N = GetParam() == 0 ? 0 : (GetParam() == 1 ? 3 : 2);
+	if (GetParam() == 2) { inverse.resize(3); }
+	auto& output = GetParam() == 3 ? matrix : inverse;
+	EXPECT_THROW(matrix::InverseGaussJordan(matrix, output, N), std::invalid_argument);
+}
+
+INSTANTIATE_TEST_SUITE_P(Arguments, GaussJordanArgumentTests, testing::Values(size_t{0}, size_t{1}, size_t{2}, size_t{3}),
+                         ([](const testing::TestParamInfo<size_t>& info) {
+	                         constexpr std::array Names{"ZeroDimension", "InputSizeMismatch", "OutputSizeMismatch", "AliasedBuffers"};
+	                         return Names[info.param];
+                         }));
 
 //-------------------------------------------------------------------------------------------------
 TEST(MatrixTest, InverseLU)

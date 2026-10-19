@@ -7,12 +7,27 @@
 #include <numbers>
 #include <numeric>
 #include <ranges>
+#include <stdexcept>
 #include <vector>
 
 #include "signal_processing/Matrix.hpp"
-#include "signal_processing/PSF.hpp"
+#include "GaussianModel.hpp"
 
 namespace palm_tracer::fit {
+namespace {
+/// <summary>Prépare une fois les constantes du modèle courant ou candidat pour tous les pixels de la ROI.</summary>
+GaussianModel PrepareModel(const fit_mode mode, const std::vector<double>& p, const double sigma, const double theta)
+{
+	switch (mode) {
+		case fit_mode::gaussian_2d_fixed: return {p[0], p[1], sigma, false};
+		case fit_mode::gaussian_2d_sigma: return {p[0], p[1], p[4], true};
+		case fit_mode::gaussian_3d_fixed: return {p[0], p[1], p[4], p[5], theta, false};
+		case fit_mode::gaussian_3d_theta: return {p[0], p[1], p[4], p[5], p[6], true};
+		default: throw std::invalid_argument("GaussianFit : mode non gaussien.");
+	}
+}
+} // namespace
+
 //==================== Common Functions ====================
 //-------------------------------------------------------------------------------------------------
 void GaussianFit::parseParams()
@@ -41,7 +56,8 @@ void GaussianFit::Fit(const localization::SegmentationInfo& infos, std::array<do
 
 	// Création des variables
 	double lambda = LAMBDA_0, minI = 0, maxI = 0;
-	LM_Workspace ws;
+	// Un cache par thread couvre aussi les appels directs et les objets successifs de configurations différentes.
+	static thread_local LM_Workspace ws;
 	ws.Resize(n_, nParams_, nParams2_);
 
 	// Initialisation des données (Récupération des min/max, de la ROI et initialisation des paramètres du modèle et de ses bornes)
@@ -50,21 +66,43 @@ void GaussianFit::Fit(const localization::SegmentationInfo& infos, std::array<do
 
 	// Première itération de Levenberg-Marquardt et initialisation de l'erreur de référence
 	double err = lm(ws);
+	if (!std::isfinite(err) || !std::ranges::all_of(ws.beta, [](const double value) { return std::isfinite(value); })) {
+		fill(infos, point, infos.x_, infos.y_, infos.z_);
+		return;
+	}
 
 	// Trouver la valeur absolue maximale
 	double m = std::ranges::max(std::views::transform(ws.beta, [](const double b) { return std::abs(b); }));
 
 	for (size_t iteration = ((m < EPSILON_1) ? N_ITER : 0); iteration < N_ITER; ++iteration) { // Main Loop
 		// Calcul de l'inverse de la matrice de courbure α
-		ws.alphaR = ws.alpha;                                                                                         // Copie de α
-		for (size_t i = 0; i < nParams_; ++i) { ws.alphaR[i * nParams_ + i] += lambda * ws.alpha[i * nParams_ + i]; } // αR = α + λ × diag(α)
-		matrix::InverseGaussJordan(ws.alphaR, ws.alphaRi, nParams_);                                                  // Inversion (Gauss-Jordan)
+		ws.alphaR = ws.alpha; // Copie de α
+		for (size_t i = 0; i < nParams_; ++i) {
+			const size_t Diagonal = i * nParams_ + i;
+			// Une colonne de Jacobien nulle (angle à l'isotropie, par exemple) impose un pas nul.
+			// Ce paramètre est réévalué à chaque itération et redevient libre dès qu'il est identifiable.
+			ws.alphaR[Diagonal] = ws.alpha[Diagonal] == 0.0 ? 1.0 : (1.0 + lambda) * ws.alpha[Diagonal];
+		}
+		try { matrix::InverseGaussJordan(ws.alphaR, ws.alphaRi, nParams_); }
+		catch (const std::domain_error&) {
+			// Une régularisation plus forte peut rétablir un système numériquement inversible.
+			if (lambda < LAMBDA_MAX) {
+				lambda = std::min(lambda * LAMBDA_UP, LAMBDA_MAX);
+				continue;
+			}
+			fill(infos, point, infos.x_, infos.y_, infos.z_);
+			return;
+		}
 
 		// Calcul du candidat (p + δp)
 		std::ranges::fill(ws.deltaP, 0.0);
 		for (size_t i = 0; i < nParams_; ++i) {
 			for (size_t j = 0; j < nParams_; ++j) { ws.deltaP[i] += ws.alphaRi[i * nParams_ + j] * ws.beta[j]; } // δP = αRi × β
-			ws.pTry[i] = std::clamp(ws.p[1][i] + ws.deltaP[i], ws.p[0][i], ws.p[2][i]);                          // pTry = clamp(p + δP)
+			if (!std::isfinite(ws.deltaP[i])) {
+				fill(infos, point, infos.x_, infos.y_, infos.z_);
+				return;
+			}
+			ws.pTry[i] = std::clamp(ws.p[1][i] + ws.deltaP[i], ws.p[0][i], ws.p[2][i]); // pTry = clamp(p + δP)
 		}
 		// En cas de clamp de pTry, deltaP doit être recalculé.
 		for (size_t i = 0; i < nParams_; ++i) { ws.deltaP[i] = ws.pTry[i] - ws.p[1][i]; }
@@ -177,14 +215,17 @@ double GaussianFit::lm(LM_Workspace& ws) const
 	std::ranges::fill(ws.alpha, 0.0);
 	std::ranges::fill(ws.beta, 0.0);
 	double err = 0.0;
+	const auto Model = PrepareModel(mode_, ws.p[1], sigmaX_, theta_);
+	const bool Circular = mode_ == fit_mode::gaussian_3d_theta && ws.p[1][4] == ws.p[1][5];
 
 	for (size_t i = 0; i < n_; ++i) {
 		const double X = static_cast<double>(ws.grid[i].x), Y = static_cast<double>(ws.grid[i].y);
-		ws.hat[i]      = psf(ws.p[1], X, Y);         // PSF théorique au pixel (x, y) selon les paramètres p
+		ws.hat[i]      = Model.Evaluate(X - ws.p[1][2], Y - ws.p[1][3], ws.grad);         // PSF théorique au pixel (x, y) selon les paramètres p
 		ws.delta[i]    = ws.grid[i].v - ws.hat[i];   // Résidu (∂) = mesure - prédiction
 		ws.deltaW[i]   = ws.weight[i] * ws.delta[i]; // Résidu pondéré (W × ∂)
 		err += ws.delta[i] * ws.deltaW[i];           // mise à jour du Chi² (somme des carrés pondérée W × ∂ × ∂)
-		deriv(ws.grad, ws.p[1], X, Y);               // dérivées au pixel
+		// L'angle reste indéterminé à l'isotropie, y compris en présence d'un résidu d'arrondi.
+		if (Circular) { ws.grad[6] = 0.0; }
 
 		// Accumulations alpha += w × grad × gradᵀ  et  beta += w × grad × r
 		for (size_t a = 0; a < nParams_; ++a) {
@@ -215,8 +256,9 @@ double GaussianFit::gain(const LM_Workspace& ws) const
 double GaussianFit::getError(const LM_Workspace& ws) const
 {
 	double res = 0.0;
+	const auto Model = PrepareModel(mode_, ws.pTry, sigmaX_, theta_);
 	for (size_t i = 0; i < n_; ++i) {
-		const double Dx = ws.grid[i].v - psf(ws.pTry, static_cast<double>(ws.grid[i].x), static_cast<double>(ws.grid[i].y));
+		const double Dx = ws.grid[i].v - Model.Evaluate(static_cast<double>(ws.grid[i].x) - ws.pTry[2], static_cast<double>(ws.grid[i].y) - ws.pTry[3]);
 		res += ws.weight[i] * Dx * Dx;
 	}
 	return res;
@@ -244,39 +286,5 @@ double GaussianFit::computeR2(LM_Workspace& ws) const
 	             R  = T1 / std::sqrt(T2 * T3);                                                    // Calcul du R
 
 	return std::isnan(R) ? 0 : R * R;
-}
-
-// ==================== Run Computes ====================
-//-------------------------------------------------------------------------------------------------
-double GaussianFit::psf(const std::vector<double>& p, const double x, const double y) const
-{
-	switch (mode_) {
-		case fit_mode::gaussian_2d_fixed: return PSF(p[0], p[1], x - p[2], y - p[3], sigmaX_);
-		case fit_mode::gaussian_2d_sigma: return PSF(p[0], p[1], x - p[2], y - p[3], p[4]);
-		case fit_mode::gaussian_3d_fixed: return PSF(p[0], p[1], x - p[2], y - p[3], p[4], p[5], theta_);
-		case fit_mode::gaussian_3d_theta: return PSF(p[0], p[1], x - p[2], y - p[3], p[4], p[5], p[6]);
-		case fit_mode::none:
-		case fit_mode::spline_3d_emccd:
-		case fit_mode::spline_3d_scmos: return 0;
-	}
-	return 0;
-}
-
-//-------------------------------------------------------------------------------------------------
-void GaussianFit::deriv(std::vector<double>& grad, const std::vector<double>& p, const double x, const double y) const
-{
-	switch (mode_) {
-		case fit_mode::none:
-		case fit_mode::spline_3d_emccd:
-		case fit_mode::spline_3d_scmos:
-		case fit_mode::gaussian_2d_fixed: Deriv(grad, p[1], x - p[2], y - p[3], sigmaX_, false);
-			break;
-		case fit_mode::gaussian_2d_sigma: Deriv(grad, p[1], x - p[2], y - p[3], p[4], true);
-			break;
-		case fit_mode::gaussian_3d_fixed: Deriv(grad, p[1], x - p[2], y - p[3], p[4], p[5], theta_, false);
-			break;
-		case fit_mode::gaussian_3d_theta: Deriv(grad, p[1], x - p[2], y - p[3], p[4], p[5], p[6], true);
-			break;
-	}
 }
 } // namespace palm_tracer::fit

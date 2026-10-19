@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cmath>
+#include <limits>
 #include <numbers>
 #include <numeric>
 
@@ -66,6 +67,12 @@ std::vector<uint16_t> GaussianImage(const GaussianCase& scenario, const Vec2I& d
 
 /// <summary>Mêmes assertions de récupération pour chaque modèle gaussien.</summary>
 class GaussianFitTests : public testing::TestWithParam<GaussianCase> { };
+
+/// <summary>Réemploi des buffers et appels concurrents pour chacun des modèles gaussiens.</summary>
+class GaussianWorkspaceTests : public testing::TestWithParam<fit_mode> { };
+
+/// <summary>Récupération de la forme après une initialisation circulaire à angle libre.</summary>
+class GaussianCircularInitializationTests : public testing::TestWithParam<GaussianCase> { };
 
 /// <summary>Conventions de remplissage pour les modèles sans ajustement et gaussiens.</summary>
 class FittingOutputTests : public testing::TestWithParam<fit_mode> { };
@@ -173,6 +180,58 @@ INSTANTIATE_TEST_SUITE_P(Models, FittingOutputTests,
 #pragma endregion fill
 
 #pragma region GaussianFit
+/// <summary>L'angle initialement non identifiable n'empêche pas la récupération du centre et de la covariance.</summary>
+TEST_P(GaussianCircularInitializationTests, RecoversCenterAndCovariance)
+{
+	constexpr Vec2I Dim{.x = 15, .y = 15};
+	const auto& Scenario = GetParam();
+	const auto Image     = GaussianImage(Scenario, Dim);
+	const std::array Params{9.0, 1.2, 1.2, 0.2};
+	const GaussianFit Fit(fit_mode::gaussian_3d_theta, Image.data(), Dim, 1, Params.data());
+	localization::SegmentationInfo info{};
+	info.Reset();
+	info.x_ = info.y_ = 7.0;
+	std::array<double, N_LOCALIZATIONS> point{};
+	Fit.Fit(info, point);
+	for (const double Value : point) { EXPECT_TRUE(std::isfinite(Value)); }
+	ASSERT_GT(point[8], 0);
+	ASSERT_GT(point[9], 0);
+	EXPECT_NEAR(point[4], 7.25, 0.01);
+	EXPECT_NEAR(point[5], 6.7, 0.01);
+	// La covariance est indépendante des échanges d'axes et de l'angle arbitraire à l'isotropie.
+	const auto Covariance = [](const double sx, const double sy, const double theta) {
+		const double C = std::cos(theta), S = std::sin(theta), X2 = sx * sx, Y2 = sy * sy;
+		return std::array{C * C * X2 + S * S * Y2, S * S * X2 + C * C * Y2, C * S * (Y2 - X2)};
+	};
+	const auto Actual   = Covariance(point[8], point[9], point[10]);
+	const auto Expected = Covariance(Scenario.sigmaX, Scenario.sigmaY, Scenario.theta);
+	for (size_t i = 0; i < Actual.size(); ++i) { EXPECT_NEAR(Actual[i], Expected[i], 0.02); }
+	EXPECT_NEAR(point[13], 8000, 5);
+	EXPECT_NEAR(point[14], 100, 2);
+}
+
+INSTANTIATE_TEST_SUITE_P(Shapes, GaussianCircularInitializationTests,
+                         testing::Values(GaussianCase{"Circular", fit_mode::gaussian_3d_theta, 1.35, 1.35, 0},
+	                         GaussianCase{"AlmostCircular", fit_mode::gaussian_3d_theta, 1.35, 1.37, 0.4},
+	                         GaussianCase{"Rotated", fit_mode::gaussian_3d_theta, 1.3, 1.9, 0.4}),
+                         [](const testing::TestParamInfo<GaussianCase>& info) { return info.param.name; });
+
+/// <summary>Une initialisation non finie retourne les sentinelles usuelles, sans exception dans OpenMP.</summary>
+TEST(GaussianFitFailureTests, RejectsNonFiniteInitialization)
+{
+	constexpr Vec2I Dim{.x = 15, .y = 15};
+	const auto Image = GaussianImage({"Circular", fit_mode::gaussian_3d_theta, 1.35, 1.35, 0}, Dim);
+	const std::array Params{9.0, std::numeric_limits<double>::quiet_NaN(), 1.8, 0.0};
+	const GaussianFit Fit(fit_mode::gaussian_3d_theta, Image.data(), Dim, 1, Params.data());
+	localization::SegmentationInfo info{};
+	info.Reset();
+	info.x_ = info.y_ = 7.0;
+	std::array<double, N_LOCALIZATIONS> point{};
+	EXPECT_NO_THROW(Fit.Fit(info, point));
+	for (const double Value : point) { EXPECT_TRUE(std::isfinite(Value)); }
+	for (const size_t Column : {size_t{7}, size_t{8}, size_t{9}, size_t{10}, size_t{11}, size_t{13}, size_t{14}}) { EXPECT_DOUBLE_EQ(point[Column], -1.0); }
+}
+
 /// <summary>Retrouve une tache sous-pixel connue avec une tolérance tenant compte de la quantification uint16.</summary>
 TEST_P(GaussianFitTests, RecoversParameters)
 {
@@ -235,5 +294,74 @@ INSTANTIATE_TEST_SUITE_P(Models, GaussianFitTests,
 	                         GaussianCase{"OneDegree", fit_mode::gaussian_3d_fixed, 1.3, 1.9, std::numbers::pi / 180},
 	                         GaussianCase{"FreeAngle", fit_mode::gaussian_3d_theta, 1.3, 1.9, 0.4}),
                          [](const testing::TestParamInfo<GaussianCase>& info) { return info.param.name; });
+/// <summary>Une ROI retrouve le même résultat après des échecs, un changement de modèle et de taille de ROI.</summary>
+TEST_P(GaussianWorkspaceTests, ReuseAfterFailureAndConfigurationChange)
+{
+	constexpr Vec2I Dim{.x = 15, .y = 15};
+	const auto Mode = GetParam();
+	const bool Isotropic = Mode == fit_mode::gaussian_2d_fixed || Mode == fit_mode::gaussian_2d_sigma;
+	const GaussianCase Scenario{"Workspace", Mode, Mode == fit_mode::gaussian_2d_fixed ? 1.2 : 1.35, Isotropic ? (Mode == fit_mode::gaussian_2d_fixed ? 1.2 : 1.35) : 1.9, Isotropic ? 0.0 : 0.4};
+	const auto Original = GaussianImage(Scenario, Dim);
+	auto image = Original;
+	const std::array Params{9.0, 1.2, 1.8, Mode == fit_mode::gaussian_3d_theta ? 0.2 : Scenario.theta};
+	const GaussianFit Fit(Mode, image.data(), Dim, 1, Params.data());
+	localization::SegmentationInfo info{};
+	info.x_ = info.y_ = 7;
+	std::array<double, N_LOCALIZATIONS> expected{}, actual{}, discarded{};
+	Fit.Fit(info, expected);
+	ASSERT_GT(expected[7], 0);
+
+	// Une image plate provoque un échec après calcul du score, qui modifie la grille en place.
+	std::fill(image.begin(), image.end(), uint16_t{100});
+	Fit.Fit(info, discarded);
+	EXPECT_DOUBLE_EQ(discarded[7], -1);
+	std::copy(Original.begin(), Original.end(), image.begin());
+
+	// Le même travailleur traverse ensuite un autre nombre de pixels/paramètres et un retour anticipé.
+	const std::array OtherParams{13.0, std::numeric_limits<double>::quiet_NaN(), 1.8, 0.2};
+	const GaussianFit Other(fit_mode::gaussian_3d_theta, image.data(), Dim, 1, OtherParams.data());
+	Other.Fit(info, discarded);
+	EXPECT_DOUBLE_EQ(discarded[7], -1);
+	auto border = info;
+	border.x_ = border.y_ = 0;
+	Fit.Fit(border, discarded);
+	EXPECT_DOUBLE_EQ(discarded[7], -1);
+	Fit.Fit(info, actual);
+	for (size_t i = 0; i < actual.size(); ++i) { EXPECT_DOUBLE_EQ(actual[i], expected[i]) << "Colonne " << i; }
+}
+
+/// <summary>Les appels concurrents sur le même objet gardent les résultats indépendants des autres ROI.</summary>
+TEST_P(GaussianWorkspaceTests, ConcurrentCallsMatchSerialResults)
+{
+	constexpr Vec2I Dim{.x = 15, .y = 15};
+	const auto Mode = GetParam();
+	const bool Isotropic = Mode == fit_mode::gaussian_2d_fixed || Mode == fit_mode::gaussian_2d_sigma;
+	const GaussianCase Scenario{"Parallel", Mode, Mode == fit_mode::gaussian_2d_fixed ? 1.2 : 1.35, Isotropic ? (Mode == fit_mode::gaussian_2d_fixed ? 1.2 : 1.35) : 1.9, Isotropic ? 0.0 : 0.4};
+	const auto Image = GaussianImage(Scenario, Dim);
+	const std::array Params{9.0, 1.2, 1.8, Mode == fit_mode::gaussian_3d_theta ? 0.2 : Scenario.theta};
+	const GaussianFit Fit(Mode, Image.data(), Dim, 16, Params.data());
+	std::array<localization::SegmentationInfo, 16> infos{};
+	std::array<std::array<double, N_LOCALIZATIONS>, 16> expected{}, actual{};
+	for (size_t i = 0; i < infos.size(); ++i) {
+		infos[i].x_ = 7.0 + 0.1 * static_cast<double>(i % 3);
+		infos[i].y_ = 7.0 - 0.1 * static_cast<double>(i % 2);
+		infos[i].intensity_ = static_cast<double>(100 + i);
+		infos[i].surf_ = static_cast<double>(9 + i);
+		Fit.Fit(infos[i], expected[i]);
+	}
+	#pragma omp parallel for num_threads(4)
+	for (int i = 0; i < static_cast<int>(infos.size()); ++i) { Fit.Fit(infos[i], actual[i]); }
+	for (size_t i = 0; i < infos.size(); ++i) {
+		for (size_t j = 0; j < actual[i].size(); ++j) { EXPECT_DOUBLE_EQ(actual[i][j], expected[i][j]) << "ROI " << i << ", colonne " << j; }
+	}
+}
+
+INSTANTIATE_TEST_SUITE_P(Models, GaussianWorkspaceTests,
+                         testing::Values(fit_mode::gaussian_2d_fixed, fit_mode::gaussian_2d_sigma, fit_mode::gaussian_3d_fixed, fit_mode::gaussian_3d_theta),
+                         ([](const testing::TestParamInfo<fit_mode>& info) {
+	                         constexpr std::array Names{"FixedSigma", "FreeSigma", "FixedAngle", "FreeAngle"};
+	                         return Names[static_cast<size_t>(info.param) - 1];
+                         }));
+
 #pragma endregion GaussianFit
 } // namespace palm_tracer::fit

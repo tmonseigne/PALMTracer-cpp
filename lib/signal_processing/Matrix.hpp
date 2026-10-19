@@ -210,10 +210,13 @@ void CenterOfMass(const std::vector<Pixel>& data, size_t n, double& x, double& y
 /// L'utilisateur doit s'assurer que `l` et `u` sont préalloués de taille n x n.</remarks>
 bool Cholesky(const std::vector<double>& a, size_t n, std::vector<double>& l, std::vector<double>& u);
 
-/// <summary>Inversion d'une matrice carrée par la méthode de Gauss-Jordan.</summary>
+/// <summary>Inversion d'une matrice carrée par Gauss-Jordan, avec équilibrage des lignes et pivot partiel.</summary>
 /// <param name="in">Matrice à inverser (format vectorisé ligne par ligne, modifiée en place).</param>
 /// <param name="out">Matrice résultat de l'inversion (même format).</param>
 /// <param name="n"> Taille de la matrice (nxn).</param>
+/// <exception cref="std::invalid_argument">Dimension nulle, tailles différentes de nxn ou buffers identiques.</exception>
+/// <exception cref="std::domain_error">Matrice singulière, pivot inférieur ou égal à n fois l'epsilon machine après équilibrage,
+/// ou calcul non fini. La sortie est alors remise à zéro ; l'entrée peut avoir été partiellement transformée.</exception>
 void InverseGaussJordan(std::vector<double>& in, std::vector<double>& out, size_t n);
 
 /// <summary>Inversion de matrice (méthode LU (sans pivot) + systèmes triangulaires).</summary>

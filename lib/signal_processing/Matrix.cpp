@@ -6,8 +6,10 @@
 #include <cmath>
 #include <execution>
 #include <iterator>
+#include <limits>
 #include <numeric>
 #include <ranges>
+#include <stdexcept>
 #include <vector>
 
 namespace palm_tracer::matrix {
@@ -294,11 +296,40 @@ bool Cholesky(const std::vector<double>& a, const size_t n, std::vector<double>&
 //-------------------------------------------------------------------------------------------------
 void InverseGaussJordan(std::vector<double>& in, std::vector<double>& out, const size_t n)
 {
+	if (&in == &out || n == 0 || n > in.size() / n || in.size() != n * n || out.size() != in.size()) {
+		throw std::invalid_argument("InverseGaussJordan : dimensions invalides ou buffers identiques.");
+	}
+	// Aucun inverse partiel ne doit être réutilisé après un échec numérique.
+	const auto Fail = [&out] {
+		std::ranges::fill(out, 0.0);
+		throw std::domain_error("InverseGaussJordan : matrice singulière, mal conditionnée ou calcul non fini.");
+	};
 	std::ranges::fill(out, 0.0);
-	for (size_t i = 0; i < n; ++i) { out[i * n + i] = 1.0; } // Initialisation de la matrice identité
-
-	// limination de Gauss-Jordan
+	// Équilibrage des lignes : le seuil de pivot est indépendant de l'unité des coefficients.
 	for (size_t i = 0; i < n; ++i) {
+		double scale = 0.0;
+		for (size_t j = 0; j < n; ++j) {
+			const double Value = in[i * n + j];
+			if (!std::isfinite(Value)) { Fail(); }
+			scale = std::max(scale, std::abs(Value));
+		}
+		if (scale == 0.0) { Fail(); }
+		for (size_t j = 0; j < n; ++j) { in[i * n + j] /= scale; }
+		out[i * n + i] = 1.0 / scale;
+	}
+
+	const double PivotTolerance = std::numeric_limits<double>::epsilon() * static_cast<double>(n);
+	// Élimination de Gauss-Jordan avec pivot partiel.
+	for (size_t i = 0; i < n; ++i) {
+		size_t pivotRow = i;
+		for (size_t j = i + 1; j < n; ++j) { if (std::abs(in[j * n + i]) > std::abs(in[pivotRow * n + i])) { pivotRow = j; } }
+		if (!std::isfinite(in[pivotRow * n + i]) || std::abs(in[pivotRow * n + i]) <= PivotTolerance) { Fail(); }
+		if (pivotRow != i) {
+			for (size_t j = 0; j < n; ++j) {
+				std::swap(in[i * n + j], in[pivotRow * n + j]);
+				std::swap(out[i * n + j], out[pivotRow * n + j]);
+			}
+		}
 		const double Pivot_Inv = 1.0 / in[i * n + i];
 
 		// Normalisation de la ligne i
@@ -319,6 +350,8 @@ void InverseGaussJordan(std::vector<double>& in, std::vector<double>& out, const
 			}
 		}
 	}
+	if (!std::ranges::all_of(in, [](const double value) { return std::isfinite(value); })
+	    || !std::ranges::all_of(out, [](const double value) { return std::isfinite(value); })) { Fail(); }
 }
 
 //-------------------------------------------------------------------------------------------------

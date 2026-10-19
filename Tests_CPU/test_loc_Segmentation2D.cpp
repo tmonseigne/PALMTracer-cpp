@@ -5,6 +5,7 @@
 #include <cmath>
 #include <numeric>
 #include <tuple>
+#include <type_traits>
 
 namespace palm_tracer::localization {
 namespace {
@@ -137,6 +138,38 @@ INSTANTIATE_TEST_SUITE_P(Surfaces, SegmentationSurfaceTests,
                          [](const testing::TestParamInfo<size_t>& info) { return info.param < VOLUME_MIN ? "BelowMinimum" : info.param == VOLUME_MIN ?
                          "AtMinimum" : "AboveMinimum"; });
 #pragma endregion FilterData
+
+#pragma region Infos
+/// <summary>La référence désigne les mesures originales et une copie explicite conserve son indépendance.</summary>
+TEST(SegmentationInfosTests, ReadOnlyReferenceAndIndependentSnapshot)
+{
+	constexpr Vec2I Dim{.x = 7, .y = 7};
+	std::vector<double> potential(Dim.GetSize(), 0);
+	for (size_t y = 2; y <= 4; ++y) { for (size_t x = 2; x <= 4; ++x) { potential[y * Dim.x + x] = 100; } }
+	const auto Segmentation = Segment(Dim, potential);
+	const auto& Infos = Segmentation.Infos();
+	static_assert(std::is_same_v<decltype(Segmentation.Infos()), const std::vector<SegmentationInfo>&>);
+	ASSERT_EQ(Infos.size(), 1);
+	EXPECT_EQ(Infos.data(), Segmentation.Infos().data());
+	auto snapshot = Segmentation.Infos();
+	ASSERT_EQ(snapshot.size(), Infos.size());
+	EXPECT_NE(snapshot.data(), Infos.data());
+	snapshot[0].intensity_ = -42;
+	EXPECT_DOUBLE_EQ(Infos[0].intensity_, 900);
+	snapshot.clear();
+	EXPECT_EQ(Infos.size(), 1);
+	EXPECT_DOUBLE_EQ(Segmentation.Infos()[0].intensity_, 900);
+}
+
+/// <summary>Une segmentation sans région fournit une référence vers un vecteur vide.</summary>
+TEST(SegmentationInfosTests, EmptyReadOnlyReference)
+{
+	constexpr Vec2I Dim{.x = 7, .y = 7};
+	const auto Segmentation = Segment(Dim, std::vector<double>(Dim.GetSize(), 0));
+	EXPECT_TRUE(Segmentation.Infos().empty());
+	EXPECT_TRUE(Segmentation.Infos().empty());
+}
+#pragma endregion Infos
 
 #pragma region WatershedIntelligent
 /// <summary>Deux pics reliés restent séparés ou fusionnent selon le ratio, sans perdre de pixels.</summary>
