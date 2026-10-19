@@ -30,7 +30,9 @@
   <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" />
-  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="UserMacros">
+    <Microsoft-GoogleTest-Disable-gtest_main>true</Microsoft-GoogleTest-Disable-gtest_main>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <OpenMPSupport>true</OpenMPSupport>
@@ -99,6 +101,7 @@
     <ClInclude Include="..\lib\tracking\Point.hpp" />
     <ClInclude Include="..\lib\tracking\Tracks.hpp" />
     <ClInclude Include="..\lib\tracking\TracksFit.hpp" />
+    <ClInclude Include="ResourceMonitoring.hpp" />
     <ClInclude Include="TiffManagement.hpp" />
     <ClInclude Include="TestUtils.hpp" />
   </ItemGroup>
@@ -118,6 +121,8 @@
     <ClCompile Include="..\lib\signal_processing\Spline.cpp" />
     <ClCompile Include="..\lib\tracking\Tracks.cpp" />
     <ClCompile Include="..\lib\tracking\TracksFit.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="test_ResourceMonitoring.cpp" />
     <ClCompile Include="test_fit_AstigFit.cpp" />
     <ClCompile Include="test_fit_Fitting.cpp" />
     <ClCompile Include="test_loc_Segmentation2D.cpp" />

@@ -54,6 +54,8 @@
     <ClCompile Include="..\lib\fit\AstigFit.cpp">
       <Filter>lib</Filter>
     </ClCompile>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="test_ResourceMonitoring.cpp" />
     <ClCompile Include="test_fit_AstigFit.cpp" />
     <ClCompile Include="test_fit_Fitting.cpp" />
     <ClCompile Include="test_loc_Segmentation2D.cpp" />
@@ -64,6 +66,7 @@
     <ClCompile Include="test_sp_PSF.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ResourceMonitoring.hpp" />
     <ClInclude Include="TiffManagement.hpp" />
     <ClInclude Include="TestUtils.hpp" />
     <ClInclude Include="..\lib\Constants.hpp">

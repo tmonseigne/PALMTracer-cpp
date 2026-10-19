@@ -62,6 +62,8 @@ list(FILTER CPU_HDRS EXCLUDE REGEX "[/\\]cuda[/\\]")
 file(GLOB_RECURSE CPU_SRC CONFIGURE_DEPENDS "lib/*.cpp")
 list(FILTER CPU_SRC EXCLUDE REGEX "[/\\]cuda[/\\]")
 file(GLOB_RECURSE TESTS_FILES CONFIGURE_DEPENDS "Tests_CPU/*.cpp" "Tests_CPU/*.hpp")
+# Les diagnostics personnels sont compilés uniquement par leurs projets locaux.
+list(FILTER TESTS_FILES EXCLUDE REGEX "_local\\.(cpp|hpp)$")
 
 # === CPU ===
 add_library(CPU SHARED CPU/main.cpp ${CPU_SRC} ${CPU_HDRS})
@@ -93,7 +95,6 @@ target_link_libraries(test_cpu
     PRIVATE
         FFTW3::fftw3
         GTest::gtest
-        GTest::gtest_main
         TIFF::TIFF
 )
 

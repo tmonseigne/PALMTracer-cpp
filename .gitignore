@@ -437,10 +437,16 @@ FodyWeavers.xsd
 
 *.exp
 
-*Docs/html
-Output/
-
 # CMake
 out/
 
 vcpkg_installed/
+
+*Docs/html
+Output/
+
+# Protocole de validation personnel
+Docs/tools/*_local.*
+Tests_CPU/*_local.*
+Docs/reports/*_local.*
+/AGENTS.md
