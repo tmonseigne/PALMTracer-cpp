@@ -4,6 +4,8 @@
 #include <cmath>	 // pour std::lround
 #include <iostream>
 #include <iterator>
+#include <limits>
+#include <numeric>
 #include <stdexcept>
 
 
@@ -22,7 +24,6 @@ void Alignment::Align(const uint16_t* highSNR, const uint16_t* lowSNR, const uin
 	upsampling_  = upsampling;
 	upsampling2_ = upsampling * upsampling;
 	computeFactor();
-	align();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -74,7 +75,6 @@ void Alignment::computeCoord(const double oldX, const double oldY, double& newX,
 //-------------------------------------------------------------------------------------------------
 void Alignment::align()
 {
-	initOutput();
 	precomputeTransformMap();
 	applyTransform();
 }
@@ -82,6 +82,13 @@ void Alignment::align()
 //-------------------------------------------------------------------------------------------------
 void Alignment::precomputeTransformMap()
 {
+	const size_t UpW = dim_.x * upsampling_, UpH = dim_.y * upsampling_;
+	offsets_.assign(UpW * UpH + 1, 0);
+	contributions_.clear();
+	if (sizeStack_ == 0 || upsampling_ == 0) { return; }
+	for (const auto& axis : factors_) {
+		if (!std::ranges::all_of(axis, [](const double value) { return std::isfinite(value); })) { return; }
+	}
 	std::vector transformGrid(dim_.y + 1, std::vector<Vec2D>(dim_.x + 1));
 
 	// 1. computeCoord pour tous les coins
@@ -90,15 +97,13 @@ void Alignment::precomputeTransformMap()
 		for (int x = 0; x <= static_cast<int>(dim_.x); ++x) { computeCoord(x, y, transformGrid[y][x].x, transformGrid[y][x].y); }
 	}
 
-	// 2. splatting inverse : chaque pixel source distribue à des pixels cibles
-	// Application du suréchantillonnage.
-	const size_t UpW      = dim_.x * upsampling_;
-	const size_t UpH      = dim_.y * upsampling_;
-	const size_t UpSizeIm = UpW * UpH;
-	const double Step     = 1.0 / static_cast<double>(upsampling_);
-	transformMap_.resize(UpSizeIm); // chaque pixel cible contiendra une liste de contributions
-	// Supprime les contributions du précédent appel en conservant les capacités allouées.
-	for (auto& contributions : transformMap_) { contributions.clear(); }
+	// Chaque ligne source possède son tampon : aucun verrou ni ordre dépendant d'OpenMP.
+	struct PendingContribution {
+		size_t target; ///< Indice du pixel cible.
+		Contribution value; ///< Source et poids du recouvrement.
+	};
+	std::vector<std::vector<PendingContribution>> rows(dim_.y);
+	const double Step = 1.0 / static_cast<double>(upsampling_);
 
 	#pragma omp parallel for
 	for (int y = 0; y < static_cast<int>(dim_.y); ++y) {
@@ -107,6 +112,21 @@ void Alignment::precomputeTransformMap()
 			const size_t SrcIdx = RowIdx + x;
 
 			const std::vector P = {transformGrid[y][x], transformGrid[y][x + 1], transformGrid[y + 1][x + 1], transformGrid[y + 1][x]};
+			if (!std::ranges::all_of(P, [](const Vec2D& point) { return std::isfinite(point.x) && std::isfinite(point.y); })) { continue; }
+			// Un quadrilatère strictement convexe accepte les deux orientations (dont les réflexions).
+			double orientation = 0;
+			bool valid = true;
+			for (size_t corner = 0; corner < 4; ++corner) {
+				const auto A = P[(corner + 1) % 4] - P[corner];
+				const auto B = P[(corner + 2) % 4] - P[(corner + 1) % 4];
+				const double Cross = A.x * B.y - A.y * B.x;
+				if (!std::isfinite(Cross) || Cross == 0 || (corner > 0 && std::signbit(Cross) != std::signbit(orientation))) {
+					valid = false;
+					break;
+				}
+				orientation = Cross;
+			}
+			if (!valid) { continue; }
 			const auto [x0, x1] = std::minmax({P[0].x, P[1].x, P[2].x, P[3].x});
 			const auto [y0, y1] = std::minmax({P[0].y, P[1].y, P[2].y, P[3].y});
 
@@ -114,9 +134,9 @@ void Alignment::precomputeTransformMap()
 			if (x1 <= 0 || y1 <= 0 || x0 >= static_cast<double>(dim_.x) || y0 >= static_cast<double>(dim_.y)) { continue; }
 			const double Scale = static_cast<double>(upsampling_);
 			const size_t Xmin  = static_cast<size_t>(std::floor(std::max(0.0, x0) * Scale));
-			const size_t Xmax  = static_cast<size_t>(std::min(static_cast<double>(UpW - 1), std::ceil(x1 * Scale)));
+			const size_t Xmax  = static_cast<size_t>(std::min(static_cast<double>(UpW - 1), std::ceil(std::min(static_cast<double>(dim_.x), x1) * Scale)));
 			const size_t Ymin  = static_cast<size_t>(std::floor(std::max(0.0, y0) * Scale));
-			const size_t Ymax  = static_cast<size_t>(std::min(static_cast<double>(UpH - 1), std::ceil(y1 * Scale)));
+			const size_t Ymax  = static_cast<size_t>(std::min(static_cast<double>(UpH - 1), std::ceil(std::min(static_cast<double>(dim_.y), y1) * Scale)));
 
 			for (size_t j = Ymin; j <= Ymax; ++j) {
 				const double Ypix      = static_cast<double>(j) * Step;
@@ -125,33 +145,43 @@ void Alignment::precomputeTransformMap()
 					const double Xpix = static_cast<double>(i) * Step;
 					std::vector<Vec2D> clipped;
 					clipPolygon(P, clipped, Xpix, Ypix, Step);
-					if (!clipped.empty()) {
-						#pragma omp critical // Évite la concurrence lors d'écriture simultanée à transformMap_[dstIdx]
-						transformMap_[RowdstIdx + i].emplace_back(Contribution{.index = SrcIdx, .weight = getArea(clipped)});
+					const double Weight = getArea(clipped);
+					if (std::isfinite(Weight) && Weight > 0) {
+						rows[y].push_back({.target = RowdstIdx + i, .value = {.index = SrcIdx, .weight = Weight}});
 					}
 				}
 			}
 		}
+	}
+	// Comptage et préfixe des listes cibles ; le passage final conserve l'ordre raster des sources.
+	for (const auto& row : rows) {
+		for (const auto& entry : row) { ++offsets_[entry.target + 1]; }
+	}
+	std::partial_sum(offsets_.begin(), offsets_.end(), offsets_.begin());
+	contributions_.resize(offsets_.back());
+	auto cursor = offsets_;
+	for (const auto& row : rows) {
+		for (const auto& entry : row) { contributions_[cursor[entry.target]++] = entry.value; }
 	}
 }
 
 //-------------------------------------------------------------------------------------------------
 void Alignment::applyTransform() const
 {
-	const int UpSizeIm = static_cast<int>(sizeIm_ * upsampling2_);
-	std::vector tmp(UpSizeIm, 0.0);
-
+	const size_t UpSizeIm = sizeIm_ * upsampling2_;
 	for (size_t p = 0; p < dim_.z; ++p) {
-		std::ranges::fill(tmp, 0.0);
-		const size_t PlaneOffset = p * sizeIm_; // La source reste inchangé
-
+		const size_t PlaneOffset = p * sizeIm_;
 		#pragma omp parallel for
-		for (int i = 0; i < UpSizeIm; ++i) {
-			double acc = 0.0;
-			for (const auto& [Index, Weight] : transformMap_[i]) { acc += Weight * input_[PlaneOffset + Index]; }
-			tmp[i] = acc;
+		for (int64_t i = 0; i < static_cast<int64_t>(UpSizeIm); ++i) {
+			double acc = 0;
+			for (size_t j = offsets_[i]; j < offsets_[i + 1]; ++j) {
+				const auto& [Index, Weight] = contributions_[j];
+				acc += Weight * input_[PlaneOffset + Index];
+			}
+			// Borner avant lround évite tout débordement de long et tout rebouclage uint16.
+			constexpr auto Maximum = std::numeric_limits<uint16_t>::max();
+			output_[p * UpSizeIm + i] = !(acc > 0) ? 0 : acc >= Maximum ? Maximum : static_cast<uint16_t>(std::lround(acc));
 		}
-		std::ranges::transform(tmp, output_ + p * UpSizeIm, [](const double v) { return static_cast<uint16_t>(std::lround(v)); });
 	}
 }
 

@@ -3,6 +3,8 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <limits>
+#include <omp.h>
 #include <numeric>
 #include <tuple>
 
@@ -256,6 +258,101 @@ TEST_P(AlignmentWarpTests, PolynomialPixelOverlap)
 
 INSTANTIATE_TEST_SUITE_P(Warps, AlignmentWarpTests, testing::Bool(),
                          [](const testing::TestParamInfo<bool>& info) { return info.param ? "Cubic" : "Quadratic"; });
+
+/// <summary>Cas indépendants de conversion autour du demi-entier.</summary>
+class AlignmentRoundingTests : public testing::TestWithParam<double> { };
+
+/// <summary>Le demi-entier positif est arrondi vers le haut, sans arrondi préalable des poids.</summary>
+TEST_P(AlignmentRoundingTests, HalfInteger)
+{
+	constexpr Vec3I Dim{.x = 1, .y = 1, .z = 1};
+	std::array<std::array<double, 10>, 2> factors{};
+	factors[0][7] = factors[1][8] = 1;
+	factors[0][9] = GetParam();
+	const uint16_t Input = 1;
+	uint16_t output = 999;
+	Alignment align;
+	align.Align(&Input, &output, Dim, factors);
+	EXPECT_EQ(output, GetParam() <= 0.5 ? 1 : 0);
+}
+
+INSTANTIATE_TEST_SUITE_P(Thresholds, AlignmentRoundingTests,
+                         testing::Values(0.5 - 1e-9, 0.5, 0.5 + 1e-9),
+                         ([](const testing::TestParamInfo<double>& info) {
+	                         constexpr std::array Names{"AboveHalf", "ExactHalf", "BelowHalf"};
+	                         return Names[info.index];
+                         }));
+
+/// <summary>Un repli global peut superposer deux cellules convexes : la somme est saturée.</summary>
+TEST(AlignmentTests, SaturatesOverlappingCells)
+{
+	constexpr Vec3I Dim{.x = 2, .y = 1, .z = 1};
+	std::array<std::array<double, 10>, 2> factors{};
+	// X' = (X - 1)^2 : les deux pixels couvrent le même pixel cible avec des orientations opposées.
+	factors[0][4] = factors[0][9] = factors[1][8] = 1;
+	factors[0][7] = -2;
+	const std::array<uint16_t, 2> Input{40000, 40000};
+	std::array<uint16_t, 2> output{999, 999};
+	Alignment align;
+	align.Align(Input.data(), output.data(), Dim, factors);
+	EXPECT_EQ(output[0], 65535);
+	EXPECT_EQ(output[1], 0);
+}
+
+/// <summary>Transformations invalides testées séparément sans conversion flottant-entier indéfinie.</summary>
+class AlignmentInvalidTests : public testing::TestWithParam<size_t> { };
+
+/// <summary>Une carte invalide remplace toute la sortie par zéro, y compris après réutilisation.</summary>
+TEST_P(AlignmentInvalidTests, InvalidGeometry)
+{
+	constexpr Vec3I Dim{.x = 2, .y = 2, .z = 2};
+	const std::vector<uint16_t> Input(Dim.GetSize(), 100);
+	std::vector<uint16_t> output(Dim.GetSize() * 4, 999);
+	std::array<std::array<double, 10>, 2> factors{};
+	factors[0][7] = factors[1][8] = 1;
+	Alignment align;
+	align.Align(Input.data(), output.data(), Dim, factors, 2);
+	switch (GetParam()) {
+		case 0: factors[0][9] = std::numeric_limits<double>::quiet_NaN(); break;
+		case 1: factors[1][9] = std::numeric_limits<double>::infinity(); break;
+		case 2: factors[0][0] = factors[0][7] = std::numeric_limits<double>::max(); break;
+		case 3: factors = {}; break;
+		default:
+			// X' = X, Y' = (1 - 2X)Y : cellules croisées ou hors champ.
+			factors[1][6] = -2;
+			break;
+	}
+	align.Align(Input.data(), output.data(), Dim, factors, 2);
+	EXPECT_TRUE(std::ranges::all_of(output, [](const uint16_t value) { return value == 0; }));
+}
+
+INSTANTIATE_TEST_SUITE_P(Invalid, AlignmentInvalidTests, testing::Range(size_t{0}, size_t{5}),
+                         ([](const testing::TestParamInfo<size_t>& info) {
+	                         constexpr std::array Names{"NaN", "Infinity", "CoordinateOverflow", "Collapsed", "Crossed"};
+	                         return Names[info.param];
+                         }));
+
+/// <summary>L'ordre des contributions et les sorties restent identiques quel que soit le nombre de threads.</summary>
+TEST(AlignmentTests, StableAcrossThreadCounts)
+{
+	constexpr Vec3I Dim{.x = 41, .y = 37, .z = 2};
+	std::array<std::array<double, 10>, 2> factors{};
+	factors[0][7] = factors[1][8] = 1;
+	factors[0][9] = 0.137;
+	factors[1][9] = 0.269;
+	factors[0][5] = 0.0001;
+	std::vector<uint16_t> input(Dim.GetSize()), serial(Dim.GetSize() * 4), parallel(serial.size());
+	for (size_t i = 0; i < input.size(); ++i) { input[i] = static_cast<uint16_t>((i * 7919) % 65536); }
+	const int Threads = omp_get_max_threads(), Dynamic = omp_get_dynamic();
+	omp_set_dynamic(0);
+	omp_set_num_threads(1);
+	Alignment align;
+	align.Align(input.data(), serial.data(), Dim, factors, 2);
+	omp_set_num_threads(Threads);
+	align.Align(input.data(), parallel.data(), Dim, factors, 2);
+	EXPECT_EQ(parallel, serial);
+	omp_set_dynamic(Dynamic);
+}
 
 #pragma region Rendus speciaux
 /// <summary>Produit les rendus et vérifie la relecture exacte du TIFF effectivement enregistre.</summary>

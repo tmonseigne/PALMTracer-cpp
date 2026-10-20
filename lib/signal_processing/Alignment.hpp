@@ -33,7 +33,7 @@ public:
 	/// <param name="highSNR">Image de référence (alignée) avec un haut rapport signal/bruit.</param>
 	/// <param name="lowSNR">Image de référence (désalignée) avec un faible rapport signal/bruit.</param>
 	/// <param name="input">Données d'entrée (pile d'images à réaligner).</param>
-	/// <param name="output">Pointeur vers la zone mémoire de sortie (même taille que `input`).</param>
+	/// <param name="output">Pointeur vers la sortie, de taille <c>dim.GetSize() * upsampling * upsampling</c>.</param>
 	/// <param name="dim">Dimensions du volume 3D (width=X, height=Y, depth=Z).</param>
 	/// <param name="upsampling">Taux de suréchantillonnage à appliquer avant recalage.</param>
 	/// <remarks>Cette méthode lance une exception, car le calcul automatique n'est pas implémenté dans cette version.</remarks>
@@ -41,7 +41,7 @@ public:
 
 	/// <summary>Mode d'alignement avec coefficients déjà calculés.</summary>
 	/// <param name="input">Données d'entrée (pile d'images à réaligner).</param>
-	/// <param name="output">Pointeur vers la zone mémoire de sortie (même taille que `input`).</param>
+	/// <param name="output">Pointeur vers la sortie, de taille <c>dim.GetSize() * upsampling * upsampling</c>.</param>
 	/// <param name="dim">Dimensions du volume 3D (width=X, height=Y, depth=Z).</param>
 	/// <param name="factors">Coefficients du modèle non linéaire, séparés pour X et Y (2x10 coefficients).</param>
 	/// <param name="upsampling">Taux de suréchantillonnage à appliquer avant recalage (>=1).</param>
@@ -64,7 +64,8 @@ protected:
 	       upsampling_{},                                 ///< Taux de suréchantillonnage.
 	       upsampling2_{};                                ///< Taux de suréchantillonnage au carré.
 	std::array<std::array<double, 10>, 2> factors_{};     ///< Coefficients du modèle de déformation polynomiale.
-	std::vector<std::vector<Contribution>> transformMap_; ///< Carte de transformation pré-calculée (chaque pixel cible contiendra une liste de contributions).
+	std::vector<size_t> offsets_;                         ///< Débuts des listes CSR, suivis du nombre total de contributions.
+	std::vector<Contribution> contributions_;            ///< Contributions contiguës, triées par indice source pour chaque cible.
 
 	/// <summary>Initialise la mémoire de sortie à 0.</summary>
 	void initOutput() const { for (size_t i = 0; i < sizeStack_; ++i) { output_[i] = 0; } }
@@ -88,11 +89,16 @@ protected:
 	///
 	/// Cette carte contient, pour chaque pixel de l'image cible, les coordonnées sources correspondantes ainsi que les poids associés à
 	/// l'interpolation.</summary>
-	/// <remarks>Utilise un splatting inverse avec suréchantillonnage.</remarks>
+	/// <remarks>Les contributions sont sommées en double par indice source croissant, indépendamment des threads.
+	/// Les coefficients non finis donnent une carte vide. Les cellules à coins non finis, dégénérées ou non convexes sont ignorées.
+	/// Les réflexions sont acceptées. Aucun inverse global n'est nécessaire : les recouvrements sont additionnés.
+	/// La carte CSR est construite par lignes sources indépendantes, puis comptage, préfixe et remplissage stable.</remarks>
 	void precomputeTransformMap();
 
 	/// <summary>Applique les contributions pré-calculées sur toutes les images du volume.</summary>
-	/// <remarks>Utilise OpenMP pour paralléliser le traitement sur chaque pixel de sortie.</remarks>
+	/// <remarks>Arrondi au plus proche, demi-entiers vers le haut, puis saturation dans <c>[0, 65535]</c>.
+	/// Les sommes non positives ou NaN donnent zéro ; les débordements positifs donnent 65535.
+	/// Utilise OpenMP pour paralléliser le traitement sur chaque pixel de sortie.</remarks>
 	void applyTransform() const;
 
 	/// <summary>Réalise une découpe polygonale (algorithme de Sutherland-Hodgman) pour estimer l'aire de recouvrement.</summary>

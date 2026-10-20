@@ -160,7 +160,7 @@ std::pair<size_t, double> Tracks::getReconnectionCost(const size_t frameGap, con
 	// Choix actuel : priorité stricte à la frame la plus proche, puis à la distance à frame égale.
 	// La comparaison lexicographique permet à un candidat plus précoce de gagner même s'il est plus éloigné.
 	// Variante future possible : C = wt * (frameGap / Tref) + wd * (distance / Dref)^2.
-	// Un coût scalaire pourrait être retourne sous la forme {0, C} pour supprimer la priorité stricte au temps.
+	// Un coût scalaire pourrait être retourné sous la forme {0, C} pour supprimer la priorité stricte au temps.
 	// On pourrait ajouter wi * log((I_next + epsilon) / (I_previous + epsilon))^2 pour la continuite d'intensité,
 	// en transmettant aussi les intensités. Poids et échelles Tref/Dref seraient à valider physiquement.
 	// Ces variantes ne sont pas actives : contraintes de recherche et arbitrage global glouton restent séparés.
