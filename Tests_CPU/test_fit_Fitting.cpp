@@ -37,9 +37,9 @@ double Model(const double x, const double y, const double x0, const double y0, c
              const double sigmaX, const double sigmaY, const double theta)
 {
 	const double Dx = x - x0, Dy = y - y0;
-	const double U  = std::cos(theta) * Dx - std::sin(theta) * Dy;
-	const double V  = std::sin(theta) * Dx + std::cos(theta) * Dy;
-	return background + amplitude * std::exp(-0.5 * (U * U / (sigmaX * sigmaX) + V * V / (sigmaY * sigmaY)));
+	const double U  = (std::cos(theta) * Dx) - (std::sin(theta) * Dy);
+	const double V  = (std::sin(theta) * Dx) + (std::cos(theta) * Dy);
+	return background + (amplitude * std::exp(-0.5 * ((U * U / (sigmaX * sigmaX)) + (V * V / (sigmaY * sigmaY)))));
 }
 
 /// <summary>Un seul candidat de centroïde entier permet d'isoler le fitting de la détection.</summary>
@@ -48,7 +48,7 @@ localization::Segmentation2D Candidate(const Vec2I& dim)
 	const std::vector<uint16_t> Image(dim.GetSize(), 0);
 	localization::ATrous decomposition(Image.data(), dim);
 	auto& potential = decomposition.wDecomp_[PLANE_ID];
-	for (size_t y = 6; y <= 8; ++y) { for (size_t x = 6; x <= 8; ++x) { potential[y * dim.x + x] = 100; } }
+	for (size_t y = 6; y <= 8; ++y) { for (size_t x = 6; x <= 8; ++x) { potential[(y * dim.x) + x] = 100; } }
 	return localization::Segmentation2D(decomposition, 0, 0);
 }
 
@@ -58,8 +58,8 @@ std::vector<uint16_t> GaussianImage(const GaussianCase& scenario, const Vec2I& d
 	std::vector<uint16_t> image(dim.GetSize());
 	for (size_t y = 0; y < dim.y; ++y) {
 		for (size_t x = 0; x < dim.x; ++x) {
-			image[y * dim.x + x] = static_cast<uint16_t>(std::lround(Model(static_cast<double>(x), static_cast<double>(y),
-			                                                               7.25, 6.7, 8000, 100, scenario.sigmaX, scenario.sigmaY, scenario.theta)));
+			image[(y * dim.x) + x] = static_cast<uint16_t>(std::lround(Model(static_cast<double>(x), static_cast<double>(y),
+			                                                                 7.25, 6.7, 8000, 100, scenario.sigmaX, scenario.sigmaY, scenario.theta)));
 		}
 	}
 	return image;
@@ -79,7 +79,7 @@ class FittingOutputTests : public testing::TestWithParam<fit_mode> { };
 
 /// <summary>Capacités inférieure, égale et supérieure au nombre de candidats.</summary>
 class FittingCapacityTests : public testing::TestWithParam<size_t> { };
-}
+} // namespace
 
 #pragma region Fit
 /// <summary>Une troncature produit un seul avertissement ; une sortie suffisante reste silencieuse.</summary>
@@ -131,17 +131,17 @@ TEST(FittingTests, ExtractsRoi)
 {
 	constexpr Vec2I Dim{.x = 7, .y = 5};
 	std::vector<uint16_t> image(Dim.GetSize());
-	for (size_t y = 0; y < Dim.y; ++y) { for (size_t x = 0; x < Dim.x; ++x) { image[y * Dim.x + x] = static_cast<uint16_t>(100 * y + x); } }
+	for (size_t y = 0; y < Dim.y; ++y) { for (size_t x = 0; x < Dim.x; ++x) { image[(y * Dim.x) + x] = static_cast<uint16_t>((100 * y) + x); } }
 	constexpr std::array Params{3.0};
 	const FittingAccess Fit(fit_mode::none, image.data(), Dim, 100, Params.data());
 	std::vector<Pixel> grid(9);
 	double min = 0, max = 0;
 	Fit.preCompute(4, 2, grid, min, max);
 	for (size_t i = 0; i < grid.size(); ++i) {
-		const size_t X = 3 + i % 3, Y = 1 + i / 3;
+		const size_t X = 3 + (i % 3), Y = 1 + (i / 3);
 		EXPECT_EQ(grid[i].x, X);
 		EXPECT_EQ(grid[i].y, Y);
-		EXPECT_DOUBLE_EQ(grid[i].v, static_cast<double>(100 * Y + X));
+		EXPECT_DOUBLE_EQ(grid[i].v, static_cast<double>((100 * Y) + X));
 	}
 	EXPECT_DOUBLE_EQ(min, 103);
 	EXPECT_DOUBLE_EQ(max, 305);
@@ -186,7 +186,7 @@ TEST_P(GaussianCircularInitializationTests, RecoversCenterAndCovariance)
 	constexpr Vec2I Dim{.x = 15, .y = 15};
 	const auto& Scenario = GetParam();
 	const auto Image     = GaussianImage(Scenario, Dim);
-	const std::array Params{9.0, 1.2, 1.2, 0.2};
+	constexpr std::array Params{9.0, 1.2, 1.2, 0.2};
 	const GaussianFit Fit(fit_mode::gaussian_3d_theta, Image.data(), Dim, 1, Params.data());
 	localization::SegmentationInfo info{};
 	info.Reset();
@@ -201,7 +201,7 @@ TEST_P(GaussianCircularInitializationTests, RecoversCenterAndCovariance)
 	// La covariance est indépendante des échanges d'axes et de l'angle arbitraire à l'isotropie.
 	const auto Covariance = [](const double sx, const double sy, const double theta) {
 		const double C = std::cos(theta), S = std::sin(theta), X2 = sx * sx, Y2 = sy * sy;
-		return std::array{C * C * X2 + S * S * Y2, S * S * X2 + C * C * Y2, C * S * (Y2 - X2)};
+		return std::array{(C * C * X2) + (S * S * Y2), (S * S * X2) + (C * C * Y2), C * S * (Y2 - X2)};
 	};
 	const auto Actual   = Covariance(point[8], point[9], point[10]);
 	const auto Expected = Covariance(Scenario.sigmaX, Scenario.sigmaY, Scenario.theta);
@@ -220,8 +220,8 @@ INSTANTIATE_TEST_SUITE_P(Shapes, GaussianCircularInitializationTests,
 TEST(GaussianFitFailureTests, RejectsNonFiniteInitialization)
 {
 	constexpr Vec2I Dim{.x = 15, .y = 15};
-	const auto Image = GaussianImage({"Circular", fit_mode::gaussian_3d_theta, 1.35, 1.35, 0}, Dim);
-	const std::array Params{9.0, std::numeric_limits<double>::quiet_NaN(), 1.8, 0.0};
+	const auto Image = GaussianImage({.name = "Circular", .mode = fit_mode::gaussian_3d_theta, .sigmaX = 1.35, .sigmaY = 1.35, .theta = 0}, Dim);
+	constexpr std::array Params{9.0, std::numeric_limits<double>::quiet_NaN(), 1.8, 0.0};
 	const GaussianFit Fit(fit_mode::gaussian_3d_theta, Image.data(), Dim, 1, Params.data());
 	localization::SegmentationInfo info{};
 	info.Reset();
@@ -270,7 +270,7 @@ TEST_P(GaussianFitTests, ScoreMatchesSquaredCorrelation)
 	std::vector<double> observed, predicted;
 	for (size_t y = 3; y <= 11; ++y) {
 		for (size_t x = 3; x <= 11; ++x) {
-			observed.push_back(Image[y * Dim.x + x]);
+			observed.push_back(Image[(y * Dim.x) + x]);
 			predicted.push_back(Model(static_cast<double>(x), static_cast<double>(y), Point[4], Point[5], Point[13], Point[14], Point[8], Point[9], Point[10]));
 		}
 	}
@@ -298,11 +298,15 @@ INSTANTIATE_TEST_SUITE_P(Models, GaussianFitTests,
 TEST_P(GaussianWorkspaceTests, ReuseAfterFailureAndConfigurationChange)
 {
 	constexpr Vec2I Dim{.x = 15, .y = 15};
-	const auto Mode = GetParam();
+	const auto Mode      = GetParam();
 	const bool Isotropic = Mode == fit_mode::gaussian_2d_fixed || Mode == fit_mode::gaussian_2d_sigma;
-	const GaussianCase Scenario{"Workspace", Mode, Mode == fit_mode::gaussian_2d_fixed ? 1.2 : 1.35, Isotropic ? (Mode == fit_mode::gaussian_2d_fixed ? 1.2 : 1.35) : 1.9, Isotropic ? 0.0 : 0.4};
+	const GaussianCase Scenario{
+		.name = "Workspace", .mode = Mode, .sigmaX = Mode == fit_mode::gaussian_2d_fixed ? 1.2 : 1.35,
+		.sigmaY = Isotropic ? (Mode == fit_mode::gaussian_2d_fixed ? 1.2 : 1.35) : 1.9,
+		.theta = Isotropic ? 0.0 : 0.4
+	};
 	const auto Original = GaussianImage(Scenario, Dim);
-	auto image = Original;
+	auto image          = Original;
 	const std::array Params{9.0, 1.2, 1.8, Mode == fit_mode::gaussian_3d_theta ? 0.2 : Scenario.theta};
 	const GaussianFit Fit(Mode, image.data(), Dim, 1, Params.data());
 	localization::SegmentationInfo info{};
@@ -318,12 +322,12 @@ TEST_P(GaussianWorkspaceTests, ReuseAfterFailureAndConfigurationChange)
 	std::copy(Original.begin(), Original.end(), image.begin());
 
 	// Le même travailleur traverse ensuite un autre nombre de pixels/paramètres et un retour anticipé.
-	const std::array OtherParams{13.0, std::numeric_limits<double>::quiet_NaN(), 1.8, 0.2};
+	constexpr std::array OtherParams{13.0, std::numeric_limits<double>::quiet_NaN(), 1.8, 0.2};
 	const GaussianFit Other(fit_mode::gaussian_3d_theta, image.data(), Dim, 1, OtherParams.data());
 	Other.Fit(info, discarded);
 	EXPECT_DOUBLE_EQ(discarded[7], -1);
 	auto border = info;
-	border.x_ = border.y_ = 0;
+	border.x_   = border.y_ = 0;
 	Fit.Fit(border, discarded);
 	EXPECT_DOUBLE_EQ(discarded[7], -1);
 	Fit.Fit(info, actual);
@@ -334,19 +338,23 @@ TEST_P(GaussianWorkspaceTests, ReuseAfterFailureAndConfigurationChange)
 TEST_P(GaussianWorkspaceTests, ConcurrentCallsMatchSerialResults)
 {
 	constexpr Vec2I Dim{.x = 15, .y = 15};
-	const auto Mode = GetParam();
+	const auto Mode      = GetParam();
 	const bool Isotropic = Mode == fit_mode::gaussian_2d_fixed || Mode == fit_mode::gaussian_2d_sigma;
-	const GaussianCase Scenario{"Parallel", Mode, Mode == fit_mode::gaussian_2d_fixed ? 1.2 : 1.35, Isotropic ? (Mode == fit_mode::gaussian_2d_fixed ? 1.2 : 1.35) : 1.9, Isotropic ? 0.0 : 0.4};
+	const GaussianCase Scenario{
+		.name = "Parallel", .mode = Mode, .sigmaX = Mode == fit_mode::gaussian_2d_fixed ? 1.2 : 1.35,
+		.sigmaY = Isotropic ? (Mode == fit_mode::gaussian_2d_fixed ? 1.2 : 1.35) : 1.9,
+		.theta = Isotropic ? 0.0 : 0.4
+	};
 	const auto Image = GaussianImage(Scenario, Dim);
 	const std::array Params{9.0, 1.2, 1.8, Mode == fit_mode::gaussian_3d_theta ? 0.2 : Scenario.theta};
 	const GaussianFit Fit(Mode, Image.data(), Dim, 16, Params.data());
 	std::array<localization::SegmentationInfo, 16> infos{};
 	std::array<std::array<double, N_LOCALIZATIONS>, 16> expected{}, actual{};
 	for (size_t i = 0; i < infos.size(); ++i) {
-		infos[i].x_ = 7.0 + 0.1 * static_cast<double>(i % 3);
-		infos[i].y_ = 7.0 - 0.1 * static_cast<double>(i % 2);
+		infos[i].x_         = 7.0 + (0.1 * static_cast<double>(i % 3));
+		infos[i].y_         = 7.0 - (0.1 * static_cast<double>(i % 2));
 		infos[i].intensity_ = static_cast<double>(100 + i);
-		infos[i].surf_ = static_cast<double>(9 + i);
+		infos[i].surf_      = static_cast<double>(9 + i);
 		Fit.Fit(infos[i], expected[i]);
 	}
 	#pragma omp parallel for num_threads(4)
@@ -361,7 +369,7 @@ INSTANTIATE_TEST_SUITE_P(Models, GaussianWorkspaceTests,
                          ([](const testing::TestParamInfo<fit_mode>& info) {
 	                         constexpr std::array Names{"FixedSigma", "FreeSigma", "FixedAngle", "FreeAngle"};
 	                         return Names[static_cast<size_t>(info.param) - 1];
-                         }));
+	                         }));
 
 #pragma endregion GaussianFit
 } // namespace palm_tracer::fit

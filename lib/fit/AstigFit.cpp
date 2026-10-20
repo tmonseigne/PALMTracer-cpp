@@ -41,7 +41,7 @@ Vec2D AstigFit::Estimate(const astig_model& model, const Vec2D& sigma, const std
 	// Première passe rapide pour trouver une bonne estimation initiale
 	for (size_t i = 0; i < zStep; ++i) {
 		const double T = static_cast<double>(i) / static_cast<double>(zStep - 1);
-		const double Z = zLimit[0] + T * DeltaZ;
+		const double Z = zLimit[0] + (T * DeltaZ);
 		const double E = getError(model, Z, sigma);
 		if (E < bestE) {
 			bestE = E;
@@ -51,8 +51,8 @@ Vec2D AstigFit::Estimate(const astig_model& model, const Vec2D& sigma, const std
 
 	// Utilisation de la méthode de Brent pour affiner l'estimation
 	const double Dz     = DeltaZ / static_cast<double>(zStep - 1);
-	const double A      = std::max(zLimit[0], std::min(bestZ - 2.0 * Dz, zLimit[1]));
-	const double B      = std::max(zLimit[0], std::min(bestZ + 2.0 * Dz, zLimit[1]));
+	const double A      = std::max(zLimit[0], std::min(bestZ - (2.0 * Dz), zLimit[1]));
+	const double B      = std::max(zLimit[0], std::min(bestZ + (2.0 * Dz), zLimit[1]));
 	const Vec2D Refined = brent(A, B, model, sigma);
 	// La grille inclut les bornes exactes : les conserver si Brent ne réduit pas l'erreur évite une saturation légèrement intérieure.
 	const double Z = Refined.y < bestE ? Refined.x : bestZ;
@@ -82,7 +82,7 @@ double AstigFit::getSigma(const std::array<double, N_PARAMS>& coeffs, const doub
 	const double U3 = U2 * U;
 	const double U4 = U3 * U;
 
-	const double Poly  = 1.0 + U2 + C3 * U3 + C4 * U4;       // Polynôme en U.
+	const double Poly  = 1.0 + U2 + (C3 * U3) + (C4 * U4);   // Polynôme en U.
 	const double Sigma = A * std::sqrt(std::max(0.0, Poly)); // Sigma en nm (ajout d'une sécurité pour éviter les racines négatives)
 	return sampling_ / pixelSize_ * Sigma;                   // Sigma en pixel.
 }
@@ -92,7 +92,7 @@ double AstigFit::getError(const astig_model& model, const double z, const Vec2D&
 {
 	const Vec2D S     = {.x = getSigma(model[0], z), .y = getSigma(model[1], z)};
 	const Vec2D Delta = S - sigma;
-	return Delta.x * Delta.x + Delta.y * Delta.y;
+	return (Delta.x * Delta.x) + (Delta.y * Delta.y);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ double AstigFit::getQuality(const astig_model& model, const double z, const Vec2
 	// Conversion finale uniquement : la recherche de Z minimise toujours la SSE en pixels carrés.
 	const double Rx = (sigma.x - Predicted.x) / Predicted.x / QUALITY_SCALE,
 	             Ry = (sigma.y - Predicted.y) / Predicted.y / QUALITY_SCALE;
-	return 1.0 / (1.0 + 0.5 * (Rx * Rx + Ry * Ry));
+	return 1.0 / (1.0 + (0.5 * ((Rx * Rx) + (Ry * Ry))));
 }
 
 //==================== Calibration LM ====================
@@ -225,24 +225,24 @@ bool AstigFit::isValidAxis(const std::array<double, N_PARAMS>& p, const double z
 	    || p[1] <= 0 || p[4] <= 0 || !std::isfinite(zMin) || !std::isfinite(zMax) || zMin > zMax) { return false; }
 	const double UMin = (zMin - p[0]) / p[1], UMax = (zMax - p[0]) / p[1];
 	if (!std::isfinite(UMin) || !std::isfinite(UMax)) { return false; }
-	auto positive = [&p](const double u) {
+	const auto Positive = [&p](const double u) {
 		const double U2   = u * u, U3 = U2 * u, U4 = U3 * u;
-		const double Poly = 1.0 + U2 + p[2] * U3 + p[3] * U4;
+		const double Poly = 1.0 + U2 + (p[2] * U3) + (p[3] * U4);
 		return std::isfinite(Poly) && Poly > 1e-18;
 	};
-	if (!positive(UMin) || !positive(UMax)) { return false; }
+	if (!Positive(UMin) || !Positive(UMax)) { return false; }
 	// Le point stationnaire u=0 vérifie toujours P(0)=1. Les autres sont les racines d'un trinôme.
-	auto validRoot     = [&](const double u) { return u <= UMin || u >= UMax || positive(u); };
-	const double Scale = std::max({1.0, std::abs(p[2]), std::abs(p[3])});
-	const double A     = 4.0 * (p[3] / Scale), B = 3.0 * (p[2] / Scale), C = 2.0 / Scale;
+	const auto ValidRoot = [&](const double u) { return u <= UMin || u >= UMax || Positive(u); };
+	const double Scale   = std::max({1.0, std::abs(p[2]), std::abs(p[3])});
+	const double A       = 4.0 * (p[3] / Scale), B = 3.0 * (p[2] / Scale), C = 2.0 / Scale;
 	// Comparaisons exactes : distinguer le degré du polynôme, sans négliger un petit coefficient non nul.
 	// ReSharper disable once CppClangTidyClangDiagnosticFloatEqual
-	if (A == 0.0) { return B == 0.0 || validRoot(-C / B); }
+	if (A == 0.0) { return B == 0.0 || ValidRoot(-C / B); }
 	const double Discriminant = std::fma(-4.0 * A, C, B * B);
 	if (Discriminant < 0) { return true; }
 	// Forme stable : évite la soustraction de deux nombres proches dans l'une des racines.
 	const double Q = -0.5 * (B + std::copysign(std::sqrt(Discriminant), B));
-	return validRoot(Q / A) && validRoot(C / Q);
+	return ValidRoot(Q / A) && ValidRoot(C / Q);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -262,17 +262,17 @@ double AstigFit::lm(const std::vector<double>& sigma, const std::vector<double>&
 		const double U3 = U2 * U;
 		const double U4 = U3 * U;
 
-		const double Poly = 1.0 + U2 + C3 * U3 + C4 * U4; // Polynôme en U.
-		const double S    = std::max(1e-18, Poly);        // Ajout d'une sécurité pour éviter les racines négatives ou nulles pour le jacobien
-		const double G    = std::sqrt(S);                 // Sigma en nm
-		const double Pred = Scale * A * G;                // Sigma en pixel.
+		const double Poly = 1.0 + U2 + (C3 * U3) + (C4 * U4); // Polynôme en U.
+		const double S    = std::max(1e-18, Poly);            // Ajout d'une sécurité pour éviter les racines négatives ou nulles pour le jacobien
+		const double G    = std::sqrt(S);                     // Sigma en nm
+		const double Pred = Scale * A * G;                    // Sigma en pixel.
 
 		const double Res = Pred - sigma[i];
 		r[i]             = Res;
 		cost += Res * Res;
 
 		// Calcul du Jacobien numérique
-		const double DsDu  = 2.0 * U + 3.0 * C3 * U2 + 4.0 * C4 * U3;
+		const double DsDu  = (2.0 * U) + (3.0 * C3 * U2) + (4.0 * C4 * U3);
 		const double Inv2G = 0.5 / G;
 
 		j[i][0] = Scale * A * (Inv2G * DsDu) * (-1.0 / W); // dσ/dz0
@@ -353,7 +353,7 @@ Vec2D AstigFit::brent(double a, double b, const astig_model& model, const Vec2D&
 	// (w, fw) : second meilleur (historique)
 	// (v, fv) : troisième meilleur (historique)
 	// Ces 3 points permettent de proposer une interpolation parabolique (rapide) quand la fonction est bien régulière localement.
-	double x = a + InvPhi2 * (b - a);
+	double x = a + (InvPhi2 * (b - a));
 	double w = x, v = x;
 
 	// Évaluations aux points mémorisés
@@ -370,10 +370,11 @@ Vec2D AstigFit::brent(double a, double b, const astig_model& model, const Vec2D&
 	for (size_t iter = 0; iter < BRENT_ITER; ++iter) {
 		// Critère d'arrêt basé sur la taille de l'intervalle et la tolérance
 		const double M    = 0.5 * (a + b);
-		const double Tol1 = BRENT_TOL * std::abs(x) + 1e-12, Tol2 = 2.0 * Tol1;
+		const double Tol1 = (BRENT_TOL * std::abs(x)) + 1e-12, Tol2 = 2.0 * Tol1;
 
-		// Condition classique de Brent : si x est suffisamment proche du milieu de l'intervalle au regard de sa demi-largeur, on considère que l'intervalle est "assez petit".
-		if (std::abs(x - M) <= Tol2 - 0.5 * (b - a)) { return Vec2D{.x = x, .y = fx}; }
+		// Condition classique de Brent : si x est suffisamment proche du milieu au regard de la demi-largeur,
+		// l'intervalle est considéré comme assez petit.
+		if (std::abs(x - M) <= Tol2 - (0.5 * (b - a))) { return Vec2D{.x = x, .y = fx}; }
 
 		// ---------- Tentative d'interpolation parabolique. ----------
 		// Elle peut accélérer énormément si la fonction est bien lisse près du minimum.
@@ -387,7 +388,7 @@ Vec2D AstigFit::brent(double a, double b, const astig_model& model, const Vec2D&
 			// R, p, q sont des quantités intermédiaires liées à la parabole passant par les 3 points x, w, v. Le minimum de cette parabole tombe en x + p/q.
 			const double R = (x - w) * (fx - fv);
 			double q       = (x - v) * (fx - fw);
-			double p       = (x - v) * q - (x - w) * R;
+			double p       = ((x - v) * q) - ((x - w) * R);
 			q              = 2.0 * (q - R);
 
 			// Convention de signe : on veut q >= 0 pour simplifier les tests.
@@ -457,15 +458,15 @@ double AstigFit::findAstigmaticCenter(const astig_model& model, const std::vecto
 
 	constexpr size_t N_SAMPLES = 2048, N_BISECT = 64;
 
-	auto delta = [this, &model](const double zz) -> double { return getSigma(model[0], zz) - getSigma(model[1], zz); };
+	const auto Delta = [this, &model](const double zz) -> double { return getSigma(model[0], zz) - getSigma(model[1], zz); };
 
-	double prevZ = ZMin, prevD            = delta(prevZ),
+	double prevZ = ZMin, prevD            = Delta(prevZ),
 	       bestD = std::abs(prevD), bestZ = prevZ;
 
 	for (size_t i = 1; i < N_SAMPLES; ++i) {
 		const double T           = static_cast<double>(i) / static_cast<double>(N_SAMPLES - 1),
-		             ZSample     = ZMin + T * (ZMax - ZMin),
-		             DeltaSample = delta(ZSample);
+		             ZSample     = ZMin + (T * (ZMax - ZMin)),
+		             DeltaSample = Delta(ZSample);
 
 		const double AbsDelta = std::abs(DeltaSample);
 		if (AbsDelta < bestD) {
@@ -479,7 +480,7 @@ double AstigFit::findAstigmaticCenter(const astig_model& model, const std::vecto
 
 			for (size_t k = 0; k < N_BISECT; ++k) {
 				const double MidZ     = 0.5 * (leftZ + rightZ),
-				             MidDelta = delta(MidZ);
+				             MidDelta = Delta(MidZ);
 
 				if (std::abs(MidDelta) < bestD) {
 					bestD = std::abs(MidDelta);

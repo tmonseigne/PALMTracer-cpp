@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+// Compatibilité avec les anciennes versions de GoogleTest.
 #ifndef INSTANTIATE_TEST_SUITE_P
 #define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
 #endif
@@ -66,7 +67,7 @@ inline void ExpectTableNear(const Table& actual, const Table& expected, const do
 		ASSERT_EQ(actual[row].size(), expected[row].size());
 		for (size_t col = 0; col < expected[row].size(); ++col) {
 			SCOPED_TRACE("Colonne " + std::to_string(col));
-			EXPECT_NEAR(actual[row][col], expected[row][col], absolute + relative * std::abs(expected[row][col]));
+			EXPECT_NEAR(actual[row][col], expected[row][col], absolute + (relative * std::abs(expected[row][col])));
 		}
 	}
 }

@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file GaussianFit.hpp
-/// \brief Classe d'ajustement gaussien (2D et 3D) par Levenberg–Marquardt sur ROI.
+/// <summary>Classe d'ajustement gaussien (2D et 3D) par Levenberg–Marquardt sur ROI.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 26/03/2025.
@@ -16,7 +17,8 @@
 
 namespace palm_tracer::fit {
 /// <summary>Classe d'ajustement Gaussien dérivée de <see cref="Fitting"/>.
-/// Elle réalise un ajustement non linéaire (LM) d'un modèle de PSF Gaussienne sur une ROI carrée centrée sur le candidat, pour plusieurs <see cref="fit_mode"/>.\n
+/// Elle réalise un ajustement non linéaire (LM) d'un modèle de PSF gaussienne sur une ROI carrée centrée sur le candidat,
+/// pour plusieurs <see cref="fit_mode"/>.\n
 /// Modes pris en charge :
 /// - <see cref="fit_mode::gaussian_2d_fixed"/> : \f$p=[\text{offset}, I, x, y]\f$, \f$\sigma_x=\sigma_y\f$ fixé.
 /// - <see cref="fit_mode::gaussian_2d_sigma"/> : \f$p=[\text{offset}, I, x, y, \sigma]\f$ (isotrope).
@@ -101,7 +103,7 @@ protected:
 
 			hat.resize(n);
 			weight.resize(n);
-			std::fill(weight.begin(), weight.end(), 1.0);
+			std::ranges::fill(weight, 1.0);
 			delta.resize(n);
 			deltaW.resize(n);
 			grid.resize(n);
@@ -109,7 +111,8 @@ protected:
 	};
 
 	//==================== Common Functions ====================
-	/// <summary>Parse <paramref name="fitParams_"/> provenant du constructeur et initialise <see cref="roi_"/>, <see cref="sigmaX_"/>, <see cref="sigmaY_"/>, <see cref="theta_"/>.</summary>
+	/// <summary>Lit <see cref="fitParams_"/> provenant du constructeur et initialise <see cref="roi_"/>,
+	/// <see cref="sigmaX_"/>, <see cref="sigmaY_"/> et <see cref="theta_"/>.</summary>
 	void parseParams() override;
 
 	//==================== Levenberg–Marquardt ====================
@@ -133,6 +136,5 @@ protected:
 	/// <param name="ws">Espace de travail pour Levenberg–Marquardt.</param>
 	/// <returns>\f$R^2\in[0,1]\f$ (retourne 0 en cas de NaN).</returns>
 	[[nodiscard]] double computeR2(LM_Workspace& ws) const;
-
 };
 } // namespace palm_tracer::fit

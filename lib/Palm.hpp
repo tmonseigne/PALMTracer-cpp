@@ -1,8 +1,9 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file Palm.hpp
-/// \brief  Classe principale pour la détection de points lumineux dans une image 2D en niveaux de gris,
+/// <summary>Classe principale pour la détection de points lumineux dans une image 2D en niveaux de gris,
 /// basée sur une décomposition en ondelettes et un post-traitement par segmentation.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 26/03/2025.

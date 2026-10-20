@@ -22,7 +22,7 @@ BSpline3D::BSpline3D(const std::vector<double>& volume, const Vec3I& dim, const 
 
 	// Padding final par réflexion
 	const auto Pad = static_cast<size_t>(std::floor(static_cast<double>(degree_) / 2.0));
-	dimPadded_     = {.x = dim_.x + 2 * Pad + 1, .y = dim_.y + 2 * Pad + 1, .z = dim_.z + 2 * Pad + 1};
+	dimPadded_     = {.x = dim_.x + (2 * Pad) + 1, .y = dim_.y + (2 * Pad) + 1, .z = dim_.z + (2 * Pad) + 1};
 
 	// Générer les indices réfléchis pour chaque dimension
 	const auto IdxX = matrix::ReflectIndex1D(dim_.x, Pad),
@@ -35,8 +35,8 @@ BSpline3D::BSpline3D(const std::vector<double>& volume, const Vec3I& dim, const 
 	for (size_t z = 0; z < dimPadded_.z; ++z) {
 		for (size_t y = 0; y < dimPadded_.y; ++y) {
 			for (size_t x = 0; x < dimPadded_.x; ++x) {
-				const size_t SrcIndex   = (IdxZ[z] * dim_.y + IdxY[y]) * dim_.x + IdxX[x],
-				             DstIndex   = (z * dimPadded_.y + y) * dimPadded_.x + x;
+				const size_t SrcIndex   = (((IdxZ[z] * dim_.y) + IdxY[y]) * dim_.x) + IdxX[x],
+				             DstIndex   = (((z * dimPadded_.y) + y) * dimPadded_.x) + x;
 				coeffsPadded_[DstIndex] = coeffs_[SrcIndex];
 			}
 		}
@@ -66,9 +66,9 @@ double BSpline3D::Eval(const double x, const size_t deg) // NOLINT(misc-no-recur
 			               B      = 0.5;
 
 			const double X2 = x * x;
-			if (x >= -A && x < -B) { return Edge + A * x + B * X2; }
-			if (x >= -B && x < B) { return Center - x * x; }
-			if (x >= B && x < A) { return Edge - A * x + B * X2; }
+			if (x >= -A && x < -B) { return Edge + (A * x) + (B * X2); }
+			if (x >= -B && x < B) { return Center - (x * x); }
+			if (x >= B && x < A) { return Edge - (A * x) + (B * X2); }
 			break;
 		}
 		case 3: {
@@ -80,15 +80,15 @@ double BSpline3D::Eval(const double x, const size_t deg) // NOLINT(misc-no-recur
 			               D = 0.5;
 
 			const double X2 = x * x, X3 = X2 * x;
-			if (x >= -2 && x < -1) { return Edge + A * x + X2 + C * X3; }
-			if (x >= -1 && x < 0) { return Center - X2 - D * X3; }
-			if (x >= 0 && x < 1) { return Center - X2 + D * X3; }
-			if (x >= 1 && x < 2) { return Edge - A * x + X2 - C * X3; }
+			if (x >= -2 && x < -1) { return Edge + (A * x) + X2 + (C * X3); }
+			if (x >= -1 && x < 0) { return Center - X2 - (D * X3); }
+			if (x >= 0 && x < 1) { return Center - X2 + (D * X3); }
+			if (x >= 1 && x < 2) { return Edge - (A * x) + X2 - (C * X3); }
 			break;
 		}
 		default: {
 			const double HalfDegP1 = (static_cast<double>(deg) + 1.0) / 2.0;
-			return ((x + HalfDegP1) * Eval(x + 0.5, deg - 1) + (HalfDegP1 - x) * Eval(x - 0.5, deg - 1)) / static_cast<double>(deg);
+			return (((x + HalfDegP1) * Eval(x + 0.5, deg - 1)) + ((HalfDegP1 - x) * Eval(x - 0.5, deg - 1))) / static_cast<double>(deg);
 		}
 	}
 
@@ -109,16 +109,16 @@ void BSpline3D::getFinalCoeff()
 			const double Dy = static_cast<double>(j) / 3.0;
 			for (size_t k = 0; k < N; ++k) {
 				const double Dz  = static_cast<double>(k) / 3.0;
-				const size_t Row = i * 16 + j * 4 + k;
+				const size_t Row = (i * 16) + (j * 4) + k;
 
 				for (size_t l = 0; l < N; ++l) {
 					const double Px = std::pow(Dx, l);
 					for (size_t m = 0; m < N; ++m) {
 						const double Py = std::pow(Dy, m);
 						for (size_t n = 0; n < N; ++n) {
-							const double Pz     = std::pow(Dz, n);
-							const size_t Col    = l * 16 + m * 4 + n;
-							a[Row * Size + Col] = Px * Py * Pz;
+							const double Pz       = std::pow(Dz, n);
+							const size_t Col      = (l * 16) + (m * 4) + n;
+							a[(Row * Size) + Col] = Px * Py * Pz;
 						}
 					}
 				}
@@ -144,19 +144,19 @@ void BSpline3D::getFinalCoeff()
 
 				size_t idx = 0;
 				for (size_t k = 0; k < N; ++k) {
-					const size_t Zi = z * 3 + k;
+					const size_t Zi = (z * 3) + k;
 					for (size_t j = 0; j < N; ++j) {
-						const size_t Yi = y * 3 + j;
+						const size_t Yi = (y * 3) + j;
 						for (size_t i = 0; i < N; ++i, ++idx) {
-							const size_t Xi = x * 3 + i;
-							temp[idx]       = Up[(Zi * upDim.y + Yi) * upDim.x + Xi];
+							const size_t Xi = (x * 3) + i;
+							temp[idx]       = Up[(((Zi * upDim.y) + Yi) * upDim.x) + Xi];
 						}
 					}
 				}
 
 				// Résolution x = A \ temp
 				std::array<double, Size> localCoeff{};
-				for (size_t i = 0; i < Size; ++i) { for (size_t j = 0; j < Size; ++j) { localCoeff[i] += aInv[i * Size + j] * temp[j]; } }
+				for (size_t i = 0; i < Size; ++i) { for (size_t j = 0; j < Size; ++j) { localCoeff[i] += aInv[(i * Size) + j] * temp[j]; } }
 
 				// Stockage dans coeffsFinal_
 				std::ranges::copy(localCoeff, coeffsFinal_.begin() + base);
@@ -181,7 +181,7 @@ void BSpline3D::getPolesFilter()
 			case 1: {
 				if (lambda_[i] <= std::numeric_limits<double>::epsilon()) { c0_[i] = 1.0; }
 				else {
-					const double R = 1.0 + 1.0 / (2.0 * lambda_[i]) - std::sqrt(1.0 + 4.0 * lambda_[i]) / (2.0 * lambda_[i]);
+					const double R = 1.0 + (1.0 / (2.0 * lambda_[i])) - (std::sqrt(1.0 + (4.0 * lambda_[i])) / (2.0 * lambda_[i]));
 					filters_[i].emplace_back(R);
 					c0_[i] = -1.0 / lambda_[i];
 				}
@@ -189,7 +189,7 @@ void BSpline3D::getPolesFilter()
 			}
 			case 2: {
 				if (lambda_[i] <= std::numeric_limits<double>::epsilon()) {
-					filters_[i].emplace_back(2.0 * std::numbers::sqrt2 - 3.0);
+					filters_[i].emplace_back((2.0 * std::numbers::sqrt2) - 3.0);
 					c0_[i] = 8.0;
 				}
 				else { throw std::invalid_argument("Even degree 2 with nonzero lambda_[i] not supported"); }
@@ -285,9 +285,9 @@ void BSpline3D::applyFilter(const size_t axis, const std::vector<std::complex<do
 
 	std::vector<std::complex<double>> tmpCoeffs, tmpLine(N), filteredLine;
 	tmpCoeffs.reserve(coeffs_.size());
-	for (auto& c : coeffs_) { tmpCoeffs.emplace_back(c); }
+	for (const auto& C : coeffs_) { tmpCoeffs.emplace_back(C); }
 
-	auto getId = [&](const size_t x, const size_t y, const size_t z) { return (z * Ny + y) * Nx + x; };
+	const auto getId = [&](const size_t x, const size_t y, const size_t z) { return (((z * Ny) + y) * Nx) + x; };
 
 	for (const auto& Zi : poles) {
 		const auto K0                     = static_cast<size_t>(std::ceil(K0Tol / std::log(std::abs(Zi))));
@@ -336,7 +336,7 @@ void BSpline3D::interpolateHDR()
 			for (size_t x = 0; x < dim_.x; ++x) {
 				const double X = static_cast<double>(x) + 1;
 
-				coeffsHDR_[(z * dim_.y + y) * dim_.x + x] = interpolate_at(X, Y, Z);
+				coeffsHDR_[(((z * dim_.y) + y) * dim_.x) + x] = interpolate_at(X, Y, Z);
 			}
 		}
 	}
@@ -368,7 +368,7 @@ double BSpline3D::interpolate_at(const double x, const double y, const double z)
 				if (Ix < 0 || static_cast<size_t>(Ix) >= dimPadded_.x) { continue; }
 				const double Bx = Eval(x - static_cast<double>(Ix), degree_);
 
-				const size_t Idx = (static_cast<size_t>(Iz) * dimPadded_.y + static_cast<size_t>(Iy)) * dimPadded_.x + static_cast<size_t>(Ix);
+				const size_t Idx = (((static_cast<size_t>(Iz) * dimPadded_.y) + static_cast<size_t>(Iy)) * dimPadded_.x) + static_cast<size_t>(Ix);
 				result += coeffsPadded_[Idx] * Bx * Byz;
 			}
 		}
@@ -387,25 +387,25 @@ std::vector<std::complex<double>> BSpline3D::solvePolynomial(const std::vector<d
 		             A2 = coeffs[2] / coeffs[0],
 		             A3 = coeffs[3] / coeffs[0];
 
-		const double Q = (3.0 * A2 - A1 * A1) / 9.0,
-		             R = (9.0 * A1 * A2 - 27.0 * A3 - 2.0 * A1 * A1 * A1) / 54.0;
-		const double D = Q * Q * Q + R * R;
+		const double Q = ((3.0 * A2) - (A1 * A1)) / 9.0,
+		             R = ((9.0 * A1 * A2) - (27.0 * A3) - (2.0 * A1 * A1 * A1)) / 54.0;
+		const double D = (Q * Q * Q) + (R * R);
 
 		std::vector<std::complex<double>> roots;
 
 		if (D >= 0) {
 			const double S = std::cbrt(R + std::sqrt(D));
 			const double T = std::cbrt(R - std::sqrt(D));
-			roots.emplace_back(-A1 / 3.0 + (S + T));
-			roots.emplace_back(-A1 / 3.0 - (S + T) / 2.0 + std::complex<double>(0, std::numbers::sqrt3 * (S - T) / 2.0));
-			roots.emplace_back(-A1 / 3.0 - (S + T) / 2.0 - std::complex<double>(0, std::numbers::sqrt3 * (S - T) / 2.0));
+			roots.emplace_back((-A1 / 3.0) + (S + T));
+			roots.emplace_back((-A1 / 3.0) - ((S + T) / 2.0) + std::complex<double>(0, std::numbers::sqrt3 * (S - T) / 2.0));
+			roots.emplace_back((-A1 / 3.0) - ((S + T) / 2.0) - std::complex<double>(0, std::numbers::sqrt3 * (S - T) / 2.0));
 		}
 		else {
 			const double Theta = std::acos(R / std::sqrt(-Q * Q * Q));
 			const double X     = 2.0 * std::sqrt(-Q);
-			roots.emplace_back(X * std::cos(Theta / 3.0) - A1 / 3.0);
-			roots.emplace_back(X * std::cos((Theta + 2.0 * std::numbers::pi) / 3.0) - A1 / 3.0);
-			roots.emplace_back(X * std::cos((Theta + 4.0 * std::numbers::pi) / 3.0) - A1 / 3.0);
+			roots.emplace_back((X * std::cos(Theta / 3.0)) - (A1 / 3.0));
+			roots.emplace_back((X * std::cos((Theta + (2.0 * std::numbers::pi)) / 3.0)) - (A1 / 3.0));
+			roots.emplace_back((X * std::cos((Theta + (4.0 * std::numbers::pi)) / 3.0)) - (A1 / 3.0));
 		}
 		return roots;
 	}
@@ -420,7 +420,7 @@ std::vector<std::complex<double>> BSpline3D::solvePolynomial(const std::vector<d
 		roots[k]            = R0 * std::complex(std::cos(Theta), std::sin(Theta));
 	}
 
-	auto eval = [&](const std::complex<double> x) {
+	const auto eval = [&](const std::complex<double> x) {
 		std::complex val = 0.0;
 		for (size_t i = 0; i <= Degree; ++i) { val += coeffs[i] * std::pow(x, static_cast<int>(Degree - i)); }
 		return val;

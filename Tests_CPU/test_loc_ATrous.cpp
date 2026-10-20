@@ -20,7 +20,7 @@ void PrintTo(const ImageCase& value, std::ostream* stream) { *stream << value.na
 
 /// <summary>Scénarios indépendants de reconstruction et de convolution.</summary>
 class ATrousImageTests : public testing::TestWithParam<ImageCase> { };
-}
+} // namespace
 
 #pragma region Decomposition
 /// <summary>La somme de tous les plans, résidu compris, reconstruit chaque pixel de l'image.</summary>
@@ -28,7 +28,7 @@ TEST_P(ATrousImageTests, ReconstructsInput)
 {
 	const Vec2I Dim = GetParam().dim;
 	std::vector<uint16_t> input(Dim.GetSize());
-	for (size_t i = 0; i < input.size(); ++i) { input[i] = static_cast<uint16_t>((i * 37 + 11) % 4096); }
+	for (size_t i = 0; i < input.size(); ++i) { input[i] = static_cast<uint16_t>(((i * 37) + 11) % 4096); }
 	const ATrous Decomposition(input.data(), Dim);
 	std::vector<double> reconstructed(input.size(), 0);
 	for (const auto& Plane : Decomposition.wDecomp_) {
@@ -44,7 +44,7 @@ TEST_P(ATrousImageTests, FirstLevelMatchesDirectConvolution)
 	constexpr std::array<double, 5> Kernel{1.0 / 16, 4.0 / 16, 6.0 / 16, 4.0 / 16, 1.0 / 16};
 	const Vec2I Dim = GetParam().dim;
 	std::vector<uint16_t> input(Dim.GetSize());
-	for (size_t i = 0; i < input.size(); ++i) { input[i] = static_cast<uint16_t>((i * 37 + 11) % 4096); }
+	for (size_t i = 0; i < input.size(); ++i) { input[i] = static_cast<uint16_t>(((i * 37) + 11) % 4096); }
 	const ATrous Decomposition(input.data(), Dim);
 	for (size_t y = 0; y < Dim.y; ++y) {
 		for (size_t x = 0; x < Dim.x; ++x) {
@@ -53,10 +53,10 @@ TEST_P(ATrousImageTests, FirstLevelMatchesDirectConvolution)
 				for (int dx = -2; dx <= 2; ++dx) {
 					const auto X = static_cast<size_t>(std::clamp(static_cast<int>(x) + dx, 0, static_cast<int>(Dim.x) - 1));
 					const auto Y = static_cast<size_t>(std::clamp(static_cast<int>(y) + dy, 0, static_cast<int>(Dim.y) - 1));
-					smoothed += Kernel[static_cast<size_t>(dx + 2)] * Kernel[static_cast<size_t>(dy + 2)] * input[Y * Dim.x + X];
+					smoothed += Kernel[static_cast<size_t>(dx + 2)] * Kernel[static_cast<size_t>(dy + 2)] * input[(Y * Dim.x) + X];
 				}
 			}
-			EXPECT_NEAR(Decomposition.wDecomp_[0][y * Dim.x + x], input[y * Dim.x + x] - smoothed, 1e-10);
+			EXPECT_NEAR(Decomposition.wDecomp_[0][(y * Dim.x) + x], input[(y * Dim.x) + x] - smoothed, 1e-10);
 		}
 	}
 }

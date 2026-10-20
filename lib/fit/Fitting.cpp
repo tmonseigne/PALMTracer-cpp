@@ -111,9 +111,9 @@ void Fitting::preCompute(const size_t x, const size_t y, std::vector<Pixel>& gri
 
 	const int Half = static_cast<int>(roiHalf_);
 	for (int i = -Half; i <= Half; ++i) {
-		const auto Idx = Half + (i + Half) * roi_;
+		const auto Idx = Half + ((i + Half) * roi_);
 		for (int j = -Half; j <= Half; ++j) {
-			grid[j + Idx] = {.x = x + j, .y = y + i, .v = static_cast<double>(image_[x + j + (y + i) * dim_.x])};
+			grid[j + Idx] = {.x = x + j, .y = y + i, .v = static_cast<double>(image_[x + j + ((y + i) * dim_.x)])};
 			min           = std::min(min, grid[j + Idx].v);
 			max           = std::max(max, grid[j + Idx].v);
 		}

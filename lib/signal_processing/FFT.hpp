@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file FFT.hpp
-/// \brief Utilitaires pour FFT 3D via FFTW3 : calcul direct et inverse, produit de Fourier croisé.
+/// <summary>Utilitaires pour FFT 3D via FFTW3 : calcul direct et inverse, produit de Fourier croisé.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 02/07/2025.
@@ -88,14 +89,14 @@ inline void FFT3D(const std::vector<double>& in, std::vector<std::complex<double
 			for (size_t x = 0; x < dim.x; ++x) {
 				// Extraire colonne Z pour ce (x, y)
 				for (size_t z = 0; z < dim.z; ++z) {
-					tempZ[z][0] = out[z * Sp + y * dim.x + x].real();
-					tempZ[z][1] = out[z * Sp + y * dim.x + x].imag();
+					tempZ[z][0] = out[(z * Sp) + (y * dim.x) + x].real();
+					tempZ[z][1] = out[(z * Sp) + (y * dim.x) + x].imag();
 				}
 
 				fftw_execute(plan1D);
 
 				// Écrire le résultat
-				for (size_t z = 0; z < dim.z; ++z) { out[z * Sp + y * dim.x + x] = std::complex(bufferZ[z][0], bufferZ[z][1]); }
+				for (size_t z = 0; z < dim.z; ++z) { out[(z * Sp) + (y * dim.x) + x] = std::complex(bufferZ[z][0], bufferZ[z][1]); }
 			}
 		}
 		fftw_destroy_plan(plan1D);

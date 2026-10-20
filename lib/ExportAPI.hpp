@@ -1,14 +1,13 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file ExportAPI.hpp
-/// \brief Définition de macros pour l'exportation des symboles de bibliothèque dynamique.
+/// <summary>Définition de macros pour l'exportation des symboles de bibliothèque dynamique.
 ///
-/// Ce fichier configure la macro `EXPORT_API` en fonction du système de compilation.
-/// Elle permet de marquer les fonctions ou classes exportées depuis une DLL (sous Windows) ou
-/// d'assurer la visibilité des symboles sur d'autres plateformes (Unix, macOS).
-/// Une convention d'appel `CALL_CONV` est également définie pour garantir la compatibilité
-/// avec les appels inter-langages ou inter-modules.
+/// <c>PT_EXPORT</c> assure la visibilité des symboles exportés selon la plateforme.
+/// <c>PT_EXTERN_C</c> impose la liaison C, et <c>PT_API</c> combine ces deux marqueurs pour les points d’entrée de la DLL.
+/// <c>PT_CALL</c> est actuellement vide et laisse la convention d’appel par défaut du compilateur.
 ///
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 16/05/2025.
@@ -18,14 +17,14 @@
 
 #pragma once
 
-// Détection de plateforme et définition de la macro EXPORT_API
+// Détection de plateforme et définition de la visibilité des symboles.
 #if defined(_WIN32) || defined(_WIN64)
 #define PT_EXPORT __declspec(dllexport)
 #else
 #define PT_EXPORT __attribute__((visibility("default")))
 #endif
 
-// Recommandé : cdecl partout (simplifie Python/Unix)
+// Marqueurs de convention d’appel et de liaison pour les points d’entrée publics.
 #define PT_CALL
 #define PT_EXTERN_C extern "C"
 #define PT_API PT_EXTERN_C PT_EXPORT

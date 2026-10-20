@@ -1,12 +1,13 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file SplineFit.hpp
-/// \brief Classe d'ajustement par spline.
+/// <summary>Classe d'ajustement par spline.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 04/06/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
-/// \remarks Ce code est inspiré de <c>SMAP</c> <a href="https://github.com/jries/SMAP">github.com/jries/SMAP</a> et adapté au cadre <see cref="palm_tracer"/>.
+/// <remarks>Ce code est inspiré de <c>SMAP</c> <a href="https://github.com/jries/SMAP">github.com/jries/SMAP</a> et adapté au cadre <see cref="palm_tracer"/>.</remarks>
 ///
 ///-------------------------------------------------------------------------------------------------
 

@@ -19,7 +19,7 @@ void PrintTo(const PSFCase& value, std::ostream* stream) { *stream << value.name
 
 /// <summary>Scénarios analytiques de PSF, indépendants des images de microscopie.</summary>
 class PSFTests : public testing::TestWithParam<PSFCase> { };
-}
+} // namespace
 
 #pragma region PSF
 /// <summary>La gaussienne isotrope suit sa valeur analytique et est paire autour de son centre.</summary>
@@ -27,7 +27,7 @@ TEST_P(PSFTests, IsotropicValue)
 {
 	const auto& [name, x, y, theta] = GetParam();
 	constexpr double Offset         = 7, Amplitude = 120, Sigma = 1.3;
-	const double Expected           = Offset + Amplitude * std::exp(-(x * x + y * y) / (2 * Sigma * Sigma));
+	const double Expected           = Offset + (Amplitude * std::exp(-((x * x) + (y * y)) / (2 * Sigma * Sigma)));
 	EXPECT_NEAR(PSF(Offset, Amplitude, x, y, Sigma), Expected, 1e-12);
 	EXPECT_DOUBLE_EQ(PSF(Offset, Amplitude, x, y, Sigma), PSF(Offset, Amplitude, -x, -y, Sigma));
 }
@@ -46,7 +46,7 @@ TEST_P(PSFTests, CircularAnisotropicMatchesIsotropic)
 TEST_P(PSFTests, IsotropicGradientMatchesFiniteDifferences)
 {
 	const auto& [name, x, y, theta] = GetParam();
-	const std::array<double, 5> Params{7, 120, 0, 0, 1.3};
+	constexpr std::array<double, 5> Params{7, 120, 0, 0, 1.3};
 	std::vector<double> gradient(5, -12345);
 	Deriv(gradient, Params[1], x, y, Params[4], true);
 	const auto Evaluate   = [x, y](const auto& p) { return PSF(p[0], p[1], x - p[2], y - p[3], p[4]); };

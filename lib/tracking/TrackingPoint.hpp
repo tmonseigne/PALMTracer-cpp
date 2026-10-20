@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file TrackingPoint.hpp
-/// \brief Structures de travail pour les points, plages de plans et associations de trajectoires.
+/// <summary>Structures de travail pour les points, plages de plans et associations de trajectoires.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 28/05/2026.
@@ -28,7 +29,7 @@ struct TrackingPoint {
 	[[nodiscard]] double GetSqDistance(const TrackingPoint& other) const
 	{
 		const auto P = point.posPx_ - other.point.posPx_;
-		return P.x * P.x + P.y * P.y;
+		return (P.x * P.x) + (P.y * P.y);
 	}
 };
 

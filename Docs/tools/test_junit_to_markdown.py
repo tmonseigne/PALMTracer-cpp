@@ -41,7 +41,7 @@ class JunitReportTests(unittest.TestCase):
 
 	# --------------------------------------------------
 	def test_html_diagnostics_are_escaped(self):
-		"""Le contenu d'une sortie de test ne devient jamais du HTML executable."""
+		"""Le contenu d'une sortie de test ne devient jamais du HTML exécutable."""
 		root = ET.fromstring('''<testsuite><testcase name="Value&lt;double&gt;">
             <failure>&lt;script&gt;unexpected&lt;/script&gt;</failure></testcase></testsuite>''')
 		content = render_report([parse_report(root, Path("local/test.xml"))])
@@ -79,7 +79,7 @@ class JunitReportTests(unittest.TestCase):
 
 	# --------------------------------------------------
 	def test_source_file_attribute(self):
-		"""Privilegie le fichier indique par GoogleTest et normalise les chemins Windows."""
+		"""Privilégie le fichier indiqué par GoogleTest et normalise les chemins Windows."""
 		root = ET.fromstring('<testsuite><testcase name="Value" file="C:\\repo\\test_math.cpp"/></testsuite>')
 		self.assertEqual(parse_report(root, Path("test.xml")).cases[0].file, "test_math.cpp")
 
@@ -111,7 +111,7 @@ class JunitReportTests(unittest.TestCase):
 
 	# --------------------------------------------------
 	def test_failed_variants_are_expanded(self):
-		"""Ouvre automatiquement les variantes lorsqu'un diagnostic doit être consulte."""
+		"""Ouvre automatiquement les variantes lorsqu'un diagnostic doit être consulté."""
 		root = ET.fromstring('''<testsuite name="Suite">
             <testcase name="Value/One"><failure>Unexpected</failure></testcase>
             <testcase name="Value/Two"><skipped/></testcase></testsuite>''')

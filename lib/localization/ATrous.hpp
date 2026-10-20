@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file ATrous.hpp
-/// \brief  Classe pour la décomposition en ondelettes 2D selon l'algorithme "à trous".
+/// <summary>Classe pour la décomposition en ondelettes 2D selon l'algorithme "à trous".
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 26/03/2025.
@@ -19,7 +20,8 @@
 
 namespace palm_tracer::localization {
 /// <summary>Classe pour la décomposition en ondelettes 2D selon l'algorithme "à trous".</summary>
-/// <remarks> Cette classe réalise la transformation en ondelettes sur une image 2D, notamment avec une décomposition multi-échelle utilisant des filtrages spline B3.
+/// <remarks>Cette classe réalise la transformation en ondelettes sur une image 2D,
+/// notamment avec une décomposition multi-échelle utilisant des filtrages spline B3.
 /// Elle gère la mémoire interne, les calculs de convolutions et la gestion des plans.</remarks>
 class ATrous {
 public:
@@ -59,7 +61,7 @@ private:
 	/// <param name="i">Indice de ligne (doit être valide).</param>
 	/// <param name="j">Indice de colonne (doit être valide).</param>
 	/// <returns>Offset 1D dans le tableau.</returns>
-	[[nodiscard]] size_t offset(const size_t i, const size_t j) const { return i * dim_.x + j; }
+	[[nodiscard]] size_t offset(const size_t i, const size_t j) const { return (i * dim_.x) + j; }
 
 	/// <summary>Applique le filtre B3-spline 2D à l'image d'entrée pour générer une image de sortie à une certaine échelle.</summary>
 	/// <param name="in">Image d'entrée (provenant d'un niveau de décomposition précédent).</param>

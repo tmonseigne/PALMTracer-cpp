@@ -180,7 +180,7 @@ std::vector<double> Spline::GetPSF(std::vector<std::vector<double>>& beads) cons
 
 	std::vector mu(beadSize_, 0.0);
 	// Fonction locale de calcul de moyenne à travers les billes
-	auto beadMean = [&](const bool update) {
+	const auto BeadMean = [&](const bool update) {
 		#pragma omp parallel for
 		for (int i = 0; i < static_cast<int>(beadSize_); ++i) {
 			double sum   = 0.0;
@@ -199,7 +199,7 @@ std::vector<double> Spline::GetPSF(std::vector<std::vector<double>>& beads) cons
 	};
 
 	//Création de la PSF de référence moyenne sur le volume complet
-	beadMean(false);
+	BeadMean(false);
 
 	// Première passe sur l'intégralité du Z.
 	const auto Shifts = Align(mu, beads, false);
@@ -208,7 +208,7 @@ std::vector<double> Spline::GetPSF(std::vector<std::vector<double>>& beads) cons
 	GetOverlap(BeadsNorm, Shifts, weights, norm, false); // Suppression des outliers
 
 	// Recalcul de la PSF de référence moyenne des billes utilisables sur le volume complet (mais évite d'ajouter des nan)
-	beadMean(true);
+	BeadMean(true);
 
 	// Seconde passe sur le sous-ensemble d'intérêt au niveau du Z.
 	Align(mu, beads, true);                                                            // Alignement basé sur le sous-ensemble d'intérêt au niveau du Z.
@@ -217,7 +217,7 @@ std::vector<double> Spline::GetPSF(std::vector<std::vector<double>>& beads) cons
 	for (size_t i = 0; i < 3; ++i) { GetOverlap(beads, Shifts, weights, norm, true); } // Lancement 3 fois pour mettre à jour le poids plusieurs fois
 	for (auto& b : beads) { matrix::Scale(b, 1 / norm); }                              // Scale des billes
 
-	beadMean(false);
+	BeadMean(false);
 	return mu;
 }
 
@@ -392,7 +392,7 @@ void Spline::GetOverlap(const std::vector<std::vector<double>>& beads, const std
 	}
 
 	// Si b est invalide (pas assez de points), fallback complet
-	const double CutOff = std::isfinite(b) ? Mu + 2.0 * b : std::numeric_limits<double>::infinity();
+	const double CutOff = std::isfinite(b) ? Mu + (2.0 * b) : std::numeric_limits<double>::infinity();
 
 	// Maj des bons indices et poids finaux
 	for (size_t i = 0; i < Nbeads; ++i) { weights[i] = (std::isnan(rms[i]) || rms[i] > CutOff) ? std::numeric_limits<double>::quiet_NaN() : 1.0 / rms[i]; }

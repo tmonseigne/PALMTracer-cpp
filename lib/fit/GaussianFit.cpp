@@ -4,14 +4,15 @@
 #include <array>
 #include <cmath>
 #include <execution>
+#include <limits>
 #include <numbers>
 #include <numeric>
 #include <ranges>
 #include <stdexcept>
 #include <vector>
 
-#include "signal_processing/Matrix.hpp"
 #include "GaussianModel.hpp"
+#include "signal_processing/Matrix.hpp"
 
 namespace palm_tracer::fit {
 namespace {
@@ -23,8 +24,11 @@ GaussianModel PrepareModel(const fit_mode mode, const std::vector<double>& p, co
 		case fit_mode::gaussian_2d_sigma: return {p[0], p[1], p[4], true};
 		case fit_mode::gaussian_3d_fixed: return {p[0], p[1], p[4], p[5], theta, false};
 		case fit_mode::gaussian_3d_theta: return {p[0], p[1], p[4], p[5], p[6], true};
-		default: throw std::invalid_argument("GaussianFit : mode non gaussien.");
+		case fit_mode::none:
+		case fit_mode::spline_3d_emccd:
+		case fit_mode::spline_3d_scmos: throw std::invalid_argument("GaussianFit : mode non gaussien.");
 	}
+	return {0, 0, 1, false}; // Pour éviter un warning de compilation, jamais atteint.
 }
 } // namespace
 
@@ -78,7 +82,7 @@ void GaussianFit::Fit(const localization::SegmentationInfo& infos, std::array<do
 		// Calcul de l'inverse de la matrice de courbure α
 		ws.alphaR = ws.alpha; // Copie de α
 		for (size_t i = 0; i < nParams_; ++i) {
-			const size_t Diagonal = i * nParams_ + i;
+			const size_t Diagonal = (i * nParams_) + i;
 			// Une colonne de Jacobien nulle (angle à l'isotropie, par exemple) impose un pas nul.
 			// Ce paramètre est réévalué à chaque itération et redevient libre dès qu'il est identifiable.
 			ws.alphaR[Diagonal] = ws.alpha[Diagonal] == 0.0 ? 1.0 : (1.0 + lambda) * ws.alpha[Diagonal];
@@ -97,7 +101,7 @@ void GaussianFit::Fit(const localization::SegmentationInfo& infos, std::array<do
 		// Calcul du candidat (p + δp)
 		std::ranges::fill(ws.deltaP, 0.0);
 		for (size_t i = 0; i < nParams_; ++i) {
-			for (size_t j = 0; j < nParams_; ++j) { ws.deltaP[i] += ws.alphaRi[i * nParams_ + j] * ws.beta[j]; } // δP = αRi × β
+			for (size_t j = 0; j < nParams_; ++j) { ws.deltaP[i] += ws.alphaRi[(i * nParams_) + j] * ws.beta[j]; } // δP = αRi × β
 			if (!std::isfinite(ws.deltaP[i])) {
 				fill(infos, point, infos.x_, infos.y_, infos.z_);
 				return;
@@ -129,7 +133,7 @@ void GaussianFit::Fit(const localization::SegmentationInfo& infos, std::array<do
 		}
 
 		// m = δPᵀ × (λ × δP + β)
-		for (size_t i = 0; i < nParams_; ++i) { ws.lBetaDeltaP[i] = lambda * ws.deltaP[i] + ws.beta[i]; }
+		for (size_t i = 0; i < nParams_; ++i) { ws.lBetaDeltaP[i] = (lambda * ws.deltaP[i]) + ws.beta[i]; }
 		m = std::inner_product(ws.deltaP.begin(), ws.deltaP.end(), ws.lBetaDeltaP.begin(), 0.0);
 
 		// Calcul de l'erreur pour l'essai en cours
@@ -214,16 +218,16 @@ double GaussianFit::lm(LM_Workspace& ws) const
 {
 	std::ranges::fill(ws.alpha, 0.0);
 	std::ranges::fill(ws.beta, 0.0);
-	double err = 0.0;
-	const auto Model = PrepareModel(mode_, ws.p[1], sigmaX_, theta_);
-	const bool Circular = mode_ == fit_mode::gaussian_3d_theta && ws.p[1][4] == ws.p[1][5];
+	double err          = 0.0;
+	const auto Model    = PrepareModel(mode_, ws.p[1], sigmaX_, theta_);
+	const bool Circular = mode_ == fit_mode::gaussian_3d_theta && std::abs(ws.p[1][4] - ws.p[1][5]) <= std::numeric_limits<double>::epsilon();
 
 	for (size_t i = 0; i < n_; ++i) {
-		const double X = static_cast<double>(ws.grid[i].x), Y = static_cast<double>(ws.grid[i].y);
-		ws.hat[i]      = Model.Evaluate(X - ws.p[1][2], Y - ws.p[1][3], ws.grad);         // PSF théorique au pixel (x, y) selon les paramètres p
-		ws.delta[i]    = ws.grid[i].v - ws.hat[i];   // Résidu (∂) = mesure - prédiction
-		ws.deltaW[i]   = ws.weight[i] * ws.delta[i]; // Résidu pondéré (W × ∂)
-		err += ws.delta[i] * ws.deltaW[i];           // mise à jour du Chi² (somme des carrés pondérée W × ∂ × ∂)
+		const auto X = static_cast<double>(ws.grid[i].x), Y = static_cast<double>(ws.grid[i].y);
+		ws.hat[i]      = Model.Evaluate(X - ws.p[1][2], Y - ws.p[1][3], ws.grad); // PSF théorique au pixel (x, y) selon les paramètres p
+		ws.delta[i]    = ws.grid[i].v - ws.hat[i];                                // Résidu (∂) = mesure - prédiction
+		ws.deltaW[i]   = ws.weight[i] * ws.delta[i];                              // Résidu pondéré (W × ∂)
+		err += ws.delta[i] * ws.deltaW[i];                                        // mise à jour du Chi² (somme des carrés pondérée W × ∂ × ∂)
 		// L'angle reste indéterminé à l'isotropie, y compris en présence d'un résidu d'arrondi.
 		if (Circular) { ws.grad[6] = 0.0; }
 
@@ -249,13 +253,13 @@ double GaussianFit::gain(const LM_Workspace& ws) const
 		quad += ws.deltaP[i] * ti;        // δPᵀ × α × δP
 		lin += ws.deltaP[i] * ws.beta[i]; // δPᵀ × β
 	}
-	return 2.0 * lin - quad; // 2 × δPᵀ × β - δPᵀ × α × δP
+	return (2.0 * lin) - quad; // 2 × δPᵀ × β - δPᵀ × α × δP
 }
 
 //-------------------------------------------------------------------------------------------------
 double GaussianFit::getError(const LM_Workspace& ws) const
 {
-	double res = 0.0;
+	double res       = 0.0;
 	const auto Model = PrepareModel(mode_, ws.pTry, sigmaX_, theta_);
 	for (size_t i = 0; i < n_; ++i) {
 		const double Dx = ws.grid[i].v - Model.Evaluate(static_cast<double>(ws.grid[i].x) - ws.pTry[2], static_cast<double>(ws.grid[i].y) - ws.pTry[3]);

@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file SegmentationInfo.hpp
-/// \brief  Classe de lien pour traiter les données issues de la segmentation d'images 2D.
+/// <summary>Classe de lien pour traiter les données issues de la segmentation d'images 2D.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 26/03/2025.

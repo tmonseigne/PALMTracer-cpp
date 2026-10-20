@@ -10,6 +10,11 @@
 #include "Structs.hpp"
 #include "fit/AstigFit.hpp"
 
+// Compatibilité avec les anciennes versions de GoogleTest.
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
+
 namespace palm_tracer::fit {
 constexpr double SAMPLING       = 1.0;
 constexpr double PIXEL_SIZE     = 160.0;
@@ -35,15 +40,15 @@ struct EstimateTestParams {
 
 constexpr std::array<EstimateTestParams, 9> ESTIMATE_CASES = {
 	{
-		{-600.0, -500.0, "BelowLowerBound"},
-		{-500.0, -500.0, "AtLowerBound"},
-		{-499.0, -499.0, "NearLowerBound"},
-		{-123.4, -123.4, "NegativeBetweenGridPoints"},
-		{0.0, 0.0, "AtCenter"},
-		{123.4, 123.4, "PositiveBetweenGridPoints"},
-		{499.0, 499.0, "NearUpperBound"},
-		{500.0, 500.0, "AtUpperBound"},
-		{600.0, 500.0, "AboveUpperBound"}
+		{.observedZ = -600.0, .expectedZ = -500.0, .name = "BelowLowerBound"},
+		{.observedZ = -500.0, .expectedZ = -500.0, .name = "AtLowerBound"},
+		{.observedZ = -499.0, .expectedZ = -499.0, .name = "NearLowerBound"},
+		{.observedZ = -123.4, .expectedZ = -123.4, .name = "NegativeBetweenGridPoints"},
+		{.observedZ = 0.0, .expectedZ = 0.0, .name = "AtCenter"},
+		{.observedZ = 123.4, .expectedZ = 123.4, .name = "PositiveBetweenGridPoints"},
+		{.observedZ = 499.0, .expectedZ = 499.0, .name = "NearUpperBound"},
+		{.observedZ = 500.0, .expectedZ = 500.0, .name = "AtUpperBound"},
+		{.observedZ = 600.0, .expectedZ = 500.0, .name = "AboveUpperBound"}
 	}
 };
 
@@ -92,7 +97,7 @@ static double SigmaModel(const std::array<double, 5>& p, const double z)
 	const double Z0   = p[0], W = p[1], C3 = p[2], C4 = p[3], A = p[4];
 	const double U    = (z - Z0) / W;
 	const double U2   = U * U;
-	const double Poly = 1.0 + U2 + C3 * (U2 * U) + C4 * (U2 * U2);
+	const double Poly = 1.0 + U2 + (C3 * (U2 * U)) + (C4 * (U2 * U2));
 	const double G    = std::sqrt(std::max(0.0, Poly));
 	return (SAMPLING / PIXEL_SIZE) * A * G;
 }
@@ -107,7 +112,7 @@ static std::vector<Vec3D> GetDataSet(const astig_model& model = REF_MODEL, const
 
 	for (size_t i = 0; i < n; ++i) {
 		const double T  = (n > 1) ? static_cast<double>(i) / static_cast<double>(n - 1) : 0.0;
-		const double Z  = -zMax + T * (2.0 * zMax);
+		const double Z  = -zMax + (T * (2.0 * zMax));
 		const double Sx = SigmaModel(model[0], Z) + noise(rng);
 		const double Sy = SigmaModel(model[1], Z) + noise(rng);
 		res[i]          = Vec3D{.x = Sx, .y = Sy, .z = Z};
@@ -199,10 +204,6 @@ TEST_P(AstigFitDomainTests, CalibrationInterval)
 	EXPECT_EQ(AstigFitAccess::isValidAxis(coefficients, limits[0], limits[1]), valid);
 }
 
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
-
 INSTANTIATE_TEST_SUITE_P(
 	Domains, AstigFitDomainTests,
 	testing::Values(
@@ -256,7 +257,7 @@ TEST_P(AstigFitEstimateTests, EstimateWithinLimits)
 	const double PredictedX = SigmaModel(ESTIMATE_MODEL[0], Res.x), PredictedY = SigmaModel(ESTIMATE_MODEL[1], Res.x);
 	const double Dx         = PredictedX - Sigma.x, Dy                         = PredictedY - Sigma.y;
 	const double Rx         = Dx / PredictedX, Ry                              = Dy / PredictedY;
-	EXPECT_NEAR(Res.y, 1.0 / (1.0 + (Rx * Rx + Ry * Ry) / (2 * 0.2 * 0.2)), 1e-12);
+	EXPECT_NEAR(Res.y, 1.0 / (1.0 + (((Rx * Rx) + (Ry * Ry)) / (2 * 0.2 * 0.2))), 1e-12);
 	EXPECT_GE(Res.y, 0.0);
 	EXPECT_LE(Res.y, 1.0);
 	if (std::abs(observedZ) > 500.0) { EXPECT_LT(Res.y, 1.0); }
@@ -266,13 +267,9 @@ TEST_P(AstigFitEstimateTests, EstimateWithinLimits)
 		const double GridZ  = std::round(observedZ / 5.0) * 5.0; // Grille de 201 points sur [-500, 500].
 		const double GridDx = SigmaModel(ESTIMATE_MODEL[0], GridZ) - Sigma.x;
 		const double GridDy = SigmaModel(ESTIMATE_MODEL[1], GridZ) - Sigma.y;
-		EXPECT_LT(Dx * Dx + Dy * Dy, GridDx * GridDx + GridDy * GridDy);
+		EXPECT_LT((Dx * Dx) + (Dy * Dy), (GridDx * GridDx) + (GridDy * GridDy));
 	}
 }
-
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
 
 INSTANTIATE_TEST_SUITE_P(
 	AxialLimits, AstigFitEstimateTests, testing::ValuesIn(ESTIMATE_CASES),
@@ -330,9 +327,9 @@ TEST(AstigFitTests, QualityScaleInvariant)
 	const Vec2D Second = Rescaled.Estimate(ESTIMATE_MODEL, {.x = 2 * Sigma.x, .y = 2 * Sigma.y}, {-500, 500});
 	EXPECT_DOUBLE_EQ(First.x, Second.x);
 	EXPECT_DOUBLE_EQ(First.y, Second.y);
-	const double Rx = Sigma.x / SigmaModel(ESTIMATE_MODEL[0], First.x) - 1,
-	             Ry = Sigma.y / SigmaModel(ESTIMATE_MODEL[1], First.x) - 1;
-	EXPECT_NEAR(First.y, 1.0 / (1.0 + (Rx * Rx + Ry * Ry) / 0.08), 1e-14);
+	const double Rx = (Sigma.x / SigmaModel(ESTIMATE_MODEL[0], First.x)) - 1,
+	             Ry = (Sigma.y / SigmaModel(ESTIMATE_MODEL[1], First.x)) - 1;
+	EXPECT_NEAR(First.y, 1.0 / (1.0 + (((Rx * Rx) + (Ry * Ry)) / 0.08)), 1e-14);
 }
 
 //-------------------------------------------------------------------------------------------------

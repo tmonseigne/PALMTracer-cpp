@@ -10,6 +10,7 @@
 #include "Structs.hpp"
 
 namespace palm_tracer::localization {
+namespace {
 //-------------------------------------------------------------------------------------------------
 struct Filter {
 	bool enabled;
@@ -17,7 +18,7 @@ struct Filter {
 };
 
 // Création d'un tableau constexpr avec tous à false + 0.0 sauf
-static constexpr std::array<Filter, N_LOCALIZATIONS> MakeDefaultFilter()
+constexpr std::array<Filter, N_LOCALIZATIONS> MakeDefaultFilter()
 {
 	std::array<Filter, N_LOCALIZATIONS> params{};
 	// Paramètres à filtrer
@@ -33,7 +34,9 @@ constexpr std::array<Filter, N_LOCALIZATIONS> SEGMENTATION_FILTER = MakeDefaultF
 /// <param name="value">Valeur.</param>
 /// <param name="lessThan">Comparatif (True si plus petit que, False sinon).</param>
 /// <returns>True si le filtre actif rejette la valeur pour le sens de comparaison demandé.</returns>
-static bool CheckFilter(const Filter& f, const double value, const bool lessThan) { return f.enabled && (lessThan ? value <= f.value : value >= f.value); }
+bool CheckFilter(const Filter& f, const double value, const bool lessThan) { return f.enabled && (lessThan ? value <= f.value : value >= f.value); }
+
+} // namespace
 
 //-------------------------------------------------------------------------------------------------
 Segmentation2D::Segmentation2D(const ATrous& decomposition, const double threshold, const double ratio)
@@ -85,12 +88,12 @@ void Segmentation2D::FilterData()
 		}
 		for (size_t i = 1; i < dim_.x - 1; ++i) {
 			if (map_[i] != 0) { bounds[map_[i]] = true; }
-			if (map_[(dim_.y - 1) * dim_.x + i] != 0) { bounds[map_[(dim_.y - 1) * dim_.x + i]] = true; }
+			if (map_[((dim_.y - 1) * dim_.x) + i] != 0) { bounds[map_[((dim_.y - 1) * dim_.x) + i]] = true; }
 		}
 	}
 
 	// Première passe : filtrage par critère
-	auto isFiltered = [&](const SegmentationInfo& info, const size_t index) {
+	const auto isFiltered = [&](const SegmentationInfo& info, const size_t index) {
 		const double Mean_Surf = info.mean_ * info.surf_;
 
 		return
@@ -155,7 +158,7 @@ void Segmentation2D::ComputeStatistics()
 		info.x_ /= info.mean_;
 		info.y_ /= info.mean_;
 		info.intensity_ = info.mean_;
-		info.stdev_     = std::sqrt(std::max(0.0, (info.stdev_ - info.mean_ * info.mean_ / info.surf_) / info.surf_));
+		info.stdev_     = std::sqrt(std::max(0.0, (info.stdev_ - (info.mean_ * info.mean_ / info.surf_)) / info.surf_));
 		info.mean_ /= info.surf_;
 	}
 }
@@ -208,7 +211,7 @@ void Segmentation2D::filterStructureWS()
 					for (size_t jj = std::max(j, static_cast<size_t>(1)) - 1; jj <= std::min(j + 1, dim_.x - 1); ++jj) {
 						if (ii == i && jj == j) { continue; }
 
-						const uint32_t NeighborSid = map_[ii * dim_.x + jj];
+						const uint32_t NeighborSid = map_[(ii * dim_.x) + jj];
 						if (NeighborSid != 0 && NeighborSid != Sid) {
 							if (output_[idx] > s.maxPotentialWithNeighbor) {
 								s.maxPotentialWithNeighbor = output_[idx];
@@ -272,7 +275,7 @@ void Segmentation2D::filterStructureWS()
 	// Marquage d'un seul point par structure pour Watershed final
 	std::ranges::fill(map_, 0);
 	for (size_t i = 0; i < wsFusions.size(); ++i) {
-		if (wsFusions[i].structToBecome == i) { map_[wsFusions[i].x * dim_.x + wsFusions[i].y] = wsFusions[i].newIndex; }
+		if (wsFusions[i].structToBecome == i) { map_[(wsFusions[i].x * dim_.x) + wsFusions[i].y] = wsFusions[i].newIndex; }
 	}
 }
 
@@ -289,7 +292,7 @@ void Segmentation2D::getLocalMax()
 				//test if it is a new maximum from the vicinity
 				for (size_t ii = i == 0 ? 0 : i - 1; ii <= std::min(i + 1, dim_.y - 1) && !err; ++ii) {
 					for (size_t jj = j == 0 ? 0 : j - 1; jj <= std::min(j + 1, dim_.x - 1) && !err; ++jj) {
-						if (ii != i || jj != j) { if (output_[idx] < output_[ii * dim_.x + jj]) { err = true; } }
+						if (ii != i || jj != j) { if (output_[idx] < output_[(ii * dim_.x) + jj]) { err = true; } }
 					}
 				}
 				if (!err) { //new maximum found
@@ -359,11 +362,11 @@ void Segmentation2D::watershed()
 				const int Ny = static_cast<int>(P.y) + dy;
 				if ((dx == 0 && dy == 0) || Ny < 0 || Ny >= static_cast<int>(dim_.x)) { continue; }
 
-				const size_t Nid = Nx * dim_.x + Ny;
+				const size_t Nid = (Nx * dim_.x) + Ny;
 				if (output_[Nid] > THRESHOLD && map_[Nid] == 0) {
-					const double Cle = -output_[Nid] + static_cast<double>(it) * EPSILON;
+					const double Cle = -output_[Nid] + (static_cast<double>(it) * EPSILON);
 					heap.emplace(Pixel{.x = static_cast<size_t>(Nx), .y = static_cast<size_t>(Ny), .v = Cle});
-					map_[Nid] = map_[P.x * dim_.x + P.y];
+					map_[Nid] = map_[(P.x * dim_.x) + P.y];
 				}
 			}
 		}

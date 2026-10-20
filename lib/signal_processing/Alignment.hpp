@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file Alignment.hpp
-/// \brief Classe pour l'alignement optique d'une pile d'images 3D avec déformation non linéaire.
+/// <summary>Classe pour l'alignement optique d'une pile d'images 3D avec déformation non linéaire.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 02/06/2025.
@@ -54,18 +55,18 @@ protected:
 		double weight; ///< Poids associé au pixel source.
 	};
 
-	const uint16_t *highSNR_{},                           ///< Image de référence alignée (fort SNR).
-	               *lowSNR_{},                            ///< Image de référence désalignée (faible SNR).
-	               *input_{};                             ///< Pointeur vers la pile d'entrée à aligner.
-	uint16_t* output_{};                                  ///< Pointeur vers la zone de sortie (résultat de l'alignement).
-	Vec3I dim_{};                                         ///< Dimensions du volume 3D (width=X, height=Y, depth=Z).
-	size_t sizeIm_{},                                     ///< Nombre total de pixels d'une image (height × width).
-	       sizeStack_{},                                  ///< Nombre total de pixels (height × width × planes).
-	       upsampling_{},                                 ///< Taux de suréchantillonnage.
-	       upsampling2_{};                                ///< Taux de suréchantillonnage au carré.
-	std::array<std::array<double, 10>, 2> factors_{};     ///< Coefficients du modèle de déformation polynomiale.
-	std::vector<size_t> offsets_;                         ///< Débuts des listes CSR, suivis du nombre total de contributions.
-	std::vector<Contribution> contributions_;            ///< Contributions contiguës, triées par indice source pour chaque cible.
+	const uint16_t *highSNR_{},                       ///< Image de référence alignée (fort SNR).
+	               *lowSNR_{},                        ///< Image de référence désalignée (faible SNR).
+	               *input_{};                         ///< Pointeur vers la pile d'entrée à aligner.
+	uint16_t* output_{};                              ///< Pointeur vers la zone de sortie (résultat de l'alignement).
+	Vec3I dim_{};                                     ///< Dimensions du volume 3D (width=X, height=Y, depth=Z).
+	size_t sizeIm_{},                                 ///< Nombre total de pixels d'une image (height × width).
+	       sizeStack_{},                              ///< Nombre total de pixels (height × width × planes).
+	       upsampling_{},                             ///< Taux de suréchantillonnage.
+	       upsampling2_{};                            ///< Taux de suréchantillonnage au carré.
+	std::array<std::array<double, 10>, 2> factors_{}; ///< Coefficients du modèle de déformation polynomiale.
+	std::vector<size_t> offsets_;                     ///< Débuts des listes CSR, suivis du nombre total de contributions.
+	std::vector<Contribution> contributions_;         ///< Contributions contiguës, triées par indice source pour chaque cible.
 
 	/// <summary>Initialise la mémoire de sortie à 0.</summary>
 	void initOutput() const { for (size_t i = 0; i < sizeStack_; ++i) { output_[i] = 0; } }

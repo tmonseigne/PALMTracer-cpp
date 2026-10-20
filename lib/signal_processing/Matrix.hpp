@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file Matrix.hpp
-/// \brief Fonctions utiles pour la manipulation des matrices et volumes 3D.
+/// <summary>Fonctions utiles pour la manipulation des matrices et volumes 3D.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 01/07/2025.

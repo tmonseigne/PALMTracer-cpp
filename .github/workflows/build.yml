@@ -58,6 +58,9 @@ jobs:
           echo "LIBRARY_PATH=/opt/homebrew/opt/libomp/lib" >> $GITHUB_ENV
 
       - name: Configure CMake with vcpkg toolchain
+        env:
+          # Remplace le fournisseur x-gha obsolète défini par run-vcpkg.
+          VCPKG_BINARY_SOURCES: 'clear;default,readwrite'
         run: >
           cmake -B build -S .
           -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
@@ -111,15 +114,7 @@ jobs:
       - name: Install Doxygen
         run: sudo apt-get update && sudo apt-get install -y doxygen graphviz cloc
 
-      - name: Download test results
-        uses: actions/download-artifact@v8
-        with:
-          pattern: test-results-*
-          path: out/test-reports
-
-      - name: Generate test report
-        run: python3 Docs/tools/junit_to_markdown.py out/test-reports/*/*.xml --output Docs/reports/test_report.md
-
+      # Publie les rapports locaux versionnés sans les remplacer par les résultats CI.
       - name: Generate Doxygen Documentation
         run: doxygen Doxyfile
 

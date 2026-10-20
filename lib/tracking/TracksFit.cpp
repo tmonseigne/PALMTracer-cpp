@@ -217,17 +217,17 @@ void TracksFit::base(const std::vector<double>& p)
 	switch (mode_) {
 		case fit_mode::linear: { // p = [a, b],  f(x) = a * x + b
 			const double A = p[0], B = p[1];
-			for (size_t i = 0; i < fitLength_; ++i) { f_[i] = A * x_[i] + B; }
+			for (size_t i = 0; i < fitLength_; ++i) { f_[i] = (A * x_[i]) + B; }
 			break;
 		}
 		case fit_mode::power: { // p = [α, a, b],  f(x) = a * x^α + b
 			const double P = p[0], A = p[1], B = p[2];
-			for (size_t i = 0; i < fitLength_; ++i) { f_[i] = A * std::pow(x_[i], P) + B; }
+			for (size_t i = 0; i < fitLength_; ++i) { f_[i] = (A * std::pow(x_[i], P)) + B; }
 			break;
 		}
 		case fit_mode::exponential: { // p = [X0, a, Tau, b],  f(x) = (b - a) * exp(-(x - x_0)/(tau)) + a
 			const double X0 = p[0], A = p[1], Tau = p[2], Factor = p[3] - A;
-			for (size_t i = 0; i < fitLength_; ++i) { f_[i] = Factor * std::exp(-(x_[i] - X0) / Tau) + A; }
+			for (size_t i = 0; i < fitLength_; ++i) { f_[i] = (Factor * std::exp(-(x_[i] - X0) / Tau)) + A; }
 			break;
 		}
 	}
@@ -342,9 +342,9 @@ void TracksFit::pivot(const size_t index)
 	for (size_t i = index + 1, k = 1; i < pSize_; ++i, ++k) {
 		if (max >= maxRow[k]) { continue; }
 		// Échanger toutes les colonnes de index .. pSize_ (incluant RHS à la colonne pSize_)
-		auto a = std::span(alpha_[index]).subspan(index);
-		auto b = std::span(alpha_[i]).subspan(index);
-		std::ranges::swap_ranges(a, b);
+		const auto A = std::span(alpha_[index]).subspan(index);
+		const auto B = std::span(alpha_[i]).subspan(index);
+		std::ranges::swap_ranges(A, B);
 		max = maxRow[k];
 	}
 }

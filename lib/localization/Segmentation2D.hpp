@@ -1,8 +1,9 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file Segmentation2D.hpp
-/// \brief  Classe de traitement d'images segmentées en 2D, permettant l'allocation de structures,
+/// <summary>Classe de traitement d'images segmentées en 2D, permettant l'allocation de structures,
 /// le calcul de statistiques et le filtrage basé sur des critères morphologiques et d'intensité.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 26/03/2025.

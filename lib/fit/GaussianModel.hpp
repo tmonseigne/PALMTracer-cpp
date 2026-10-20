@@ -34,9 +34,9 @@ public:
 	[[nodiscard]] double Evaluate(double x, double y, std::span<double> gradient = {}) const;
 
 private:
-	const double offset_, amplitude_; ///< Fond et amplitude de l'état courant.
-	const double sigmaX_, sigmaY_, sigmaX2_, sigmaY2_; ///< Largeurs et carrés préparés.
+	const double offset_, amplitude_;                                        ///< Fond et amplitude de l'état courant.
+	const double sigmaX_, sigmaY_, sigmaX2_, sigmaY2_;                       ///< Largeurs et carrés préparés.
 	const double cosTheta_, sinTheta_, cosTheta2_, sinTheta2_, cosSinTheta_; ///< Constantes de rotation.
-	const bool isotropic_, hasSigma_, hasTheta_; ///< Modèle et composantes libres du gradient.
+	const bool isotropic_, hasSigma_, hasTheta_;                             ///< Modèle et composantes libres du gradient.
 };
 } // namespace palm_tracer::fit

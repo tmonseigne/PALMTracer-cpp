@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file Fitting.hpp
-/// \brief Classe mère pour l'ajustement (fitting) de PSF sur ROI 2D/3D.
+/// <summary>Classe mère pour l'ajustement (fitting) de PSF sur ROI 2D/3D.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 27/05/2025.

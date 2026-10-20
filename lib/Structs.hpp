@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file Structs.hpp
-/// \brief  Fichier de structures nécessaire aux algorithmes.
+/// <summary>Fichier de structures nécessaire aux algorithmes.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 01/07/2025.
@@ -95,7 +96,7 @@ struct Vec3I {
 
 	[[nodiscard]] size_t GetPlaneSize() const { return x * y; }
 	[[nodiscard]] size_t GetSize() const { return x * y * z; }
-	[[nodiscard]] size_t GetIndex(const Vec3I& size) const { return (z * size.y + y) * size.x + x; }
+	[[nodiscard]] size_t GetIndex(const Vec3I& size) const { return (((z * size.y) + y) * size.x) + x; }
 	[[nodiscard]] Vec3I GetMid() const { return Vec3I{.x = x / 2, .y = y / 2, .z = z / 2}; }
 
 	[[nodiscard]] Vec3I Clamp(const Vec3I& other) const
@@ -178,7 +179,7 @@ struct Vec3D {
 		}
 	}
 
-	[[nodiscard]] double Norm() const { return std::sqrt(x * x + y * y + z * z); }
+	[[nodiscard]] double Norm() const { return std::sqrt((x * x) + (y * y) + (z * z)); }
 };
 
 

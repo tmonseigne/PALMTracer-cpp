@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file TracksFit.hpp
-/// \brief Classe d'ajustement non linéaire (Levenberg–Marquardt) pour séries 1D.
+/// <summary>Classe d'ajustement non linéaire (Levenberg–Marquardt) pour séries 1D.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 13/10/2025.

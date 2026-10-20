@@ -38,7 +38,7 @@ inline void LoadTiff3D(const char* filename, std::vector<uint16_t>& data, palm_t
 		std::vector<uint16_t> buf(static_cast<size_t>(w) * h);
 
 		for (uint32_t row = 0; row < h; ++row) {
-			if (TIFFReadScanline(tif, buf.data() + static_cast<size_t>(row) * w, row) < 0) {
+			if (TIFFReadScanline(tif, buf.data() + (static_cast<size_t>(row) * w), row) < 0) {
 				TIFFClose(tif);
 				throw std::runtime_error("Erreur de lecture scanline");
 			}
@@ -70,7 +70,7 @@ inline void SaveTiff3D(const char* filename, const uint16_t* data, const palm_tr
 		TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
 
 		for (uint32_t y = 0; y < dim.y; ++y) {
-			const uint16_t* row_data = data + z * dim.x * dim.y + y * dim.x;
+			const uint16_t* row_data = data + (z * dim.x * dim.y) + (y * dim.x);
 			TIFFWriteScanline(tif, const_cast<uint16_t*>(row_data), y);
 		}
 

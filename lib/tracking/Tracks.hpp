@@ -1,9 +1,10 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file Tracks.hpp
-/// \brief Définition de la classe <see cref="Tracks"/> permettant de manipuler et de reconnecter des trajectoires issues du suivi de points (tracking) en
+/// <summary>Définition de la classe <see cref="Tracks"/> permettant de manipuler et de reconnecter des trajectoires issues du suivi de points (tracking) en
 /// microscopie.
 /// La classe fournit des méthodes de chargement, de recomposition et d'export des trajectoires au format tableau 2D.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 30/09/2025.
@@ -151,8 +152,8 @@ protected:
 
 	/// <summary>Candidat de reconnexion avec indice d'origine et coût déjà calculé.</summary>
 	struct ReconnectionCandidate {
-		size_t target;                       ///< Indice du segment cible dans t_.
-		std::pair<size_t, double> cost;       ///< Coût fourni uniquement par getReconnectionCost.
+		size_t target;                  ///< Indice du segment cible dans t_.
+		std::pair<size_t, double> cost; ///< Coût fourni uniquement par getReconnectionCost.
 	};
 
 	/// <summary>Génère et trie les reconnexions admissibles d'un segment, indépendamment des conflits gloutons.</summary>
@@ -166,7 +167,7 @@ protected:
 	/// <remarks>Le tri stable utilise exclusivement getReconnectionCost. Les filtres taken et indice après la tête
 	/// sont appliqués lors des connexions séquentielles. Les appels concurrents utilisent des listes de sortie distinctes.</remarks>
 	[[nodiscard]] bool getReconnectionCandidates(const std::vector<size_t>& starts, size_t current, size_t mode,
-	                                            size_t maxDuration, double maxSpeed, std::vector<ReconnectionCandidate>& candidates) const;
+	                                             size_t maxDuration, double maxSpeed, std::vector<ReconnectionCandidate>& candidates) const;
 
 	/// <summary>Convertit un tableau brut <c>(Id, Plane, X, Y)</c> en liste de points de tracking triée par plan puis par identifiant.</summary>
 	/// <param name="points">Tableau d'entrée contigu de doubles contenant 4 valeurs par point : <c>Id</c>, <c>Plane</c>, <c>X</c>, <c>Y</c>.</param>

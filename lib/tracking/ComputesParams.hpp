@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file ComputesParams.hpp
-/// \brief Définition des paramètres de calcul utilisés par le module de suivi et d'analyse des trajectoires.
+/// <summary>Définition des paramètres de calcul utilisés par le module de suivi et d'analyse des trajectoires.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 21/10/2025.

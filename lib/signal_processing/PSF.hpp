@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file PSF.hpp
-/// \brief Fonctions utiles pour le calcul des PSF.
+/// <summary>Fonctions utiles pour le calcul des PSF.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 01/07/2025.

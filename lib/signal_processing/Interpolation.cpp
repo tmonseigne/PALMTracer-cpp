@@ -14,14 +14,14 @@ namespace palm_tracer {
 //-------------------------------------------------------------------------------------------------
 double Interpolation3D::cubic1D(const std::array<double, 4>& v, const double x)
 {
-	return v[1] + 0.5 * x * (v[2] - v[0] + x * (2.0 * v[0] - 5.0 * v[1] + 4.0 * v[2] - v[3] + x * (3.0 * (v[1] - v[2]) + v[3] - v[0])));
+	return v[1] + (0.5 * x * (v[2] - v[0] + (x * ((2.0 * v[0]) - (5.0 * v[1]) + (4.0 * v[2]) - v[3] + (x * ((3.0 * (v[1] - v[2])) + v[3] - v[0]))))));
 }
 
 double Interpolation3D::cubic3D(const std::vector<double>& volume, const Vec3I& dim, const Vec3D& pos)
 {
-	auto get = [&](const int x, const int y, const int z) -> double {
+	const auto get = [&](const int x, const int y, const int z) -> double {
 		if (x < 0 || x >= static_cast<int>(dim.x) || y < 0 || y >= static_cast<int>(dim.y) || z < 0 || z >= static_cast<int>(dim.z)) { return 0.0; }
-		return volume[(z * dim.y + y) * dim.x + x];
+		return volume[(((z * dim.y) + y) * dim.x) + x];
 	};
 
 	const int Ix = static_cast<int>(std::floor(pos.x));
@@ -51,17 +51,17 @@ double Interpolation3D::cubic3D(const std::vector<double>& volume, const Vec3I& 
 double Interpolation3D::cubicWeight1D(double x, const double a)
 {
 	x = std::abs(x);
-	if (x <= 1.0) { return (a + 2) * x * x * x - (a + 3) * x * x + 1; }
-	if (x < 2.0) { return a * x * x * x - 5 * a * x * x + 8 * a * x - 4 * a; }
+	if (x <= 1.0) { return ((a + 2) * x * x * x) - ((a + 3) * x * x) + 1; }
+	if (x < 2.0) { return (a * x * x * x) - (5 * a * x * x) + (8 * a * x) - (4 * a); }
 	return 0.0;
 }
 
 //-------------------------------------------------------------------------------------------------
 double Interpolation3D::cubicWeight3D(const std::vector<double>& volume, const Vec3I& dim, const Vec3D& pos)
 {
-	auto get = [&](const int x, const int y, const int z) -> double {
+	const auto get = [&](const int x, const int y, const int z) -> double {
 		if (x < 0 || x >= static_cast<int>(dim.x) || y < 0 || y >= static_cast<int>(dim.y) || z < 0 || z >= static_cast<int>(dim.z)) { return 0.0; }
-		return volume[(z * dim.y + y) * dim.x + x];
+		return volume[(((z * dim.y) + y) * dim.x) + x];
 	};
 
 	const int Ix = static_cast<int>(std::floor(pos.x)),
@@ -85,9 +85,9 @@ double Interpolation3D::cubicWeight3D(const std::vector<double>& volume, const V
 //-------------------------------------------------------------------------------------------------
 double Interpolation3D::trilinear(const std::vector<double>& volume, const Vec3I& dim, const Vec3D& pos)
 {
-	auto get = [&](const int x, const int y, const int z) -> double {
+	const auto get = [&](const int x, const int y, const int z) -> double {
 		if (x < 0 || x >= static_cast<int>(dim.x) || y < 0 || y >= static_cast<int>(dim.y) || z < 0 || z >= static_cast<int>(dim.z)) { return 0.0; }
-		return volume[(z * dim.y + y) * dim.x + x];
+		return volume[(((z * dim.y) + y) * dim.x) + x];
 	};
 
 	const int X0 = static_cast<int>(std::floor(pos.x)),
@@ -98,24 +98,24 @@ double Interpolation3D::trilinear(const std::vector<double>& volume, const Vec3I
 	const double Dx = pos.x - X0, Dy = pos.y - Y0, Dz = pos.z - Z0;
 
 	// Trilinear interpolation
-	const double C00 = get(X0, Y0, Z0) * (1 - Dx) + get(X1, Y0, Z0) * Dx,
-	             C01 = get(X0, Y0, Z1) * (1 - Dx) + get(X1, Y0, Z1) * Dx,
-	             C10 = get(X0, Y1, Z0) * (1 - Dx) + get(X1, Y1, Z0) * Dx,
-	             C11 = get(X0, Y1, Z1) * (1 - Dx) + get(X1, Y1, Z1) * Dx;
+	const double C00 = (get(X0, Y0, Z0) * (1 - Dx)) + (get(X1, Y0, Z0) * Dx),
+	             C01 = (get(X0, Y0, Z1) * (1 - Dx)) + (get(X1, Y0, Z1) * Dx),
+	             C10 = (get(X0, Y1, Z0) * (1 - Dx)) + (get(X1, Y1, Z0) * Dx),
+	             C11 = (get(X0, Y1, Z1) * (1 - Dx)) + (get(X1, Y1, Z1) * Dx);
 
-	const double C0 = C00 * (1 - Dy) + C10 * Dy,
-	             C1 = C01 * (1 - Dy) + C11 * Dy;
+	const double C0 = (C00 * (1 - Dy)) + (C10 * Dy),
+	             C1 = (C01 * (1 - Dy)) + (C11 * Dy);
 
-	return C0 * (1 - Dz) + C1 * Dz;
+	return (C0 * (1 - Dz)) + (C1 * Dz);
 }
 
 
 //-------------------------------------------------------------------------------------------------
 double Interpolation3D::spline3D(const std::vector<double>& coeffs, const Vec3I& dim, const Vec3D& pos)
 {
-	auto get = [&](const int x, const int y, const int z) -> double {
+	const auto get = [&](const int x, const int y, const int z) -> double {
 		if (x < 0 || x >= static_cast<int>(dim.x) || y < 0 || y >= static_cast<int>(dim.y) || z < 0 || z >= static_cast<int>(dim.z)) { return 0.0; }
-		return coeffs[(z * dim.y + y) * dim.x + x];
+		return coeffs[(((z * dim.y) + y) * dim.x) + x];
 	};
 
 	const int Ix = static_cast<int>(std::floor(pos.x)),
@@ -190,9 +190,9 @@ std::vector<double> Interpolation3D::Upsample(const std::vector<double>& volume,
 	const double Step = 1.0 / factor;
 
 	newDim = {
-		.x = static_cast<size_t>(std::round(static_cast<double>(dim.x - 1) * factor + 1)),
-		.y = static_cast<size_t>(std::round(static_cast<double>(dim.y - 1) * factor + 1)),
-		.z = static_cast<size_t>(std::round(static_cast<double>(dim.z - 1) * factor + 1))
+		.x = static_cast<size_t>(std::round((static_cast<double>(dim.x - 1) * factor) + 1)),
+		.y = static_cast<size_t>(std::round((static_cast<double>(dim.y - 1) * factor) + 1)),
+		.z = static_cast<size_t>(std::round((static_cast<double>(dim.z - 1) * factor) + 1))
 	};
 
 	std::vector out(newDim.GetSize(), 0.0);
@@ -304,7 +304,7 @@ Vec3D Interpolation3D::GetShift(const std::vector<double>& ref, const std::vecto
 
 	// Normalisation par le nombre de voxels valides
 	const size_t Nvalid = std::ranges::count_if(tarHD, [](const double v) { return !std::isnan(v); });
-	for (double& v : spatialG) { v = std::isnan(v) ? NAN : v / static_cast<double>(Nvalid) - 1.0; }
+	for (double& v : spatialG) { v = std::isnan(v) ? NAN : (v / static_cast<double>(Nvalid)) - 1.0; }
 
 
 	// Maximum brut + interpolation locale

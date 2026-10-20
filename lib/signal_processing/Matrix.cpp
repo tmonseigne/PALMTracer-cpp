@@ -170,7 +170,7 @@ double Quantile(const std::vector<double>& data, const double q)
 	// L'index est celui le plus proche du Quantile demandé si l'on veut le quantile précis, il faut interpoler entre les 2 index les plus proches.
 	// const size_t Idx = std::clamp(static_cast<size_t>(pos), static_cast<size_t>(0), filtered.size() - 1);
 	if (Low == High) { return filtered[Low]; }
-	return (1.0 - Alpha) * filtered[Low] + Alpha * filtered[High];
+	return ((1.0 - Alpha) * filtered[Low]) + (Alpha * filtered[High]);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -212,7 +212,7 @@ void Crop(std::vector<double>& data, Vec3I& size, const bool cropX, const bool c
 		.z = static_cast<size_t>(cropZ && size.z > 2 ? 1 : 0)
 	};
 
-	const Vec3I NewSize{.x = size.x - 2 * Offset.x, .y = size.y - 2 * Offset.y, .z = size.z - 2 * Offset.z};
+	const Vec3I NewSize{.x = size.x - (2 * Offset.x), .y = size.y - (2 * Offset.y), .z = size.z - (2 * Offset.z)};
 
 	std::vector<double> crop;
 	crop.reserve(NewSize.GetSize());
@@ -233,7 +233,7 @@ std::vector<double> ExtractSubVolume(const std::vector<double>& data, const Vec3
 {
 	std::vector<double> out;
 	out.reserve(xrange.size() * yrange.size() * zrange.size());
-	for (const size_t Z : zrange) { for (const size_t Y : yrange) { for (const size_t X : xrange) { out.push_back(data[(Z * dim.y + Y) * dim.x + X]); } } }
+	for (const size_t Z : zrange) { for (const size_t Y : yrange) { for (const size_t X : xrange) { out.push_back(data[(((Z * dim.y) + Y) * dim.x) + X]); } } }
 	return out;
 }
 
@@ -275,18 +275,18 @@ bool Cholesky(const std::vector<double>& a, const size_t n, std::vector<double>&
 		for (size_t j = 0; j < i + 1; ++j) {
 			double s = 0;
 			// Calcul de la somme des produits scalaires entre lignes/colonnes précédentes
-			for (size_t k = 0; k < j; ++k) { s += u[i * n + k] * u[j * n + k]; }
+			for (size_t k = 0; k < j; ++k) { s += u[(i * n) + k] * u[(j * n) + k]; }
 
-			if (i == j) {                    // Diagonale
-				if (a[i * n + i] - s >= 0) { // On vérifie que la racine est réelle (matrice définie positive).
-					u[i * n + j] = std::sqrt(a[i * n + i] - s);
-					l[j * n + i] = u[i * n + j];
+			if (i == j) {                      // Diagonale
+				if (a[(i * n) + i] - s >= 0) { // On vérifie que la racine est réelle (matrice définie positive).
+					u[(i * n) + j] = std::sqrt(a[(i * n) + i] - s);
+					l[(j * n) + i] = u[(i * n) + j];
 				}
 				else { return false; } // La matrice n'est pas définie positive → échec
 			}
 			else { // Hors diagonale : calcul classique de la valeur
-				u[i * n + j] = 1.0 / u[j * n + j] * (a[i * n + j] - s);
-				l[j * n + i] = u[i * n + j];
+				u[(i * n) + j] = 1.0 / u[(j * n) + j] * (a[(i * n) + j] - s);
+				l[(j * n) + i] = u[(i * n) + j];
 			}
 		}
 	}
@@ -309,43 +309,43 @@ void InverseGaussJordan(std::vector<double>& in, std::vector<double>& out, const
 	for (size_t i = 0; i < n; ++i) {
 		double scale = 0.0;
 		for (size_t j = 0; j < n; ++j) {
-			const double Value = in[i * n + j];
+			const double Value = in[(i * n) + j];
 			if (!std::isfinite(Value)) { Fail(); }
 			scale = std::max(scale, std::abs(Value));
 		}
 		if (scale == 0.0) { Fail(); }
-		for (size_t j = 0; j < n; ++j) { in[i * n + j] /= scale; }
-		out[i * n + i] = 1.0 / scale;
+		for (size_t j = 0; j < n; ++j) { in[(i * n) + j] /= scale; }
+		out[(i * n) + i] = 1.0 / scale;
 	}
 
 	const double PivotTolerance = std::numeric_limits<double>::epsilon() * static_cast<double>(n);
 	// Élimination de Gauss-Jordan avec pivot partiel.
 	for (size_t i = 0; i < n; ++i) {
 		size_t pivotRow = i;
-		for (size_t j = i + 1; j < n; ++j) { if (std::abs(in[j * n + i]) > std::abs(in[pivotRow * n + i])) { pivotRow = j; } }
-		if (!std::isfinite(in[pivotRow * n + i]) || std::abs(in[pivotRow * n + i]) <= PivotTolerance) { Fail(); }
+		for (size_t j = i + 1; j < n; ++j) { if (std::abs(in[(j * n) + i]) > std::abs(in[(pivotRow * n) + i])) { pivotRow = j; } }
+		if (!std::isfinite(in[(pivotRow * n) + i]) || std::abs(in[(pivotRow * n) + i]) <= PivotTolerance) { Fail(); }
 		if (pivotRow != i) {
 			for (size_t j = 0; j < n; ++j) {
-				std::swap(in[i * n + j], in[pivotRow * n + j]);
-				std::swap(out[i * n + j], out[pivotRow * n + j]);
+				std::swap(in[(i * n) + j], in[(pivotRow * n) + j]);
+				std::swap(out[(i * n) + j], out[(pivotRow * n) + j]);
 			}
 		}
-		const double Pivot_Inv = 1.0 / in[i * n + i];
+		const double Pivot_Inv = 1.0 / in[(i * n) + i];
 
 		// Normalisation de la ligne i
 		for (size_t j = 0; j < n; ++j) {
-			in[i * n + j] *= Pivot_Inv;
-			out[i * n + j] *= Pivot_Inv;
+			in[(i * n) + j] *= Pivot_Inv;
+			out[(i * n) + j] *= Pivot_Inv;
 		}
 
 		// Élimination des autres lignes
 		for (size_t j = 0; j < n; ++j) {
 			if (j != i) {
-				const double Factor = in[j * n + i];
+				const double Factor = in[(j * n) + i];
 
 				for (size_t k = 0; k < n; ++k) {
-					in[j * n + k] -= Factor * in[i * n + k];
-					out[j * n + k] -= Factor * out[i * n + k];
+					in[(j * n) + k] -= Factor * in[(i * n) + k];
+					out[(j * n) + k] -= Factor * out[(i * n) + k];
 				}
 			}
 		}
@@ -367,19 +367,19 @@ void InverseLU(std::vector<double>& in, std::vector<double>& out, const size_t n
 		for (size_t i = 0; i <= j; ++i) {
 			//deal with ii-1 in the sum, set sum(kk=0->ii-1) when ii=0 to zero
 			if (i > 0) {
-				for (size_t k = 0; k <= i - 1; ++k) { tmp1 += in[i + k * n] * in[k + j * n]; }
-				in[i + j * n] -= tmp1;
+				for (size_t k = 0; k <= i - 1; ++k) { tmp1 += in[i + (k * n)] * in[k + (j * n)]; }
+				in[i + (j * n)] -= tmp1;
 				tmp1 = 0;
 			}
 		}
 
 		for (size_t i = j + 1; i < n; ++i) {
 			if (j > 0) {
-				for (size_t k = 0; k <= j - 1; ++k) { tmp1 += in[i + k * n] * in[k + j * n]; }
-				in[i + j * n] = (1 / in[j + j * n]) * (in[i + j * n] - tmp1);
-				tmp1          = 0;
+				for (size_t k = 0; k <= j - 1; ++k) { tmp1 += in[i + (k * n)] * in[k + (j * n)]; }
+				in[i + (j * n)] = (1 / in[j + (j * n)]) * (in[i + (j * n)] - tmp1);
+				tmp1            = 0;
 			}
-			else { in[i + j * n] = (1 / in[j + j * n]) * in[i + j * n]; }
+			else { in[i + (j * n)] = (1 / in[j + (j * n)]) * in[i + (j * n)]; }
 		}
 	}
 
@@ -393,18 +393,18 @@ void InverseLU(std::vector<double>& in, std::vector<double>& out, const size_t n
 		for (size_t i = 1; i < n; ++i) {
 			if (i == num) { b = 1; }
 			else { b = 0; }
-			for (size_t j = 0; j <= i - 1; ++j) { tmp1 += in[i + j * n] * y[j]; }
+			for (size_t j = 0; j <= i - 1; ++j) { tmp1 += in[i + (j * n)] * y[j]; }
 			y[i] = static_cast<double>(b) - tmp1;
 			tmp1 = 0;
 		}
 
 		// calculate out
-		out[n - 1 + num * n] = y[n - 1] / in[(n - 1) + (n - 1) * n];
+		out[n - 1 + (num * n)] = y[n - 1] / in[(n - 1) + ((n - 1) * n)];
 
 		for (int i = static_cast<int>(n) - 2; i >= 0; --i) {
-			for (size_t j = i + 1; j < n; ++j) { tmp1 += in[i + j * n] * out[j + num * n]; }
-			out[i + num * n] = (1 / in[i + i * n]) * (y[i] - tmp1);
-			tmp1             = 0;
+			for (size_t j = i + 1; j < n; ++j) { tmp1 += in[i + (j * n)] * out[j + (num * n)]; }
+			out[i + (num * n)] = (1 / in[i + (i * n)]) * (y[i] - tmp1);
+			tmp1               = 0;
 		}
 	}
 }
@@ -413,7 +413,7 @@ void InverseLU(std::vector<double>& in, std::vector<double>& out, const size_t n
 std::vector<size_t> ReflectionIndices(const size_t n, const size_t k0)
 {
 	std::vector<size_t> base;
-	base.reserve(2 * n - 2);
+	base.reserve((2 * n) - 2);
 	for (size_t i = 0; i < n; ++i) { base.push_back(i); }
 	for (size_t i = n - 2; i > 0; --i) { base.push_back(i); }
 
@@ -427,16 +427,16 @@ std::vector<size_t> ReflectIndex1D(const size_t n, const size_t pad)
 {
 	// Construction du motif réfléchi
 	std::vector<size_t> base;
-	base.reserve(2 * n - 2);
+	base.reserve((2 * n) - 2);
 	for (size_t i = 0; i < n; ++i) { base.push_back(i); }
 	for (size_t i = n - 2; i > 0; --i) { base.push_back(i); }
 
-	const size_t Period = 2 * n - 2;
+	const size_t Period = (2 * n) - 2;
 	std::vector<size_t> idx;
-	idx.reserve(n + 2 * pad);
+	idx.reserve(n + (2 * pad));
 
 	for (int i = -static_cast<int>(pad); i <= static_cast<int>(n + pad); ++i) {
-		const size_t Wrapped = (i % Period + Period) % Period;
+		const size_t Wrapped = ((i % Period) + Period) % Period;
 		idx.push_back(base[Wrapped]);
 	}
 

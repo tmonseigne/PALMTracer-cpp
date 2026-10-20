@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file AstigFit.hpp
-/// \brief Classe d'ajustement non linéaire (Levenberg–Marquardt) d'une courbe d'astigmatisme \f$\sigma(z)\f$.
+/// <summary>Classe d'ajustement non linéaire (Levenberg–Marquardt) d'une courbe d'astigmatisme \f$\sigma(z)\f$.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 05/01/2026.

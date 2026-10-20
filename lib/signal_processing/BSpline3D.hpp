@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file BSpline3D.hpp
-/// \brief Représentation et traitement d'un volume 3D par régularisation B-spline de degré quelconque.
+/// <summary>Représentation et traitement d'un volume 3D par régularisation B-spline de degré quelconque.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 17/07/2025.
@@ -60,7 +61,7 @@ public:
 	/// <summary>Remplace les coefficients par une copie indépendante.</summary>
 	BSpline3D& operator=(const BSpline3D&) = default;
 
-	/// <summary>Transfere les buffers sans recopier les volumes ; la source reste destructible et reaffectable.</summary>
+	/// <summary>Transfère les buffers sans recopier les volumes ; la source reste destructible et réaffectable.</summary>
 	BSpline3D(BSpline3D&&) noexcept = default;
 
 	/// <summary>Remplace les coefficients par transfert des buffers, notamment depuis le temporaire de calibration.</summary>

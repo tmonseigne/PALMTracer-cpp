@@ -56,7 +56,7 @@ class CoverageReportTests(unittest.TestCase):
 
 	# --------------------------------------------------
 	def test_drive_source_root(self):
-		"""Accepte la racine C: exportee par OpenCppCoverage, sans la traiter comme un chemin relatif."""
+		"""Accepte la racine C: exportée par OpenCppCoverage, sans la traiter comme un chemin relatif."""
 		xml = ET.Element("coverage")
 		base = self.root.anchor.rstrip("\\/") or "/"
 		ET.SubElement(ET.SubElement(xml, "sources"), "source").text = base
@@ -67,7 +67,7 @@ class CoverageReportTests(unittest.TestCase):
 
 	# --------------------------------------------------
 	def test_render_escapes_source(self):
-		"""Le bilan compte les lignes uniques et protege le HTML du code et des libelles."""
+		"""Le bilan compte les lignes uniques et protège le HTML du code et des libellés."""
 		xml = ET.fromstring('''<coverage><packages><package><classes><class filename="lib/example.cpp">
 			<lines><line number="1" hits="1"/><line number="2" hits="0"/></lines></class></classes></package></packages></coverage>''')
 		report = render_report(parse_coverage(xml, self.root), self.root, "Debug <MSVC>", "date")
@@ -79,7 +79,7 @@ class CoverageReportTests(unittest.TestCase):
 
 	# --------------------------------------------------
 	def test_empty_report(self):
-		"""L'absence de ligne instrumentee n'est pas presentee comme une couverture parfaite."""
+		"""L'absence de ligne instrumentée n'est pas présentée comme une couverture parfaite."""
 		self.assertEqual(parse_coverage(ET.fromstring("<coverage/>"), self.root), [])
 		self.assertIn("N/A line coverage", render_report([], self.root, "empty", "date"))
 

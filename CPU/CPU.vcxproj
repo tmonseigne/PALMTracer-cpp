@@ -11,6 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgInstalledDir>$(MSBuildThisFileDirectory)..\vcpkg_installed\</VcpkgInstalledDir>
     <ProjectName>PALMTracer_CPU</ProjectName>
     <ProjectGuid>{604B0055-C378-4945-86A9-DC0EBC014AAF}</ProjectGuid>
     <RootNamespace>PALMTracer_CPU</RootNamespace>
@@ -24,6 +26,7 @@
     <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -71,7 +74,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>../lib;C:\Git\vcpkg\installed\x64-windows\include;../vcpkg/installed/x64-windows/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
@@ -100,7 +103,7 @@
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>../lib;C:\Git\vcpkg\installed\x64-windows\include;../vcpkg/installed/x64-windows/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>

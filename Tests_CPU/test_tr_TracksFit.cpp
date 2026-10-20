@@ -77,9 +77,9 @@ public:
 double Model(const fit_mode mode, const std::vector<double>& p, const double x)
 {
 	switch (mode) {
-		case fit_mode::linear: return p[0] * x + p[1];
-		case fit_mode::power: return p[1] * std::pow(x, p[0]) + p[2];
-		case fit_mode::exponential: return (p[3] - p[1]) * std::exp(-(x - p[0]) / p[2]) + p[1];
+		case fit_mode::linear: return (p[0] * x) + p[1];
+		case fit_mode::power: return (p[1] * std::pow(x, p[0])) + p[2];
+		case fit_mode::exponential: return ((p[3] - p[1]) * std::exp(-(x - p[0]) / p[2])) + p[1];
 	}
 	return 0;
 }
@@ -100,7 +100,7 @@ class TracksFitModelTests : public testing::TestWithParam<fit_mode> { };
 
 /// <summary>Réutilisation après compactage partiel ou scintillement invalidant le fit.</summary>
 class TracksFitReuseTests : public testing::TestWithParam<std::vector<double>> { };
-}
+} // namespace
 
 #pragma region Fit
 /// <summary>Retrouve une série synthétique ; l'exponentielle est vérifiée en prédictions car x0 et b ne sont pas identifiables séparément.</summary>
@@ -144,7 +144,7 @@ TEST(TracksFitTests, LinearLeastSquares)
 	TracksFit fit(ComputesParams{.mode = fit_mode::linear, .fitLength = 6});
 	const std::vector<double> Input{5, 7, 9, 11, 50, 70};
 	// Solution analytique : moyenne X = 3.5, moyenne Y = 152/6, covariance = 228, variance X = 17.5.
-	constexpr double Slope = 228.0 / 17.5, Intercept = 152.0 / 6.0 - Slope * 3.5;
+	constexpr double Slope = 228.0 / 17.5, Intercept = (152.0 / 6.0) - (Slope * 3.5);
 	EXPECT_GE(fit.Fit(Input), 0);
 	const auto Actual = fit.GetP();
 	ASSERT_EQ(Actual.size(), 2);
@@ -159,7 +159,7 @@ TEST(TracksFitTests, ReconfigureAndReuse)
 	constexpr std::array Modes{fit_mode::linear, fit_mode::power, fit_mode::exponential, fit_mode::linear};
 	for (size_t k = 0; k < Modes.size(); ++k) {
 		SCOPED_TRACE("Configuration " + std::to_string(k));
-		const ComputesParams Params{.mode = Modes[k], .fitLength = 6 + 2 * k};
+		const ComputesParams Params{.mode = Modes[k], .fitLength = 6 + (2 * k)};
 		reused.SetMode(Params);
 		TracksFit fresh(Params);
 		std::vector<double> input(Params.fitLength);
@@ -173,7 +173,7 @@ TEST(TracksFitTests, ReconfigureAndReuse)
 /// <summary>Une fenêtre avec des lags absents ne modifie pas la configuration utilisée par la trajectoire suivante.</summary>
 TEST_P(TracksFitReuseTests, RestoresWindowAfterMissingLags)
 {
-	const ComputesParams Params{.mode = fit_mode::linear, .fitLength = 6};
+	constexpr ComputesParams Params{.mode = fit_mode::linear, .fitLength = 6};
 	TracksFitAccess reused(Params);
 	const double FirstScore = reused.Fit(GetParam());
 	if (std::ranges::count_if(GetParam(), [](const double value) { return value >= 0; }) < 2) { EXPECT_DOUBLE_EQ(FirstScore, -1); }
@@ -202,7 +202,7 @@ INSTANTIATE_TEST_SUITE_P(MissingLags, TracksFitReuseTests,
 /// <summary>Les lags d'origine sont conservés après retrait des valeurs manquantes et le scintillement est réinitialisé.</summary>
 TEST(TracksFitTests, PreservesMissingLagPositions)
 {
-	const ComputesParams Params{.mode = fit_mode::linear, .fitLength = 6};
+	constexpr ComputesParams Params{.mode = fit_mode::linear, .fitLength = 6};
 	TracksFitAccess fit(Params);
 	const auto Data = fit.Prepare({5, -1, 9, 11, -1, 15});
 	EXPECT_EQ(Data[0], (std::vector<double>{1, 3, 4, 6}));

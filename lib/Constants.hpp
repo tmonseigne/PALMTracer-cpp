@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file Constants.hpp
-/// \brief  Fichier de constantes nécessaire aux algorithmes.
+/// <summary>Fichier de constantes nécessaire aux algorithmes.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 18/04/2025.

@@ -6,6 +6,10 @@
 #include <stdexcept>
 #include "signal_processing/Matrix.hpp"
 
+// Compatibilité avec les anciennes versions de GoogleTest.
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
 
 namespace palm_tracer::signal_processing {
 constexpr double EPSILON = 1e-10;
@@ -245,7 +249,7 @@ TEST_P(GaussJordanPivotTests, RecoversIdentity)
 	for (size_t i = 0; i < N; ++i) {
 		for (size_t j = 0; j < N; ++j) {
 			double product = 0.0;
-			for (size_t k = 0; k < N; ++k) { product += Original[i * N + k] * inverse[k * N + j]; }
+			for (size_t k = 0; k < N; ++k) { product += Original[(i * N) + k] * inverse[(k * N) + j]; }
 			EXPECT_NEAR(product, i == j ? 1.0 : 0.0, EPSILON);
 		}
 	}
@@ -253,11 +257,11 @@ TEST_P(GaussJordanPivotTests, RecoversIdentity)
 
 INSTANTIATE_TEST_SUITE_P(Matrices, GaussJordanPivotTests,
                          testing::Values(std::vector<double>{0, 1, 1, 0}, std::vector<double>{1e-20, 1, 1, 1},
-                                         std::vector<double>{1e-100, 0, 0, 1e100}, std::vector<double>{0, 0, 2, 3, 0, 0, 0, 4, 0}),
+	                         std::vector<double>{1e-100, 0, 0, 1e100}, std::vector<double>{0, 0, 2, 3, 0, 0, 0, 4, 0}),
                          ([](const testing::TestParamInfo<std::vector<double>>& info) {
 	                         constexpr std::array Names{"ZeroPivot", "TinyPivot", "DifferentRowScales", "MultipleSwaps"};
 	                         return Names[info.index];
-                         }));
+	                         }));
 
 /// <summary>L'échec efface l'inverse partiel au lieu de laisser des NaN, Inf ou coefficients trompeurs.</summary>
 TEST_P(GaussJordanFailureTests, RejectsInvalidInverse)
@@ -270,16 +274,16 @@ TEST_P(GaussJordanFailureTests, RejectsInvalidInverse)
 
 INSTANTIATE_TEST_SUITE_P(Matrices, GaussJordanFailureTests,
                          testing::Values(std::vector<double>{1, 2, 2, 4}, std::vector<double>{1, 0, 0, 0},
-                                         std::vector<double>{1, 1, 1, std::nextafter(1.0, 2.0)},
-                                         std::vector<double>{NAN_VECTOR[0], 0, 0, 1},
-                                         std::vector<double>{std::numeric_limits<double>::infinity(), 0, 0, 1},
-                                         std::vector<double>{std::numeric_limits<double>::denorm_min(), 0, 0, 1}),
+	                         std::vector<double>{1, 1, 1, std::nextafter(1.0, 2.0)},
+	                         std::vector<double>{NAN_VECTOR[0], 0, 0, 1},
+	                         std::vector<double>{std::numeric_limits<double>::infinity(), 0, 0, 1},
+	                         std::vector<double>{std::numeric_limits<double>::denorm_min(), 0, 0, 1}),
                          ([](const testing::TestParamInfo<std::vector<double>>& info) {
 	                         constexpr std::array Names{
-		                         "DependentRows", "ZeroRow", "NumericallySingular", "NonFiniteNaN", "NonFiniteInfinity", "InverseOverflow"
+	                         "DependentRows", "ZeroRow", "NumericallySingular", "NonFiniteNaN", "NonFiniteInfinity", "InverseOverflow"
 	                         };
 	                         return Names[info.index];
-                         }));
+	                         }));
 
 /// <summary>Les buffers et la dimension sont validés avant tout accès ou mutation.</summary>
 TEST_P(GaussJordanArgumentTests, RejectsInvalidDimensions)
@@ -295,7 +299,7 @@ INSTANTIATE_TEST_SUITE_P(Arguments, GaussJordanArgumentTests, testing::Values(si
                          ([](const testing::TestParamInfo<size_t>& info) {
 	                         constexpr std::array Names{"ZeroDimension", "InputSizeMismatch", "OutputSizeMismatch", "AliasedBuffers"};
 	                         return Names[info.param];
-                         }));
+	                         }));
 
 //-------------------------------------------------------------------------------------------------
 TEST(MatrixTest, InverseLU)

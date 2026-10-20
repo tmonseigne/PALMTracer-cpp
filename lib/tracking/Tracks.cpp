@@ -286,7 +286,7 @@ std::vector<std::vector<double>> Tracks::ComputeAllInstantDiffusion(const Comput
 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(N); ++i) {
-		const size_t Idx   = static_cast<size_t>(i);
+		const auto Idx     = static_cast<size_t>(i);
 		const Track& Track = t_[Idx];
 
 		auto diff = ComputeInstantDiffusion(Track, p);
@@ -377,7 +377,7 @@ std::vector<std::vector<double>> Tracks::ComputeAllFitMetrics(const ComputesPara
 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(N); ++i) {
-		const size_t Idx   = static_cast<size_t>(i);
+		const auto Idx     = static_cast<size_t>(i);
 		const Track& Track = t_[Idx];
 
 		auto metrics = ComputeFitMetrics(Track, p);

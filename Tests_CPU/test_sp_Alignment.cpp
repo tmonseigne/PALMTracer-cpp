@@ -4,13 +4,18 @@
 #include <algorithm>
 #include <filesystem>
 #include <limits>
-#include <omp.h>
 #include <numeric>
+#include <omp.h>
 #include <tuple>
 
 #include "TestUtils.hpp"
 #include "TiffManagement.hpp"
 #include "signal_processing/Alignment.hpp"
+
+// Compatibilité avec les anciennes versions de GoogleTest.
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
 
 namespace palm_tracer::signal_processing {
 const std::filesystem::path PATH          = std::filesystem::path(__FILE__).parent_path();
@@ -89,7 +94,7 @@ TEST(AlignmentTests, UpsampledIdentity)
 	constexpr Vec3I Dim{.x = 7, .y = 5, .z = 2};
 	std::array<std::array<double, 10>, 2> factors{};
 	factors[0][7] = factors[1][8] = 1;
-	std::vector<uint16_t> input(Dim.GetSize()), output(Dim.GetSize() * 4 + 2, 999);
+	std::vector<uint16_t> input(Dim.GetSize()), output((Dim.GetSize() * 4) + 2, 999);
 	std::iota(input.begin(), input.end(), uint16_t{1});
 	Alignment align;
 	align.Align(input.data(), output.data() + 1, Dim, factors, 2);
@@ -98,7 +103,7 @@ TEST(AlignmentTests, UpsampledIdentity)
 	for (size_t z = 0; z < Dim.z; ++z) {
 		for (size_t y = 0; y < Dim.y * 2; ++y) {
 			for (size_t x = 0; x < Dim.x * 2; ++x) {
-				EXPECT_EQ(output[1 + z * Dim.GetPlaneSize() * 4 + y * Dim.x * 2 + x], input[z * Dim.GetPlaneSize() + y / 2 * Dim.x + x / 2]);
+				EXPECT_EQ(output[1 + (z * Dim.GetPlaneSize() * 4) + (y * Dim.x * 2) + x], input[(z * Dim.GetPlaneSize()) + (y / 2 * Dim.x) + (x / 2)]);
 			}
 		}
 	}
@@ -109,7 +114,7 @@ TEST_P(AlignmentOutsideTests, OutsideImage)
 {
 	constexpr Vec3I Dim{.x = 7, .y = 5, .z = 2};
 	const std::vector<uint16_t> Input(Dim.GetSize(), 100);
-	std::vector<uint16_t> output(Dim.GetSize() * 4 + 2, 999);
+	std::vector<uint16_t> output((Dim.GetSize() * 4) + 2, 999);
 	Alignment align;
 	constexpr std::array Shifts{
 		Vec2D{.x = -20, .y = 0}, Vec2D{.x = 20, .y = 0},
@@ -142,7 +147,9 @@ TEST(AlignmentTests, IntegerTranslation)
 	std::iota(input.begin(), input.end(), uint16_t{1});
 	for (size_t z = 0; z < Dim.z; ++z) {
 		for (size_t y = 1; y < Dim.y; ++y) {
-			for (size_t x = 1; x < Dim.x; ++x) { expected[z * Dim.GetPlaneSize() + y * Dim.x + x] = input[z * Dim.GetPlaneSize() + (y - 1) * Dim.x + x - 1]; }
+			for (size_t x = 1; x < Dim.x; ++x) {
+				expected[(z * Dim.GetPlaneSize()) + (y * Dim.x) + x] = input[(z * Dim.GetPlaneSize()) + ((y - 1) * Dim.x) + x - 1];
+			}
 		}
 	}
 	Alignment align;
@@ -160,7 +167,7 @@ TEST(AlignmentTests, TransposePixels)
 	std::iota(input.begin(), input.end(), uint16_t{1});
 	for (size_t z = 0; z < Dim.z; ++z) {
 		for (size_t y = 0; y < Dim.y; ++y) {
-			for (size_t x = 0; x < Dim.x; ++x) { expected[z * Dim.GetPlaneSize() + y * Dim.x + x] = input[z * Dim.GetPlaneSize() + x * Dim.x + y]; }
+			for (size_t x = 0; x < Dim.x; ++x) { expected[(z * Dim.GetPlaneSize()) + (y * Dim.x) + x] = input[(z * Dim.GetPlaneSize()) + (x * Dim.x) + y]; }
 		}
 	}
 	Alignment align;
@@ -188,7 +195,7 @@ class AlignmentPolynomialTests : public testing::TestWithParam<std::tuple<size_t
 
 /// <summary>Deformations non linéaires dont les recouvrements se calculent analytiquement.</summary>
 class AlignmentWarpTests : public testing::TestWithParam<bool> { };
-}
+} // namespace
 
 /// <summary>Vérifie l'ordre des dix coefficients cubiques, quadratiques et affines.</summary>
 TEST_P(AlignmentPolynomialTests, CoordinateMonomials)
@@ -225,10 +232,10 @@ TEST(AlignmentTests, FractionalTranslation)
 				for (size_t dy = 0; dy < 2; ++dy) {
 					for (size_t dx = 0; dx < 2; ++dx) {
 						if (x < dx || y < dy) { continue; }
-						value += (dx == 0 ? 0.75 : 0.25) * 0.5 * input[z * Dim.GetPlaneSize() + (y - dy) * Dim.x + x - dx];
+						value += (dx == 0 ? 0.75 : 0.25) * 0.5 * input[(z * Dim.GetPlaneSize()) + ((y - dy) * Dim.x) + x - dx];
 					}
 				}
-				expected[z * Dim.GetPlaneSize() + y * Dim.x + x] = static_cast<uint16_t>(std::lround(value));
+				expected[(z * Dim.GetPlaneSize()) + (y * Dim.x) + x] = static_cast<uint16_t>(std::lround(value));
 			}
 		}
 	}
@@ -267,10 +274,10 @@ TEST_P(AlignmentRoundingTests, HalfInteger)
 {
 	constexpr Vec3I Dim{.x = 1, .y = 1, .z = 1};
 	std::array<std::array<double, 10>, 2> factors{};
-	factors[0][7] = factors[1][8] = 1;
-	factors[0][9] = GetParam();
-	const uint16_t Input = 1;
-	uint16_t output = 999;
+	factors[0][7]            = factors[1][8] = 1;
+	factors[0][9]            = GetParam();
+	constexpr uint16_t Input = 1;
+	uint16_t output          = 999;
 	Alignment align;
 	align.Align(&Input, &output, Dim, factors);
 	EXPECT_EQ(output, GetParam() <= 0.5 ? 1 : 0);
@@ -281,7 +288,7 @@ INSTANTIATE_TEST_SUITE_P(Thresholds, AlignmentRoundingTests,
                          ([](const testing::TestParamInfo<double>& info) {
 	                         constexpr std::array Names{"AboveHalf", "ExactHalf", "BelowHalf"};
 	                         return Names[info.index];
-                         }));
+	                         }));
 
 /// <summary>Un repli global peut superposer deux cellules convexes : la somme est saturée.</summary>
 TEST(AlignmentTests, SaturatesOverlappingCells)
@@ -291,7 +298,7 @@ TEST(AlignmentTests, SaturatesOverlappingCells)
 	// X' = (X - 1)^2 : les deux pixels couvrent le même pixel cible avec des orientations opposées.
 	factors[0][4] = factors[0][9] = factors[1][8] = 1;
 	factors[0][7] = -2;
-	const std::array<uint16_t, 2> Input{40000, 40000};
+	constexpr std::array<uint16_t, 2> Input{40000, 40000};
 	std::array<uint16_t, 2> output{999, 999};
 	Alignment align;
 	align.Align(Input.data(), output.data(), Dim, factors);
@@ -313,14 +320,16 @@ TEST_P(AlignmentInvalidTests, InvalidGeometry)
 	Alignment align;
 	align.Align(Input.data(), output.data(), Dim, factors, 2);
 	switch (GetParam()) {
-		case 0: factors[0][9] = std::numeric_limits<double>::quiet_NaN(); break;
-		case 1: factors[1][9] = std::numeric_limits<double>::infinity(); break;
-		case 2: factors[0][0] = factors[0][7] = std::numeric_limits<double>::max(); break;
-		case 3: factors = {}; break;
-		default:
-			// X' = X, Y' = (1 - 2X)Y : cellules croisées ou hors champ.
-			factors[1][6] = -2;
+		case 0: factors[0][9] = std::numeric_limits<double>::quiet_NaN();
 			break;
+		case 1: factors[1][9] = std::numeric_limits<double>::infinity();
+			break;
+		case 2: factors[0][0] = factors[0][7] = std::numeric_limits<double>::max();
+			break;
+		case 3: factors = {};
+			break;
+		default: factors[1][6] = -2;
+			break; // X' = X, Y' = (1 - 2X)Y : cellules croisées ou hors champ.
 	}
 	align.Align(Input.data(), output.data(), Dim, factors, 2);
 	EXPECT_TRUE(std::ranges::all_of(output, [](const uint16_t value) { return value == 0; }));
@@ -330,7 +339,7 @@ INSTANTIATE_TEST_SUITE_P(Invalid, AlignmentInvalidTests, testing::Range(size_t{0
                          ([](const testing::TestParamInfo<size_t>& info) {
 	                         constexpr std::array Names{"NaN", "Infinity", "CoordinateOverflow", "Collapsed", "Crossed"};
 	                         return Names[info.param];
-                         }));
+	                         }));
 
 /// <summary>L'ordre des contributions et les sorties restent identiques quel que soit le nombre de threads.</summary>
 TEST(AlignmentTests, StableAcrossThreadCounts)
@@ -392,9 +401,6 @@ TEST_P(AlignmentTests, SavesAndReloadsTransformedStack)
 	EXPECT_EQ(reloaded, output);
 }
 
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
 
 INSTANTIATE_TEST_SUITE_P(
 	TestSuites, AlignmentTests,

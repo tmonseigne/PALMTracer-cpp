@@ -21,7 +21,7 @@ void PrintTo(const FFTCase& value, std::ostream* stream) { *stream << value.name
 
 /// <summary>Validation indépendante des dimensions et des deux implementations FFT.</summary>
 class FFTVolumeTests : public testing::TestWithParam<FFTCase> { };
-}
+} // namespace
 
 /// <summary>Compare chaque fréquence à une DFT directe, sans réutiliser l'algorithme inverse.</summary>
 TEST_P(FFTVolumeTests, MatchesDirectDiscreteTransform)
@@ -39,14 +39,14 @@ TEST_P(FFTVolumeTests, MatchesDirectDiscreteTransform)
 				for (size_t z = 0; z < dim.z; ++z) {
 					for (size_t y = 0; y < dim.y; ++y) {
 						for (size_t x = 0; x < dim.x; ++x) {
-							const double Phase = -2 * std::numbers::pi * (static_cast<double>(kx * x) / static_cast<double>(dim.x)
-							                                              + static_cast<double>(ky * y) / static_cast<double>(dim.y) + static_cast<double>(
-								                                              kz * z) / static_cast<double>(dim.z));
-							expected += input[z * dim.GetPlaneSize() + y * dim.x + x] * std::polar(1.0, Phase);
+							const double Phase = -2 * std::numbers::pi * ((static_cast<double>(kx * x) / static_cast<double>(dim.x))
+							                                              + (static_cast<double>(ky * y) / static_cast<double>(dim.y)) + (static_cast<double>(
+								                                              kz * z) / static_cast<double>(dim.z)));
+							expected += input[(z * dim.GetPlaneSize()) + (y * dim.x) + x] * std::polar(1.0, Phase);
 						}
 					}
 				}
-				const auto Value = actual[kz * dim.GetPlaneSize() + ky * dim.x + kx];
+				const auto Value = actual[(kz * dim.GetPlaneSize()) + (ky * dim.x) + kx];
 				EXPECT_NEAR(Value.real(), expected.real(), 1e-10);
 				EXPECT_NEAR(Value.imag(), expected.imag(), 1e-10);
 			}

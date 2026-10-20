@@ -24,7 +24,7 @@ Table Localize(const uint16_t* pixels, const Vec3I& dim, const size_t fit, const
 {
 	constexpr std::array Params{7.0, 1.0, 2.0, 0.0};
 	// Un emplacement par pixel couvre largement la densité des piles de référence.
-	std::vector<double> output((dim.GetPlaneSize() / 5 + 1) * dim.z * N_LOCALIZATIONS, -12345.0);
+	std::vector<double> output(((dim.GetPlaneSize() / 5) + 1) * dim.z * N_LOCALIZATIONS, -12345.0);
 	const Palm Processor(pixels, output.data(), output.size(), dim, 103.6, watershed ? 0.0 : 10.0, fit, Params.data());
 	const int Count = Processor.Processing();
 	EXPECT_GE(Count, 0);
@@ -42,9 +42,9 @@ Table Localize(const uint16_t* pixels, const Vec3I& dim, const size_t fit, const
 		auto& row = result.back();
 		if (fit == 4 && row[8] > 0 && row[9] > 0) {
 			constexpr double Pi = std::numbers::pi;
-			double angle        = std::fmod(row[10] + Pi / 2, Pi);
+			double angle        = std::fmod(row[10] + (Pi / 2), Pi);
 			if (angle < 0) { angle += Pi; }
-			row[10] = (angle - Pi / 2) * 180 / Pi;
+			row[10] = (angle - (Pi / 2)) * 180 / Pi;
 		}
 	}
 	return result;
@@ -63,7 +63,7 @@ void ExpectLocalizationsNear(const Table& actual, const Table& expected, const d
 		for (size_t j = 0; j < expected.size(); ++j) {
 			if (used[j] || Row[1] != expected[j][1] || Row[3] != expected[j][3]) { continue; }
 			const double Dx = Row[4] - expected[j][4], Dy = Row[5] - expected[j][5], Dz = Row[6] - expected[j][6];
-			const double D  = Dx * Dx + Dy * Dy + Dz * Dz;
+			const double D  = (Dx * Dx) + (Dy * Dy) + (Dz * Dz);
 			if (D < distance) {
 				nearest  = j;
 				distance = D;
@@ -113,10 +113,10 @@ TEST(PalmTests, BoundedOutput)
 	EXPECT_DOUBLE_EQ(output.front(), -12345);
 	EXPECT_DOUBLE_EQ(output.back(), -12345);
 	for (size_t i = 0; i < Input.dim.z; ++i) {
-		EXPECT_DOUBLE_EQ(output[1 + i * N_LOCALIZATIONS], static_cast<double>(i + 1));
-		EXPECT_DOUBLE_EQ(output[1 + i * N_LOCALIZATIONS + 1], static_cast<double>(i + 1));
-		EXPECT_DOUBLE_EQ(output[1 + i * N_LOCALIZATIONS + 2], 1);
-		EXPECT_GT(output[1 + i * N_LOCALIZATIONS + 16], 0);
+		EXPECT_DOUBLE_EQ(output[1 + (i * N_LOCALIZATIONS)], static_cast<double>(i + 1));
+		EXPECT_DOUBLE_EQ(output[1 + (i * N_LOCALIZATIONS) + 1], static_cast<double>(i + 1));
+		EXPECT_DOUBLE_EQ(output[1 + (i * N_LOCALIZATIONS) + 2], 1);
+		EXPECT_GT(output[1 + (i * N_LOCALIZATIONS) + 16], 0);
 	}
 }
 
@@ -136,19 +136,19 @@ TEST_P(PalmCapacityTests, RespectsPerFrameCapacity)
 	constexpr std::array Params{7.0, 1.0, 2.0, 0.0};
 	constexpr size_t PerPlane = 2;
 	const size_t Rows         = (Dim.z - First) * PerPlane;
-	const size_t Capacity     = Dim.z * PerPlane * N_LOCALIZATIONS + 1;
+	const size_t Capacity     = (Dim.z * PerPlane * N_LOCALIZATIONS) + 1;
 	std::vector<double> output(Capacity + 2, -12345);
 	const Palm Processor(pixels.data(), output.data() + 1, Capacity, Dim, 103.6, 0, 0, Params.data());
 	EXPECT_EQ(Processor.Processing(), static_cast<int>(Rows * N_LOCALIZATIONS));
 	EXPECT_DOUBLE_EQ(output.front(), -12345);
-	EXPECT_DOUBLE_EQ(output[1 + Rows * N_LOCALIZATIONS], -12345);
+	EXPECT_DOUBLE_EQ(output[1 + (Rows * N_LOCALIZATIONS)], -12345);
 	EXPECT_DOUBLE_EQ(output[Capacity], -12345);
 	EXPECT_DOUBLE_EQ(output.back(), -12345);
 	for (size_t i = 0; i < Rows; ++i) {
-		const size_t Offset = 1 + i * N_LOCALIZATIONS;
+		const size_t Offset = 1 + (i * N_LOCALIZATIONS);
 		EXPECT_DOUBLE_EQ(output[Offset], static_cast<double>(i + 1));
-		EXPECT_DOUBLE_EQ(output[Offset + 1], static_cast<double>(First + i / PerPlane + 1));
-		EXPECT_DOUBLE_EQ(output[Offset + 2], static_cast<double>(i % PerPlane + 1));
+		EXPECT_DOUBLE_EQ(output[Offset + 1], static_cast<double>(First + (i / PerPlane) + 1));
+		EXPECT_DOUBLE_EQ(output[Offset + 2], static_cast<double>((i % PerPlane) + 1));
 		EXPECT_GT(output[Offset + 16], 0);
 	}
 }
@@ -177,7 +177,7 @@ TEST_P(PalmParallelTests, MatchesIndividualFrames)
 	for (size_t i = 0; i < Actual.size(); ++i) {
 		EXPECT_DOUBLE_EQ(Actual[i][0], static_cast<double>(i + 1));
 		EXPECT_DOUBLE_EQ(Actual[i][1], i < Single.size() ? 2 : 4);
-		EXPECT_DOUBLE_EQ(Actual[i][2], static_cast<double>(i % Single.size() + 1));
+		EXPECT_DOUBLE_EQ(Actual[i][2], static_cast<double>((i % Single.size()) + 1));
 		ExpectTableNear({Table::value_type(Actual[i].begin() + 3, Actual[i].end())},
 		                {Table::value_type(Single[i % Single.size()].begin() + 3, Single[i % Single.size()].end())}, 1e-12);
 	}
@@ -242,7 +242,7 @@ TEST(PalmTests, Quadrants)
 namespace {
 /// <summary>Un cas indépendant par plan du calcul de seuil automatique.</summary>
 class AutoThresholdTests : public testing::TestWithParam<size_t> { };
-}
+} // namespace
 
 /// <summary>Compare le seuil de chaque plan à sa valeur attendue.</summary>
 TEST_P(AutoThresholdTests, Value)
@@ -255,8 +255,8 @@ TEST_P(AutoThresholdTests, Value)
 	const Stack Input("stack.tif");
 	ASSERT_LT(GetParam(), Input.dim.z);
 	const Vec3I Dim{.x = Input.dim.x, .y = Input.dim.y, .z = 1};
-	std::vector<double> output((Dim.GetPlaneSize() / 5 + 1) * N_LOCALIZATIONS);
-	Palm processor(Input.pixels.data() + GetParam() * Dim.GetPlaneSize(), output.data(), output.size(), Dim, 0, 10, 0, Params.data());
+	std::vector<double> output(((Dim.GetPlaneSize() / 5) + 1) * N_LOCALIZATIONS);
+	Palm processor(Input.pixels.data() + (GetParam() * Dim.GetPlaneSize()), output.data(), output.size(), Dim, 0, 10, 0, Params.data());
 	EXPECT_NEAR(processor.AutoThreshold(), Expected[GetParam()], 1e-5);
 }
 

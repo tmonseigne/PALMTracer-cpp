@@ -350,8 +350,8 @@ TEST(InterpolationTests, SubpixelMaxInterp3D)
 	std::vector volume(Size.GetSize(), 0.0);
 
 	// Coordonnées du maximum entre les voxels (1,1,1) et (2,2,2)
-	volume[(1 * Size.y + 1) * Size.x + 1] = 1.0;
-	volume[(2 * Size.y + 2) * Size.x + 2] = 8.0; // maximum, mais non aligné avec grille
+	volume[(((1 * Size.y) + 1) * Size.x) + 1] = 1.0;
+	volume[(((2 * Size.y) + 2) * Size.x) + 2] = 8.0; // maximum, mais non aligné avec grille
 
 	constexpr Vec3D Start  = {.x = 1.5, .y = 1.5, .z = 1.5};
 	constexpr double Delta = 0.05, Window = 1.0;
@@ -431,7 +431,8 @@ TEST_P(InterpolationModeTests, NonLinearMatrix)
 		for (size_t z = 0; z < Size.z; ++z) {
 			for (size_t y = 0; y < Size.y; ++y) {
 				for (size_t x = 0; x < Size.x; ++x) {
-					EXPECT_DOUBLE_EQ(Zoomed[2 * z * newSize.GetPlaneSize() + 2 * y * newSize.x + 2 * x], Volume[z * Size.GetPlaneSize() + y * Size.x + x]);
+					EXPECT_DOUBLE_EQ(Zoomed[(2 * z * newSize.GetPlaneSize()) + (2 * y * newSize.x) + (2 * x)],
+					                 Volume[(z * Size.GetPlaneSize()) + (y * Size.x) + x]);
 				}
 			}
 		}

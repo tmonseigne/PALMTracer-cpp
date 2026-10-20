@@ -54,15 +54,15 @@ void ATrous::b3SplineFiltering2D(const std::vector<double>& in, std::vector<doub
 	auto get = [&](const std::vector<double>& data, const int y, const int x) -> double { return data[offsetTest(y, x)]; };
 
 	// Lambda pour simplifier l'accès au voisinage avec ou sans test de bord
-	auto convolutionY = [&](const size_t idx, const int i, const int j) -> double {
-		return CoeffH0 * in[idx] + CoeffH1 * (get(in, i, j - IStep) + get(in, i, j + IStep)) +
-		       CoeffH2 * (get(in, i, j - IDoubleStep) + get(in, i, j + IDoubleStep));
+	const auto convolutionY = [&](const size_t idx, const int i, const int j) -> double {
+		return (CoeffH0 * in[idx]) + (CoeffH1 * (get(in, i, j - IStep) + get(in, i, j + IStep))) +
+		       (CoeffH2 * (get(in, i, j - IDoubleStep) + get(in, i, j + IDoubleStep)));
 	};
 
 	// Lambda pour simplifier l'accès au voisinage avec ou sans test de bord
-	auto convolutionX = [&](const size_t idx, const int i, const int j) -> double {
-		return CoeffH0 * tmp_[idx] + CoeffH1 * (get(tmp_, i - IStep, j) + get(tmp_, i + IStep, j)) +
-		       CoeffH2 * (get(tmp_, i - IDoubleStep, j) + get(tmp_, i + IDoubleStep, j));
+	const auto convolutionX = [&](const size_t idx, const int i, const int j) -> double {
+		return (CoeffH0 * tmp_[idx]) + (CoeffH1 * (get(tmp_, i - IStep, j) + get(tmp_, i + IStep, j))) +
+		       (CoeffH2 * (get(tmp_, i - IDoubleStep, j) + get(tmp_, i + IDoubleStep, j)));
 	};
 
 	// Convolution horizontale (Y-axis)

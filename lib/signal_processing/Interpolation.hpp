@@ -1,12 +1,13 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file Interpolation.hpp
-/// \brief Outils d'interpolation 3D : zoom, décalage et estimation de shift subpixel.
+/// <summary>Outils d'interpolation 3D : zoom, décalage et estimation de shift subpixel.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 02/07/2025.
 /// \copyright <a href="https://choosealicense.com/licenses/agpl-3.0/">GNU Affero General Public License v3.0</a>.
-/// \remarks Ce code est basé sur celui de SMAP <a href="https://github.com/jries/SMAP">github.com/jries/SMAP</a>.
+/// <remarks>Ce code est basé sur celui de SMAP <a href="https://github.com/jries/SMAP">github.com/jries/SMAP</a>.</remarks>
 ///
 ///-------------------------------------------------------------------------------------------------
 

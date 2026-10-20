@@ -1,7 +1,8 @@
 ///-------------------------------------------------------------------------------------------------
 ///
 /// \file Point.hpp
-/// \brief Définition de la classe <see cref="Point"/> représentant un élément d'une trajectoire.
+/// <summary>Définition de la classe <see cref="Point"/> représentant un élément d'une trajectoire.
+/// </summary>
 /// \author Thibaut Monseigne (CNRS).
 /// \version 1.3.0.
 /// \date 30/09/2025.
@@ -23,7 +24,14 @@ public:
 	double intensity_ = 0,                        ///< Intensité totale mesurée dans la région d'intérêt (somme des valeurs de pixels).
 	       surface_   = 0;                        ///< Surface de la région associée au point (aire en pixels²).
 
-	Point()  = default; ///< Constructeur par défaut de la classe <see cref="Point"/>. Initialise tous les attributs à zéro.
+	Point() = default; ///< Constructeur par défaut de la classe <see cref="Point"/>. Initialise tous les attributs à zéro.
+
+	/// <summary>Copie les coordonnées et les caractéristiques du point.</summary>
+	Point(const Point&) = default;
+
+	/// <summary>Remplace les coordonnées et les caractéristiques par celles du point source.</summary>
+	Point& operator=(const Point&) = default;
+
 	~Point() = default; ///< Destructeur par défaut de la classe <see cref="Point"/>.
 
 	/// <summary>Constructeur paramétré de la classe <see cref="Point"/>.</summary>

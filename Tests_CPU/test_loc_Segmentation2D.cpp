@@ -29,7 +29,7 @@ class SegmentationSurfaceTests : public testing::TestWithParam<size_t> { };
 
 /// <summary>Fusion facultative de deux bassins reliés par un col.</summary>
 class SegmentationWatershedTests : public testing::TestWithParam<std::tuple<bool, bool>> { };
-}
+} // namespace
 
 #pragma region SegmentationInfo
 /// <summary>Une région commence vide et Reset restaure cet état après utilisation.</summary>
@@ -63,7 +63,7 @@ TEST(SegmentationTests, ManyRegions)
 	std::vector<double> potential(Dim.GetSize(), 0);
 	for (size_t y = 1; y < 1024; y += 4) {
 		for (size_t x = 1; x < 1024; x += 4) {
-			for (size_t dy = 0; dy < 3; ++dy) { for (size_t dx = 0; dx < 3; ++dx) { potential[(y + dy) * Dim.x + x + dx] = 100; } }
+			for (size_t dy = 0; dy < 3; ++dy) { for (size_t dx = 0; dx < 3; ++dx) { potential[((y + dy) * Dim.x) + x + dx] = 100; } }
 		}
 	}
 	const auto Infos = Segment(Dim, potential).Infos();
@@ -83,8 +83,8 @@ TEST_P(SegmentationStatisticsTests, RegionMeasurements)
 	std::vector<double> values;
 	for (size_t y = 1; y <= 3; ++y) {
 		for (size_t x = 2; x <= 4; ++x) {
-			const double Value       = GetParam() ? 12.0 : static_cast<double>(1 + (y - 1) * 3 + x - 2);
-			potential[y * Dim.x + x] = Value;
+			const double Value         = GetParam() ? 12.0 : static_cast<double>(1 + ((y - 1) * 3) + x - 2);
+			potential[(y * Dim.x) + x] = Value;
 			values.push_back(Value);
 			sum += Value;
 			weightedX += Value * static_cast<double>(x);
@@ -114,7 +114,7 @@ TEST_P(SegmentationThresholdTests, StrictThreshold)
 {
 	constexpr Vec2I Dim{.x = 7, .y = 5};
 	std::vector<double> potential(Dim.GetSize(), 0);
-	for (size_t y = 1; y <= 3; ++y) { for (size_t x = 2; x <= 4; ++x) { potential[y * Dim.x + x] = 10; } }
+	for (size_t y = 1; y <= 3; ++y) { for (size_t x = 2; x <= 4; ++x) { potential[(y * Dim.x) + x] = 10; } }
 	EXPECT_EQ(Segment(Dim, potential, GetParam()).Infos().size(), GetParam() < 10 ? size_t{1} : size_t{0});
 }
 
@@ -127,7 +127,7 @@ TEST_P(SegmentationSurfaceTests, MinimumSurface)
 {
 	constexpr Vec2I Dim{.x = 9, .y = 5};
 	std::vector<double> potential(Dim.GetSize(), 0);
-	for (size_t x = 1; x <= GetParam(); ++x) { potential[2 * Dim.x + x] = 10; }
+	for (size_t x = 1; x <= GetParam(); ++x) { potential[(2 * Dim.x) + x] = 10; }
 	const auto Infos = Segment(Dim, potential).Infos();
 	ASSERT_EQ(Infos.size(), GetParam() > VOLUME_MIN ? size_t{1} : size_t{0});
 	if (!Infos.empty()) { EXPECT_DOUBLE_EQ(Infos[0].surf_, static_cast<double>(GetParam())); }
@@ -145,9 +145,9 @@ TEST(SegmentationInfosTests, ReadOnlyReferenceAndIndependentSnapshot)
 {
 	constexpr Vec2I Dim{.x = 7, .y = 7};
 	std::vector<double> potential(Dim.GetSize(), 0);
-	for (size_t y = 2; y <= 4; ++y) { for (size_t x = 2; x <= 4; ++x) { potential[y * Dim.x + x] = 100; } }
+	for (size_t y = 2; y <= 4; ++y) { for (size_t x = 2; x <= 4; ++x) { potential[(y * Dim.x) + x] = 100; } }
 	const auto Segmentation = Segment(Dim, potential);
-	const auto& Infos = Segmentation.Infos();
+	const auto& Infos       = Segmentation.Infos();
 	static_assert(std::is_same_v<decltype(Segmentation.Infos()), const std::vector<SegmentationInfo>&>);
 	ASSERT_EQ(Infos.size(), 1);
 	EXPECT_EQ(Infos.data(), Segmentation.Infos().data());
@@ -180,14 +180,14 @@ TEST_P(SegmentationWatershedTests, ConnectedPeaks)
 	std::vector<double> potential(Dim.GetSize(), 0);
 	// Le bassin dominant doit absorber son voisin même s'il porte la première étiquette.
 	for (size_t y = 2; y <= 4; ++y) {
-		for (size_t x = 2; x <= 4; ++x) { potential[y * Dim.x + x] = firstPeakHigher ? 100 : 60; }
-		for (size_t x = 8; x <= 10; ++x) { potential[y * Dim.x + x] = firstPeakHigher ? 60 : 100; }
+		for (size_t x = 2; x <= 4; ++x) { potential[(y * Dim.x) + x] = firstPeakHigher ? 100 : 60; }
+		for (size_t x = 8; x <= 10; ++x) { potential[(y * Dim.x) + x] = firstPeakHigher ? 60 : 100; }
 	}
 	// Un col non plat évite de créer un troisième germe au milieu du pont.
-	potential[3 * Dim.x + 5] = firstPeakHigher ? 40 : 30;
-	potential[3 * Dim.x + 6] = 20;
-	potential[3 * Dim.x + 7] = firstPeakHigher ? 30 : 40;
-	const auto Infos         = Segment(Dim, potential, 0, merge ? 10 : 0).Infos();
+	potential[(3 * Dim.x) + 5] = firstPeakHigher ? 40 : 30;
+	potential[(3 * Dim.x) + 6] = 20;
+	potential[(3 * Dim.x) + 7] = firstPeakHigher ? 30 : 40;
+	const auto Infos           = Segment(Dim, potential, 0, merge ? 10 : 0).Infos();
 	ASSERT_EQ(Infos.size(), merge ? size_t{1} : size_t{2});
 	double surface = 0, intensity = 0;
 	for (const auto& Info : Infos) {
@@ -210,13 +210,13 @@ TEST(SegmentationTests, AbsorbedPeakDoesNotReturn)
 	constexpr Vec2I Dim{.x = 18, .y = 7};
 	std::vector<double> potential(Dim.GetSize(), 0);
 	for (size_t y = 2; y <= 4; ++y) {
-		for (size_t x = 1; x <= 3; ++x) { potential[y * Dim.x + x] = 200; }
-		for (size_t x = 7; x <= 9; ++x) { potential[y * Dim.x + x] = 100; }
-		for (size_t x = 13; x <= 15; ++x) { potential[y * Dim.x + x] = 60; }
+		for (size_t x = 1; x <= 3; ++x) { potential[(y * Dim.x) + x] = 200; }
+		for (size_t x = 7; x <= 9; ++x) { potential[(y * Dim.x) + x] = 100; }
+		for (size_t x = 13; x <= 15; ++x) { potential[(y * Dim.x) + x] = 60; }
 	}
-	potential[3 * Dim.x + 10] = 40;
-	potential[3 * Dim.x + 11] = 20;
-	potential[3 * Dim.x + 12] = 30;
+	potential[(3 * Dim.x) + 10] = 40;
+	potential[(3 * Dim.x) + 11] = 20;
+	potential[(3 * Dim.x) + 12] = 30;
 	// Le premier bassin est isolé : la fusion des deux suivants ne dépend pas du défaut de sentinelle 0.
 	const auto Infos = Segment(Dim, potential, 0, 10).Infos();
 	ASSERT_EQ(Infos.size(), 2);

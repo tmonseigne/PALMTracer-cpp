@@ -308,8 +308,8 @@ PT_API void PT_CALL Astigmatism3DCalibration(const double* input, double* output
 }
 
 //-------------------------------------------------------------------------------------------------
-/// <summary>Calcule la position axiale Z d'un jeu de points de à partir d'un modèle d'astigmatisme 3D.</summary>
-/// <param name="input">Pointeur vers le tableau d'entrée contenant les points, au format (\f$\sigma_x, \sigma_y, z\f$).</param>
+/// <summary>Calcule la position axiale Z d'un jeu de points à partir d'un modèle d'astigmatisme 3D.</summary>
+/// <param name="input">Paires de sigmas observés (\f$\sigma_x, \sigma_y\f$), en pixels, pour chaque point.</param>
 /// <param name="output">Paires [Z en nm, score Q_Z entre 0 et 1] pour chaque point ; 1 indique une correspondance parfaite des sigmas.</param>
 /// <param name="size">Nombre de points dans le tableau d'entrée.</param>
 /// <param name="pixelSize">Taille d'un pixel en unités physiques (en nanomètre/pixel).</param>
@@ -317,7 +317,7 @@ PT_API void PT_CALL Astigmatism3DCalibration(const double* input, double* output
 /// <param name="zMax">Borne absolue Z (nm).</param>
 /// <remarks>Le score de compatibilité Q_Z remplace l'ancienne SSE en pixels carrés, sans changer la recherche de Z.
 /// Il n'est ni un R2 ni une précision axiale ; voir la documentation de palm_tracer::fit::AstigFit et \ref axial_quality_score.
-/// Le format du buffer reste inchange. La colonne historique Python <c>MSE Z</c> contient desormais ce score, plus grand = meilleur.</remarks>
+/// Le format du buffer reste inchangé. La colonne historique Python <c>MSE Z</c> contient désormais ce score, plus grand = meilleur.</remarks>
 PT_API void PT_CALL Astigmatism3DEstimation(const double* input, double* output, const uint64_t size, const double pixelSize, const double* model,
                                             const double zMax)
 {

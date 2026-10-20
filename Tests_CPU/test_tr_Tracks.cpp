@@ -46,11 +46,11 @@ class TrackingGreedyTests : public testing::TestWithParam<std::tuple<bool, bool>
 
 /// <summary>Scénario de reconnexion avec chaînes attendues explicitement.</summary>
 struct BlinkingScenario {
-	std::string name;                              ///< Nom du comportement vérifié.
-	std::vector<std::array<double, 3>> rows;        ///< Un segment par ligne : identifiant, plan et X.
-	std::vector<std::vector<size_t>> expected;      ///< Identifiants des points, regroupés par chaîne attendue.
-	size_t maxDuration = 4;                        ///< Délai maximal admissible.
-	size_t emptyIndex  = INVALID_INDEX;            ///< Segment à vider pour vérifier son exclusion, le cas échéant.
+	std::string name;                          ///< Nom du comportement vérifié.
+	std::vector<std::array<double, 3>> rows;   ///< Un segment par ligne : identifiant, plan et X.
+	std::vector<std::vector<size_t>> expected; ///< Identifiants des points, regroupés par chaîne attendue.
+	size_t maxDuration = 4;                    ///< Délai maximal admissible.
+	size_t emptyIndex  = INVALID_INDEX;        ///< Segment à vider pour vérifier son exclusion, le cas échéant.
 };
 
 /// <summary>Bornes temporelles et contraintes gloutonnes absentes des seules références CSV.</summary>
@@ -130,9 +130,11 @@ INSTANTIATE_TEST_SUITE_P(Radii, CandidateRadiusTests,
 /// <summary>Le même buffer conserve sa capacité et ne garde aucun candidat des transitions précédentes, sans conserver de candidat périmé.</summary>
 TEST(TracksTests, ReusesCandidateBufferAcrossTransitions)
 {
-	const std::array Input{1.0, 1.0, 0.0, 0.0, 2.0, 1.0, 0.2, 0.0,
-	                       3.0, 2.0, 0.1, 0.0, 4.0, 2.0, 0.3, 0.0,
-	                       5.0, 3.0, 3.0, 0.0, 6.0, 4.0, 3.0, 0.0};
+	constexpr std::array Input{
+		1.0, 1.0, 0.0, 0.0, 2.0, 1.0, 0.2, 0.0,
+		3.0, 2.0, 0.1, 0.0, 4.0, 2.0, 0.3, 0.0,
+		5.0, 3.0, 3.0, 0.0, 6.0, 4.0, 3.0, 0.0
+	};
 	const auto Points = TracksAccess::loadPoints(Input.data(), Input.size() / 4);
 	const auto Planes = TracksAccess::getPlaneRanges(Points);
 	std::vector<Candidate> candidates;
@@ -157,7 +159,7 @@ TEST(TracksTests, ReusesCandidateBufferAcrossTransitions)
 	EXPECT_EQ(candidates.data(), Storage);
 	EXPECT_EQ(candidates.capacity(), Capacity);
 
-	const PlaneRange Empty{.begin = 0, .end = 0};
+	constexpr PlaneRange Empty{.begin = 0, .end = 0};
 	TracksAccess::getCandidates(Points, Empty, Planes[1], 1, candidates);
 	EXPECT_TRUE(candidates.empty());
 	EXPECT_EQ(candidates.capacity(), Capacity);
@@ -170,23 +172,25 @@ TEST(TracksTests, ReusesCandidateBufferAcrossTransitions)
 TEST_P(TrackingGreedyTests, ResolvesConflicts)
 {
 	const auto [fallback, reverse] = GetParam();
-	std::array<std::array<double, 4>, 4> rows{{
-		{1, 1, 0, 0}, {2, 1, fallback ? 2.2 : 0.0, 0},
-		{3, 2, 1, 0}, {4, 2, fallback ? 3.7 : -1.0, 0}
-	}};
+	std::array<std::array<double, 4>, 4> rows{
+		{
+			{1, 1, 0, 0}, {2, 1, fallback ? 2.2 : 0.0, 0},
+			{3, 2, 1, 0}, {4, 2, fallback ? 3.7 : -1.0, 0}
+		}
+	};
 	if (reverse) { std::ranges::reverse(rows); }
 	std::vector<double> input;
 	for (const auto& Row : rows) { input.insert(input.end(), Row.begin(), Row.end()); }
 	std::array<uint64_t, 8> output{};
-	const std::array<uint64_t, 8> Expected{1, 1, 2, 2, 3, 1, 4, 2};
+	constexpr std::array<uint64_t, 8> Expected{1, 1, 2, 2, 3, 1, 4, 2};
 	EXPECT_EQ(Tracks::Tracking(input.data(), output.data(), rows.size(), fallback ? 2 : 1), output.size());
 	EXPECT_EQ(output, Expected);
 }
 
 INSTANTIATE_TEST_SUITE_P(Greedy, TrackingGreedyTests, testing::Combine(testing::Bool(), testing::Bool()),
                          [](const testing::TestParamInfo<TrackingGreedyTests::ParamType>& info) {
-	                         return std::string(std::get<0>(info.param) ? "FallbackNeighbor" : "ExactTies")
-	                         + (std::get<1>(info.param) ? "Reversed" : "Ordered");
+                         return std::string(std::get<0>(info.param) ? "FallbackNeighbor" : "ExactTies")
+                         + (std::get<1>(info.param) ? "Reversed" : "Ordered");
                          });
 
 /// <summary>Deux distances distinctes de moins d'un epsilon ne sont pas des ex aequo.</summary>
@@ -253,7 +257,7 @@ TEST_P(TrackingTests, Links)
 	const auto Expected = LoadCsv(InputPath / "ref" / ("stack-tracking-" + Suffix + "-5.csv"));
 	if (reverse) { std::ranges::reverse(localizations); }
 	const auto Input = Flatten(localizations, {0, 1, 4, 5});
-	std::vector<uint64_t> output(2 * localizations.size() + 1, UINT64_MAX);
+	std::vector<uint64_t> output((2 * localizations.size()) + 1, UINT64_MAX);
 	ASSERT_EQ(Tracks::Tracking(Input.data(), output.data(), localizations.size(), 5), 2 * localizations.size());
 	EXPECT_EQ(output.back(), UINT64_MAX);
 	std::map<uint64_t, uint64_t> expected, actual;
@@ -286,9 +290,7 @@ TEST_P(BlinkingIndexTests, BuildsExpectedChains)
 {
 	const auto& Scenario = GetParam();
 	std::vector<double> input;
-	for (const auto& Row : Scenario.rows) {
-		input.insert(input.end(), {Row[0], Row[1], Row[0], Row[2], 0, 0, 10, 1});
-	}
+	for (const auto& Row : Scenario.rows) { input.insert(input.end(), {Row[0], Row[1], Row[0], Row[2], 0, 0, 10, 1}); }
 	TracksAccess tracks;
 	tracks.LoadTracks(input.data(), Scenario.rows.size(), 1);
 	if (Scenario.emptyIndex != INVALID_INDEX) { tracks.t_[Scenario.emptyIndex].points.clear(); }
@@ -323,7 +325,7 @@ INSTANTIATE_TEST_SUITE_P(TemporalIndex, BlinkingIndexTests,
 /// <summary>La borne temporelle reste valide lorsque son addition au dernier plan déborderait size_t.</summary>
 TEST(TracksTests, BlinkingNearPlaneLimit)
 {
-	const std::array<double, 2 * N_TRACKING> Input{1, 1, 1, 0, 0, 0, 10, 1, 2, 2, 2, 0, 0, 0, 10, 1};
+	constexpr std::array<double, 2 * N_TRACKING> Input{1, 1, 1, 0, 0, 0, 10, 1, 2, 2, 2, 0, 0, 0, 10, 1};
 	TracksAccess tracks;
 	tracks.LoadTracks(Input.data(), 2, 1);
 	// Affectation entière directe : un double ne représente pas exactement ces plans extrêmes.

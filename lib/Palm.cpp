@@ -70,12 +70,12 @@ double Palm::AutoThreshold()
 		processingPlane(0, points);
 		// Mise à jour du masque
 		std::fill(mask.begin(), mask.end(), false);
-		for (const auto& p : points) {
-			const auto Xmin = static_cast<size_t>(std::max(0, static_cast<int>(p[4] - HalfRoi))),
-			           Xmax = std::min(dim_.x, static_cast<size_t>(p[4] + HalfRoi)),
-			           Ymin = static_cast<size_t>(std::max(0, static_cast<int>(p[5] - HalfRoi))),
-			           Ymax = std::min(dim_.y, static_cast<size_t>(p[5] + HalfRoi));
-			for (size_t y = Ymin; y < Ymax; ++y) { for (size_t x = Xmin; x < Xmax; ++x) { mask[y * dim_.x + x] = true; } }
+		for (const auto& P : points) {
+			const auto Xmin = static_cast<size_t>(std::max(0, static_cast<int>(P[4] - HalfRoi))),
+			           Xmax = std::min(dim_.x, static_cast<size_t>(P[4] + HalfRoi)),
+			           Ymin = static_cast<size_t>(std::max(0, static_cast<int>(P[5] - HalfRoi))),
+			           Ymax = std::min(dim_.y, static_cast<size_t>(P[5] + HalfRoi));
+			for (size_t y = Ymin; y < Ymax; ++y) { for (size_t x = Xmin; x < Xmax; ++x) { mask[(y * dim_.x) + x] = true; } }
 		}
 		// Deux passages dans le même ordre, sans recopier les pixels hors masque.
 		size_t count = 0;
@@ -106,7 +106,7 @@ double Palm::AutoThreshold()
 //-------------------------------------------------------------------------------------------------
 void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const
 {
-	const uint16_t* image = stack_ + plane * size_;
+	const uint16_t* image = stack_ + (plane * size_);
 	const Vec2I Dim       = {.x = dim_.x, .y = dim_.y};
 
 	//----- Décomposition en ondelette -----

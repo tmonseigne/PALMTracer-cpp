@@ -63,13 +63,13 @@ void Alignment::computeCoord(const double oldX, const double oldY, double& newX,
 	             X3  = X2 * oldX,
 	             Y3  = Y2 * oldY;
 
-	newX = factors_[0][0] * X3 + factors_[0][1] * Y3 + factors_[0][2] * X2Y + factors_[0][3] * XY2 +
-	       factors_[0][4] * X2 + factors_[0][5] * Y2 + factors_[0][6] * XY +
-	       factors_[0][7] * oldX + factors_[0][8] * oldY + factors_[0][9];
+	newX = (factors_[0][0] * X3) + (factors_[0][1] * Y3) + (factors_[0][2] * X2Y) + (factors_[0][3] * XY2) +
+	       (factors_[0][4] * X2) + (factors_[0][5] * Y2) + (factors_[0][6] * XY) +
+	       (factors_[0][7] * oldX) + (factors_[0][8] * oldY) + factors_[0][9];
 
-	newY = factors_[1][0] * X3 + factors_[1][1] * Y3 + factors_[1][2] * X2Y + factors_[1][3] * XY2 +
-	       factors_[1][4] * X2 + factors_[1][5] * Y2 + factors_[1][6] * XY +
-	       factors_[1][7] * oldX + factors_[1][8] * oldY + factors_[1][9];
+	newY = (factors_[1][0] * X3) + (factors_[1][1] * Y3) + (factors_[1][2] * X2Y) + (factors_[1][3] * XY2) +
+	       (factors_[1][4] * X2) + (factors_[1][5] * Y2) + (factors_[1][6] * XY) +
+	       (factors_[1][7] * oldX) + (factors_[1][8] * oldY) + factors_[1][9];
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -83,12 +83,10 @@ void Alignment::align()
 void Alignment::precomputeTransformMap()
 {
 	const size_t UpW = dim_.x * upsampling_, UpH = dim_.y * upsampling_;
-	offsets_.assign(UpW * UpH + 1, 0);
+	offsets_.assign((UpW * UpH) + 1, 0);
 	contributions_.clear();
 	if (sizeStack_ == 0 || upsampling_ == 0) { return; }
-	for (const auto& axis : factors_) {
-		if (!std::ranges::all_of(axis, [](const double value) { return std::isfinite(value); })) { return; }
-	}
+	for (const auto& Axis : factors_) { if (!std::ranges::all_of(Axis, [](const double value) { return std::isfinite(value); })) { return; } }
 	std::vector transformGrid(dim_.y + 1, std::vector<Vec2D>(dim_.x + 1));
 
 	// 1. computeCoord pour tous les coins
@@ -99,7 +97,7 @@ void Alignment::precomputeTransformMap()
 
 	// Chaque ligne source possède son tampon : aucun verrou ni ordre dépendant d'OpenMP.
 	struct PendingContribution {
-		size_t target; ///< Indice du pixel cible.
+		size_t target;      ///< Indice du pixel cible.
 		Contribution value; ///< Source et poids du recouvrement.
 	};
 	std::vector<std::vector<PendingContribution>> rows(dim_.y);
@@ -115,12 +113,13 @@ void Alignment::precomputeTransformMap()
 			if (!std::ranges::all_of(P, [](const Vec2D& point) { return std::isfinite(point.x) && std::isfinite(point.y); })) { continue; }
 			// Un quadrilatère strictement convexe accepte les deux orientations (dont les réflexions).
 			double orientation = 0;
-			bool valid = true;
+			bool valid         = true;
 			for (size_t corner = 0; corner < 4; ++corner) {
-				const auto A = P[(corner + 1) % 4] - P[corner];
-				const auto B = P[(corner + 2) % 4] - P[(corner + 1) % 4];
-				const double Cross = A.x * B.y - A.y * B.x;
-				if (!std::isfinite(Cross) || Cross == 0 || (corner > 0 && std::signbit(Cross) != std::signbit(orientation))) {
+				const auto A       = P[(corner + 1) % 4] - P[corner];
+				const auto B       = P[(corner + 2) % 4] - P[(corner + 1) % 4];
+				const double Cross = (A.x * B.y) - (A.y * B.x);
+				if (!std::isfinite(Cross) || std::abs(Cross) <= std::numeric_limits<double>::epsilon()
+				    || (corner > 0 && std::signbit(Cross) != std::signbit(orientation))) {
 					valid = false;
 					break;
 				}
@@ -132,11 +131,11 @@ void Alignment::precomputeTransformMap()
 
 			// Rejeter les pixels hors champ avant toute conversion d'une borne négative en entier non signe.
 			if (x1 <= 0 || y1 <= 0 || x0 >= static_cast<double>(dim_.x) || y0 >= static_cast<double>(dim_.y)) { continue; }
-			const double Scale = static_cast<double>(upsampling_);
-			const size_t Xmin  = static_cast<size_t>(std::floor(std::max(0.0, x0) * Scale));
-			const size_t Xmax  = static_cast<size_t>(std::min(static_cast<double>(UpW - 1), std::ceil(std::min(static_cast<double>(dim_.x), x1) * Scale)));
-			const size_t Ymin  = static_cast<size_t>(std::floor(std::max(0.0, y0) * Scale));
-			const size_t Ymax  = static_cast<size_t>(std::min(static_cast<double>(UpH - 1), std::ceil(std::min(static_cast<double>(dim_.y), y1) * Scale)));
+			const auto Scale  = static_cast<double>(upsampling_);
+			const size_t Xmin = static_cast<size_t>(std::floor(std::max(0.0, x0) * Scale));
+			const size_t Xmax = static_cast<size_t>(std::min(static_cast<double>(UpW - 1), std::ceil(std::min(static_cast<double>(dim_.x), x1) * Scale)));
+			const size_t Ymin = static_cast<size_t>(std::floor(std::max(0.0, y0) * Scale));
+			const size_t Ymax = static_cast<size_t>(std::min(static_cast<double>(UpH - 1), std::ceil(std::min(static_cast<double>(dim_.y), y1) * Scale)));
 
 			for (size_t j = Ymin; j <= Ymax; ++j) {
 				const double Ypix      = static_cast<double>(j) * Step;
@@ -146,23 +145,17 @@ void Alignment::precomputeTransformMap()
 					std::vector<Vec2D> clipped;
 					clipPolygon(P, clipped, Xpix, Ypix, Step);
 					const double Weight = getArea(clipped);
-					if (std::isfinite(Weight) && Weight > 0) {
-						rows[y].push_back({.target = RowdstIdx + i, .value = {.index = SrcIdx, .weight = Weight}});
-					}
+					if (std::isfinite(Weight) && Weight > 0) { rows[y].push_back({.target = RowdstIdx + i, .value = {.index = SrcIdx, .weight = Weight}}); }
 				}
 			}
 		}
 	}
 	// Comptage et préfixe des listes cibles ; le passage final conserve l'ordre raster des sources.
-	for (const auto& row : rows) {
-		for (const auto& entry : row) { ++offsets_[entry.target + 1]; }
-	}
+	for (const auto& Row : rows) { for (const auto& Entry : Row) { ++offsets_[Entry.target + 1]; } }
 	std::partial_sum(offsets_.begin(), offsets_.end(), offsets_.begin());
 	contributions_.resize(offsets_.back());
 	auto cursor = offsets_;
-	for (const auto& row : rows) {
-		for (const auto& entry : row) { contributions_[cursor[entry.target]++] = entry.value; }
-	}
+	for (const auto& Row : rows) { for (const auto& Entry : Row) { contributions_[cursor[Entry.target]++] = Entry.value; } }
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -179,8 +172,8 @@ void Alignment::applyTransform() const
 				acc += Weight * input_[PlaneOffset + Index];
 			}
 			// Borner avant lround évite tout débordement de long et tout rebouclage uint16.
-			constexpr auto Maximum = std::numeric_limits<uint16_t>::max();
-			output_[p * UpSizeIm + i] = !(acc > 0) ? 0 : acc >= Maximum ? Maximum : static_cast<uint16_t>(std::lround(acc));
+			constexpr auto Maximum      = std::numeric_limits<uint16_t>::max();
+			output_[(p * UpSizeIm) + i] = !(acc > 0) ? 0 : acc >= Maximum ? Maximum : static_cast<uint16_t>(std::lround(acc));
 		}
 	}
 }
@@ -190,7 +183,7 @@ void Alignment::clipPolygon(const std::vector<Vec2D>& poly, std::vector<Vec2D>& 
 {
 	const double Xmax = xmin + pixelSize, Ymax = ymin + pixelSize;
 
-	auto inside = [](const Vec2D& c, const int edge, const double bound) {
+	const auto inside = [](const Vec2D& c, const int edge, const double bound) {
 		switch (edge) {
 			case 0: return c.x >= bound; // left
 			case 1: return c.x <= bound; // right
@@ -200,9 +193,9 @@ void Alignment::clipPolygon(const std::vector<Vec2D>& poly, std::vector<Vec2D>& 
 		}
 	};
 
-	auto intersect = [](const Vec2D& a, const Vec2D& b, const int edge, const double bound) {
-		if (edge < 2) { return Vec2D{.x = bound, .y = a.y + (b.y - a.y) * (bound - a.x) / (b.x - a.x)}; } // vertical clip
-		return Vec2D{.x = a.x + (b.x - a.x) * (bound - a.y) / (b.y - a.y), .y = bound};                   // horizontal clip
+	const auto intersect = [](const Vec2D& a, const Vec2D& b, const int edge, const double bound) {
+		if (edge < 2) { return Vec2D{.x = bound, .y = a.y + ((b.y - a.y) * (bound - a.x) / (b.x - a.x))}; } // vertical clip
+		return Vec2D{.x = a.x + ((b.x - a.x) * (bound - a.y) / (b.y - a.y)), .y = bound};                   // horizontal clip
 	};
 
 	clipped.reserve(4);
@@ -250,7 +243,7 @@ double Alignment::getArea(const std::vector<Vec2D>& poly) const
 	for (size_t i = 0; i < N; ++i) {
 		const auto& [x0, y0] = poly[i];
 		const auto& [x1, y1] = poly[(i + 1) % N];
-		area += x0 * y1 - x1 * y0;
+		area += (x0 * y1) - (x1 * y0);
 	}
 	return 0.5 * static_cast<double>(upsampling2_) * std::abs(area);
 }
