@@ -26,14 +26,35 @@ Tracks LoadTracksData(const bool is3D)
 
 using TrackingParams = std::tuple<size_t, bool, bool>;
 
-/// <summary>Observe les allocations internes sans etendre l'API de production.</summary>
+/// <summary>Expose les éléments nécessaires aux vérifications ciblées, sans étendre l'API de production.</summary>
 class TracksAccess final : public Tracks {
 public:
 	using Tracks::t_;
+	using Tracks::getCandidates;
+	using Tracks::getPlaneRanges;
+	using Tracks::loadPoints;
 };
 
 /// <summary>Variantes du suivi par mode d'ajustement, watershed et ordre d'entrée.</summary>
 class TrackingTests : public testing::TestWithParam<TrackingParams> { };
+
+/// <summary>Filtre numérique des candidats : rayon, distance, admissibilité et nom du cas.</summary>
+class CandidateRadiusTests : public testing::TestWithParam<std::tuple<double, double, bool, std::string>> { };
+
+/// <summary>Ex aequo ou second voisin disponible, dans les deux ordres d'entrée.</summary>
+class TrackingGreedyTests : public testing::TestWithParam<std::tuple<bool, bool>> { };
+
+/// <summary>Scénario de reconnexion avec chaînes attendues explicitement.</summary>
+struct BlinkingScenario {
+	std::string name;                              ///< Nom du comportement vérifié.
+	std::vector<std::array<double, 3>> rows;        ///< Un segment par ligne : identifiant, plan et X.
+	std::vector<std::vector<size_t>> expected;      ///< Identifiants des points, regroupés par chaîne attendue.
+	size_t maxDuration = 4;                        ///< Délai maximal admissible.
+	size_t emptyIndex  = INVALID_INDEX;            ///< Segment à vider pour vérifier son exclusion, le cas échéant.
+};
+
+/// <summary>Bornes temporelles et contraintes gloutonnes absentes des seules références CSV.</summary>
+class BlinkingIndexTests : public testing::TestWithParam<BlinkingScenario> { };
 
 /// <summary>Modes de reconnexion indépendants valides sur fichiers CSV.</summary>
 class BlinkingTests : public testing::TestWithParam<size_t> { };
@@ -75,6 +96,99 @@ TEST(TracksTests, LoadsSparseGroups)
 #pragma endregion LoadTracks
 
 #pragma region Tracking
+/// <summary>Le filtre conserve le seuil inclusif et les règles numériques du carré du rayon.</summary>
+TEST_P(CandidateRadiusTests, FiltersBySquaredRadius)
+{
+	const auto& [radius, distance, accepted, name] = GetParam();
+	const std::array Input{1.0, 1.0, 0.0, 0.0, 2.0, 2.0, distance, 0.0};
+	const auto Points = TracksAccess::loadPoints(Input.data(), 2);
+	std::vector<Candidate> candidates;
+	TracksAccess::getCandidates(Points, {.begin = 0, .end = 1}, {.begin = 1, .end = 2}, radius, candidates);
+	ASSERT_EQ(candidates.size(), accepted ? size_t{1} : size_t{0});
+	if (accepted) {
+		EXPECT_EQ(candidates[0].from, 0);
+		EXPECT_EQ(candidates[0].to, 1);
+		EXPECT_EQ(candidates[0].distance2, distance * distance);
+	}
+}
+
+INSTANTIATE_TEST_SUITE_P(Radii, CandidateRadiusTests,
+                         testing::Values(
+	                         std::make_tuple(2.0, 2.0, true, "InclusiveBoundary"),
+	                         std::make_tuple(2.0, std::nextafter(2.0, 3.0), false, "OutsideBoundary"),
+	                         std::make_tuple(0.0, 0.0, true, "ZeroRadius"),
+	                         std::make_tuple(-1.0, 0.5, true, "NegativeRadius"),
+	                         std::make_tuple(1e-200, 1e-200, true, "SquaredUnderflow"),
+	                         std::make_tuple(1e-140, 1e-140, true, "SmallNormalRadius"),
+	                         std::make_tuple(1e140, 1e140, true, "LargeNormalRadius"),
+	                         std::make_tuple(0.1, 0.1, true, "FractionalRadius"),
+	                         std::make_tuple(std::numeric_limits<double>::infinity(), 3.0, true, "InfiniteRadius"),
+	                         std::make_tuple(std::numeric_limits<double>::quiet_NaN(), 1.0, false, "NanRadius"),
+	                         std::make_tuple(1.0, std::numeric_limits<double>::infinity(), false, "InfiniteCoordinate")),
+                         [](const testing::TestParamInfo<CandidateRadiusTests::ParamType>& info) { return std::get<3>(info.param); });
+
+/// <summary>Le même buffer conserve sa capacité et ne garde aucun candidat des transitions précédentes, sans conserver de candidat périmé.</summary>
+TEST(TracksTests, ReusesCandidateBufferAcrossTransitions)
+{
+	const std::array Input{1.0, 1.0, 0.0, 0.0, 2.0, 1.0, 0.2, 0.0,
+	                       3.0, 2.0, 0.1, 0.0, 4.0, 2.0, 0.3, 0.0,
+	                       5.0, 3.0, 3.0, 0.0, 6.0, 4.0, 3.0, 0.0};
+	const auto Points = TracksAccess::loadPoints(Input.data(), Input.size() / 4);
+	const auto Planes = TracksAccess::getPlaneRanges(Points);
+	std::vector<Candidate> candidates;
+	candidates.reserve(64);
+	const size_t Capacity = candidates.capacity();
+	candidates.emplace_back(INVALID_INDEX, INVALID_INDEX, -1);
+	TracksAccess::getCandidates(Points, Planes[0], Planes[1], 1, candidates);
+	ASSERT_EQ(candidates.size(), 4);
+	const Candidate* Storage = candidates.data();
+	EXPECT_EQ(candidates.capacity(), Capacity);
+
+	// Une transition sans voisin efface les quatre anciens candidats sans libérer la capacité.
+	TracksAccess::getCandidates(Points, Planes[1], Planes[2], 1, candidates);
+	EXPECT_TRUE(candidates.empty());
+	EXPECT_EQ(candidates.capacity(), Capacity);
+
+	// Le rayon nul remplit la même allocation avec une seule liaison exacte.
+	TracksAccess::getCandidates(Points, Planes[2], Planes[3], 0, candidates);
+	ASSERT_EQ(candidates.size(), 1);
+	EXPECT_EQ(candidates[0].from, 4);
+	EXPECT_EQ(candidates[0].to, 5);
+	EXPECT_EQ(candidates.data(), Storage);
+	EXPECT_EQ(candidates.capacity(), Capacity);
+
+	const PlaneRange Empty{.begin = 0, .end = 0};
+	TracksAccess::getCandidates(Points, Empty, Planes[1], 1, candidates);
+	EXPECT_TRUE(candidates.empty());
+	EXPECT_EQ(candidates.capacity(), Capacity);
+	TracksAccess::getCandidates(Points, Planes[0], Empty, 1, candidates);
+	EXPECT_TRUE(candidates.empty());
+	EXPECT_EQ(candidates.capacity(), Capacity);
+}
+
+/// <summary>Les ex aequo suivent les identifiants ; un conflit laisse au second point son autre voisin admissible.</summary>
+TEST_P(TrackingGreedyTests, ResolvesConflicts)
+{
+	const auto [fallback, reverse] = GetParam();
+	std::array<std::array<double, 4>, 4> rows{{
+		{1, 1, 0, 0}, {2, 1, fallback ? 2.2 : 0.0, 0},
+		{3, 2, 1, 0}, {4, 2, fallback ? 3.7 : -1.0, 0}
+	}};
+	if (reverse) { std::ranges::reverse(rows); }
+	std::vector<double> input;
+	for (const auto& Row : rows) { input.insert(input.end(), Row.begin(), Row.end()); }
+	std::array<uint64_t, 8> output{};
+	const std::array<uint64_t, 8> Expected{1, 1, 2, 2, 3, 1, 4, 2};
+	EXPECT_EQ(Tracks::Tracking(input.data(), output.data(), rows.size(), fallback ? 2 : 1), output.size());
+	EXPECT_EQ(output, Expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(Greedy, TrackingGreedyTests, testing::Combine(testing::Bool(), testing::Bool()),
+                         [](const testing::TestParamInfo<TrackingGreedyTests::ParamType>& info) {
+	                         return std::string(std::get<0>(info.param) ? "FallbackNeighbor" : "ExactTies")
+	                         + (std::get<1>(info.param) ? "Reversed" : "Ordered");
+                         });
+
 /// <summary>Deux distances distinctes de moins d'un epsilon ne sont pas des ex aequo.</summary>
 TEST(TracksTests, ResolvesCloseDistances)
 {
@@ -166,6 +280,60 @@ TEST(TracksTests, TrackingEmptyInput)
 #pragma endregion Tracking
 
 #pragma region BlinkingReconnection
+
+/// <summary>Vérifie les chaînes attendues sans recopier l'algorithme de reconnexion dans les tests.</summary>
+TEST_P(BlinkingIndexTests, BuildsExpectedChains)
+{
+	const auto& Scenario = GetParam();
+	std::vector<double> input;
+	for (const auto& Row : Scenario.rows) {
+		input.insert(input.end(), {Row[0], Row[1], Row[0], Row[2], 0, 0, 10, 1});
+	}
+	TracksAccess tracks;
+	tracks.LoadTracks(input.data(), Scenario.rows.size(), 1);
+	if (Scenario.emptyIndex != INVALID_INDEX) { tracks.t_[Scenario.emptyIndex].points.clear(); }
+	tracks.BlinkingReconnection(0, Scenario.maxDuration, 2);
+	ASSERT_EQ(tracks.t_.size(), Scenario.expected.size());
+	for (size_t i = 0; i < Scenario.expected.size(); ++i) {
+		EXPECT_EQ(tracks.t_[i].id, i + 1);
+		std::vector<size_t> ids;
+		for (const auto& Point : tracks.t_[i].points) { ids.push_back(Point.id_); }
+		EXPECT_EQ(ids, Scenario.expected[i]);
+	}
+}
+
+INSTANTIATE_TEST_SUITE_P(TemporalIndex, BlinkingIndexTests,
+                         testing::Values(
+	                         BlinkingScenario{"ZeroDuration", {{1, 1, 0}, {2, 5, 0}}, {{1}, {2}}, 0},
+	                         BlinkingScenario{"OutsideWindow", {{1, 1, 0}, {2, 5, 0}}, {{1}, {2}}, 3},
+	                         BlinkingScenario{"InclusiveWindow", {{1, 1, 0}, {2, 5, 0}}, {{1, 2}}},
+	                         BlinkingScenario{"SameFrameExcluded", {{1, 1, 0}, {2, 1, 0}}, {{1}, {2}}},
+	                         BlinkingScenario{"UnlimitedDuration", {{1, 1, 0}, {2, 1e12, 0}}, {{1, 2}}, std::numeric_limits<size_t>::max()},
+	                         BlinkingScenario{"ExactTiesOrdered", {{1, 1, 0}, {2, 2, 1}, {3, 2, -1}}, {{1, 2}, {3}}},
+	                         BlinkingScenario{"ExactTiesReversed", {{1, 1, 0}, {3, 2, -1}, {2, 2, 1}}, {{1, 3}, {2}}},
+	                         BlinkingScenario{"TakenCandidate", {{1, 1, 0}, {2, 1, 0.1}, {3, 2, 0}}, {{1, 3}, {2}}},
+	                         BlinkingScenario{"OriginalHeadOrder", {{1, 3, 0}, {2, 1, 0}, {3, 2, 0}}, {{1}, {2, 3}}},
+	                         BlinkingScenario{"EmptySegment", {{1, 1, 0}, {2, 2, 0}, {3, 3, 0}}, {{1, 3}}, 4, 1},
+	                         // Une distance NaN ne départage pas les candidats de même délai : le premier reste retenu.
+	                         BlinkingScenario{"NanDistance", {{1, 1, 0}, {2, 2, std::numeric_limits<double>::quiet_NaN()}, {3, 2, 1}}, {{1, 2}, {3}}}),
+                         [](const testing::TestParamInfo<BlinkingScenario>& info) { return info.param.name; });
+
+/// <summary>La borne temporelle reste valide lorsque son addition au dernier plan déborderait size_t.</summary>
+TEST(TracksTests, BlinkingNearPlaneLimit)
+{
+	const std::array<double, 2 * N_TRACKING> Input{1, 1, 1, 0, 0, 0, 10, 1, 2, 2, 2, 0, 0, 0, 10, 1};
+	TracksAccess tracks;
+	tracks.LoadTracks(Input.data(), 2, 1);
+	// Affectation entière directe : un double ne représente pas exactement ces plans extrêmes.
+	tracks.t_[0].points[0].plane_ = std::numeric_limits<size_t>::max() - 2;
+	tracks.t_[1].points[0].plane_ = std::numeric_limits<size_t>::max() - 1;
+	tracks.BlinkingReconnection(0, 10, 2);
+	ASSERT_EQ(tracks.t_.size(), 1);
+	ASSERT_EQ(tracks.t_[0].points.size(), 2);
+	EXPECT_EQ(tracks.t_[0].points[0].id_, 1);
+	EXPECT_EQ(tracks.t_[0].points[1].id_, 2);
+}
+
 /// <summary>Le candidat temporellement le plus proche gagne ; a même frame, la distance départage, quel que soit l'ordre de parcours.</summary>
 TEST_P(BlinkingPriorityTests, CandidatePriority)
 {
@@ -282,7 +450,7 @@ INSTANTIATE_TEST_SUITE_P(, TrackAnalysisTests, testing::Bool(),
 TEST(TracksTests, InstantDiffusion)
 {
 	const auto Tracks = LoadTracksData(true);
-	const ComputesParams Params{.mode = fit_mode::linear, .fitLength = 4, .is3D = true, .pixelSize = 1, .exposureTime = 1};
+	constexpr ComputesParams Params{.mode = fit_mode::linear, .fitLength = 4, .is3D = true, .pixelSize = 1, .exposureTime = 1};
 	auto expected = LoadCsv(InputPath / "ref/tracking2-InstantD-True.csv");
 	for (auto& row : expected) { for (size_t i = 1; i < row.size(); ++i) { row[i] = std::pow(10.0, row[i]); } }
 	ExpectTableNear(Tracks.ComputeAllInstantDiffusion(Params), expected, 1e-5);
@@ -307,7 +475,7 @@ INSTANTIATE_TEST_SUITE_P(, TrackFitTests, testing::Range(size_t{1}, size_t{3}),
 TEST(TracksTests, AnalysisEmptyState)
 {
 	const Tracks Tracks;
-	const ComputesParams Params{.fitLength = 4};
+	constexpr ComputesParams Params{.fitLength = 4};
 	EXPECT_TRUE(Tracks.ComputeAllMSD().empty());
 	EXPECT_TRUE(Tracks.ComputeAllInstantDiffusion(Params).empty());
 	EXPECT_TRUE(Tracks.ComputeAllFitMetrics(Params).empty());

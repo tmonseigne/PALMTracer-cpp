@@ -70,6 +70,8 @@ public:
 	/// - priorité au plus petit décalage temporel \f$\Delta t\f$,
 	/// - puis, à  \f$\Delta t\f$ égal, priorité à la distance spatiale minimale,
 	/// sous réserve que cette distance soit inférieure au seuil calculé par <c>getMaxDistance</c>.
+	/// Un index des débuts triés par plan limite la recherche à la fenêtre temporelle admissible, sans modifier l'ordre des têtes.
+	/// Dans un même plan, les indices d'origine sont parcourus dans l'ordre croissant pour préserver les ex aequo.
 	/// Le classement des candidats admissibles est centralise dans <see cref="getReconnectionCost"/>.
 	/// A coût exactement égal, le premier candidat rencontre est conservé ; l'association globale reste gloutonne.
 	/// </remarks>
@@ -170,6 +172,16 @@ protected:
 	/// </remarks>
 	[[nodiscard]] static std::vector<PlaneRange> getPlaneRanges(const std::vector<TrackingPoint>& points);
 
+	/// <summary>Génère tous les candidats admissibles entre deux plans, sans tri ni décision d'association.</summary>
+	/// <param name="points">Points triés par plan et identifiant.</param>
+	/// <param name="current">Plage des points sources.</param>
+	/// <param name="next">Plage des points cibles du plan suivant.</param>
+	/// <param name="maxDistance">Rayon dont le carré définit le filtre exact historique.</param>
+	/// <param name="candidates">Buffer vidé puis rempli avec tous les candidats admissibles, sans tri ; sa capacité est conservée.</param>
+	/// <remarks>La recherche examine exhaustivement toutes les paires des deux plans.</remarks>
+	static void getCandidates(const std::vector<TrackingPoint>& points, PlaneRange current, PlaneRange next,
+	                          double maxDistance, std::vector<Candidate>& candidates);
+
 	/// <summary>Associe gloutonnement les points de plans consécutifs pour construire des trajectoires 2D.</summary>
 	/// <param name="points">Points triés et modifiables. Les champs <c>previous</c>, <c>next</c> et <c>trackId</c> sont mis à jour en place.</param>
 	/// <param name="planes">Plages d'indices par plan, typiquement calculées par <see cref="getPlaneRanges"/>.</param>
@@ -179,7 +191,10 @@ protected:
 	/// triés par distance croissante puis par indices, puis validés de manière gloutonne si les deux extrémités sont encore libres.
 	/// Les couples de plans sont indépendants pour la génération des candidats et peuvent être traités en parallèle, mais l'attribution finale des identifiants
 	/// de trajectoire reste séquentielle pour garder un résultat déterministe.
-	/// Complexité principale : \f$\sum_t \mathcal{O}(n_t\,n_{t+1})\f$ pour la génération des candidats, plus le coût des tris locaux.
+	/// La recherche des candidats est exhaustive. L'indexation spatiale 2D évaluée sur la pile uTub complète
+	/// (5,19 millions de localisations, jusqu'à 600 par frame) n'a pas démontré de gain significatif au regard
+	/// des seuils pratiques et de la dispersion des mesures ; le parcours exhaustif est conservé pour sa simplicité.
+	/// Chaque thread réutilise son vecteur de candidats entre transitions. La génération est quadratique par paire de plans.
 	/// </remarks>
 	static void track(std::vector<TrackingPoint>& points, const std::vector<PlaneRange>& planes, double maxDistance);
 

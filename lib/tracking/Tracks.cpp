@@ -1,6 +1,7 @@
 #include "Tracks.hpp"
 #include "Constants.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 
@@ -82,6 +83,15 @@ void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, c
 	std::vector<std::vector<size_t>> chains; // Liste des chaînes d'indices (ex: { [2,4,5], [3], [6,7], ... })
 	chains.reserve(N);                       // Taille maximale possible
 
+	// Index temporel indépendant de l'ordre des têtes : seuls les débuts réellement occupés sont stockés.
+	std::vector<size_t> starts; // Indices dans t_ : les trajectoires et l’ordre des têtes restent inchangés.
+	starts.reserve(N);
+	for (size_t j = 0; j < N; ++j) { if (!t_[j].points.empty()) { starts.push_back(j); } }
+	std::ranges::sort(starts, [&](const size_t a, const size_t b) {
+		const size_t A = t_[a].points.front().plane_, B = t_[b].points.front().plane_;
+		return A != B ? A < B : a < b; // Tri par début ; à plan égal, conserve l’ordre de parcours historique.
+	});
+
 	// --- Construction des chaînes d'indices de connexion ---
 	for (size_t head = 0; head < N; ++head) {      // Trajectoire à tester
 		if (t_[head].points.empty()) { continue; } // Au cas où, mais théoriquement impossible.
@@ -90,34 +100,35 @@ void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, c
 		chain.push_back(head);                     // Ajout de la trajectoire initiale
 
 		// On tente d'allonger la chaîne de façon gloutonne
-		size_t current = head;
+		size_t current = head; // Segment à prolonger ; head reste la tête de toute la chaîne.
 		while (true) {
 			if (t_[current].points.empty()) { break; }            // Au cas où, mais théoriquement impossible.
 			const Point& Lp = t_[current].points.back();          // Dernier point de la trajectoire i.
 			size_t bJ       = std::numeric_limits<size_t>::max(); // Indice (j) du meilleur point.
 			auto bestCost   = getReconnectionCost(std::numeric_limits<size_t>::max(), std::numeric_limits<double>::max());
 
-			// Cherche le meilleur j non encore pris (hors tête) et non vide
-			for (size_t j = head + 1; j < N; ++j) {
-				if (j == current || taken[j] || t_[j].points.empty()) { continue; }
-				const Point& Fp = t_[j].points.front();   // Premier point de la trajectoire j.
-				if (Fp.plane_ <= Lp.plane_) { continue; } // Vérification de continuité temporelle.
-				const size_t Dp = Fp.plane_ - Lp.plane_;  // Calcul du temps (nombre de plans entre les trajectoires).
-				// (à vérifier, mais un break est possible, car les trajectoires sont triées par plan de démarrage)
-				if (Dp > maxDuration) { continue; }                                          // Vérification de validité temporelle.
-				const double D    = Fp.GetDistance(Lp),                                      // Calcul de la distance.
-				             MaxD = getMaxDistance(mode, static_cast<double>(Dp), maxSpeed); // Calcul de la distance maximale.
-				if (D > MaxD) { continue; }                                                  // Vérification de validité spatiale.
-				const auto Cost = getReconnectionCost(Dp, D);
-				if (!(Cost < bestCost)) { continue; } // A coût égal, conserver le premier candidat rencontre.
+			// Borne exclusive basse ; la soustraction évite tout débordement de Lp.plane_ + maxDuration.
+			const auto Begin = std::ranges::upper_bound(starts, Lp.plane_, {},
+			                                            [&](const size_t j) { return t_[j].points.front().plane_; }); // Premier début strictement après Lp.
+			for (auto it = Begin; it != starts.end(); ++it) {
+				const size_t J  = *it;                   // Indice d’origine du segment, distinct de sa position dans l’index trié.
+				const Point& Fp = t_[J].points.front();  // Premier point de la trajectoire j candidate.
+				const size_t Dp = Fp.plane_ - Lp.plane_; // Délai strictement positif grâce à upper_bound.
+				if (Dp > maxDuration) { break; }         // Les débuts suivants sont encore plus tardifs : toute la suite est hors fenêtre.
+				// Préserve la restriction historique aux indices après la tête et les conflits gloutons.
+				if (J <= head || J == current || taken[J]) { continue; } // Exclut les indices avant la tête, le segment courant et ceux déjà absorbés.
+				const double D = Fp.GetDistance(Lp), MaxD = getMaxDistance(mode, static_cast<double>(Dp), maxSpeed); // Calcul des distances.
+				if (D > MaxD) { continue; } // Vérification de validité spatiale.
+				const auto Cost = getReconnectionCost(Dp, D); // Compare d’abord le délai, puis la distance à délai égal.
+				if (Cost >= bestCost) { continue; } // À coût égal, conserver le premier candidat rencontre.
 
-				bJ       = j;
-				bestCost = Cost;
+				bJ       = J;
+				bestCost = Cost; // Mémorise le meilleur candidat ; la connexion attend la fin de la recherche.
 			}
 
 			if (bJ == std::numeric_limits<size_t>::max()) { break; } // Aucune trajectoire de trouvé, on sort du while
 			chain.push_back(bJ);                                     // Ajout de la trajectoire à la liste
-			taken[bJ] = true;                                        // Ajout d'un token "trajectoire prise"
+			taken[bJ] = true;                                        // Réserve ce segment pour cette chaîne et empêche sa réutilisation.
 			current   = bJ;                                          // Mise à jour de la trajectoire courante (qui est la dernière de la liste)
 		}
 		chains.emplace_back(std::move(chain)); // Ajout de la chaîne de trajectoire au tableau final.
@@ -430,49 +441,61 @@ std::vector<PlaneRange> Tracks::getPlaneRanges(const std::vector<TrackingPoint>&
 }
 
 //-------------------------------------------------------------------------------------------------
+void Tracks::getCandidates(const std::vector<TrackingPoint>& points, const PlaneRange current, const PlaneRange next,
+                           const double maxDistance, std::vector<Candidate>& candidates)
+{
+	candidates.clear();
+	candidates.reserve(current.end - current.begin);
+	if (current.begin == current.end || next.begin == next.end) { return; }
+	const double Radius2 = maxDistance * maxDistance;
+	for (size_t i = current.begin; i < current.end; ++i) {
+		for (size_t j = next.begin; j < next.end; ++j) {
+			const double D2 = points[i].GetSqDistance(points[j]);
+			if (D2 <= Radius2) { candidates.emplace_back(i, j, D2); }
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
 void Tracks::track(std::vector<TrackingPoint>& points, const std::vector<PlaneRange>& planes, const double maxDistance)
 {
-	const size_t Transitions  = planes.empty() ? 0 : planes.size() - 1;
-	const double MaxDistance2 = maxDistance * maxDistance; // Pré-calcul du carré de la distance maximale pour éviter les racines carrées répétées
-
-	#pragma omp parallel for schedule(dynamic)
-	for (int plane = 0; plane < static_cast<int>(Transitions); ++plane) {
-		const PlaneRange& Current = planes[plane];
-		const PlaneRange& Next    = planes[plane + 1];
-
-		if (Current.begin == Current.end || Next.begin == Next.end) { continue; }
-
+	const size_t Transitions = planes.empty() ? 0 : planes.size() - 1;
+	// Crée une équipe fixe : chaque thread réutilise son buffer de candidats entre les transitions.
+	#pragma omp parallel
+	{
 		std::vector<Candidate> candidates;
-		candidates.reserve(Current.end - Current.begin);
+		// Répartit les transitions entre les threads déjà créés ; la séparation des deux pragmas évite de recréer le buffer à chaque itération.
+		#pragma omp for schedule(dynamic)
+		for (int plane = 0; plane < static_cast<int>(Transitions); ++plane) {
+			const PlaneRange& Current = planes[plane];
+			const PlaneRange& Next    = planes[plane + 1];
 
-		// Pour chaque point du plan courant, on cherche les points du plan suivant qui sont dans la distance maximale
-		for (size_t i = Current.begin; i < Current.end; ++i) {
-			for (size_t j = Next.begin; j < Next.end; ++j) {
-				const double D2 = points[i].GetSqDistance(points[j]);
-				if (D2 <= MaxDistance2) { candidates.emplace_back(i, j, D2); }
+			if (Current.begin == Current.end || Next.begin == Next.end) { continue; }
+
+			// Examine toutes les paires et conserve tous les candidats admissibles.
+			getCandidates(points, Current, Next, maxDistance, candidates);
+
+			// Tri des candidats par distance croissante, puis par index croissant pour garantir la stabilité
+			std::ranges::sort(candidates, [](const Candidate& a, const Candidate& b) {
+				// Comparaison exacte nécessaire pour garantir un ordre faible strict ; une tolérance n'est pas transitive.
+				// ReSharper disable once CppClangTidyClangDiagnosticFloatEqual
+				if (a.distance2 != b.distance2) { return a.distance2 < b.distance2; }
+				if (a.from != b.from) { return a.from < b.from; }
+				return a.to < b.to;
+			});
+
+			// Pour chaque candidat, on relie les points si aucun des deux n'est déjà relié
+			for (const Candidate& C : candidates) {
+				// les points ne sont accedés pour le plan P uniquement pour next et pour le plan P+1 pour previous, donc pas de data race possible
+				TrackingPoint& from = points[C.from];
+				TrackingPoint& to   = points[C.to];
+
+				// Si l'un des deux est déjà relié, on ignore ce candidat. Utile, car on a trié par distance croissante, donc on garde le plus proche.
+				if (from.next != INVALID_INDEX || to.previous != INVALID_INDEX) { continue; }
+
+				from.next   = C.to;
+				to.previous = C.from;
 			}
-		}
-
-		// Tri des candidats par distance croissante, puis par index croissant pour garantir la stabilité
-		std::ranges::sort(candidates, [](const Candidate& a, const Candidate& b) {
-			// Comparaison exacte nécessaire pour garantir un ordre faible strict ; une tolérance n'est pas transitive.
-			// ReSharper disable once CppClangTidyClangDiagnosticFloatEqual
-			if (a.distance2 != b.distance2) { return a.distance2 < b.distance2; }
-			if (a.from != b.from) { return a.from < b.from; }
-			return a.to < b.to;
-		});
-
-		// Pour chaque candidat, on relie les points si aucun des deux n'est déjà relié
-		for (const Candidate& C : candidates) {
-			// les points ne sont accedés pour le plan P uniquement pour next et pour le plan P+1 pour previous, donc pas de data race possible
-			TrackingPoint& from = points[C.from];
-			TrackingPoint& to   = points[C.to];
-
-			// Si l'un des deux est déjà relié, on ignore ce candidat. Utile, car on a trié par distance croissante, donc on garde le plus proche.
-			if (from.next != INVALID_INDEX || to.previous != INVALID_INDEX) { continue; }
-
-			from.next   = C.to;
-			to.previous = C.from;
 		}
 	}
 
