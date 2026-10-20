@@ -70,7 +70,9 @@ public:
 	/// - priorité au plus petit décalage temporel \f$\Delta t\f$,
 	/// - puis, à  \f$\Delta t\f$ égal, priorité à la distance spatiale minimale,
 	/// sous réserve que cette distance soit inférieure au seuil calculé par <c>getMaxDistance</c>.
-	/// Un index des débuts triés par plan limite la recherche à la fenêtre temporelle admissible, sans modifier l'ordre des têtes.
+	/// Un index temporel limite la génération parallèle des candidats à la fenêtre admissible.
+	/// Chaque liste est triée de façon stable par getReconnectionCost, puis les connexions sont décidées séquentiellement
+	/// dans l'ordre des têtes, en vérifiant les segments déjà pris. Les coûts NaN conservent le parcours historique.
 	/// Dans un même plan, les indices d'origine sont parcourus dans l'ordre croissant pour préserver les ex aequo.
 	/// Le classement des candidats admissibles est centralise dans <see cref="getReconnectionCost"/>.
 	/// A coût exactement égal, le premier candidat rencontre est conservé ; l'association globale reste gloutonne.
@@ -146,6 +148,25 @@ protected:
 	/// <returns>Paire \f$(\Delta f,d)\f$ a minimiser lexicographiquement ; ce n'est pas une somme pondérée.</returns>
 	/// <remarks>Les limites de durée et de distance restent des contraintes d'admissibilité séparées du coût.</remarks>
 	[[nodiscard]] static std::pair<size_t, double> getReconnectionCost(size_t frameGap, double distance);
+
+	/// <summary>Candidat de reconnexion avec indice d'origine et coût déjà calculé.</summary>
+	struct ReconnectionCandidate {
+		size_t target;                       ///< Indice du segment cible dans t_.
+		std::pair<size_t, double> cost;       ///< Coût fourni uniquement par getReconnectionCost.
+	};
+
+	/// <summary>Génère et trie les reconnexions admissibles d'un segment, indépendamment des conflits gloutons.</summary>
+	/// <param name="starts">Indices des segments non vides, triés par plan de début puis indice d'origine.</param>
+	/// <param name="current">Indice du segment dont la fin est à prolonger.</param>
+	/// <param name="mode">Mode de calcul de la distance maximale admissible.</param>
+	/// <param name="maxDuration">Délai maximal inclusif, en plans.</param>
+	/// <param name="maxSpeed">Paramètre spatial transmis à getMaxDistance.</param>
+	/// <param name="candidates">Liste vidée puis remplie ; tous les candidats admissibles sont conservés.</param>
+	/// <returns>Vrai si la liste est triée ; faux si un coût NaN impose de conserver l'ordre temporel initial.</returns>
+	/// <remarks>Le tri stable utilise exclusivement getReconnectionCost. Les filtres taken et indice après la tête
+	/// sont appliqués lors des connexions séquentielles. Les appels concurrents utilisent des listes de sortie distinctes.</remarks>
+	[[nodiscard]] bool getReconnectionCandidates(const std::vector<size_t>& starts, size_t current, size_t mode,
+	                                            size_t maxDuration, double maxSpeed, std::vector<ReconnectionCandidate>& candidates) const;
 
 	/// <summary>Convertit un tableau brut <c>(Id, Plane, X, Y)</c> en liste de points de tracking triée par plan puis par identifiant.</summary>
 	/// <param name="points">Tableau d'entrée contigu de doubles contenant 4 valeurs par point : <c>Id</c>, <c>Plane</c>, <c>X</c>, <c>Y</c>.</param>

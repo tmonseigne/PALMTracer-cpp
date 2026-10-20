@@ -92,6 +92,15 @@ void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, c
 		return A != B ? A < B : a < b; // Tri par début ; à plan égal, conserve l’ordre de parcours historique.
 	});
 
+	// Chaque itération écrit sa propre liste ; t_ et l'index temporel restent en lecture seule jusqu'à la fin de l'équipe.
+	std::vector<std::vector<ReconnectionCandidate>> candidates(N);
+	std::vector<unsigned char> ordered(N, 1); // Un octet par liste : vector<bool> partagerait des bits entre threads.
+	#pragma omp parallel for schedule(dynamic)
+	for (ptrdiff_t current = 0; current < static_cast<ptrdiff_t>(N); ++current) {
+		const auto Index = static_cast<size_t>(current);
+		ordered[Index]   = static_cast<unsigned char>(getReconnectionCandidates(starts, Index, mode, maxDuration, maxSpeed, candidates[Index]));
+	}
+
 	// --- Construction des chaînes d'indices de connexion ---
 	for (size_t head = 0; head < N; ++head) {      // Trajectoire à tester
 		if (t_[head].points.empty()) { continue; } // Au cas où, mais théoriquement impossible.
@@ -102,28 +111,15 @@ void Tracks::BlinkingReconnection(const size_t mode, const size_t maxDuration, c
 		// On tente d'allonger la chaîne de façon gloutonne
 		size_t current = head; // Segment à prolonger ; head reste la tête de toute la chaîne.
 		while (true) {
-			if (t_[current].points.empty()) { break; }            // Au cas où, mais théoriquement impossible.
-			const Point& Lp = t_[current].points.back();          // Dernier point de la trajectoire i.
-			size_t bJ       = std::numeric_limits<size_t>::max(); // Indice (j) du meilleur point.
-			auto bestCost   = getReconnectionCost(std::numeric_limits<size_t>::max(), std::numeric_limits<double>::max());
-
-			// Borne exclusive basse ; la soustraction évite tout débordement de Lp.plane_ + maxDuration.
-			const auto Begin = std::ranges::upper_bound(starts, Lp.plane_, {},
-			                                            [&](const size_t j) { return t_[j].points.front().plane_; }); // Premier début strictement après Lp.
-			for (auto it = Begin; it != starts.end(); ++it) {
-				const size_t J  = *it;                   // Indice d’origine du segment, distinct de sa position dans l’index trié.
-				const Point& Fp = t_[J].points.front();  // Premier point de la trajectoire j candidate.
-				const size_t Dp = Fp.plane_ - Lp.plane_; // Délai strictement positif grâce à upper_bound.
-				if (Dp > maxDuration) { break; }         // Les débuts suivants sont encore plus tardifs : toute la suite est hors fenêtre.
-				// Préserve la restriction historique aux indices après la tête et les conflits gloutons.
-				if (J <= head || J == current || taken[J]) { continue; } // Exclut les indices avant la tête, le segment courant et ceux déjà absorbés.
-				const double D = Fp.GetDistance(Lp), MaxD = getMaxDistance(mode, static_cast<double>(Dp), maxSpeed); // Calcul des distances.
-				if (D > MaxD) { continue; } // Vérification de validité spatiale.
-				const auto Cost = getReconnectionCost(Dp, D); // Compare d’abord le délai, puis la distance à délai égal.
-				if (Cost >= bestCost) { continue; } // À coût égal, conserver le premier candidat rencontre.
-
-				bJ       = J;
-				bestCost = Cost; // Mémorise le meilleur candidat ; la connexion attend la fin de la recherche.
+			size_t bJ     = std::numeric_limits<size_t>::max(); // Indice du meilleur segment encore disponible.
+			auto bestCost = getReconnectionCost(std::numeric_limits<size_t>::max(), std::numeric_limits<double>::max());
+			for (const auto& C : candidates[current]) {
+				if (C.target <= head || taken[C.target]) { continue; } // Les conflits restent résolus dans l'ordre des têtes.
+				if (C.cost >= bestCost) { continue; }
+				bJ       = C.target;
+				bestCost = C.cost;
+				if (ordered[current] != 0) { break; } // Le premier candidat libre est optimal dans une liste triée.
+				// Un coût NaN impose le parcours complet historique, sans lui attribuer artificiellement une priorité.
 			}
 
 			if (bJ == std::numeric_limits<size_t>::max()) { break; } // Aucune trajectoire de trouvé, on sort du while
@@ -169,6 +165,34 @@ std::pair<size_t, double> Tracks::getReconnectionCost(const size_t frameGap, con
 	// en transmettant aussi les intensités. Poids et échelles Tref/Dref seraient à valider physiquement.
 	// Ces variantes ne sont pas actives : contraintes de recherche et arbitrage global glouton restent séparés.
 	return {frameGap, distance};
+}
+
+//-------------------------------------------------------------------------------------------------
+bool Tracks::getReconnectionCandidates(const std::vector<size_t>& starts, const size_t current, const size_t mode,
+                                       const size_t maxDuration, const double maxSpeed, std::vector<ReconnectionCandidate>& candidates) const
+{
+	candidates.clear();
+	if (t_[current].points.empty()) { return true; }
+	const Point& Last = t_[current].points.back();
+	// Premier début strictement postérieur.
+	const auto Begin = std::ranges::upper_bound(starts, Last.plane_, {}, [&](const size_t j) { return t_[j].points.front().plane_; });
+	bool ordered     = true;
+	for (auto it = Begin; it != starts.end(); ++it) {
+		const size_t J     = *it;
+		const Point& First = t_[J].points.front();
+		const size_t Gap   = First.plane_ - Last.plane_; // Soustraction sûre ; aucune addition susceptible de déborder.
+		if (Gap > maxDuration) { break; }                // L'index est trié : tous les débuts suivants dépassent aussi la fenêtre.
+		if (J == current) { continue; }
+		const double Distance = First.GetDistance(Last);
+		if (Distance > getMaxDistance(mode, static_cast<double>(Gap), maxSpeed)) { continue; }
+		const auto Cost = getReconnectionCost(Gap, Distance); // Règle de classement centralisée, indépendante de l'admissibilité.
+		candidates.push_back({.target = J, .cost = Cost});
+		ordered = ordered && !std::isnan(Cost.second);
+	}
+	// Les coûts égaux gardent leur ordre temporel puis leur indice d'origine.
+	if (ordered) { std::ranges::stable_sort(candidates, {}, &ReconnectionCandidate::cost); }
+
+	return ordered;
 }
 
 //-------------------------------------------------------------------------------------------------

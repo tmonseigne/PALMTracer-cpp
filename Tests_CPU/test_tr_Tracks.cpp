@@ -312,10 +312,12 @@ INSTANTIATE_TEST_SUITE_P(TemporalIndex, BlinkingIndexTests,
 	                         BlinkingScenario{"ExactTiesOrdered", {{1, 1, 0}, {2, 2, 1}, {3, 2, -1}}, {{1, 2}, {3}}},
 	                         BlinkingScenario{"ExactTiesReversed", {{1, 1, 0}, {3, 2, -1}, {2, 2, 1}}, {{1, 3}, {2}}},
 	                         BlinkingScenario{"TakenCandidate", {{1, 1, 0}, {2, 1, 0.1}, {3, 2, 0}}, {{1, 3}, {2}}},
+	                         BlinkingScenario{"TakenWithFallback", {{1, 1, 0}, {2, 1, 0.1}, {3, 2, 0}, {4, 2, 1}}, {{1, 3}, {2, 4}}},
+	                         BlinkingScenario{"BackwardIndexInChain", {{1, 1, 0}, {2, 3, 0}, {3, 2, 0}}, {{1, 3, 2}}},
 	                         BlinkingScenario{"OriginalHeadOrder", {{1, 3, 0}, {2, 1, 0}, {3, 2, 0}}, {{1}, {2, 3}}},
 	                         BlinkingScenario{"EmptySegment", {{1, 1, 0}, {2, 2, 0}, {3, 3, 0}}, {{1, 3}}, 4, 1},
-	                         // Une distance NaN ne départage pas les candidats de même délai : le premier reste retenu.
-	                         BlinkingScenario{"NanDistance", {{1, 1, 0}, {2, 2, std::numeric_limits<double>::quiet_NaN()}, {3, 2, 1}}, {{1, 2}, {3}}}),
+	                         // Avec la comparaison historique >=, un coût NaN n'écarte pas le candidat suivant de même délai.
+	                         BlinkingScenario{"NanDistance", {{1, 1, 0}, {2, 2, std::numeric_limits<double>::quiet_NaN()}, {3, 2, 1}}, {{1, 3}, {2}}}),
                          [](const testing::TestParamInfo<BlinkingScenario>& info) { return info.param.name; });
 
 /// <summary>La borne temporelle reste valide lorsque son addition au dernier plan déborderait size_t.</summary>
