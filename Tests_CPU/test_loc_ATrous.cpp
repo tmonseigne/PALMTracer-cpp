@@ -66,6 +66,30 @@ INSTANTIATE_TEST_SUITE_P(Shapes, ATrousImageTests,
 	                         ImageCase{"SingleColumn", {.x = 1, .y = 9}}, ImageCase{"Rectangle", {.x = 13, .y = 7}}),
                          [](const testing::TestParamInfo<ImageCase>& info) { return info.param.name; });
 
+/// <summary>Les images successives réécrivent tous les plans sans réallouer ni relire l'image précédente.</summary>
+TEST_P(ATrousImageTests, ReusesWorkspaceAcrossFrames)
+{
+	const Vec2I Dim = GetParam().dim;
+	ATrous decomposition(Dim);
+	std::array<const double*, N_PLANES> addresses{};
+	for (size_t level = 0; level < N_PLANES; ++level) { addresses[level] = decomposition.wDecomp_[level].data(); }
+	for (size_t frame = 0; frame < 4; ++frame) {
+		SCOPED_TRACE(frame);
+		std::vector<uint16_t> input(Dim.GetSize(), 0);
+		for (size_t i = 0; i < input.size(); ++i) {
+			input[i] = frame == 1 ? 0 : frame == 2 ? uint16_t{65535} : static_cast<uint16_t>(((i * 37) + frame + 11) % 4096);
+		}
+		const ATrous Expected(input.data(), Dim);
+		for (auto& level : decomposition.wDecomp_) { std::ranges::fill(level, -12345); }
+		decomposition.Process(input.data());
+		std::ranges::fill(input, uint16_t{999});
+		for (size_t level = 0; level < N_PLANES; ++level) {
+			EXPECT_EQ(decomposition.wDecomp_[level].data(), addresses[level]);
+			EXPECT_EQ(decomposition.wDecomp_[level], Expected.wDecomp_[level]);
+		}
+	}
+}
+
 /// <summary>Un champ constant produit uniquement un résidu constant, même pour les intensités limites uint16.</summary>
 TEST_P(ATrousConstantTests, DetailsVanishAndResidualIsPreserved)
 {

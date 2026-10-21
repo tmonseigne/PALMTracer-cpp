@@ -6,13 +6,18 @@
 #include "Constants.hpp"
 
 namespace palm_tracer::localization {
-ATrous::ATrous(const uint16_t* image, const Vec2I& dim)
+ATrous::ATrous(const Vec2I& dim)
 	: dim_(dim), size_(dim.GetSize())
 {
 	tmp_.resize(size_);
 	for (auto& wavelet : wDecomp_) { wavelet.resize(size_); }
-	decomposition2D(image);
 }
+
+//-------------------------------------------------------------------------------------------------
+ATrous::ATrous(const uint16_t* image, const Vec2I& dim) : ATrous(dim) { Process(image); }
+
+//-------------------------------------------------------------------------------------------------
+void ATrous::Process(const uint16_t* image) { decomposition2D(image); }
 
 //-------------------------------------------------------------------------------------------------
 void ATrous::decomposition2D(const uint16_t* image)

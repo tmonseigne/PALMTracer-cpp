@@ -33,6 +33,10 @@ namespace palm_tracer::localization {
 /// Elle repose sur une image segmentée (labelisée), ainsi qu'éventuellement sur des cartes de données ou de potentiels.
 class Segmentation2D {
 public:
+	/// <summary>Configure les dimensions et alloue les cartes sans lancer de segmentation.</summary>
+	/// <param name="dim">Dimensions initiales des images à segmenter.</param>
+	explicit Segmentation2D(const Vec2I& dim);
+
 	/// <summary>Segmente le plan d'ondelettes seuillé, puis mesure et filtre les régions obtenues.</summary>
 	/// <param name="decomposition">Décomposition dont le plan <c>PLANE_ID</c> fournit le potentiel de segmentation.</param>
 	/// <param name="threshold">Seuil de détection utilisé après la décomposition en ondelettes.</param>
@@ -43,6 +47,14 @@ public:
 
 	/// <summary>Libère les cartes et les mesures des régions.</summary>
 	~Segmentation2D() = default;
+
+	/// <summary>Segmente une nouvelle décomposition en réutilisant les cartes disponibles.</summary>
+	/// <param name="decomposition">Décomposition courante, lue uniquement pendant cet appel.</param>
+	/// <param name="threshold">Seuil strict appliqué au potentiel courant.</param>
+	/// <param name="ratio">Seuil relatif de fusion des bassins, comme dans le constructeur.</param>
+	/// <remarks>Actualise les dimensions, réécrit les cartes et réinitialise les statistiques et les labels.
+	/// Aucune référence à la décomposition n'est conservée. Une instance appartient à un seul thread à la fois.</remarks>
+	void Process(const ATrous& decomposition, double threshold, double ratio);
 
 	/// <summary>Calcule les statistiques par structure à partir de l'image d'intensité et de la segmentation.</summary>
 	void ComputeStatistics();

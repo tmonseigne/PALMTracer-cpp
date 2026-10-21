@@ -262,6 +262,7 @@ PT_API bool PT_CALL TrackAnalysis(const double* input, double* outputMSD, double
 PT_API void PT_CALL Wavelett(const uint16_t* input, double* output, const uint64_t height, const uint64_t width, const uint64_t planes, uint64_t levelOutput)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
+	if (planes == 0) { return; }
 
 	if (levelOutput == 0) { levelOutput = 1; } // on force au niveau 1 si l'appelant donne 0
 	// if (levelOutput == 0) { throw std::invalid_argument("levelOutput must be >= 1"); } // lever une exception dans une DLL Extern C n'est pas géré
@@ -270,15 +271,20 @@ PT_API void PT_CALL Wavelett(const uint16_t* input, double* output, const uint64
 	const palm_tracer::Vec2I Dim = {.x = width, .y = height};
 	const uint64_t Size          = Dim.GetSize();
 	const uint64_t Level         = std::min(levelOutput - 1, static_cast<uint64_t>(palm_tracer::N_PLANES) - 1); // le niveau 1 correspond à l'index 0 du tableau
+	const int Threads = static_cast<int>(std::min(planes, static_cast<uint64_t>(omp_get_max_threads())));
 
-	#pragma omp parallel for schedule(static)
-	// Parallélisation sur les plans avec un planning statique (plus efficace si les boucles font exactement le même temps)
-	for (int i = 0; i < static_cast<int>(planes); ++i) {
-		const uint64_t PlaneOffset = i * Size;
-		const uint16_t* image      = input + PlaneOffset;
-		const palm_tracer::localization::ATrous Decomposition(image, Dim); // Objet pour la décomposition ondelettes (algorithme à trous).
-		const double* waveletPlane = Decomposition.wDecomp_[Level].data(); // Récupération du plan d'ondelettes demandé
-		std::copy_n(waveletPlane, Size, output + PlaneOffset);             // Copie du résultat dans le tableau de sortie
+	#pragma omp parallel num_threads(Threads)
+	{
+		palm_tracer::localization::ATrous decomposition(Dim);
+		// Chaque thread conserve son espace de travail entre les plans qui lui sont attribués.
+		#pragma omp for schedule(static)
+		for (int i = 0; i < static_cast<int>(planes); ++i) {
+			const uint64_t PlaneOffset = i * Size;
+			const uint16_t* image      = input + PlaneOffset;
+			decomposition.Process(image);
+			const double* waveletPlane = decomposition.wDecomp_[Level].data();
+			std::copy_n(waveletPlane, Size, output + PlaneOffset);
+		}
 	}
 }
 

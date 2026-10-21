@@ -188,6 +188,32 @@ INSTANTIATE_TEST_SUITE_P(, PalmParallelTests, testing::Combine(testing::Values(s
                            return std::string(std::get<0>(info.param) == 0 ? "NoFit" : "GaussianTheta") + "Threads" + std::to_string(std::get<1>(info.param));
                            });
 
+/// <summary>Plusieurs frames différentes et vides réutilisent chaque espace sans transférer de détection ni de fit.</summary>
+TEST_P(PalmParallelTests, ReusesWorkspacesAcrossDifferentFrames)
+{
+	const auto [fit, threads] = GetParam();
+	const ThreadBudget Budget(threads);
+	const Stack Input("stack.tif");
+	const Vec3I Dim{.x = Input.dim.x, .y = Input.dim.y, .z = 9};
+	const Vec3I SingleDim{.x = Dim.x, .y = Dim.y, .z = 1};
+	const size_t PlaneSize = Dim.GetPlaneSize();
+	std::vector<uint16_t> pixels(Dim.GetSize(), 0);
+	Table expected;
+	for (size_t plane = 0; plane < Dim.z; plane += 2) {
+		const auto* image = Input.pixels.data() + ((plane % Input.dim.z) * PlaneSize);
+		std::copy_n(image, PlaneSize, pixels.data() + (plane * PlaneSize));
+		auto single = Localize(image, SingleDim, fit, true);
+		for (auto& row : single) {
+			row[0] = static_cast<double>(expected.size() + 1);
+			row[1] = static_cast<double>(plane + 1);
+			expected.push_back(row);
+		}
+	}
+	const auto Actual = Localize(pixels.data(), Dim, fit, true);
+	ASSERT_EQ(Actual.size(), expected.size());
+	for (size_t row = 0; row < Actual.size(); ++row) { ExpectTableNear({Actual[row]}, {expected[row]}, 1e-12); }
+}
+
 /// <summary>Une capacité nulle ou une pile sans plan ne lit ni n'ecrit de tampon.</summary>
 TEST(PalmTests, EmptyOutput)
 {

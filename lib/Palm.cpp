@@ -6,6 +6,7 @@
 #include <compare>
 #include <execution>
 #include <numeric>
+#include <omp.h>
 #include <ranges>
 #include <thread>
 #include <vector>
@@ -31,9 +32,16 @@ int Palm::Processing() const
 {
 	if (nPointsMaxPerPlane_ == 0) { return 0; }
 	std::vector<std::vector<std::array<double, col::Count>>> allPoints(dim_.z);
+	const int Threads = static_cast<int>(std::min(dim_.z, static_cast<size_t>(omp_get_max_threads())));
 
-	#pragma omp parallel for
-	for (int i = 0; i < static_cast<int>(dim_.z); ++i) { processingPlane(i, allPoints[i]); }
+	#pragma omp parallel num_threads(Threads)
+	{
+		const Vec2I Dim{.x = dim_.x, .y = dim_.y};
+		localization::ATrous decomposition(Dim);
+		localization::Segmentation2D segmentation(Dim);
+		#pragma omp for
+		for (int i = 0; i < static_cast<int>(dim_.z); ++i) { processingPlane(i, allPoints[i], decomposition, segmentation); }
+	}
 
 	// Copie par plan et attribution de l'identifiant global, du plan et de l'index local.
 	size_t count = 0, global = 1;
@@ -67,9 +75,12 @@ double Palm::AutoThreshold()
 	for (size_t i = 0; i < size_; ++i) { variance += (stack_[i] - mu) * (stack_[i] - mu); }
 	variance /= static_cast<double>(size_);
 	thresholdVal_ = std::sqrt(variance);
+	const Vec2I Dim{.x = dim_.x, .y = dim_.y};
+	localization::ATrous decomposition(Dim);
+	localization::Segmentation2D segmentation(Dim);
 
 	for (size_t i = 0; i < THRESHOLD_ITERATION; ++i) {
-		processingPlane(0, points);
+		processingPlane(0, points, decomposition, segmentation);
 		// Mise à jour du masque
 		std::fill(mask.begin(), mask.end(), false);
 		for (const auto& P : points) {
@@ -106,52 +117,53 @@ double Palm::AutoThreshold()
 }
 
 //-------------------------------------------------------------------------------------------------
-void Palm::processingPlane(const size_t plane, std::vector<std::array<double, col::Count>>& points) const
+void Palm::processingPlane(const size_t plane, std::vector<std::array<double, col::Count>>& points,
+                           localization::ATrous& decomposition, localization::Segmentation2D& segmentation) const
 {
 	const uint16_t* image = stack_ + (plane * size_);
 	const Vec2I Dim       = {.x = dim_.x, .y = dim_.y};
 
 	//----- Décomposition en ondelette -----
-	const localization::ATrous Decomposition(image, Dim); // Objet pour la décomposition ondelettes (algorithme à trous).
+	decomposition.Process(image);
 
 	//----- Segmentation -----
-	const localization::Segmentation2D Segmentation(Decomposition, thresholdVal_, watershedRatio_); // Objet de segmentation intelligente 2D.
+	segmentation.Process(decomposition, thresholdVal_, watershedRatio_);
 
 	//----- Fitting -----
 	switch (fit_) {
 		case 1: {
 			const fit::GaussianFit Gfit(fit::fit_mode::gaussian_2d_fixed, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Gfit.FitAll(Segmentation, points);
+			Gfit.FitAll(segmentation, points);
 			break;
 		}
 
 		case 2: { // Gaussian fit of 2D
 			const fit::GaussianFit Gfit(fit::fit_mode::gaussian_2d_sigma, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Gfit.FitAll(Segmentation, points);
+			Gfit.FitAll(segmentation, points);
 			break;
 		}
 
 		case 3: { // Gaussian fit of 3D Theta is constant
 			const fit::GaussianFit Gfit(fit::fit_mode::gaussian_3d_fixed, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Gfit.FitAll(Segmentation, points);
+			Gfit.FitAll(segmentation, points);
 			break;
 		}
 
 		case 4: { // Gaussian fit of 3D
 			const fit::GaussianFit Gfit(fit::fit_mode::gaussian_3d_theta, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Gfit.FitAll(Segmentation, points);
+			Gfit.FitAll(segmentation, points);
 			break;
 		}
 
 		case 5: { // Spline fit for Z on EMCCD sensor (maybe same call for sCMOS)
 			const fit::SplineFit Sfit(fit::fit_mode::spline_3d_emccd, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Sfit.FitAll(Segmentation, points);
+			Sfit.FitAll(segmentation, points);
 			break;
 		}
 
 		default: {
 			const fit::Fitting Sfit(fit::fit_mode::none, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Sfit.FitAll(Segmentation, points);
+			Sfit.FitAll(segmentation, points);
 			break;
 		}
 	}

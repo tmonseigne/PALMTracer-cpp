@@ -31,6 +31,66 @@ class SegmentationSurfaceTests : public testing::TestWithParam<size_t> { };
 class SegmentationWatershedTests : public testing::TestWithParam<std::tuple<bool, bool>> { };
 } // namespace
 
+#pragma region Process
+/// <summary>Les transitions dense/vide/dense et les nouveaux seuils et ratios remplacent tout l'état précédent.</summary>
+TEST_P(SegmentationWatershedTests, ReusesWorkspaceAcrossFrames)
+{
+	const auto [merge, firstPeakHigher] = GetParam();
+	constexpr Vec2I Dim{.x = 13, .y = 7};
+	const std::vector<uint16_t> Image(Dim.GetSize(), 0);
+	ATrous decomposition(Image.data(), Dim);
+	Segmentation2D segmentation(Dim);
+	for (size_t frame = 0; frame < 5; ++frame) {
+		SCOPED_TRACE(frame);
+		auto& potential = decomposition.wDecomp_[PLANE_ID];
+		std::ranges::fill(potential, 0);
+		if (frame != 1) {
+			for (size_t y = 2; y <= 4; ++y) {
+				for (size_t x = 2; x <= 4; ++x) { potential[(y * Dim.x) + x] = firstPeakHigher ? 100 : 60; }
+				for (size_t x = 8; x <= 10; ++x) { potential[(y * Dim.x) + x] = firstPeakHigher ? 60 : 100; }
+			}
+			potential[(3 * Dim.x) + 5] = firstPeakHigher ? 40 : 30;
+			potential[(3 * Dim.x) + 6] = 20;
+			potential[(3 * Dim.x) + 7] = firstPeakHigher ? 30 : 40;
+		}
+		const double Threshold = frame == 3 ? 100 : 0;
+		const double Ratio = (frame == 4 ? !merge : merge) ? 10 : 0;
+		const Segmentation2D Expected(decomposition, Threshold, Ratio);
+		segmentation.Process(decomposition, Threshold, Ratio);
+		std::ranges::fill(potential, -999);
+		ASSERT_EQ(segmentation.Infos().size(), Expected.Infos().size());
+		for (size_t i = 0; i < Expected.Infos().size(); ++i) {
+			const auto& Actual = segmentation.Infos()[i];
+			const auto& Reference = Expected.Infos()[i];
+			EXPECT_DOUBLE_EQ(Actual.x_, Reference.x_);
+			EXPECT_DOUBLE_EQ(Actual.y_, Reference.y_);
+			EXPECT_DOUBLE_EQ(Actual.z_, Reference.z_);
+			EXPECT_DOUBLE_EQ(Actual.intensity_, Reference.intensity_);
+			EXPECT_DOUBLE_EQ(Actual.surf_, Reference.surf_);
+			EXPECT_DOUBLE_EQ(Actual.mean_, Reference.mean_);
+			EXPECT_DOUBLE_EQ(Actual.stdev_, Reference.stdev_);
+		}
+	}
+}
+
+/// <summary>Une nouvelle décomposition redimensionne les cartes sans conserver les anciennes régions.</summary>
+TEST(SegmentationTests, ReconfiguresDimensions)
+{
+	Segmentation2D segmentation(Vec2I{.x = 2, .y = 2});
+	for (const Vec2I Dim : {Vec2I{.x = 13, .y = 7}, Vec2I{.x = 7, .y = 13}, Vec2I{.x = 3, .y = 3}}) {
+		const std::vector<uint16_t> Image(Dim.GetSize(), 0);
+		ATrous decomposition(Image.data(), Dim);
+		std::ranges::fill(decomposition.wDecomp_[PLANE_ID], 10);
+		segmentation.Process(decomposition, 0, 0);
+		ASSERT_EQ(segmentation.Infos().size(), 1);
+		EXPECT_DOUBLE_EQ(segmentation.Infos()[0].surf_, static_cast<double>(Dim.GetSize()));
+		EXPECT_DOUBLE_EQ(segmentation.Infos()[0].intensity_, 10 * static_cast<double>(Dim.GetSize()));
+		EXPECT_DOUBLE_EQ(segmentation.Infos()[0].x_, static_cast<double>(Dim.x - 1) / 2);
+		EXPECT_DOUBLE_EQ(segmentation.Infos()[0].y_, static_cast<double>(Dim.y - 1) / 2);
+	}
+}
+#pragma endregion Process
+
 #pragma region SegmentationInfo
 /// <summary>Une région commence vide et Reset restaure cet état après utilisation.</summary>
 TEST(SegmentationInfoTests, DefaultStateAndReset)

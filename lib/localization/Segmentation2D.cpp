@@ -40,13 +40,24 @@ bool CheckFilter(const Filter& f, const double value, const bool lessThan) { ret
 } // namespace
 
 //-------------------------------------------------------------------------------------------------
+Segmentation2D::Segmentation2D(const Vec2I& dim)
+	: dim_(dim), size_(dim.GetSize()), ratio_(0), map_(size_), output_(size_) { }
+
+//-------------------------------------------------------------------------------------------------
 Segmentation2D::Segmentation2D(const ATrous& decomposition, const double threshold, const double ratio)
-	: dim_(decomposition.dim_), size_(decomposition.size_), ratio_(ratio)
+	: Segmentation2D(decomposition.dim_) { Process(decomposition, threshold, ratio); }
+
+//-------------------------------------------------------------------------------------------------
+void Segmentation2D::Process(const ATrous& decomposition, const double threshold, const double ratio)
 {
-	// Initialization
+	dim_   = decomposition.dim_;
+	size_  = decomposition.size_;
+	ratio_ = ratio;
 	map_.resize(size_);
 	output_.resize(size_);
+	infos_.clear();
 
+	// Chaque pixel est réécrit, y compris sous le seuil ; aucun label ni potentiel ancien ne subsiste.
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(size_); ++i) {
 		if (decomposition.wDecomp_[PLANE_ID][i] > threshold) {

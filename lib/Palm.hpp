@@ -18,6 +18,8 @@
 
 #include "Constants.hpp"
 #include "Structs.hpp"
+#include "localization/ATrous.hpp"
+#include "localization/Segmentation2D.hpp"
 
 namespace palm_tracer {
 /// <summary>Classe principale pour la détection de points lumineux dans une image 2D en niveaux de gris,
@@ -140,6 +142,9 @@ private:
 	///
 	/// <param name="plane">Index du plan à analyser.</param>
 	/// <param name="points">Résultat de l'analyse.</param>
-	void processingPlane(size_t plane, std::vector<std::array<double, localization_columns::Count>>& points) const;
+	/// <param name="decomposition">Espace d'ondelettes réutilisé exclusivement par le thread appelant.</param>
+	/// <param name="segmentation">Espace de segmentation réinitialisé pour la frame courante.</param>
+	void processingPlane(size_t plane, std::vector<std::array<double, localization_columns::Count>>& points,
+	                     localization::ATrous& decomposition, localization::Segmentation2D& segmentation) const;
 };
 } // namespace palm_tracer

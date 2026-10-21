@@ -29,6 +29,10 @@ public:
 	size_t size_;                                       ///< Taille totale (hauteur × largeur).
 	std::array<std::vector<double>, N_PLANES> wDecomp_; ///< Résultat de la décomposition en ondelettes : tableau des plans.
 
+	/// <summary>Configure les dimensions et alloue les tampons sans traiter d'image.</summary>
+	/// <param name="dim">Dimensions communes aux images successives.</param>
+	explicit ATrous(const Vec2I& dim);
+
 	/// <summary>Constructeur de la classe <see cref="ATrous"/>.</summary>
 	/// <param name="image">Pointeur vers l'image 2D d'entrée (tableau d'uint16_t).</param>
 	/// <param name="dim">Dimensions de l'image (X, Y).</param>
@@ -36,6 +40,12 @@ public:
 
 	/// <summary>Destructeur de la classe <see cref="ATrous"/>.</summary>
 	~ATrous() = default;
+
+	/// <summary>Décompose une nouvelle image en réutilisant les tampons configurés.</summary>
+	/// <param name="image">Image de <c>size_</c> pixels, valide pendant cet appel uniquement.</param>
+	/// <remarks>Tous les plans et le tampon temporaire sont entièrement réécrits avant leur lecture.
+	/// Aucune référence à l'image n'est conservée. Une instance ne doit pas être utilisée simultanément par plusieurs threads.</remarks>
+	void Process(const uint16_t* image);
 
 private:
 	std::vector<double> tmp_; ///< Vecteur temporaire utilisé pour les calculs intermédiaires lors de la décomposition.
