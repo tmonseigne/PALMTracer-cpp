@@ -266,6 +266,48 @@ TEST_P(AlignmentWarpTests, PolynomialPixelOverlap)
 INSTANTIATE_TEST_SUITE_P(Warps, AlignmentWarpTests, testing::Bool(),
                          [](const testing::TestParamInfo<bool>& info) { return info.param ? "Cubic" : "Quadratic"; });
 
+/// <summary>Suréchantillonnages indépendants pour la réutilisation des tampons entre pixels.</summary>
+class AlignmentClippingTests : public testing::TestWithParam<size_t> { };
+
+/// <summary>Compare chaque recouvrement à deux intersections d'intervalles, y compris après une découpe vide.</summary>
+TEST_P(AlignmentClippingTests, ReusedBuffersPreserveOverlap)
+{
+	constexpr Vec3I Dim{.x = 7, .y = 5, .z = 2};
+	constexpr double ShiftX = 0.25, ShiftY = 0.5;
+	const size_t Upsampling = GetParam(), UpW = Dim.x * Upsampling, UpH = Dim.y * Upsampling;
+	const double Step = 1.0 / static_cast<double>(Upsampling);
+	std::array<std::array<double, 10>, 2> factors{};
+	factors[0][7] = factors[1][8] = 1;
+	factors[0][9] = ShiftX;
+	factors[1][9] = ShiftY;
+	std::vector<uint16_t> input(Dim.GetSize()), output(Dim.GetSize() * Upsampling * Upsampling, 999), expected(output.size());
+	for (size_t i = 0; i < input.size(); ++i) { input[i] = static_cast<uint16_t>(64 * (i + 1)); }
+	for (size_t z = 0; z < Dim.z; ++z) {
+		for (size_t y = 0; y < UpH; ++y) {
+			for (size_t x = 0; x < UpW; ++x) {
+				const double Left = static_cast<double>(x) * Step, Top = static_cast<double>(y) * Step;
+				double value = 0;
+				for (size_t sy = 0; sy < Dim.y; ++sy) {
+					const double SourceY = static_cast<double>(sy) + ShiftY;
+					const double Height = std::max(0.0, std::min(Top + Step, SourceY + 1) - std::max(Top, SourceY));
+					for (size_t sx = 0; sx < Dim.x; ++sx) {
+						const double SourceX = static_cast<double>(sx) + ShiftX;
+						const double Width = std::max(0.0, std::min(Left + Step, SourceX + 1) - std::max(Left, SourceX));
+						value += Width * Height / (Step * Step) * input[(z * Dim.GetPlaneSize()) + (sy * Dim.x) + sx];
+					}
+				}
+				expected[(z * UpW * UpH) + (y * UpW) + x] = static_cast<uint16_t>(std::lround(value));
+			}
+		}
+	}
+	Alignment align;
+	align.Align(input.data(), output.data(), Dim, factors, Upsampling);
+	EXPECT_EQ(output, expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(Sampling, AlignmentClippingTests, testing::Values(size_t{1}, size_t{2}, size_t{4}),
+                         [](const testing::TestParamInfo<size_t>& info) { return "Upsampling" + std::to_string(info.param); });
+
 /// <summary>Cas indépendants de conversion autour du demi-entier.</summary>
 class AlignmentRoundingTests : public testing::TestWithParam<double> { };
 

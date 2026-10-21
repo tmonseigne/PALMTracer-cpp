@@ -105,10 +105,13 @@ protected:
 	/// <summary>Réalise une découpe polygonale (algorithme de Sutherland-Hodgman) pour estimer l'aire de recouvrement.</summary>
 	/// <param name="poly">Polygone d'origine.</param>
 	/// <param name="clipped">Polygone résultant dans le pixel cible.</param>
+	/// <param name="scratch">Tampon intermédiaire, distinct de <c>clipped</c>, réutilisé entre les bords.</param>
 	/// <param name="xmin">Coordonnée X du coin supérieur gauche du pixel cible.</param>
 	/// <param name="ymin">Coordonnée Y du coin supérieur gauche du pixel cible.</param>
 	/// <param name="pixelSize">Taille d'un pixel (souvent 1 / suréchantillonnage).</param>
-	static void clipPolygon(const std::vector<Vec2D>& poly, std::vector<Vec2D>& clipped, double xmin, double ymin, double pixelSize);
+	/// <remarks>Les deux tampons sont vidés à chaque appel et doivent appartenir au thread appelant.</remarks>
+	static void clipPolygon(const std::array<Vec2D, 4>& poly, std::vector<Vec2D>& clipped, std::vector<Vec2D>& scratch,
+	                        double xmin, double ymin, double pixelSize);
 
 	/// <summary>Calcule l'aire d'un polygone (utile pour les poids de contribution).</summary>
 	/// <param name="poly">Polygone (doit être convexe pour validité des poids).</param>

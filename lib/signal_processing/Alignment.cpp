@@ -3,7 +3,6 @@
 #include <algorithm> // std::min, std::max
 #include <cmath>	 // pour std::lround
 #include <iostream>
-#include <iterator>
 #include <limits>
 #include <numeric>
 #include <stdexcept>
@@ -103,49 +102,55 @@ void Alignment::precomputeTransformMap()
 	std::vector<std::vector<PendingContribution>> rows(dim_.y);
 	const double Step = 1.0 / static_cast<double>(upsampling_);
 
-	#pragma omp parallel for
-	for (int y = 0; y < static_cast<int>(dim_.y); ++y) {
-		const size_t RowIdx = y * dim_.x;
-		for (int x = 0; x < static_cast<int>(dim_.x); ++x) {
-			const size_t SrcIdx = RowIdx + x;
+	#pragma omp parallel
+	{
+		// Chaque thread conserve ses deux tampons pour tous les découpages qui lui sont attribués.
+		std::vector<Vec2D> clipped, scratch;
+		clipped.reserve(8);
+		scratch.reserve(8);
+		#pragma omp for
+		for (int y = 0; y < static_cast<int>(dim_.y); ++y) {
+			const size_t RowIdx = y * dim_.x;
+			for (int x = 0; x < static_cast<int>(dim_.x); ++x) {
+				const size_t SrcIdx = RowIdx + x;
 
-			const std::vector P = {transformGrid[y][x], transformGrid[y][x + 1], transformGrid[y + 1][x + 1], transformGrid[y + 1][x]};
-			if (!std::ranges::all_of(P, [](const Vec2D& point) { return std::isfinite(point.x) && std::isfinite(point.y); })) { continue; }
-			// Un quadrilatère strictement convexe accepte les deux orientations (dont les réflexions).
-			double orientation = 0;
-			bool valid         = true;
-			for (size_t corner = 0; corner < 4; ++corner) {
-				const auto A       = P[(corner + 1) % 4] - P[corner];
-				const auto B       = P[(corner + 2) % 4] - P[(corner + 1) % 4];
-				const double Cross = (A.x * B.y) - (A.y * B.x);
-				if (!std::isfinite(Cross) || std::abs(Cross) <= std::numeric_limits<double>::epsilon()
-				    || (corner > 0 && std::signbit(Cross) != std::signbit(orientation))) {
-					valid = false;
-					break;
+				const std::array<Vec2D, 4> P{transformGrid[y][x], transformGrid[y][x + 1], transformGrid[y + 1][x + 1], transformGrid[y + 1][x]};
+				if (!std::ranges::all_of(P, [](const Vec2D& point) { return std::isfinite(point.x) && std::isfinite(point.y); })) { continue; }
+				// Un quadrilatère strictement convexe accepte les deux orientations (dont les réflexions).
+				double orientation = 0;
+				bool valid         = true;
+				for (size_t corner = 0; corner < 4; ++corner) {
+					const auto A       = P[(corner + 1) % 4] - P[corner];
+					const auto B       = P[(corner + 2) % 4] - P[(corner + 1) % 4];
+					const double Cross = (A.x * B.y) - (A.y * B.x);
+					if (!std::isfinite(Cross) || std::abs(Cross) <= std::numeric_limits<double>::epsilon()
+					    || (corner > 0 && std::signbit(Cross) != std::signbit(orientation))) {
+						valid = false;
+						break;
+					}
+					orientation = Cross;
 				}
-				orientation = Cross;
-			}
-			if (!valid) { continue; }
-			const auto [x0, x1] = std::minmax({P[0].x, P[1].x, P[2].x, P[3].x});
-			const auto [y0, y1] = std::minmax({P[0].y, P[1].y, P[2].y, P[3].y});
+				if (!valid) { continue; }
+				const auto [x0, x1] = std::minmax({P[0].x, P[1].x, P[2].x, P[3].x});
+				const auto [y0, y1] = std::minmax({P[0].y, P[1].y, P[2].y, P[3].y});
 
-			// Rejeter les pixels hors champ avant toute conversion d'une borne négative en entier non signe.
-			if (x1 <= 0 || y1 <= 0 || x0 >= static_cast<double>(dim_.x) || y0 >= static_cast<double>(dim_.y)) { continue; }
-			const auto Scale  = static_cast<double>(upsampling_);
-			const size_t Xmin = static_cast<size_t>(std::floor(std::max(0.0, x0) * Scale));
-			const size_t Xmax = static_cast<size_t>(std::min(static_cast<double>(UpW - 1), std::ceil(std::min(static_cast<double>(dim_.x), x1) * Scale)));
-			const size_t Ymin = static_cast<size_t>(std::floor(std::max(0.0, y0) * Scale));
-			const size_t Ymax = static_cast<size_t>(std::min(static_cast<double>(UpH - 1), std::ceil(std::min(static_cast<double>(dim_.y), y1) * Scale)));
+				// Rejeter les pixels hors champ avant toute conversion d'une borne négative en entier non signe.
+				if (x1 <= 0 || y1 <= 0 || x0 >= static_cast<double>(dim_.x) || y0 >= static_cast<double>(dim_.y)) { continue; }
+				const auto Scale  = static_cast<double>(upsampling_);
+				const size_t Xmin = static_cast<size_t>(std::floor(std::max(0.0, x0) * Scale));
+				const size_t Xmax = static_cast<size_t>(std::min(static_cast<double>(UpW - 1), std::ceil(std::min(static_cast<double>(dim_.x), x1) * Scale)));
+				const size_t Ymin = static_cast<size_t>(std::floor(std::max(0.0, y0) * Scale));
+				const size_t Ymax = static_cast<size_t>(std::min(static_cast<double>(UpH - 1), std::ceil(std::min(static_cast<double>(dim_.y), y1) * Scale)));
 
-			for (size_t j = Ymin; j <= Ymax; ++j) {
-				const double Ypix      = static_cast<double>(j) * Step;
-				const size_t RowdstIdx = j * UpW;
-				for (size_t i = Xmin; i <= Xmax; ++i) {
-					const double Xpix = static_cast<double>(i) * Step;
-					std::vector<Vec2D> clipped;
-					clipPolygon(P, clipped, Xpix, Ypix, Step);
-					const double Weight = getArea(clipped);
-					if (std::isfinite(Weight) && Weight > 0) { rows[y].push_back({.target = RowdstIdx + i, .value = {.index = SrcIdx, .weight = Weight}}); }
+				for (size_t j = Ymin; j <= Ymax; ++j) {
+					const double Ypix      = static_cast<double>(j) * Step;
+					const size_t RowdstIdx = j * UpW;
+					for (size_t i = Xmin; i <= Xmax; ++i) {
+						const double Xpix = static_cast<double>(i) * Step;
+						clipPolygon(P, clipped, scratch, Xpix, Ypix, Step);
+						const double Weight = getArea(clipped);
+						if (std::isfinite(Weight) && Weight > 0) { rows[y].push_back({.target = RowdstIdx + i, .value = {.index = SrcIdx, .weight = Weight}}); }
+					}
 				}
 			}
 		}
@@ -179,7 +184,8 @@ void Alignment::applyTransform() const
 }
 
 //-------------------------------------------------------------------------------------------------
-void Alignment::clipPolygon(const std::vector<Vec2D>& poly, std::vector<Vec2D>& clipped, const double xmin, const double ymin, const double pixelSize)
+void Alignment::clipPolygon(const std::array<Vec2D, 4>& poly, std::vector<Vec2D>& clipped, std::vector<Vec2D>& scratch,
+                            const double xmin, const double ymin, const double pixelSize)
 {
 	const double Xmax = xmin + pixelSize, Ymax = ymin + pixelSize;
 
@@ -198,17 +204,16 @@ void Alignment::clipPolygon(const std::vector<Vec2D>& poly, std::vector<Vec2D>& 
 		return Vec2D{.x = a.x + ((b.x - a.x) * (bound - a.y) / (b.y - a.y)), .y = bound};                   // horizontal clip
 	};
 
-	clipped.reserve(4);
-	std::ranges::copy(poly, std::back_inserter(clipped));
+	clipped.clear();
+	scratch.clear();
+	clipped.insert(clipped.end(), poly.begin(), poly.end());
 	for (int edge = 0; edge < 4; ++edge) {
-		std::vector<Vec2D> input = clipped;
-		clipped.clear();
+		scratch.clear();
+		if (clipped.empty()) { break; }
 
-		if (input.empty()) { break; }
-
-		for (size_t i = 0; i < input.size(); ++i) {
-			const auto& A = input[i];
-			const auto& B = input[(i + 1) % input.size()];
+		for (size_t i = 0; i < clipped.size(); ++i) {
+			const auto& A = clipped[i];
+			const auto& B = clipped[(i + 1) % clipped.size()];
 			double bound;
 			switch (edge) {
 				case 0: bound = xmin;
@@ -225,13 +230,14 @@ void Alignment::clipPolygon(const std::vector<Vec2D>& poly, std::vector<Vec2D>& 
 			const bool Ain = inside(A, edge, bound);
 			const bool Bin = inside(B, edge, bound);
 
-			if (Ain && Bin) { clipped.push_back(B); }
-			else if (Ain && !Bin) { clipped.push_back(intersect(A, B, edge, bound)); }
+			if (Ain && Bin) { scratch.push_back(B); }
+			else if (Ain && !Bin) { scratch.push_back(intersect(A, B, edge, bound)); }
 			else if (!Ain && Bin) {
-				clipped.push_back(intersect(A, B, edge, bound));
-				clipped.push_back(B);
+				scratch.push_back(intersect(A, B, edge, bound));
+				scratch.push_back(B);
 			}
 		}
+		clipped.swap(scratch);
 	}
 }
 
