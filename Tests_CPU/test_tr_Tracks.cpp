@@ -73,7 +73,7 @@ class TrackFitTests : public testing::TestWithParam<size_t> { };
 /// <summary>Les identifiants clairsemes ne determinent pas les tailles d'allocation.</summary>
 TEST(TracksTests, LoadsSparseGroups)
 {
-	constexpr std::array<double, 3 * N_TRACKING> Input{
+	constexpr std::array<double, 3 * tracking_columns::Count> Input{
 		1000000000000, 1, 1, 2, 3, 4, 5, 6,
 		1000000000000, 2, 2, 3, 4, 5, 6, 7,
 		2000000000000, 3, 3, 4, 5, 6, 7, 8
@@ -325,7 +325,7 @@ INSTANTIATE_TEST_SUITE_P(TemporalIndex, BlinkingIndexTests,
 /// <summary>La borne temporelle reste valide lorsque son addition au dernier plan déborderait size_t.</summary>
 TEST(TracksTests, BlinkingNearPlaneLimit)
 {
-	constexpr std::array<double, 2 * N_TRACKING> Input{1, 1, 1, 0, 0, 0, 10, 1, 2, 2, 2, 0, 0, 0, 10, 1};
+	constexpr std::array<double, 2 * tracking_columns::Count> Input{1, 1, 1, 0, 0, 0, 10, 1, 2, 2, 2, 0, 0, 0, 10, 1};
 	TracksAccess tracks;
 	tracks.LoadTracks(Input.data(), 2, 1);
 	// Affectation entière directe : un double ne représente pas exactement ces plans extrêmes.
@@ -342,7 +342,7 @@ TEST(TracksTests, BlinkingNearPlaneLimit)
 TEST_P(BlinkingPriorityTests, CandidatePriority)
 {
 	const auto [sameFrame, reverse] = GetParam();
-	std::array<std::array<double, N_TRACKING>, 3> input{
+	std::array<std::array<double, tracking_columns::Count>, 3> input{
 		{
 			{1, 1, 1, 0, 0, 0, 10, 1},
 			{2, sameFrame ? 2.0 : 3.0, 2, sameFrame ? 2.0 : 1.0, 0, 0, 10, 1},
@@ -381,8 +381,8 @@ TEST_P(BlinkingTests, Reconnection)
 	ASSERT_EQ(tracks.FillOutput(output.data()), Input.size());
 	EXPECT_DOUBLE_EQ(output.back(), -12345);
 	Table actual;
-	for (size_t i = 0; i < Input.size(); i += N_TRACKING) {
-		actual.emplace_back(output.begin() + static_cast<ptrdiff_t>(i), output.begin() + static_cast<ptrdiff_t>(i + N_TRACKING));
+	for (size_t i = 0; i < Input.size(); i += tracking_columns::Count) {
+		actual.emplace_back(output.begin() + static_cast<ptrdiff_t>(i), output.begin() + static_cast<ptrdiff_t>(i + tracking_columns::Count));
 	}
 	ExpectTableNear(actual, Expected);
 }

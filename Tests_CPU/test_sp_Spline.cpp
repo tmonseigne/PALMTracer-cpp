@@ -420,7 +420,7 @@ TEST(SplineTests, Calibrate)
 		std::cout << "Size " << dim << ", Plane Size = " << PlaneSize << ", HalfPlane = " << HalfPlane;
 
 		// Calcul du seuil sur l'image centrale (Z0) ROI de 25 pour prendre les billes complètes.
-		const auto PointsListSize = static_cast<size_t>(0.2 * static_cast<double>(PlaneSize) * N_LOCALIZATIONS);
+		const auto PointsListSize = static_cast<size_t>(0.2 * static_cast<double>(PlaneSize) * localization_columns::Count);
 		std::vector<double> pointsList(PointsListSize);
 		constexpr std::array<double, 4> FitParams = {ROI, 1.0, 2.0, 0.0};
 		auto palm = Palm(input.data() + PlaneSize * HalfPlane, pointsList.data(), PointsListSize, dim.y, dim.x, 1, 0, 10, 0, FitParams.data());
@@ -429,12 +429,12 @@ TEST(SplineTests, Calibrate)
 
 		// Calcul de la position des billes sur l'image centrale (Z0)
 		size_t nBeads = palm.Processing();
-		nBeads /= N_LOCALIZATIONS;
+		nBeads /= localization_columns::Count;
 		std::cout << nBeads << " Beads found " << "\n";
 		std::vector<Vec2I> beads;
 		beads.réserve(nBeads);
 		for (size_t i = 0; i < nBeads; ++i) {
-			const size_t Idx = i * N_LOCALIZATIONS,
+			const size_t Idx = i * localization_columns::Count,
 			             X   = static_cast<size_t>(std::round(pointsList[Idx + 4])),
 			             Y   = static_cast<size_t>(std::round(pointsList[Idx + 5]));
 			std::cout << "Bead " << i + 1 << " (" << X << ", " << Y << ")\n";

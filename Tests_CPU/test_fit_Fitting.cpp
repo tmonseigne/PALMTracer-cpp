@@ -91,7 +91,7 @@ TEST_P(FittingCapacityTests, WarnsOnlyWhenTruncated)
 	const auto Segmentation = Candidate(Dim);
 	ASSERT_EQ(Segmentation.Infos().size(), 1);
 	const Fitting Fit(fit_mode::none, Image.data(), Dim, GetParam(), Params.data());
-	std::vector<std::array<double, N_LOCALIZATIONS>> points;
+	std::vector<std::array<double, localization_columns::Count>> points;
 	testing::internal::CaptureStderr();
 	Fit.FitAll(Segmentation, points);
 	const auto Warning = testing::internal::GetCapturedStderr();
@@ -113,7 +113,7 @@ TEST(FittingTests, RespectsOutputCapacity)
 	constexpr std::array Params{7.0};
 	const auto Segmentation = Candidate(Dim);
 	ASSERT_EQ(Segmentation.Infos().size(), 1);
-	std::vector<std::array<double, N_LOCALIZATIONS>> points(3);
+	std::vector<std::array<double, localization_columns::Count>> points(3);
 	const Fitting Full(fit_mode::none, Image.data(), Dim, 1, Params.data());
 	Full.FitAll(Segmentation, points);
 	ASSERT_EQ(points.size(), 1);
@@ -160,9 +160,9 @@ TEST_P(FittingOutputTests, LocalizationFields)
 	info.Reset();
 	info.intensity_ = 123;
 	info.surf_      = 9;
-	std::array<double, N_LOCALIZATIONS> actual{};
+	std::array<double, localization_columns::Count> actual{};
 	Fit.fill(info, actual, 3.25, 2.5, 0, 7, 120, 1.2, 2.4, 0.3, 0.98, -1);
-	const std::array<double, N_LOCALIZATIONS> Expected{
+	const std::array<double, localization_columns::Count> Expected{
 		0, 0, 0, -1, 3.25, 2.5, 0,
 		GetParam() == fit_mode::none ? 123 : 2 * std::numbers::pi * 120 * 1.2 * 2.4,
 		1.2, 2.4, 0.3, 0.98, -1, 120, 7, 123, 9, 0.5
@@ -191,7 +191,7 @@ TEST_P(GaussianCircularInitializationTests, RecoversCenterAndCovariance)
 	localization::SegmentationInfo info{};
 	info.Reset();
 	info.x_ = info.y_ = 7.0;
-	std::array<double, N_LOCALIZATIONS> point{};
+	std::array<double, localization_columns::Count> point{};
 	Fit.Fit(info, point);
 	for (const double Value : point) { EXPECT_TRUE(std::isfinite(Value)); }
 	ASSERT_GT(point[8], 0);
@@ -226,7 +226,7 @@ TEST(GaussianFitFailureTests, RejectsNonFiniteInitialization)
 	localization::SegmentationInfo info{};
 	info.Reset();
 	info.x_ = info.y_ = 7.0;
-	std::array<double, N_LOCALIZATIONS> point{};
+	std::array<double, localization_columns::Count> point{};
 	EXPECT_NO_THROW(Fit.Fit(info, point));
 	for (const double Value : point) { EXPECT_TRUE(std::isfinite(Value)); }
 	for (const size_t Column : {size_t{7}, size_t{8}, size_t{9}, size_t{10}, size_t{11}, size_t{13}, size_t{14}}) { EXPECT_DOUBLE_EQ(point[Column], -1.0); }
@@ -240,7 +240,7 @@ TEST_P(GaussianFitTests, RecoversParameters)
 	const auto Image     = GaussianImage(Scenario, Dim);
 	const std::array Params{9.0, 1.2, 1.8, Scenario.mode == fit_mode::gaussian_3d_theta ? 0.2 : Scenario.theta};
 	const GaussianFit Fit(Scenario.mode, Image.data(), Dim, 100, Params.data());
-	std::vector<std::array<double, N_LOCALIZATIONS>> points;
+	std::vector<std::array<double, localization_columns::Count>> points;
 	Fit.FitAll(Candidate(Dim), points);
 	ASSERT_EQ(points.size(), 1);
 	const auto& Point = points[0];
@@ -263,7 +263,7 @@ TEST_P(GaussianFitTests, ScoreMatchesSquaredCorrelation)
 	const auto Image     = GaussianImage(Scenario, Dim);
 	const std::array Params{9.0, 1.2, 1.8, Scenario.mode == fit_mode::gaussian_3d_theta ? 0.2 : Scenario.theta};
 	const GaussianFit Fit(Scenario.mode, Image.data(), Dim, 100, Params.data());
-	std::vector<std::array<double, N_LOCALIZATIONS>> points;
+	std::vector<std::array<double, localization_columns::Count>> points;
 	Fit.FitAll(Candidate(Dim), points);
 	ASSERT_EQ(points.size(), 1);
 	const auto& Point = points[0];
@@ -311,7 +311,7 @@ TEST_P(GaussianWorkspaceTests, ReuseAfterFailureAndConfigurationChange)
 	const GaussianFit Fit(Mode, image.data(), Dim, 1, Params.data());
 	localization::SegmentationInfo info{};
 	info.x_ = info.y_ = 7;
-	std::array<double, N_LOCALIZATIONS> expected{}, actual{}, discarded{};
+	std::array<double, localization_columns::Count> expected{}, actual{}, discarded{};
 	Fit.Fit(info, expected);
 	ASSERT_GT(expected[7], 0);
 
@@ -349,7 +349,7 @@ TEST_P(GaussianWorkspaceTests, ConcurrentCallsMatchSerialResults)
 	const std::array Params{9.0, 1.2, 1.8, Mode == fit_mode::gaussian_3d_theta ? 0.2 : Scenario.theta};
 	const GaussianFit Fit(Mode, Image.data(), Dim, 16, Params.data());
 	std::array<localization::SegmentationInfo, 16> infos{};
-	std::array<std::array<double, N_LOCALIZATIONS>, 16> expected{}, actual{};
+	std::array<std::array<double, localization_columns::Count>, 16> expected{}, actual{};
 	for (size_t i = 0; i < infos.size(); ++i) {
 		infos[i].x_         = 7.0 + (0.1 * static_cast<double>(i % 3));
 		infos[i].y_         = 7.0 - (0.1 * static_cast<double>(i % 2));

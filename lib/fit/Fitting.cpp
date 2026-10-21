@@ -8,6 +8,8 @@
 #include <vector>
 
 namespace palm_tracer::fit {
+namespace col = localization_columns;
+
 //-------------------------------------------------------------------------------------------------
 void Fitting::initialize()
 {
@@ -39,7 +41,7 @@ void Fitting::initialize()
 
 // ==================== Fit Computes ====================
 //-------------------------------------------------------------------------------------------------
-void Fitting::FitAll(const localization::Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const
+void Fitting::FitAll(const localization::Segmentation2D& segmentation, std::vector<std::array<double, col::Count>>& points) const
 {
 	const auto& P      = segmentation.Infos();
 	const size_t Count = std::min(P.size(), maxPoints_);
@@ -56,51 +58,51 @@ void Fitting::FitAll(const localization::Segmentation2D& segmentation, std::vect
 }
 
 //-------------------------------------------------------------------------------------------------
-void Fitting::fill(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, const double x, const double y, const double z,
+void Fitting::fill(const localization::SegmentationInfo& infos, std::array<double, col::Count>& point, const double x, const double y, const double z,
                    const double offset, const double intensity, const double sigmaX, const double sigmaY, const double theta,
                    const double rssXY, const double rssZ) const
 {
 	// Champs d'identité (non gérés ici)
-	point[0] = 0;  // Id
-	point[1] = 0;  // Plane
-	point[2] = 0;  // Index
-	point[3] = -1; // Channel
+	point[col::Id]      = 0;  // Id
+	point[col::Plane]   = 0;  // Plane
+	point[col::Index]   = 0;  // Index
+	point[col::Channel] = -1; // Channel
 
 	// Position (pixels ou unités adaptées pour z)
-	point[4] = x; // X
-	point[5] = y; // Y
-	point[6] = z; // Z
+	point[col::X] = x; // X
+	point[col::Y] = y; // Y
+	point[col::Z] = z; // Z
 
 	// Intensité intégrée selon le modèle
 	switch (mode_) {
-		case fit_mode::none: point[7] = infos.intensity_;
+		case fit_mode::none: point[col::Intensity] = infos.intensity_;
 			break;
 		case fit_mode::gaussian_2d_fixed:
 		case fit_mode::gaussian_2d_sigma:
 		case fit_mode::gaussian_3d_fixed:
 		case fit_mode::gaussian_3d_theta:
 			// I_int ≈ 2π × amplitude × sigmaX × sigmaY (pixels)
-			if (intensity > EPSILON && sigmaX > EPSILON && sigmaY > EPSILON) { point[7] = 2.0 * std::numbers::pi * intensity * sigmaX * sigmaY; }
-			else { point[7] = -1; }
+			if (intensity > EPSILON && sigmaX > EPSILON && sigmaY > EPSILON) { point[col::Intensity] = 2.0 * std::numbers::pi * intensity * sigmaX * sigmaY; }
+			else { point[col::Intensity] = -1; }
 			break;
 		case fit_mode::spline_3d_emccd:
-		case fit_mode::spline_3d_scmos: point[7] = intensity;
+		case fit_mode::spline_3d_scmos: point[col::Intensity] = intensity;
 			break;
 	}
 
-	point[8]  = sigmaX;           // Sigma X
-	point[9]  = sigmaY;           // Sigma Y
-	point[10] = theta;            // Theta en radians pour le modèle gaussien.
-	point[11] = rssXY;            // Indicateur XY ; colonne historique MSE XY.
-	point[12] = rssZ;             // Indicateur axial ; colonne historique MSE Z.
-	point[13] = intensity;        // Amplitude
-	point[14] = offset;           // Offset
-	point[15] = infos.intensity_; // Intensité de la segmentation
-	point[16] = infos.surf_;      // Surface de la segmentation
+	point[col::SigmaX]       = sigmaX;           // Sigma X
+	point[col::SigmaY]       = sigmaY;           // Sigma Y
+	point[col::Theta]        = theta;            // Theta en radians pour le modèle gaussien.
+	point[col::QualityXY]    = rssXY;            // Indicateur XY ; colonne historique MSE XY.
+	point[col::QualityZ]     = rssZ;             // Indicateur axial ; colonne historique MSE Z.
+	point[col::Amplitude]    = intensity;        // Amplitude
+	point[col::Offset]       = offset;           // Offset
+	point[col::SegIntensity] = infos.intensity_; // Intensité de la segmentation
+	point[col::Surface]      = infos.surf_;      // Surface de la segmentation
 
 	// Circularité = min(sigmaX, sigmaY) / max(sigmaX, sigmaY) si définis, 1 sinon
-	if (sigmaX > EPSILON && sigmaY > EPSILON) { point[17] = std::min(sigmaX, sigmaY) / std::max(sigmaX, sigmaY); }
-	else { point[17] = 1; }
+	if (sigmaX > EPSILON && sigmaY > EPSILON) { point[col::Circularity] = std::min(sigmaX, sigmaY) / std::max(sigmaX, sigmaY); }
+	else { point[col::Circularity] = 1; }
 }
 
 //-------------------------------------------------------------------------------------------------

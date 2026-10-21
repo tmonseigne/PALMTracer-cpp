@@ -25,8 +25,8 @@ public:
 
 	/// <summary>Exécute un ajustement de modèle spline sur une région d'intérêt (ROI) centrée sur une position (x, y) dans l'image fournie.</summary>
 	/// <param name="infos">Informations issues de la segmentation (position initiale, intensité, etc.).</param>
-	/// <param name="point">Sortie : localisation ajustée (format <see cref="N_LOCALIZATIONS"/>).</param>
-	void Fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const override;
+	/// <param name="point">Sortie : localisation ajustée (format <see cref="localization_columns::Count"/>).</param>
+	void Fit(const localization::SegmentationInfo& infos, std::array<double, localization_columns::Count>& point) const override;
 
 protected:
 	static constexpr double LAMBDA_0   = 0.1,   ///< Valeur initiale du paramètre lambda dans l'algorithme de Levenberg-Marquardt.

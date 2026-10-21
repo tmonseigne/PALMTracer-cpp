@@ -12,6 +12,8 @@
 #include "signal_processing/Matrix.hpp"
 
 namespace palm_tracer::fit {
+namespace col = localization_columns;
+
 /// <summary>Calcule la racine carrée réelle d'un nombre, même s'il est négatif.
 ///
 /// Cette fonction retourne la partie réelle de la racine carrée complexe d'un nombre réel.
@@ -48,7 +50,7 @@ void SplineFit::parseParams()
 }
 
 //-------------------------------------------------------------------------------------------------
-void SplineFit::Fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
+void SplineFit::Fit(const localization::SegmentationInfo& infos, std::array<double, col::Count>& point) const
 {
 	// Vérification si la zone d'intérêt est entièrement dans l'image (évite les bords)
 	const auto Ux = static_cast<size_t>(infos.x_), Uy = static_cast<size_t>(infos.y_);

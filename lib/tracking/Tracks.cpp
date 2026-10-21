@@ -8,6 +8,10 @@
 #include "TracksFit.hpp"
 
 namespace palm_tracer::tracking {
+namespace col = tracking_columns;
+namespace input_col = tracking_input_columns;
+namespace output_col = tracking_output_columns;
+
 //==================== DLL Input/output ====================
 //-------------------------------------------------------------------------------------------------
 void Tracks::LoadTracks(const double* input, const size_t nRow, const double pixelSize)
@@ -19,26 +23,24 @@ void Tracks::LoadTracks(const double* input, const size_t nRow, const double pix
 
 	// Les identifiants peuvent être clairsemes : reserver selon les groupes réels.
 	size_t groups = 1;
-	for (size_t i = 1; i < nRow; ++i) { if (static_cast<size_t>(input[i * N_TRACKING]) != static_cast<size_t>(input[(i - 1) * N_TRACKING])) { ++groups; } }
+	for (size_t i = 1; i < nRow; ++i) {
+		if (static_cast<size_t>(input[i * col::Count + col::Track]) != static_cast<size_t>(input[(i - 1) * col::Count + col::Track])) { ++groups; }
+	}
 	t_.reserve(groups);
 	for (size_t begin = 0; begin < nRow;) {
-		const auto Id = static_cast<size_t>(input[begin * N_TRACKING]);
+		const auto Id = static_cast<size_t>(input[begin * col::Count + col::Track]);
 		size_t end    = begin + 1;
-		while (end < nRow && static_cast<size_t>(input[end * N_TRACKING]) == Id) { ++end; }
+		while (end < nRow && static_cast<size_t>(input[end * col::Count + col::Track]) == Id) { ++end; }
 		Track currentTrack;
 		currentTrack.id = Id;
 		currentTrack.points.reserve(end - begin);
 		for (size_t i = begin; i < end; ++i) {
-			const size_t R    = i * N_TRACKING;
-			const Vec3D PosPx = {.x = input[R + 3], .y = input[R + 4], .z = input[R + 5]};
+			const size_t R    = i * col::Count;
+			const Vec3D PosPx = {.x = input[R + col::X], .y = input[R + col::Y], .z = input[R + col::Z]};
 			const Vec3D Pos   = {.x = PosPx.x * pixelSize, .y = PosPx.y * pixelSize, .z = PosPx.z};
 			// Ajout du point (emplace_back = construction in-place)
-			currentTrack.points.emplace_back(static_cast<size_t>(input[R + 2]), // Id
-			                                 static_cast<size_t>(input[R + 1]), // Plan
-			                                 PosPx,                             // Position en pixel
-			                                 Pos,                               // Position en unités physiques
-			                                 input[R + 6],                      // Intensité
-			                                 input[R + 7]);                     // Surface
+			currentTrack.points.emplace_back(static_cast<size_t>(input[R + col::Id]), static_cast<size_t>(input[R + col::Plane]),
+			                                 PosPx, Pos, input[R + col::Intensity], input[R + col::Surface]);
 		}
 		t_.emplace_back(std::move(currentTrack));
 		begin = end;
@@ -51,14 +53,15 @@ size_t Tracks::FillOutput(double* output) const
 	size_t idx = 0;
 	for (const auto& T : t_) {
 		for (const auto& P : T.points) {
-			output[idx++] = static_cast<double>(T.id);     // Track
-			output[idx++] = static_cast<double>(P.plane_); // Plane
-			output[idx++] = static_cast<double>(P.id_);    // Id
-			output[idx++] = P.posPx_.x;                    // X
-			output[idx++] = P.posPx_.y;                    // Y
-			output[idx++] = P.posPx_.z;                    // Z
-			output[idx++] = P.intensity_;                  // Intensité
-			output[idx++] = P.surface_;                    // Surface
+			output[idx + col::Track]     = static_cast<double>(T.id);     // Track
+			output[idx + col::Plane]     = static_cast<double>(P.plane_); // Plane
+			output[idx + col::Id]        = static_cast<double>(P.id_);    // Id
+			output[idx + col::X]         = P.posPx_.x;                    // X
+			output[idx + col::Y]         = P.posPx_.y;                    // Y
+			output[idx + col::Z]         = P.posPx_.z;                    // Z
+			output[idx + col::Intensity] = P.intensity_;                  // Intensité
+			output[idx + col::Surface]   = P.surface_;                    // Surface
+			idx += col::Count;
 		}
 	}
 	return idx;
@@ -415,12 +418,12 @@ std::vector<TrackingPoint> Tracks::loadPoints(const double* points, const size_t
 {
 	std::vector<TrackingPoint> res(nPoints);
 
-	for (size_t i = 0, idx = 0; i < nPoints; ++i) {
+	for (size_t i = 0, idx = 0; i < nPoints; ++i, idx += input_col::Count) {
 		auto& p          = res[i];
-		p.point.id_      = static_cast<size_t>(points[idx++]);
-		p.point.plane_   = static_cast<size_t>(points[idx++]);
-		p.point.posPx_.x = points[idx++];
-		p.point.posPx_.y = points[idx++];
+		p.point.id_      = static_cast<size_t>(points[idx + input_col::Id]);
+		p.point.plane_   = static_cast<size_t>(points[idx + input_col::Plane]);
+		p.point.posPx_.x = points[idx + input_col::X];
+		p.point.posPx_.y = points[idx + input_col::Y];
 	}
 
 	std::ranges::sort(res, [](const TrackingPoint& a, const TrackingPoint& b) {
@@ -542,8 +545,9 @@ uint64_t Tracks::fillTrackingIdOutput(const std::vector<TrackingPoint>& points, 
 {
 	size_t idx = 0;
 	for (const auto& P : points) {
-		output[idx++] = P.point.id_; // Id
-		output[idx++] = P.trackId;   // Track
+		output[idx + output_col::Id]    = P.point.id_; // Id
+		output[idx + output_col::Track] = P.trackId;   // Track
+		idx += output_col::Count;
 	}
 	return idx;
 }

@@ -31,7 +31,7 @@ namespace palm_tracer {
 ///		- Filtrage morphologique basé sur les seuils d'intensité et de volume.
 ///		- Fitting gaussien (optionnel) pour affiner la position des objets.
 ///
-/// Le résultat est un tableau de points, chacun contenant <see cref="N_LOCALIZATIONS"/> doubles représentant
+/// Le résultat est un tableau de points, chacun contenant <see cref="localization_columns::Count"/> doubles représentant
 /// des informations telles que la position, l'intensité, les paramètres de l'ajustement, etc.
 ///
 /// Le traitement est lancé via la méthode <see cref="Processing()"/>.</remarks>
@@ -43,7 +43,7 @@ public:
 	///
 	/// <param name="image">Pile contiguë de pixels non signés 16 bits, de taille X × Y × Z, ordonnée par plan.</param>
 	/// <param name="points">Pointeur vers le tableau de sortie où seront stockés les points détectés (x, y, intensité, etc.).</param>
-	/// <param name="pointsListSize">Taille totale allouée pour le tableau de points (doit être un multiple de <see cref="N_LOCALIZATIONS"/>).</param>
+	/// <param name="pointsListSize">Taille totale allouée pour le tableau de points (doit être un multiple de <see cref="localization_columns::Count"/>).</param>
 	/// <param name="dim">Dimensions de la pile (X, Y, Z).</param>
 	/// <param name="thresholdVal">Seuil de détection appliqué sur les coefficients du plan d'ondelettes choisi.</param>
 	/// <param name="watershedRatio">Seuil de fusion des bassins : 0 conserve les maxima distincts, 10 autorise les fusions.</param>
@@ -83,11 +83,11 @@ public:
 	/// - Fitting gaussien optionnel autour des objets détectés.
 	/// - Remplissage du tableau <see cref="points_"/> avec les résultats (coordonnées, intensité, sigma, etc.).
 	///
-	/// Le tableau est rempli par blocs de <see cref="N_LOCALIZATIONS"/> doubles, sans ligne sentinelle.
+	/// Le tableau est rempli par blocs de <see cref="localization_columns::Count"/> doubles, sans ligne sentinelle.
 	/// La capacité est répartie également entre les plans ; les détections excédentaires d'un plan sont ignorées.
 	/// Chaque plan exécute son pipeline complet : ondelettes, segmentation, fitting puis tri Y/X.
 	/// </summary>
-	/// <returns>Le nombre de doubles écrits, soit le nombre de détections retenues multiplié par <see cref="N_LOCALIZATIONS"/>.</returns>
+	/// <returns>Le nombre de doubles écrits, soit le nombre de détections retenues multiplié par <see cref="localization_columns::Count"/>.</returns>
 	[[nodiscard]] int Processing() const;
 
 	/// <summary>Calcule automatiquement un seuil adapté à l'image en fonction des localisations détectées.
@@ -140,6 +140,6 @@ private:
 	///
 	/// <param name="plane">Index du plan à analyser.</param>
 	/// <param name="points">Résultat de l'analyse.</param>
-	void processingPlane(size_t plane, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const;
+	void processingPlane(size_t plane, std::vector<std::array<double, localization_columns::Count>>& points) const;
 };
 } // namespace palm_tracer

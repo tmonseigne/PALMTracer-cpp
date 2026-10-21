@@ -32,7 +32,7 @@ public:
 
 	/// <summary>Charge un ensemble de trajectoires précalculé depuis un tableau 2D brut.</summary>
 	/// <param name="input">Pointeur vers un tableau contigu de doubles.
-	/// Chaque ligne correspond à un point et doit contenir <see cref="N_TRACKING"/> colonnes (Track, Plan, Id, X, Y, Z, Intensité, Surface).</param>
+	/// Chaque ligne correspond à un point et doit contenir <see cref="tracking_columns::Count"/> colonnes (Track, Plan, Id, X, Y, Z, Intensité, Surface).</param>
 	/// <param name="nRow">Nombre de lignes (points) dans le tableau.</param>
 	/// <param name="pixelSize">Taille d'un pixel en unités réelles (nanomètre).</param>
 	/// <remarks>Cette fonction initialise le vecteur interne de trajectoires <c>t_</c>.</remarks>

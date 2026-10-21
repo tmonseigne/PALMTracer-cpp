@@ -46,8 +46,8 @@ public:
 	/// Leur capacité est conservée jusqu'à la fin du thread et chaque ROI réinitialise ses données et paramètres.
 	/// Si l'inversion échoue malgré l'amortissement maximal ou si le pas n'est pas fini, retourne les sentinelles d'échec de <see cref="fill"/>.</remarks>
 	/// <param name="infos">Informations issues de la segmentation (position initiale, intensité, etc.).</param>
-	/// <param name="point">Sortie : localisation ajustée (format <see cref="N_LOCALIZATIONS"/>).</param>
-	void Fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const override;
+	/// <param name="point">Sortie : localisation ajustée (format <see cref="localization_columns::Count"/>).</param>
+	void Fit(const localization::SegmentationInfo& infos, std::array<double, localization_columns::Count>& point) const override;
 
 protected:
 	//==================== Hyperparamètres LM ====================

@@ -10,6 +10,8 @@
 #include "signal_processing/Matrix.hpp"
 #include "tracking/Tracks.hpp"
 
+namespace col = palm_tracer::localization_columns;
+
 
 static std::once_flag omp_init_flag;
 
@@ -72,7 +74,7 @@ PT_API double PT_CALL AutoThreshold(const uint16_t* input, const uint64_t height
 {
 	std::call_once(omp_init_flag, InitOpenMP);
 
-	const auto PointsListSize = static_cast<uint64_t>(0.2 * static_cast<double>(height * width) * palm_tracer::N_LOCALIZATIONS);
+	const auto PointsListSize = static_cast<uint64_t>(0.2 * static_cast<double>(height * width) * col::Count);
 	std::vector<double> pointsList(PointsListSize);
 	const palm_tracer::Vec3I Dim = {.x = width, .y = height, .z = 1};
 
@@ -151,7 +153,7 @@ PT_API void PT_CALL Tracking(const double* input, uint64_t* output, const uint64
 /// <param name="maxDuration">Durée maximale (en nombre de frames) autorisée entre deux segments pour être considérés comme appartenant à la même
 /// trajectoire.</param>
 /// <param name="maxSpeed">Vitesse maximale autorisée des cibles pour reconnecter deux segments séparés par un blinking.</param>
-/// <returns>Nombre de doubles écrits dans <paramref name="output"/>, par lignes de <c>N_TRACKING</c> valeurs.</returns>
+/// <returns>Nombre de doubles écrits dans <paramref name="output"/>, par lignes de <c>tracking_columns::Count</c> valeurs.</returns>
 PT_API uint64_t PT_CALL BlinkingReconnection(const double* input, double* output, const uint64_t nRow, const double pixelSize,
                                              const uint64_t mode, const uint64_t maxDuration, const double maxSpeed)
 {

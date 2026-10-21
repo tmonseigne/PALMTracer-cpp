@@ -10,6 +10,8 @@
 #include "Structs.hpp"
 
 namespace palm_tracer::localization {
+namespace col = localization_columns;
+
 namespace {
 //-------------------------------------------------------------------------------------------------
 struct Filter {
@@ -18,15 +20,15 @@ struct Filter {
 };
 
 // Création d'un tableau constexpr avec tous à false + 0.0 sauf
-constexpr std::array<Filter, N_LOCALIZATIONS> MakeDefaultFilter()
+constexpr std::array<Filter, col::Count> MakeDefaultFilter()
 {
-	std::array<Filter, N_LOCALIZATIONS> params{};
+	std::array<Filter, col::Count> params{};
 	// Paramètres à filtrer
 	params[0] = {.enabled = true, .value = VOLUME_MIN};
 	return params;
 }
 
-constexpr std::array<Filter, N_LOCALIZATIONS> SEGMENTATION_FILTER = MakeDefaultFilter();
+constexpr std::array<Filter, col::Count> SEGMENTATION_FILTER = MakeDefaultFilter();
 ///< Tableau de paramètres de filtre (min/max de surface, intensité, morphologie...)
 
 /// <summary>Vérifie si le filtre est actif et valide.</summary>
@@ -35,7 +37,6 @@ constexpr std::array<Filter, N_LOCALIZATIONS> SEGMENTATION_FILTER = MakeDefaultF
 /// <param name="lessThan">Comparatif (True si plus petit que, False sinon).</param>
 /// <returns>True si le filtre actif rejette la valeur pour le sens de comparaison demandé.</returns>
 bool CheckFilter(const Filter& f, const double value, const bool lessThan) { return f.enabled && (lessThan ? value <= f.value : value >= f.value); }
-
 } // namespace
 
 //-------------------------------------------------------------------------------------------------

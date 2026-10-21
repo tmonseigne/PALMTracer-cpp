@@ -17,18 +17,20 @@
 
 
 namespace palm_tracer {
+namespace col = localization_columns;
+
 //-------------------------------------------------------------------------------------------------
 Palm::Palm(const uint16_t* image, double* points, const size_t pointsListSize, const Vec3I& dim,
            const double thresholdVal, const double watershedRatio, const size_t fit, const double* fitParams)
 	: stack_(image), points_(points), dim_(dim), size_(dim.GetPlaneSize()),
-	  nPointsMaxPerPlane_(dim.z == 0 ? 0 : (pointsListSize / N_LOCALIZATIONS) / dim.z),
+	  nPointsMaxPerPlane_(dim.z == 0 ? 0 : (pointsListSize / col::Count) / dim.z),
 	  thresholdVal_(thresholdVal), watershedRatio_(watershedRatio), fit_(fit), fitParams_(fitParams) { }
 
 //-------------------------------------------------------------------------------------------------
 int Palm::Processing() const
 {
 	if (nPointsMaxPerPlane_ == 0) { return 0; }
-	std::vector<std::vector<std::array<double, N_LOCALIZATIONS>>> allPoints(dim_.z);
+	std::vector<std::vector<std::array<double, col::Count>>> allPoints(dim_.z);
 
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(dim_.z); ++i) { processingPlane(i, allPoints[i]); }
@@ -40,12 +42,12 @@ int Palm::Processing() const
 		const double Plane = i + 1;
 		for (const auto& Point : allPoints[i]) {
 			std::ranges::copy(Point, points_ + count);
-			points_[count]     = static_cast<double>(global);
-			points_[count + 1] = Plane;
-			points_[count + 2] = static_cast<double>(local);
+			points_[count + col::Id]    = static_cast<double>(global);
+			points_[count + col::Plane] = Plane;
+			points_[count + col::Index] = static_cast<double>(local);
 			++global;
 			++local;
-			count += N_LOCALIZATIONS;
+			count += col::Count;
 		}
 	}
 
@@ -55,7 +57,7 @@ int Palm::Processing() const
 //-------------------------------------------------------------------------------------------------
 double Palm::AutoThreshold()
 {
-	std::vector<std::array<double, N_LOCALIZATIONS>> points;
+	std::vector<std::array<double, col::Count>> points;
 	std::vector mask(size_, false); //  Création du masque binaire (true = masque actif)
 	const double HalfRoi = fitParams_[0] / 2;
 
@@ -71,10 +73,10 @@ double Palm::AutoThreshold()
 		// Mise à jour du masque
 		std::fill(mask.begin(), mask.end(), false);
 		for (const auto& P : points) {
-			const auto Xmin = static_cast<size_t>(std::max(0, static_cast<int>(P[4] - HalfRoi))),
-			           Xmax = std::min(dim_.x, static_cast<size_t>(P[4] + HalfRoi)),
-			           Ymin = static_cast<size_t>(std::max(0, static_cast<int>(P[5] - HalfRoi))),
-			           Ymax = std::min(dim_.y, static_cast<size_t>(P[5] + HalfRoi));
+			const auto Xmin = static_cast<size_t>(std::max(0, static_cast<int>(P[col::X] - HalfRoi))),
+			           Xmax = std::min(dim_.x, static_cast<size_t>(P[col::X] + HalfRoi)),
+			           Ymin = static_cast<size_t>(std::max(0, static_cast<int>(P[col::Y] - HalfRoi))),
+			           Ymax = std::min(dim_.y, static_cast<size_t>(P[col::Y] + HalfRoi));
 			for (size_t y = Ymin; y < Ymax; ++y) { for (size_t x = Xmin; x < Xmax; ++x) { mask[(y * dim_.x) + x] = true; } }
 		}
 		// Deux passages dans le même ordre, sans recopier les pixels hors masque.
@@ -104,7 +106,7 @@ double Palm::AutoThreshold()
 }
 
 //-------------------------------------------------------------------------------------------------
-void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const
+void Palm::processingPlane(const size_t plane, std::vector<std::array<double, col::Count>>& points) const
 {
 	const uint16_t* image = stack_ + (plane * size_);
 	const Vec2I Dim       = {.x = dim_.x, .y = dim_.y};
@@ -157,8 +159,8 @@ void Palm::processingPlane(const size_t plane, std::vector<std::array<double, N_
 	// Tri par Y puis X (en cas peu probable de Y identique)
 	std::ranges::sort(points, [](const auto& a, const auto& b) {
 		// L'ordre faible reste valide même si un ajustement produit un NaN.
-		if (const auto Order = std::weak_order(a[5], b[5]); Order != 0) { return Order < 0; }
-		return std::weak_order(a[4], b[4]) < 0;
+		if (const auto Order = std::weak_order(a[col::Y], b[col::Y]); Order != 0) { return Order < 0; }
+		return std::weak_order(a[col::X], b[col::X]) < 0;
 	});
 }
 } // namespace palm_tracer

@@ -53,14 +53,14 @@ public:
 	/// Bouclage parallèle (<c>OpenMP</c>) jusqu'à <see cref="maxPoints_"/>.
 	/// Émet un avertissement sur la sortie d'erreur une seule fois par appel si des points dépassent la capacité.
 	/// </remarks>
-	void FitAll(const localization::Segmentation2D& segmentation, std::vector<std::array<double, N_LOCALIZATIONS>>& points) const;
+	void FitAll(const localization::Segmentation2D& segmentation, std::vector<std::array<double, localization_columns::Count>>& points) const;
 
 	/// <summary>Exécute l'ajustement sur une seule région, sans créer d'équipe OpenMP.</summary>
 	/// <param name="infos">Informations issues de la segmentation (position initiale, intensité, etc.).</param>
-	/// <param name="point">Sortie : localisation ajustée (format <see cref="N_LOCALIZATIONS"/>).</param>
+	/// <param name="point">Sortie : localisation ajustée (format <see cref="localization_columns::Count"/>).</param>
 	/// <remarks>Implémentation par défaut : recopie les valeurs brutes via <see cref="fill"/>.
 	/// L'appelant peut répartir les régions d'un lot entre ses propres threads.</remarks>
-	virtual void Fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
+	virtual void Fit(const localization::SegmentationInfo& infos, std::array<double, localization_columns::Count>& point) const
 	{
 		fill(infos, point, infos.x_, infos.y_, infos.z_, 0, 0);
 	}
@@ -101,7 +101,7 @@ protected:
 	/// <param name="rssXY">Indicateur du modèle : corrélation au carré pour le fit gaussien, -1 si non calculé.
 	/// La colonne de sortie conserve le nom historique MSE XY.</param>
 	/// <param name="rssZ">Indicateur axial propre au modèle, -1 si non calculé ; transmis sans conversion dans la colonne MSE Z.</param>
-	void fill(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point, double x, double y, double z = 0,
+	void fill(const localization::SegmentationInfo& infos, std::array<double, localization_columns::Count>& point, double x, double y, double z = 0,
 	          double offset = -1, double intensity = -1, double sigmaX = -1, double sigmaY = -1, double theta = -1,
 	          double rssXY = -1, double rssZ = -1) const;
 

@@ -15,6 +15,8 @@
 #include "signal_processing/Matrix.hpp"
 
 namespace palm_tracer::fit {
+namespace col = localization_columns;
+
 namespace {
 /// <summary>Prépare une fois les constantes du modèle courant ou candidat pour tous les pixels de la ROI.</summary>
 GaussianModel PrepareModel(const fit_mode mode, const std::vector<double>& p, const double sigma, const double theta)
@@ -43,7 +45,7 @@ void GaussianFit::parseParams()
 }
 
 //-------------------------------------------------------------------------------------------------
-void GaussianFit::Fit(const localization::SegmentationInfo& infos, std::array<double, N_LOCALIZATIONS>& point) const
+void GaussianFit::Fit(const localization::SegmentationInfo& infos, std::array<double, col::Count>& point) const
 {
 	// Vérification si la zone d'intérêt est entièrement dans l'image (évite les bords)
 	const auto Ux = static_cast<size_t>(infos.x_), Uy = static_cast<size_t>(infos.y_);
@@ -224,10 +226,10 @@ double GaussianFit::lm(LM_Workspace& ws) const
 
 	for (size_t i = 0; i < n_; ++i) {
 		const auto X = static_cast<double>(ws.grid[i].x), Y = static_cast<double>(ws.grid[i].y);
-		ws.hat[i]      = Model.Evaluate(X - ws.p[1][2], Y - ws.p[1][3], ws.grad); // PSF théorique au pixel (x, y) selon les paramètres p
-		ws.delta[i]    = ws.grid[i].v - ws.hat[i];                                // Résidu (∂) = mesure - prédiction
-		ws.deltaW[i]   = ws.weight[i] * ws.delta[i];                              // Résidu pondéré (W × ∂)
-		err += ws.delta[i] * ws.deltaW[i];                                        // mise à jour du Chi² (somme des carrés pondérée W × ∂ × ∂)
+		ws.hat[i]    = Model.Evaluate(X - ws.p[1][2], Y - ws.p[1][3], ws.grad); // PSF théorique au pixel (x, y) selon les paramètres p
+		ws.delta[i]  = ws.grid[i].v - ws.hat[i];                                // Résidu (∂) = mesure - prédiction
+		ws.deltaW[i] = ws.weight[i] * ws.delta[i];                              // Résidu pondéré (W × ∂)
+		err += ws.delta[i] * ws.deltaW[i];                                      // mise à jour du Chi² (somme des carrés pondérée W × ∂ × ∂)
 		// L'angle reste indéterminé à l'isotropie, y compris en présence d'un résidu d'arrondi.
 		if (Circular) { ws.grad[6] = 0.0; }
 
