@@ -3,12 +3,15 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <memory>
 #include <numeric>
 #include <omp.h>
 #include <ranges>
 #include <vector>
 
 #include "localization/FrameProcessor.hpp"
+#include "fit/GaussianFit.hpp"
+#include "fit/SplineFit.hpp"
 
 namespace palm_tracer {
 namespace col = localization_columns;
@@ -64,6 +67,55 @@ int Palm::Processing() const
 	}
 
 	return assembleLocalizations(allPoints, points_);
+}
+
+//-------------------------------------------------------------------------------------------------
+size_t Palm::FitLocalizations(const uint16_t* image, const double* positions, const size_t nPoints,
+                              double* output, const size_t, const Vec3I& dim, const size_t fit, const double* fitParams)
+{
+	namespace input = fitting_input_columns;
+	if (nPoints == 0) { return 0; }
+
+	std::vector<size_t> localIndices(nPoints), planeCounts(dim.z, 0);
+	for (size_t i = 0; i < nPoints; ++i) {
+		const double* Position = positions + i * input::Count;
+		const double Plane = Position[input::Plane];
+		localIndices[i] = ++planeCounts[static_cast<size_t>(Plane) - 1];
+	}
+
+	const Vec2I Dim{.x = dim.x, .y = dim.y};
+	const int Threads = static_cast<int>(std::min(nPoints, static_cast<size_t>(omp_get_max_threads())));
+	#pragma omp parallel num_threads(Threads)
+	{
+		// Chaque travailleur conserve le modèle de son dernier plan, sans espace de détection ni copie de l'image.
+		size_t previousPlane = dim.z;
+		std::unique_ptr<fit::Fitting> fitter;
+		#pragma omp for
+		for (int64_t i = 0; i < static_cast<int64_t>(nPoints); ++i) {
+			const auto Row = static_cast<size_t>(i);
+			const double* Position = positions + Row * input::Count;
+			const auto Plane = static_cast<size_t>(Position[input::Plane]) - 1;
+			if (Plane != previousPlane) {
+				const uint16_t* Image = image + Plane * dim.GetPlaneSize();
+				const auto Mode = static_cast<fit::fit_mode>(fit);
+				if (fit == 5) { fitter = std::make_unique<fit::SplineFit>(Mode, Image, Dim, nPoints, fitParams); }
+				else { fitter = std::make_unique<fit::GaussianFit>(Mode, Image, Dim, nPoints, fitParams); }
+				previousPlane = Plane;
+			}
+			localization::SegmentationInfo info;
+			info.x_ = Position[input::X];
+			info.y_ = Position[input::Y];
+			info.intensity_ = Position[input::SegIntensity];
+			info.surf_ = Position[input::Surface];
+			localization::LocalizationRow point{};
+			fitter->Fit(info, point);
+			point[col::Id] = Position[input::Id];
+			point[col::Plane] = Position[input::Plane];
+			point[col::Index] = static_cast<double>(localIndices[Row]);
+			std::ranges::copy(point, output + Row * col::Count);
+		}
+	}
+	return nPoints * col::Count;
 }
 
 //-------------------------------------------------------------------------------------------------

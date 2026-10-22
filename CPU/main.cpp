@@ -122,6 +122,32 @@ PT_API uint64_t PT_CALL Localization(const uint16_t* input, double* output, cons
 
 
 //-------------------------------------------------------------------------------------------------
+/// <summary>Ajuste des positions existantes sur une pile, sans détection ni segmentation.</summary>
+/// <param name="input">Pile contiguë de <c>planes × height × width</c> pixels non signés 16 bits.</param>
+/// <param name="positions">Tableau contigu de <c>nPoints × 6</c> doubles : <c>Id, Plane, X, Y, Intensity, Surface</c>.
+/// Plans à partir de 1, coordonnées en pixels à partir de 0 ; les deux dernières valeurs décrivent la segmentation initiale.</param>
+/// <param name="nPoints">Nombre de positions fournies.</param>
+/// <param name="output">Tampon distinct des entrées ; reçoit les 18 colonnes habituelles, dans l'ordre d'entrée.</param>
+/// <param name="outputSize">Capacité de sortie en doubles ; au moins <c>18 × nPoints</c>, sans troncature.</param>
+/// <param name="height">Hauteur de chaque image en pixels.</param>
+/// <param name="width">Largeur de chaque image en pixels.</param>
+/// <param name="planes">Nombre de plans de la pile.</param>
+/// <param name="fit">Mode historique d'ajustement : 1 à 4 gaussien, 5 spline EMCCD.</param>
+/// <param name="fit_params">Paramètres habituels du modèle ; voir <see cref="palm_tracer::Palm::FitLocalizations"/>.</param>
+/// <returns>Nombre de doubles écrits ; 0 pour une entrée vide.</returns>
+/// <remarks>Les entrées respectent les contrats du pipeline de localisation.
+/// L'identifiant global, l'intensité et la surface de segmentation sont conservés.
+/// Les coordonnées près du bord reçoivent les sentinelles habituelles du fit.</remarks>
+PT_API uint64_t PT_CALL Fitting(const uint16_t* input, const double* positions, const uint64_t nPoints,
+                                double* output, const uint64_t outputSize, const uint64_t height,
+                                const uint64_t width, const uint64_t planes, const uint64_t fit, const double* fit_params)
+{
+	std::call_once(omp_init_flag, InitOpenMP);
+	const palm_tracer::Vec3I Dim{.x = width, .y = height, .z = planes};
+	return palm_tracer::Palm::FitLocalizations(input, positions, nPoints, output, outputSize, Dim, fit, fit_params);
+}
+
+//-------------------------------------------------------------------------------------------------
 /// <summary>Construit des trajectoires 2D à partir d'un tableau contigu de localisations simples, puis exporte le couple <c>(Id, Track)</c> de chaque
 /// point.</summary>
 /// <param name="input">Tableau d'entrée contigu de doubles contenant 4 valeurs par point : <c>Id</c>, <c>Plane</c>, <c>X</c>, <c>Y</c>.</param>

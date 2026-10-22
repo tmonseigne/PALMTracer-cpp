@@ -264,6 +264,37 @@ TEST(PalmTests, Quadrants)
 }
 #pragma endregion Localisation
 
+#pragma region Ajustement de positions
+/// <summary>Compare le fit séparé à la localisation avec fit sur la pile entière et vérifie les identifiants transmis.</summary>
+TEST(PalmTests, FittingMatchesLocalization)
+{
+	const Stack Input("stack.tif");
+	constexpr std::array Params{7.0, 1.0, 2.0, 0.0};
+	const auto Detected = Localize(Input.pixels.data(), Input.dim, 0, true);
+	auto expected = Localize(Input.pixels.data(), Input.dim, 2, true);
+	ASSERT_FALSE(Detected.empty());
+	std::vector<double> positions;
+	for (const auto& Row : Detected) {
+		positions.insert(positions.end(), {2 * Row[localization_columns::Id], Row[localization_columns::Plane],
+		                                  Row[localization_columns::X], Row[localization_columns::Y],
+		                                  Row[localization_columns::SegIntensity], Row[localization_columns::Surface]});
+	}
+	std::vector<double> output(Detected.size() * localization_columns::Count);
+	ASSERT_EQ(Palm::FitLocalizations(Input.pixels.data(), positions.data(), Detected.size(), output.data(), output.size(),
+	                                 Input.dim, 2, Params.data()), output.size());
+	Table actual;
+	for (size_t i = 0; i < Detected.size(); ++i) {
+		const auto Begin = output.begin() + static_cast<ptrdiff_t>(i * localization_columns::Count);
+		actual.emplace_back(Begin, Begin + localization_columns::Count);
+		EXPECT_DOUBLE_EQ(actual.back()[localization_columns::Id], positions[i * fitting_input_columns::Count + fitting_input_columns::Id]);
+	}
+	// Les identifiants sont vérifiés séparément ; le tri avant ou après fit peut modifier les indices.
+	for (auto& Row : actual) { Row[localization_columns::Id] = Row[localization_columns::Index] = 0; }
+	for (auto& Row : expected) { Row[localization_columns::Id] = Row[localization_columns::Index] = 0; }
+	ExpectLocalizationsNear(actual, expected, 1e-8);
+}
+#pragma endregion Ajustement de positions
+
 #pragma region Seuil automatique
 namespace {
 /// <summary>Un cas indépendant par plan du calcul de seuil automatique.</summary>

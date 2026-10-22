@@ -4,6 +4,7 @@ EXPORTS
 	Alignment
 	AutoThreshold
 	Localization
+	Fitting
 	Tracking
 	BlinkingReconnection
 	TrackAnalysis

@@ -52,6 +52,17 @@ constexpr size_t Count        = 18; ///< Nombre de colonnes d'une localisation.
 
 constexpr double EPSILON = 1e-7;
 
+/// <summary>Colonnes des positions initiales transmises à l'ajustement sans détection.</summary>
+namespace fitting_input_columns {
+constexpr size_t Id           = 0; ///< Identifiant global fourni, conservé après ajustement.
+constexpr size_t Plane        = 1; ///< Numéro entier du plan, à partir de 1.
+constexpr size_t X            = 2; ///< Position initiale X en pixels, à partir de 0.
+constexpr size_t Y            = 3; ///< Position initiale Y en pixels, à partir de 0.
+constexpr size_t SegIntensity = 4; ///< Intensité de segmentation fournie par l'appelant.
+constexpr size_t Surface      = 5; ///< Surface de segmentation fournie, en pixels carrés.
+constexpr size_t Count        = 6; ///< Nombre de colonnes d'une position initiale.
+}
+
 //==================================================
 //==================== TRACKING ====================
 //==================================================

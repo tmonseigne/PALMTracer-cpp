@@ -88,6 +88,24 @@ public:
 	/// <returns>Le nombre de doubles écrits, soit le nombre de détections retenues multiplié par <see cref="localization_columns::Count"/>.</returns>
 	[[nodiscard]] int Processing() const;
 
+	/// <summary>Ajuste des positions fournies sans détection ni segmentation, en conservant leur ordre.</summary>
+	/// <param name="image">Pile contiguë de pixels 16 bits, ordonnée par plan.</param>
+	/// <param name="positions">Tableau contigu de <c>nPoints × 6</c> doubles : identifiant global, plan entier à partir de 1, X et Y en pixels à partir de 0,
+	/// intensité de segmentation et surface de segmentation en pixels carrés.</param>
+	/// <param name="nPoints">Nombre de positions à ajuster.</param>
+	/// <param name="output">Tampon distinct des entrées, au format habituel de 18 colonnes par localisation.</param>
+	/// <param name="outputSize">Capacité du tampon en doubles ; doit couvrir toutes les positions.</param>
+	/// <param name="dim">Dimensions de la pile (X, Y, Z), strictement positives.</param>
+	/// <param name="fit">Mode d'ajustement historique : 1 à 4 pour les gaussiennes, 5 pour les splines EMCCD.</param>
+	/// <param name="fitParams">Paramètres habituels du modèle choisi ; ROI positive et compatible avec l'image.</param>
+	/// <returns>Nombre de doubles écrits ; 0 si l'entrée est vide.</returns>
+	/// <remarks>Les entrées respectent les contrats du pipeline de localisation. Les identifiants globaux sont recopiés depuis l'entrée ;
+	/// les indices locaux suivent l'ordre d'apparition dans chaque plan. L'intensité et la surface de segmentation sont recopiées depuis l'entrée.
+	/// Une ROI débordant de l'image conserve les coordonnées initiales et reçoit les sentinelles habituelles d'échec du fit.
+	/// La validité des positions, des dimensions, des tampons et des paramètres du modèle est à la charge de l'appelant.</remarks>
+	[[nodiscard]] static size_t FitLocalizations(const uint16_t* image, const double* positions, size_t nPoints,
+	                                           double* output, size_t outputSize, const Vec3I& dim, size_t fit, const double* fitParams);
+
 	/// <summary>Calcule automatiquement un seuil adapté à l'image en fonction des localisations détectées.
 	///
 	/// La méthode procède par itérations successives afin d'affiner le seuil de segmentation.
