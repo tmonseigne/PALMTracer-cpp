@@ -10,6 +10,7 @@
 ///
 ///-------------------------------------------------------------------------------------------------
 #pragma once
+#include <cstdint>
 #include <iostream>
 
 namespace palm_tracer::tracking {
@@ -23,7 +24,7 @@ enum class blinking_mode : uint8_t {
 /// <summary>Mode du modèle d'ajustement pour l'analyse statistique des trajectoires.
 /// L'ajustement cherche le vecteur de paramètres <c>p</c> qui minimise la somme des carrés :
 /// \f[ \Phi(p) = \sum_{i=0}^{N-1}\big(y_i - f(x_i; p)\big)^2 \f] (moindres carrés non pondérés).
-/// La qualité peut être évaluée via <see cref="TracksFit::computeR2"/>.</summary>
+/// La qualité peut être évaluée via <see cref="Fit::computeR2"/>.</summary>
 /// <remarks>
 /// D'autres cas (espace spectral, histogrammes) pourront être ajoutés ultérieurement :
 /// - spectral : polynôme bidimensionnel, translation, affine (avec/sans translation), polywarp ;

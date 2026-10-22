@@ -1,5 +1,5 @@
 #include "TestUtils.hpp"
-#include "tracking/TracksFit.hpp"
+#include "tracking/Fit.hpp"
 
 #include <algorithm>
 #include <array>
@@ -8,9 +8,9 @@
 namespace palm_tracer::tracking {
 namespace {
 /// <summary>Accès de test aux calculs proteges, sans changer l'interface du moteur.</summary>
-class TracksFitAccess final : public TracksFit {
+class FitAccess final : public Fit {
 public:
-	using TracksFit::TracksFit;
+	using Fit::Fit;
 
 	/// <summary>Observe la longueur configurée et les tailles de stockage après un fit.</summary>
 	std::array<size_t, 5> StorageSizes() const { return {fitLength_, x_.size(), y_.size(), f_.size(), df_.size()}; }
@@ -96,22 +96,22 @@ std::vector<double> Parameters(const fit_mode mode)
 }
 
 /// <summary>Validation indépendante de chacun des modèles d'analyse de trajectoire.</summary>
-class TracksFitModelTests : public testing::TestWithParam<fit_mode> { };
+class FitModelTests : public testing::TestWithParam<fit_mode> { };
 
 /// <summary>Réutilisation après compactage partiel ou scintillement invalidant le fit.</summary>
-class TracksFitReuseTests : public testing::TestWithParam<std::vector<double>> { };
+class FitReuseTests : public testing::TestWithParam<std::vector<double>> { };
 } // namespace
 
 #pragma region Fit
 /// <summary>Retrouve une série synthétique ; l'exponentielle est vérifiée en prédictions car x0 et b ne sont pas identifiables séparément.</summary>
-TEST_P(TracksFitModelTests, RecoversSyntheticCurve)
+TEST_P(FitModelTests, RecoversSyntheticCurve)
 {
 	const ComputesParams Params{.mode = GetParam(), .fitLength = 12};
-	TracksFit fit(Params);
+	Fit fit(Params);
 	const auto Expected = Parameters(GetParam());
 	std::vector<double> input(Params.fitLength);
 	for (size_t i = 0; i < input.size(); ++i) { input[i] = Model(GetParam(), Expected, static_cast<double>(i + 1)); }
-	EXPECT_NEAR(fit.Fit(input), 1, 1e-5);
+	EXPECT_NEAR(fit.Compute(input), 1, 1e-5);
 	const auto Actual = fit.GetP();
 	ASSERT_EQ(Actual.size(), Expected.size());
 	for (size_t i = 0; i < input.size(); ++i) { EXPECT_NEAR(Model(GetParam(), Actual, static_cast<double>(i + 1)), input[i], 0.01) << "Lag " << i + 1; }
@@ -119,10 +119,10 @@ TEST_P(TracksFitModelTests, RecoversSyntheticCurve)
 }
 
 /// <summary>Sur données bruitées, le coût obtenu ne dépasse pas celui des paramètres ayant généré la courbe.</summary>
-TEST_P(TracksFitModelTests, MinimizesSquaredResiduals)
+TEST_P(FitModelTests, MinimizesSquaredResiduals)
 {
 	const ComputesParams Params{.mode = GetParam(), .fitLength = 12};
-	TracksFitAccess fit(Params);
+	FitAccess fit(Params);
 	const auto Expected = Parameters(GetParam());
 	constexpr std::array Noise{0.2, -0.3, 0.1, 0.4, -0.2, 0.1, -0.4, 0.2, 0.3, -0.1, 0.2, -0.3};
 	std::vector<double> x(Noise.size()), input(Noise.size());
@@ -132,20 +132,20 @@ TEST_P(TracksFitModelTests, MinimizesSquaredResiduals)
 		input[i] = Model(GetParam(), Expected, x[i]) + Noise[i];
 		noiseCost += Noise[i] * Noise[i];
 	}
-	const double Score = fit.Fit(input);
+	const double Score = fit.Compute(input);
 	EXPECT_GE(Score, 0);
 	EXPECT_LE(Score, 1);
 	EXPECT_LE(fit.Error(fit.GetP(), x, input), noiseCost + 1e-6);
 }
 
 /// <summary>Le fit linéaire retrouve la solution des moindres carrés, même si les premiers lags suggerent une autre droite.</summary>
-TEST(TracksFitTests, LinearLeastSquares)
+TEST(FitTests, LinearLeastSquares)
 {
-	TracksFit fit(ComputesParams{.mode = fit_mode::linear, .fitLength = 6});
+	Fit fit(ComputesParams{.mode = fit_mode::linear, .fitLength = 6});
 	const std::vector<double> Input{5, 7, 9, 11, 50, 70};
 	// Solution analytique : moyenne X = 3.5, moyenne Y = 152/6, covariance = 228, variance X = 17.5.
 	constexpr double Slope = 228.0 / 17.5, Intercept = (152.0 / 6.0) - (Slope * 3.5);
-	EXPECT_GE(fit.Fit(Input), 0);
+	EXPECT_GE(fit.Compute(Input), 0);
 	const auto Actual = fit.GetP();
 	ASSERT_EQ(Actual.size(), 2);
 	EXPECT_NEAR(Actual[0], Slope, 1e-5);
@@ -153,43 +153,43 @@ TEST(TracksFitTests, LinearLeastSquares)
 }
 
 /// <summary>Les changements de modèle et de longueur sur un objet réutilisé donnent le résultat d'un objet neuf.</summary>
-TEST(TracksFitTests, ReconfigureAndReuse)
+TEST(FitTests, ReconfigureAndReuse)
 {
-	TracksFit reused(ComputesParams{.mode = fit_mode::linear, .fitLength = 6});
+	Fit reused(ComputesParams{.mode = fit_mode::linear, .fitLength = 6});
 	constexpr std::array Modes{fit_mode::linear, fit_mode::power, fit_mode::exponential, fit_mode::linear};
 	for (size_t k = 0; k < Modes.size(); ++k) {
 		SCOPED_TRACE("Configuration " + std::to_string(k));
 		const ComputesParams Params{.mode = Modes[k], .fitLength = 6 + (2 * k)};
 		reused.SetMode(Params);
-		TracksFit fresh(Params);
+		Fit fresh(Params);
 		std::vector<double> input(Params.fitLength);
 		for (size_t i = 0; i < input.size(); ++i) { input[i] = Model(Params.mode, Parameters(Params.mode), static_cast<double>(i + 1)); }
-		EXPECT_DOUBLE_EQ(reused.Fit(input), fresh.Fit(input));
+		EXPECT_DOUBLE_EQ(reused.Compute(input), fresh.Compute(input));
 		EXPECT_EQ(reused.GetP(), fresh.GetP());
 		EXPECT_EQ(reused.HasBlink(), fresh.HasBlink());
 	}
 }
 
 /// <summary>Une fenêtre avec des lags absents ne modifie pas la configuration utilisée par la trajectoire suivante.</summary>
-TEST_P(TracksFitReuseTests, RestoresWindowAfterMissingLags)
+TEST_P(FitReuseTests, RestoresWindowAfterMissingLags)
 {
 	constexpr ComputesParams Params{.mode = fit_mode::linear, .fitLength = 6};
-	TracksFitAccess reused(Params);
-	const double FirstScore = reused.Fit(GetParam());
+	FitAccess reused(Params);
+	const double FirstScore = reused.Compute(GetParam());
 	if (std::ranges::count_if(GetParam(), [](const double value) { return value >= 0; }) < 2) { EXPECT_DOUBLE_EQ(FirstScore, -1); }
 	EXPECT_TRUE(reused.HasBlink());
 	constexpr std::array<size_t, 5> ExpectedSizes{6, 6, 6, 6, 6};
 	EXPECT_EQ(reused.StorageSizes(), ExpectedSizes);
 	// Les derniers lags ne suivent pas la droite des premiers : une fenêtre raccourcie donnerait un autre résultat.
 	const std::vector<double> Full{5, 7, 9, 11, 50, 70};
-	TracksFit fresh(Params);
-	EXPECT_DOUBLE_EQ(reused.Fit(Full), fresh.Fit(Full));
+	Fit fresh(Params);
+	EXPECT_DOUBLE_EQ(reused.Compute(Full), fresh.Compute(Full));
 	EXPECT_EQ(reused.GetP(), fresh.GetP());
 	EXPECT_FALSE(reused.HasBlink());
 	EXPECT_EQ(reused.StorageSizes(), ExpectedSizes);
 }
 
-INSTANTIATE_TEST_SUITE_P(MissingLags, TracksFitReuseTests,
+INSTANTIATE_TEST_SUITE_P(MissingLags, FitReuseTests,
                          testing::Values(std::vector<double>{5, -1, 9, 11, -1, 15}, std::vector<double>{-1, -1, 9, -1, -1, -1},
 	                         std::vector<double>{-1, -1, -1, -1, -1, -1}),
                          ([](const testing::TestParamInfo<std::vector<double>>& info) {
@@ -200,10 +200,10 @@ INSTANTIATE_TEST_SUITE_P(MissingLags, TracksFitReuseTests,
 
 #pragma region fillXY
 /// <summary>Les lags d'origine sont conservés après retrait des valeurs manquantes et le scintillement est réinitialisé.</summary>
-TEST(TracksFitTests, PreservesMissingLagPositions)
+TEST(FitTests, PreservesMissingLagPositions)
 {
 	constexpr ComputesParams Params{.mode = fit_mode::linear, .fitLength = 6};
-	TracksFitAccess fit(Params);
+	FitAccess fit(Params);
 	const auto Data = fit.Prepare({5, -1, 9, 11, -1, 15});
 	EXPECT_EQ(Data[0], (std::vector<double>{1, 3, 4, 6}));
 	EXPECT_EQ(Data[1], (std::vector<double>{5, 9, 11, 15}));
@@ -217,9 +217,9 @@ TEST(TracksFitTests, PreservesMissingLagPositions)
 
 #pragma region base
 /// <summary>Compare chaque modèle aux équations analytiques sur des abscisses non entières.</summary>
-TEST_P(TracksFitModelTests, ModelValues)
+TEST_P(FitModelTests, ModelValues)
 {
-	TracksFitAccess fit(ComputesParams{.mode = GetParam(), .fitLength = 4});
+	FitAccess fit(ComputesParams{.mode = GetParam(), .fitLength = 4});
 	const auto Params = Parameters(GetParam());
 	const std::vector<double> X{0.5, 1.25, 2.5, 4};
 	const auto Values = fit.Evaluate(Params, X);
@@ -230,9 +230,9 @@ TEST_P(TracksFitModelTests, ModelValues)
 
 #pragma region deriv
 /// <summary>Compare toutes les dérivées analytiques aux différences finies centrées.</summary>
-TEST_P(TracksFitModelTests, GradientMatchesFiniteDifferences)
+TEST_P(FitModelTests, GradientMatchesFiniteDifferences)
 {
-	TracksFitAccess fit(ComputesParams{.mode = GetParam(), .fitLength = 4});
+	FitAccess fit(ComputesParams{.mode = GetParam(), .fitLength = 4});
 	const auto Params = Parameters(GetParam());
 	const std::vector<double> X{0.5, 1.25, 2.5, 4};
 	const auto Gradient   = fit.Gradient(Params, X);
@@ -248,7 +248,7 @@ TEST_P(TracksFitModelTests, GradientMatchesFiniteDifferences)
 	}
 }
 
-INSTANTIATE_TEST_SUITE_P(Models, TracksFitModelTests,
+INSTANTIATE_TEST_SUITE_P(Models, FitModelTests,
                          testing::Values(fit_mode::linear, fit_mode::power, fit_mode::exponential),
                          ([](const testing::TestParamInfo<fit_mode>& info) {
 	                         constexpr std::array Names{"Linear", "Power", "Exponential"};
@@ -258,9 +258,9 @@ INSTANTIATE_TEST_SUITE_P(Models, TracksFitModelTests,
 
 #pragma region computeBeta
 /// <summary>Un pivot initial nul doit être remplace par une ligne valide, et non provoquer un échec du solveur.</summary>
-TEST(TracksFitTests, SolvesZeroLeadingPivot)
+TEST(FitTests, SolvesZeroLeadingPivot)
 {
-	TracksFitAccess fit(ComputesParams{.mode = fit_mode::linear, .fitLength = 2});
+	FitAccess fit(ComputesParams{.mode = fit_mode::linear, .fitLength = 2});
 	std::vector<double> solution;
 	ASSERT_TRUE(fit.Solve({{0, 1, 2}, {1, 1, 5}}, solution));
 	ASSERT_EQ(solution.size(), 2);
@@ -271,9 +271,9 @@ TEST(TracksFitTests, SolvesZeroLeadingPivot)
 
 #pragma region computeError
 /// <summary>La SSE distingue des modèles dont la corrélation au carré est pourtant identique.</summary>
-TEST(TracksFitTests, SquaredResidualCost)
+TEST(FitTests, SquaredResidualCost)
 {
-	TracksFitAccess fit(ComputesParams{.mode = fit_mode::linear, .fitLength = 4});
+	FitAccess fit(ComputesParams{.mode = fit_mode::linear, .fitLength = 4});
 	const std::vector<double> X{1, 2, 3, 4}, Y{5, 7, 9, 11};
 	EXPECT_DOUBLE_EQ(fit.Error({2, 3}, X, Y), 0);
 	EXPECT_DOUBLE_EQ(fit.Error({2, 4}, X, Y), 4);
@@ -284,9 +284,9 @@ TEST(TracksFitTests, SquaredResidualCost)
 
 #pragma region computeR2
 /// <summary>Le score final partage la convention gaussienne, invariante aux transformations affines.</summary>
-TEST(TracksFitTests, CorrelationScore)
+TEST(FitTests, CorrelationScore)
 {
-	TracksFitAccess fit(ComputesParams{.mode = fit_mode::linear, .fitLength = 4});
+	FitAccess fit(ComputesParams{.mode = fit_mode::linear, .fitLength = 4});
 	const std::vector<double> X{1, 2, 3, 4}, Y{5, 7, 9, 11};
 	EXPECT_DOUBLE_EQ(fit.Score({2, 3}, X, Y), 1);
 	EXPECT_DOUBLE_EQ(fit.Score({2, 4}, X, Y), 1);
@@ -297,9 +297,9 @@ TEST(TracksFitTests, CorrelationScore)
 }
 
 /// <summary>La corrélation d'une série non affine reste inférieure à 1 et correspond au calcul analytique centre.</summary>
-TEST(TracksFitTests, ImperfectCorrelationScore)
+TEST(FitTests, ImperfectCorrelationScore)
 {
-	TracksFitAccess fit(ComputesParams{.mode = fit_mode::linear, .fitLength = 4});
+	FitAccess fit(ComputesParams{.mode = fit_mode::linear, .fitLength = 4});
 	EXPECT_NEAR(fit.Score({1, 0}, {1, 2, 3, 4}, {1, 2, 4, 8}), 0.92, 1e-14);
 }
 #pragma endregion computeR2

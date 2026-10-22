@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClCompile Include="..\lib\localization\FrameProcessor.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
     <ClCompile Include="..\lib\localization\ATrous.cpp">
       <Filter>lib</Filter>
     </ClCompile>
@@ -47,11 +50,18 @@
       <Filter>lib</Filter>
     </ClCompile>
     <ClCompile Include="test_tr_Tracks.cpp" />
+    <ClCompile Include="..\lib\tracking\Reconnection.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\tracking\Analysis.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPU\TrackAnalysis.cpp" />
     <ClCompile Include="..\lib\tracking\Tracks.cpp">
       <Filter>lib</Filter>
     </ClCompile>
     <ClCompile Include="test_tr_Point.cpp" />
-    <ClCompile Include="..\lib\tracking\TracksFit.cpp">
+    <ClCompile Include="..\lib\tracking\Fit.cpp">
       <Filter>lib</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\fit\AstigFit.cpp">
@@ -63,10 +73,12 @@
     <ClCompile Include="test_fit_Fitting.cpp" />
     <ClCompile Include="test_fit_GaussianModel.cpp" />
     <ClCompile Include="test_loc_Segmentation2D.cpp" />
-    <ClCompile Include="test_tr_TracksFit.cpp" />
+    <ClCompile Include="test_tr_Fit.cpp" />
     <ClCompile Include="test_Palm.cpp" />
+    <ClCompile Include="test_cpu_TrackAnalysis.cpp" />
     <ClCompile Include="test_TiffManagement.cpp" />
     <ClCompile Include="test_loc_ATrous.cpp" />
+    <ClCompile Include="test_loc_FrameProcessor.cpp" />
     <ClCompile Include="test_sp_PSF.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -77,6 +89,9 @@
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\Structs.hpp">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\localization\FrameProcessor.hpp">
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\localization\ATrous.hpp">
@@ -127,10 +142,17 @@
     <ClInclude Include="..\lib\tracking\Point.hpp">
       <Filter>lib</Filter>
     </ClInclude>
+    <ClInclude Include="..\lib\tracking\Reconnection.hpp">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tracking\Analysis.hpp">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CPU\TrackAnalysis.hpp" />
     <ClInclude Include="..\lib\tracking\Tracks.hpp">
       <Filter>lib</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tracking\TracksFit.hpp">
+    <ClInclude Include="..\lib\tracking\Fit.hpp">
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\tracking\ComputesParams.hpp">

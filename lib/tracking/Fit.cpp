@@ -1,4 +1,4 @@
-#include "TracksFit.hpp"
+#include "Fit.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -11,10 +11,10 @@
 
 namespace palm_tracer::tracking {
 //-------------------------------------------------------------------------------------------------
-TracksFit::TracksFit(const ComputesParams& p) { SetMode(p); }
+Fit::Fit(const ComputesParams& p) { SetMode(p); }
 
 //-------------------------------------------------------------------------------------------------
-void TracksFit::SetMode(const ComputesParams& p)
+void Fit::SetMode(const ComputesParams& p)
 {
 	mode_  = p.mode;
 	pSize_ = getPSize();
@@ -33,7 +33,7 @@ void TracksFit::SetMode(const ComputesParams& p)
 }
 
 //-------------------------------------------------------------------------------------------------
-void TracksFit::SetFitLength(const ComputesParams& p)
+void Fit::SetFitLength(const ComputesParams& p)
 {
 	fitLength_ = p.fitLength;
 	x_.assign(fitLength_, 0.0);
@@ -43,7 +43,7 @@ void TracksFit::SetFitLength(const ComputesParams& p)
 }
 
 //-------------------------------------------------------------------------------------------------
-double TracksFit::Fit(const std::vector<double>& input)
+double Fit::Compute(const std::vector<double>& input)
 {
 	if (!checkInputValidity(input)) { return -1; }
 	const size_t ConfiguredLength = fitLength_;
@@ -115,7 +115,7 @@ double TracksFit::Fit(const std::vector<double>& input)
 }
 
 //-------------------------------------------------------------------------------------------------
-size_t TracksFit::getPSize() const
+size_t Fit::getPSize() const
 {
 	switch (mode_) {
 		case fit_mode::linear: return 2;
@@ -126,17 +126,17 @@ size_t TracksFit::getPSize() const
 }
 
 //-------------------------------------------------------------------------------------------------
-bool TracksFit::checkInputValidity(const std::vector<double>& input) const
+bool Fit::checkInputValidity(const std::vector<double>& input) const
 {
 	//Vérification de la taille du Fit.
 	if (fitLength_ < 2) {
-		//std::cerr << "[TracksFit] Fit length too short (" << fitLength_ << ") need at least a value of 2" << std::endl;
+		//std::cerr << "[Fit] Fit length too short (" << fitLength_ << ") need at least a value of 2" << std::endl;
 		return false;
 	}
 
 	//Vérification entre la taille de l'entrée et le fitlength.
 	if (input.size() < fitLength_) {
-		//std::cerr << "[TracksFit] Not enough sample in input (" << N << ") for a Fit length of " << fitLength_ << std::endl;
+		//std::cerr << "[Fit] Not enough sample in input (" << N << ") for a Fit length of " << fitLength_ << std::endl;
 		return false;
 	}
 
@@ -146,7 +146,7 @@ bool TracksFit::checkInputValidity(const std::vector<double>& input) const
 		case fit_mode::power: {
 			// Si les deux premières valeurs sont négatives ou égales à 0.
 			if (input[0] <= 0 || input[1] <= 0) {
-				//std::cerr << "[TracksFit] The two first input must be strictly positive (" << input[0] << " and " << input[1] << ")." << std::endl;
+				//std::cerr << "[Fit] The two first input must be strictly positive (" << input[0] << " and " << input[1] << ")." << std::endl;
 				return false;
 			}
 			break;
@@ -157,7 +157,7 @@ bool TracksFit::checkInputValidity(const std::vector<double>& input) const
 }
 
 //-------------------------------------------------------------------------------------------------
-void TracksFit::fillXY(const std::vector<double>& input)
+void Fit::fillXY(const std::vector<double>& input)
 {
 	if (input.size() < fitLength_) { return; } // Déjà vérifier en amont
 	hasBlink_ = false;                         // (Re)Initialisation de la détection de scintillement.
@@ -181,7 +181,7 @@ void TracksFit::fillXY(const std::vector<double>& input)
 }
 
 //-------------------------------------------------------------------------------------------------
-void TracksFit::initP()
+void Fit::initP()
 {
 	switch (mode_) {
 		case fit_mode::linear: { // p = [a, b]
@@ -212,7 +212,7 @@ void TracksFit::initP()
 }
 
 //-------------------------------------------------------------------------------------------------
-void TracksFit::base(const std::vector<double>& p)
+void Fit::base(const std::vector<double>& p)
 {
 	switch (mode_) {
 		case fit_mode::linear: { // p = [a, b],  f(x) = a * x + b
@@ -234,7 +234,7 @@ void TracksFit::base(const std::vector<double>& p)
 }
 
 //-------------------------------------------------------------------------------------------------
-void TracksFit::deriv()
+void Fit::deriv()
 {
 	switch (mode_) {
 		case fit_mode::linear: { // p = [a, b]
@@ -270,7 +270,7 @@ void TracksFit::deriv()
 }
 
 //-------------------------------------------------------------------------------------------------
-void TracksFit::computeAlpha(const double lambda)
+void Fit::computeAlpha(const double lambda)
 {
 	// Initialisation
 	for (auto& row : alpha_) { std::ranges::fill(row, 0.0); }
@@ -292,7 +292,7 @@ void TracksFit::computeAlpha(const double lambda)
 }
 
 //-------------------------------------------------------------------------------------------------
-bool TracksFit::computeBeta()
+bool Fit::computeBeta()
 {
 	// Initialisation
 	std::ranges::fill(beta_, 0.0);
@@ -324,7 +324,7 @@ bool TracksFit::computeBeta()
 }
 
 //-------------------------------------------------------------------------------------------------
-void TracksFit::pivot(const size_t index)
+void Fit::pivot(const size_t index)
 {
 	// Recherche du maximum échelonné par ligne (m)
 	std::vector<double> maxRow(pSize_ - index);
@@ -350,7 +350,7 @@ void TracksFit::pivot(const size_t index)
 }
 
 //-------------------------------------------------------------------------------------------------
-double TracksFit::computeError(const std::vector<double>& p)
+double Fit::computeError(const std::vector<double>& p)
 {
 	base(p);
 	double error = 0;
@@ -362,7 +362,7 @@ double TracksFit::computeError(const std::vector<double>& p)
 }
 
 //-------------------------------------------------------------------------------------------------
-double TracksFit::computeR2(const std::vector<double>& p)
+double Fit::computeR2(const std::vector<double>& p)
 {
 	base(p); // Calcule la prédiction f_ à partir des paramètres
 	if (fitLength_ == 0) { return std::numeric_limits<double>::quiet_NaN(); }

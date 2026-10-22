@@ -4,10 +4,12 @@
 
 #include "ExportAPI.hpp"
 #include "Palm.hpp"
+#include "TrackAnalysis.hpp"
 #include "fit/AstigFit.hpp"
 #include "localization/ATrous.hpp"
 #include "signal_processing/Alignment.hpp"
 #include "signal_processing/Matrix.hpp"
+#include "tracking/Reconnection.hpp"
 #include "tracking/Tracks.hpp"
 
 namespace col = palm_tracer::localization_columns;
@@ -149,7 +151,7 @@ PT_API void PT_CALL Tracking(const double* input, uint64_t* output, const uint64
 /// <c>Tracks::LoadTracks</c>.</param>
 /// <param name="pixelSize">Taille d'un pixel, en unités physiques (par exemple µm/pixel). Utilisée pour convertir les distances en unités physiques lors de la
 /// reconnexion.</param>
-/// <param name="mode">Mode de diffusion des cibles. La signification des différents modes est définie par <c>Tracks::BlinkingReconnection</c>.</param>
+/// <param name="mode">Mode de diffusion des cibles. La signification des différents modes est définie par <c>palm_tracer::blinking_mode</c>.</param>
 /// <param name="maxDuration">Durée maximale (en nombre de frames) autorisée entre deux segments pour être considérés comme appartenant à la même
 /// trajectoire.</param>
 /// <param name="maxSpeed">Vitesse maximale autorisée des cibles pour reconnecter deux segments séparés par un blinking.</param>
@@ -161,7 +163,7 @@ PT_API uint64_t PT_CALL BlinkingReconnection(const double* input, double* output
 
 	palm_tracer::tracking::Tracks tracks;
 	tracks.LoadTracks(input, nRow, pixelSize);
-	tracks.BlinkingReconnection(mode, maxDuration, maxSpeed);
+	palm_tracer::tracking::reconnection::Reconnect(tracks.GetTracks(), mode, maxDuration, maxSpeed);
 	return tracks.FillOutput(output);
 }
 
@@ -205,41 +207,8 @@ PT_API bool PT_CALL TrackAnalysis(const double* input, double* outputMSD, double
                                   const double pixelSize, const double exposureTime, const uint64_t fitMode, const double* fitParams)
 {
 	std::call_once(omp_init_flag, InitOpenMP);
-
-	palm_tracer::tracking::ComputesParams p = {
-		.mode = palm_tracer::tracking::fit_mode::linear,
-		.fitLength = static_cast<uint64_t>(fitParams[0]),
-		.is3D = is3D,
-		.pixelSize = pixelSize,
-		.exposureTime = exposureTime
-	};
-	palm_tracer::tracking::Tracks tracks;
-	tracks.LoadTracks(input, nRow, pixelSize);
-
-	if (isMSD) {
-		const auto MSD = tracks.ComputeAllMSD();
-		palm_tracer::matrix::SendIrregularArray(MSD, outputMSD);
-	}
-	if (isInd) {
-		const auto Ind = tracks.ComputeAllInstantDiffusion(p);
-		palm_tracer::matrix::SendIrregularArray(Ind, outputInd);
-	}
-	if (fitMode != 0) {
-		switch (fitMode) {
-			case 2: {
-				p.mode = palm_tracer::tracking::fit_mode::power;
-				break;
-			}
-			case 3: {
-				p.mode = palm_tracer::tracking::fit_mode::exponential;
-				break;
-			}
-			default: break;
-		}
-		const auto Fit = tracks.ComputeAllFitMetrics(p);
-		palm_tracer::matrix::SendIrregularArray(Fit, outputFit);
-	}
-	return true;
+	return palm_tracer::cpu::AnalyzeTracks(input, outputMSD, outputInd, outputFit, nRow,
+	                                       isMSD, isInd, is3D, pixelSize, exposureTime, fitMode, fitParams);
 }
 
 
@@ -271,7 +240,7 @@ PT_API void PT_CALL Wavelett(const uint16_t* input, double* output, const uint64
 	const palm_tracer::Vec2I Dim = {.x = width, .y = height};
 	const uint64_t Size          = Dim.GetSize();
 	const uint64_t Level         = std::min(levelOutput - 1, static_cast<uint64_t>(palm_tracer::N_PLANES) - 1); // le niveau 1 correspond à l'index 0 du tableau
-	const int Threads = static_cast<int>(std::min(planes, static_cast<uint64_t>(omp_get_max_threads())));
+	const int Threads            = static_cast<int>(std::min(planes, static_cast<uint64_t>(omp_get_max_threads())));
 
 	#pragma omp parallel num_threads(Threads)
 	{

@@ -40,8 +40,7 @@ bool CheckFilter(const Filter& f, const double value, const bool lessThan) { ret
 } // namespace
 
 //-------------------------------------------------------------------------------------------------
-Segmentation2D::Segmentation2D(const Vec2I& dim)
-	: dim_(dim), size_(dim.GetSize()), ratio_(0), map_(size_), output_(size_) { }
+Segmentation2D::Segmentation2D(const Vec2I& dim) : dim_(dim), size_(dim.GetSize()), ratio_(0), map_(size_), output_(size_) { }
 
 //-------------------------------------------------------------------------------------------------
 Segmentation2D::Segmentation2D(const ATrous& decomposition, const double threshold, const double ratio)

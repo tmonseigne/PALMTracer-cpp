@@ -66,7 +66,7 @@ file(GLOB_RECURSE TESTS_FILES CONFIGURE_DEPENDS "Tests_CPU/*.cpp" "Tests_CPU/*.h
 list(FILTER TESTS_FILES EXCLUDE REGEX "_local\\.(cpp|hpp)$")
 
 # === CPU ===
-add_library(CPU SHARED CPU/main.cpp ${CPU_SRC} ${CPU_HDRS})
+add_library(CPU SHARED CPU/main.cpp CPU/TrackAnalysis.cpp ${CPU_SRC} ${CPU_HDRS})
 
 # === Gestion manuelle OpenMP cross-plateforme ===
 configure_openmp_for_target(CPU)
@@ -82,7 +82,7 @@ target_link_libraries(CPU PUBLIC FFTW3::fftw3)
 # === Google Test (test_cpu) ===
 enable_testing()
 
-add_executable(test_cpu ${TESTS_FILES} ${CPU_SRC} ${CPU_HDRS})
+add_executable(test_cpu CPU/TrackAnalysis.cpp ${TESTS_FILES} ${CPU_SRC} ${CPU_HDRS})
 
 # === Gestion manuelle OpenMP cross-plateforme ===
 configure_openmp_for_target(test_cpu)

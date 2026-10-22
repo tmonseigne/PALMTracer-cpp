@@ -1,24 +1,45 @@
 #include "Palm.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cmath>
-#include <compare>
-#include <execution>
+#include <limits>
 #include <numeric>
 #include <omp.h>
 #include <ranges>
-#include <thread>
 #include <vector>
 
-#include "fit/GaussianFit.hpp"
-#include "fit/SplineFit.hpp"
-#include "localization/ATrous.hpp"
-#include "localization/Segmentation2D.hpp"
-
+#include "localization/FrameProcessor.hpp"
 
 namespace palm_tracer {
 namespace col = localization_columns;
+
+namespace {
+/// <summary>Copie les frames dans l'ordre et attribue les identifiants globaux et locaux.</summary>
+/// <param name="frames">Localisations retenues par frame, dans l'ordre de la pile.</param>
+/// <param name="output">Tampon capable de contenir toutes les localisations fournies.</param>
+/// <returns>Nombre de doubles écrits au format historique.</returns>
+int assembleLocalizations(const std::vector<localization::FrameLocalizations>& frames, double* output)
+{
+	// Copie par plan et attribution de l'identifiant global, du plan et de l'index local.
+	size_t count = 0, global = 1;
+	for (int i = 0; i < static_cast<int>(frames.size()); ++i) {
+		size_t local       = 1;
+		const double Plane = i + 1;
+		for (const auto& Point : frames[i]) {
+			std::ranges::copy(Point, output + count);
+			output[count + col::Id]    = static_cast<double>(global);
+			output[count + col::Plane] = Plane;
+			output[count + col::Index] = static_cast<double>(local);
+			++global;
+			++local;
+			count += col::Count;
+		}
+	}
+
+	return static_cast<int>(count);
+}
+} // namespace
+
 
 //-------------------------------------------------------------------------------------------------
 Palm::Palm(const uint16_t* image, double* points, const size_t pointsListSize, const Vec3I& dim,
@@ -31,41 +52,24 @@ Palm::Palm(const uint16_t* image, double* points, const size_t pointsListSize, c
 int Palm::Processing() const
 {
 	if (nPointsMaxPerPlane_ == 0) { return 0; }
-	std::vector<std::vector<std::array<double, col::Count>>> allPoints(dim_.z);
+	std::vector<localization::FrameLocalizations> allPoints(dim_.z);
 	const int Threads = static_cast<int>(std::min(dim_.z, static_cast<size_t>(omp_get_max_threads())));
 
 	#pragma omp parallel num_threads(Threads)
 	{
 		const Vec2I Dim{.x = dim_.x, .y = dim_.y};
-		localization::ATrous decomposition(Dim);
-		localization::Segmentation2D segmentation(Dim);
+		localization::FrameProcessor processor(Dim, nPointsMaxPerPlane_, watershedRatio_, fit_, fitParams_);
 		#pragma omp for
-		for (int i = 0; i < static_cast<int>(dim_.z); ++i) { processingPlane(i, allPoints[i], decomposition, segmentation); }
+		for (int i = 0; i < static_cast<int>(dim_.z); ++i) { processor.Process(stack_ + (static_cast<size_t>(i) * size_), thresholdVal_, allPoints[i]); }
 	}
 
-	// Copie par plan et attribution de l'identifiant global, du plan et de l'index local.
-	size_t count = 0, global = 1;
-	for (int i = 0; i < static_cast<int>(dim_.z); ++i) {
-		size_t local       = 1;
-		const double Plane = i + 1;
-		for (const auto& Point : allPoints[i]) {
-			std::ranges::copy(Point, points_ + count);
-			points_[count + col::Id]    = static_cast<double>(global);
-			points_[count + col::Plane] = Plane;
-			points_[count + col::Index] = static_cast<double>(local);
-			++global;
-			++local;
-			count += col::Count;
-		}
-	}
-
-	return static_cast<int>(count);
+	return assembleLocalizations(allPoints, points_);
 }
 
 //-------------------------------------------------------------------------------------------------
 double Palm::AutoThreshold()
 {
-	std::vector<std::array<double, col::Count>> points;
+	localization::FrameLocalizations points;
 	std::vector mask(size_, false); //  Création du masque binaire (true = masque actif)
 	const double HalfRoi = fitParams_[0] / 2;
 
@@ -76,11 +80,10 @@ double Palm::AutoThreshold()
 	variance /= static_cast<double>(size_);
 	thresholdVal_ = std::sqrt(variance);
 	const Vec2I Dim{.x = dim_.x, .y = dim_.y};
-	localization::ATrous decomposition(Dim);
-	localization::Segmentation2D segmentation(Dim);
+	localization::FrameProcessor processor(Dim, nPointsMaxPerPlane_, watershedRatio_, fit_, fitParams_);
 
 	for (size_t i = 0; i < THRESHOLD_ITERATION; ++i) {
-		processingPlane(0, points, decomposition, segmentation);
+		processor.Process(stack_, thresholdVal_, points);
 		// Mise à jour du masque
 		std::fill(mask.begin(), mask.end(), false);
 		for (const auto& P : points) {
@@ -117,62 +120,4 @@ double Palm::AutoThreshold()
 }
 
 //-------------------------------------------------------------------------------------------------
-void Palm::processingPlane(const size_t plane, std::vector<std::array<double, col::Count>>& points,
-                           localization::ATrous& decomposition, localization::Segmentation2D& segmentation) const
-{
-	const uint16_t* image = stack_ + (plane * size_);
-	const Vec2I Dim       = {.x = dim_.x, .y = dim_.y};
-
-	//----- Décomposition en ondelette -----
-	decomposition.Process(image);
-
-	//----- Segmentation -----
-	segmentation.Process(decomposition, thresholdVal_, watershedRatio_);
-
-	//----- Fitting -----
-	switch (fit_) {
-		case 1: {
-			const fit::GaussianFit Gfit(fit::fit_mode::gaussian_2d_fixed, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Gfit.FitAll(segmentation, points);
-			break;
-		}
-
-		case 2: { // Gaussian fit of 2D
-			const fit::GaussianFit Gfit(fit::fit_mode::gaussian_2d_sigma, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Gfit.FitAll(segmentation, points);
-			break;
-		}
-
-		case 3: { // Gaussian fit of 3D Theta is constant
-			const fit::GaussianFit Gfit(fit::fit_mode::gaussian_3d_fixed, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Gfit.FitAll(segmentation, points);
-			break;
-		}
-
-		case 4: { // Gaussian fit of 3D
-			const fit::GaussianFit Gfit(fit::fit_mode::gaussian_3d_theta, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Gfit.FitAll(segmentation, points);
-			break;
-		}
-
-		case 5: { // Spline fit for Z on EMCCD sensor (maybe same call for sCMOS)
-			const fit::SplineFit Sfit(fit::fit_mode::spline_3d_emccd, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Sfit.FitAll(segmentation, points);
-			break;
-		}
-
-		default: {
-			const fit::Fitting Sfit(fit::fit_mode::none, image, Dim, nPointsMaxPerPlane_, fitParams_);
-			Sfit.FitAll(segmentation, points);
-			break;
-		}
-	}
-
-	// Tri par Y puis X (en cas peu probable de Y identique)
-	std::ranges::sort(points, [](const auto& a, const auto& b) {
-		// L'ordre faible reste valide même si un ajustement produit un NaN.
-		if (const auto Order = std::weak_order(a[col::Y], b[col::Y]); Order != 0) { return Order < 0; }
-		return std::weak_order(a[col::X], b[col::X]) < 0;
-	});
-}
 } // namespace palm_tracer

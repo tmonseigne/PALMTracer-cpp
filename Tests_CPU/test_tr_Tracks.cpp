@@ -1,5 +1,7 @@
 #include "Constants.hpp"
 #include "TestUtils.hpp"
+#include "tracking/Analysis.hpp"
+#include "tracking/Reconnection.hpp"
 #include "tracking/Tracks.hpp"
 
 #include <array>
@@ -294,7 +296,7 @@ TEST_P(BlinkingIndexTests, BuildsExpectedChains)
 	TracksAccess tracks;
 	tracks.LoadTracks(input.data(), Scenario.rows.size(), 1);
 	if (Scenario.emptyIndex != INVALID_INDEX) { tracks.t_[Scenario.emptyIndex].points.clear(); }
-	tracks.BlinkingReconnection(0, Scenario.maxDuration, 2);
+	reconnection::Reconnect(tracks.GetTracks(), 0, Scenario.maxDuration, 2);
 	ASSERT_EQ(tracks.t_.size(), Scenario.expected.size());
 	for (size_t i = 0; i < Scenario.expected.size(); ++i) {
 		EXPECT_EQ(tracks.t_[i].id, i + 1);
@@ -331,7 +333,7 @@ TEST(TracksTests, BlinkingNearPlaneLimit)
 	// Affectation entière directe : un double ne représente pas exactement ces plans extrêmes.
 	tracks.t_[0].points[0].plane_ = std::numeric_limits<size_t>::max() - 2;
 	tracks.t_[1].points[0].plane_ = std::numeric_limits<size_t>::max() - 1;
-	tracks.BlinkingReconnection(0, 10, 2);
+	reconnection::Reconnect(tracks.GetTracks(), 0, 10, 2);
 	ASSERT_EQ(tracks.t_.size(), 1);
 	ASSERT_EQ(tracks.t_[0].points.size(), 2);
 	EXPECT_EQ(tracks.t_[0].points[0].id_, 1);
@@ -355,7 +357,7 @@ TEST_P(BlinkingPriorityTests, CandidatePriority)
 	for (const auto& Row : input) { flat.insert(flat.end(), Row.begin(), Row.end()); }
 	TracksAccess tracks;
 	tracks.LoadTracks(flat.data(), input.size(), 1);
-	tracks.BlinkingReconnection(0, 3, 3);
+	reconnection::Reconnect(tracks.GetTracks(), 0, 3, 3);
 	ASSERT_FALSE(tracks.t_.empty());
 	ASSERT_GE(tracks.t_[0].points.size(), 2);
 	EXPECT_EQ(tracks.t_[0].points[0].id_, 1);
@@ -376,7 +378,7 @@ TEST_P(BlinkingTests, Reconnection)
 	const auto Expected = LoadCsv(InputPath / "ref" / ("tracking-blinking-" + std::to_string(GetParam()) + ".csv"));
 	Tracks tracks;
 	tracks.LoadTracks(Input.data(), Initial.size(), 1);
-	tracks.BlinkingReconnection(GetParam(), 4, 2);
+	reconnection::Reconnect(tracks.GetTracks(), GetParam(), 4, 2);
 	std::vector<double> output(Input.size() + 1, -12345);
 	ASSERT_EQ(tracks.FillOutput(output.data()), Input.size());
 	EXPECT_DOUBLE_EQ(output.back(), -12345);
@@ -397,7 +399,7 @@ INSTANTIATE_TEST_SUITE_P(, BlinkingTests, testing::Range(size_t{0}, size_t{3}),
 TEST(TracksTests, BlinkingEmptyState)
 {
 	Tracks tracks;
-	tracks.BlinkingReconnection(0, 4, 2);
+	reconnection::Reconnect(tracks.GetTracks(), 0, 4, 2);
 	EXPECT_EQ(tracks.FillOutput(nullptr), 0);
 }
 #pragma endregion BlinkingReconnection
@@ -427,7 +429,7 @@ TEST(TracksTests, MSDWithGaps)
 	};
 	Tracks tracks;
 	tracks.LoadTracks(InitialTracks.data(), 10, 1);
-	const auto Res = tracks.ComputeAllMSD();
+	const auto Res = analysis::ComputeAllMSD(tracks.GetTracks());
 	ExpectTableNear(Res, Ref);
 }
 
@@ -435,7 +437,8 @@ TEST(TracksTests, MSDWithGaps)
 TEST_P(TrackAnalysisTests, MSD)
 {
 	const auto Tracks = LoadTracksData(GetParam());
-	ExpectTableNear(Tracks.ComputeAllMSD(), LoadCsv(InputPath / "ref" / (GetParam() ? "tracking2-MSD-True.csv" : "tracking2-MSD-False.csv")));
+	ExpectTableNear(analysis::ComputeAllMSD(Tracks.GetTracks()),
+	                LoadCsv(InputPath / "ref" / (GetParam() ? "tracking2-MSD-True.csv" : "tracking2-MSD-False.csv")));
 }
 
 /// <summary>Compare le modèle linéaire et les métriques initiales aux références 2D et 3D.</summary>
@@ -443,7 +446,8 @@ TEST_P(TrackAnalysisTests, Fit)
 {
 	const auto Tracks = LoadTracksData(GetParam());
 	const ComputesParams Params{.mode = fit_mode::linear, .fitLength = 4, .is3D = GetParam(), .pixelSize = 1, .exposureTime = 1};
-	ExpectTableNear(Tracks.ComputeAllFitMetrics(Params), LoadCsv(InputPath / "ref" / (GetParam() ? "tracking2-Fit-True.csv" : "tracking2-Fit-False.csv")), 1e-5,
+	ExpectTableNear(analysis::ComputeAllFitMetrics(Tracks.GetTracks(), Params),
+	                LoadCsv(InputPath / "ref" / (GetParam() ? "tracking2-Fit-True.csv" : "tracking2-Fit-False.csv")), 1e-5,
 	                1e-5);
 }
 
@@ -457,7 +461,7 @@ TEST(TracksTests, InstantDiffusion)
 	constexpr ComputesParams Params{.mode = fit_mode::linear, .fitLength = 4, .is3D = true, .pixelSize = 1, .exposureTime = 1};
 	auto expected = LoadCsv(InputPath / "ref/tracking2-InstantD-True.csv");
 	for (auto& row : expected) { for (size_t i = 1; i < row.size(); ++i) { row[i] = std::pow(10.0, row[i]); } }
-	ExpectTableNear(Tracks.ComputeAllInstantDiffusion(Params), expected, 1e-5);
+	ExpectTableNear(analysis::ComputeAllInstantDiffusion(Tracks.GetTracks(), Params), expected, 1e-5);
 }
 
 /// <summary>Compare les modèles de puissance et exponentiel sur une trajectoire 2D commune.</summary>
@@ -466,7 +470,8 @@ TEST_P(TrackFitTests, Fit)
 	constexpr std::array Modes{fit_mode::linear, fit_mode::power, fit_mode::exponential};
 	const auto Tracks = LoadTracksData(false);
 	const ComputesParams Params{.mode = Modes[GetParam()], .fitLength = 4, .is3D = false, .pixelSize = 1, .exposureTime = 1};
-	ExpectTableNear(Tracks.ComputeAllFitMetrics(Params), LoadCsv(InputPath / "ref" / ("tracking2-Fit-" + std::to_string(GetParam() + 1) + ".csv")), 1e-5, 1e-3);
+	ExpectTableNear(analysis::ComputeAllFitMetrics(Tracks.GetTracks(), Params),
+	                LoadCsv(InputPath / "ref" / ("tracking2-Fit-" + std::to_string(GetParam() + 1) + ".csv")), 1e-5, 1e-3);
 }
 
 INSTANTIATE_TEST_SUITE_P(, TrackFitTests, testing::Range(size_t{1}, size_t{3}),
@@ -480,9 +485,9 @@ TEST(TracksTests, AnalysisEmptyState)
 {
 	const Tracks Tracks;
 	constexpr ComputesParams Params{.fitLength = 4};
-	EXPECT_TRUE(Tracks.ComputeAllMSD().empty());
-	EXPECT_TRUE(Tracks.ComputeAllInstantDiffusion(Params).empty());
-	EXPECT_TRUE(Tracks.ComputeAllFitMetrics(Params).empty());
+	EXPECT_TRUE(analysis::ComputeAllMSD(Tracks.GetTracks()).empty());
+	EXPECT_TRUE(analysis::ComputeAllInstantDiffusion(Tracks.GetTracks(), Params).empty());
+	EXPECT_TRUE(analysis::ComputeAllFitMetrics(Tracks.GetTracks(), Params).empty());
 }
 #pragma endregion Analyses
 } // namespace palm_tracer::tracking

@@ -54,13 +54,13 @@ TEST_P(SegmentationWatershedTests, ReusesWorkspaceAcrossFrames)
 			potential[(3 * Dim.x) + 7] = firstPeakHigher ? 30 : 40;
 		}
 		const double Threshold = frame == 3 ? 100 : 0;
-		const double Ratio = (frame == 4 ? !merge : merge) ? 10 : 0;
+		const double Ratio     = (frame == 4 ? !merge : merge) ? 10 : 0;
 		const Segmentation2D Expected(decomposition, Threshold, Ratio);
 		segmentation.Process(decomposition, Threshold, Ratio);
 		std::ranges::fill(potential, -999);
 		ASSERT_EQ(segmentation.Infos().size(), Expected.Infos().size());
 		for (size_t i = 0; i < Expected.Infos().size(); ++i) {
-			const auto& Actual = segmentation.Infos()[i];
+			const auto& Actual    = segmentation.Infos()[i];
 			const auto& Reference = Expected.Infos()[i];
 			EXPECT_DOUBLE_EQ(Actual.x_, Reference.x_);
 			EXPECT_DOUBLE_EQ(Actual.y_, Reference.y_);

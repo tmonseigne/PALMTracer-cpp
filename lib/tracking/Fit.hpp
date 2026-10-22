@@ -1,6 +1,6 @@
 ///-------------------------------------------------------------------------------------------------
 ///
-/// \file TracksFit.hpp
+/// \file Fit.hpp
 /// <summary>Classe d'ajustement non linéaire (Levenberg–Marquardt) pour séries 1D.
 /// </summary>
 /// \author Thibaut Monseigne (CNRS).
@@ -25,11 +25,11 @@ namespace palm_tracer::tracking {
 /// \f]
 /// puis d'évaluer la qualité via <c>computeR2()</c>.
 /// </summary>
-class TracksFit {
+class Fit {
 public:
-	/// <summary>Constructeur par défaut de la classe <see cref="TracksFit"/>.</summary>
+	/// <summary>Constructeur par défaut de la classe <see cref="Fit"/>.</summary>
 	/// <param name="p">Paramètres de configuration des calculs.</param>
-	explicit TracksFit(const ComputesParams& p);
+	explicit Fit(const ComputesParams& p);
 
 	/// <summary>Configure le mode d'ajustement et initialise les structures internes en conséquence.\n
 	/// Appelle <c><see cref="SetFitLength"/>(...)</c> pour allouer les tableaux dépendant de la fenêtre, puis redimensionne les structures liées au nombre de
@@ -69,7 +69,7 @@ public:
 	/// La corrélation au carré ne pénalise pas un décalage ou un changement d'échelle du modèle et ne mesure pas une incertitude physique.
 	/// Après retrait des lags manquants, restaure la longueur configurée et les buffers pour l'appel suivant,
 	/// y compris si moins de deux lags restent valides. Les paramètres ajustes et <see cref="HasBlink"/> sont conservés.</remarks>
-	double Fit(const std::vector<double>& input);
+	double Compute(const std::vector<double>& input);
 
 protected:
 	fit_mode mode_    = fit_mode::linear;     ///< Mode de fitting utilisé.

@@ -12,14 +12,10 @@
 ///-------------------------------------------------------------------------------------------------
 
 #pragma once
-#include <array>
 #include <cstdint>
-#include <vector>
 
 #include "Constants.hpp"
 #include "Structs.hpp"
-#include "localization/ATrous.hpp"
-#include "localization/Segmentation2D.hpp"
 
 namespace palm_tracer {
 /// <summary>Classe principale pour la détection de points lumineux dans une image 2D en niveaux de gris,
@@ -101,7 +97,7 @@ public:
 	/// Étapes principales :
 	/// - Initialisation de l'écart type (seuil) à partir de l'image brute.
 	/// - À chaque itération :
-	///   - Détection des points lumineux sur l'image avec le seuil courant via `processingPlane`.
+	///   - Détection des points lumineux sur l'image avec le seuil courant via le processeur de frame interne.
 	///   - Construction d'un masque binaire qui couvre les zones autour des localisations détectées (ROI).
 	///   - Extraction des pixels hors masque (hors ROI).
 	///   - Calcul de l'écart type des pixels hors ROI.
@@ -127,24 +123,5 @@ private:
 
 	size_t fit_;              ///< Mode de fitting à appliquer (0 = aucun, 1 à 4 = variantes 2D ou 3D de l'ajustement Gaussien, 5 = Ajustement par Splines).
 	const double* fitParams_; ///< Paramètres de l'ajustement
-
-	/// <summary>Lance le traitement complet de détection sur le plan passé en paramèter de l'image d'entrée.</summary>
-	///
-	/// Étapes principales :
-	/// - Décomposition en ondelettes (ATrous).
-	/// - Seuillage du plan choisi et création d'une carte binaire de segmentation.
-	/// - Application d'un Watershed intelligent.
-	/// - Calcul des caractéristiques des objets segmentés.
-	/// - Application éventuelle de filtres morphologiques (volume, intensité).
-	/// - Fitting gaussien optionnel autour des objets détectés.
-	///
-	/// Le vecteur contient uniquement les détections calculées, limitées à la capacité par plan.
-	///
-	/// <param name="plane">Index du plan à analyser.</param>
-	/// <param name="points">Résultat de l'analyse.</param>
-	/// <param name="decomposition">Espace d'ondelettes réutilisé exclusivement par le thread appelant.</param>
-	/// <param name="segmentation">Espace de segmentation réinitialisé pour la frame courante.</param>
-	void processingPlane(size_t plane, std::vector<std::array<double, localization_columns::Count>>& points,
-	                     localization::ATrous& decomposition, localization::Segmentation2D& segmentation) const;
 };
 } // namespace palm_tracer
